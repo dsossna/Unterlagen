@@ -1,0 +1,715 @@
+\chapter{Implementing Security}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Database Auditing}
+      Auditing ist das Überwachen und Aufzeichnen von ausgewählten Aktionen,
+      die innerhalb der Datenbank stattfinden. Es kann auf Einzelnen oder auf
+      einer Kombination von Faktoren (z. B. Nutzername, Anwendung, Anmeldezeit,
+      usw.) basieren. Auditing üblicherweise für die folgenden Zwecke
+      genutzt:
+      \begin{itemize}
+        \item Abschreckung von Nutzern, vor unerlaubten Zugriffen auf Objekte,,
+        außerhalb ihres Verantwortungsbereiches.
+        \item Daten über bestimmte Aktivitäten in der Datenbank sammeln
+        \item Verdächtige Nutzeraktivitäten aufdecken
+        \item Aufdecken von Problemen mit Autorisations- und Zugriffskontrollmechanismen
+      \end{itemize}
+      In Oracle gibt es fünf Arten des Auditings:
+      \begin{itemize}
+        \item \textbf{Statementauditing}: Die Nutzung bestimmter SQL-Statements wird überwacht.
+        \item \textbf{Privilegeauditing}: Die Nutzung von Privilegien wird überwacht.
+        \item \textbf{Objectauditing}: Der Zugriff auf bestimmte Objekte wird überwacht.
+        \item \textbf{Networkauditing}: Überwachung von Fehlern im Netzwerk
+        \item \textbf{Standardauditing}: Standardmäßige Überwachung, die immer aktiv ist.
+      \end{itemize}
+      \begin{merke}
+        Jeder Datenbankadministrator kann das Auditing jederzeit aktivieren.
+      \end{merke}
+      \subsection{Grundsätze und Vorgehensweisen beim Auditing}
+        Oracle 11g ermöglicht es Auditinginformationen in den Auditingtrail
+        der Datenbank oder den des Betriebssystems (Windowsereignisanzeige oder
+        SysLog Daemon) zu schreiben. Je nachdem welche Nutzergruppe überwacht
+        werden muss, normale Nutzer oder Administratoren, empfiehlt es sich
+        einen adäquaten Auditingtrail auszuwählen, so dass dieser nicht
+        durch den betroffenen Nutzerkreis verändert/gefälscht werden kann.
+        Datenbankadministratoren z. B. haben in einer Oracledatenbank
+        unbeschränkten Zugriff, weshalb ein Sammeln der Auditingdaten innerhalb
+        der Datenbank nicht sinnvoll ist.
+        \subsubsection{Auditinginformationen überschaubar halten}
+          Auch wenn Auditing keine großen Kosten erzeugt, sollte die Menge der Auditinginformationen auf das Notwendigste beschränkt werden. Auf diese Weise soll der Auditingtrail überschaubar gehalten und eine einfache Auswertung der Informationen ermöglicht werden.
+
+          Das Wichtigste für die Entwicklung einer Auditingstrategie ist: Der genaue Zweck des Auditings muss bestimmt werden. Erst wenn festgelegt wurde, warum die Datenbank überwacht werden muss, kann eine zielführende Überwachungsstrategie entwickelt werden.
+
+          Wenn das Ziel des Auditings das Sammeln von historischen Informationen über die Datenbank ist, sollten folgende Regeln eingehalten werden:
+          \begin{itemize}
+            \item Auditinginformationen archivieren und den Auditingtrail leeren
+
+              Wurden alle benötigten Informationen gesammelt, sollten diese archiviert und der Auditingtrail geleert werden, damit dieser später für neue Überwachungen zur Ver\-fü\-gung steht.
+            \item Datenschutzrichtlinien beachten
+            
+              Das Bundesdatenschutzgesetz (BDSG) regelt sehr genau, auf welche
+              Weise Daten erhoben werden dürfen wie lange diese gespeichert
+              werden dürfen und wer in welchem Falle Zugriff auf die gesammelten
+              Daten hat.
+          \end{itemize}
+        \subsubsection{Überwachen von verdächtigen Aktivitäten}
+          Beim Überwachen verdächtiger Aktivitäten sollte wie folgt vorgegangen werden:
+          \begin{itemize}
+            \item Erst umfassend und dann immer spezieller auditieren
+
+              Wenn verdächtige Aktivitäten in einem System, wie z. B. einer Datenbank, festgestellt werden, liegen meist nicht viele Informationen über diese vor. Daher muss am Anfang ein umfassenderes Auditing stattfinden, bis alle notwendigen Informationen gesammelt wurden, um die Überwachung auf bestimmte Objekte, Nutzer oder Aktivitäten einschränken zu können.
+
+              Die Auditinginformationen sollten immer wieder dahingehend ausgewertet werden, ob nicht eine weitere Spezialisierung des Auditings stattfinden kann.
+            \item Absichern des Auditingtrails vor unauthorisierten Zugriffen
+
+              Der Auditingtrail sollte vor unerwünschten Veränderungen von außerhalb ge\-schü\-tzt werden, z. B. durch eine Überwachung des Auditingtrails.
+          \end{itemize}
+        \subsubsection{Überwachen administrativer Nutzer}
+          Sessions des Nutzers \identifier{sys} oder anderer Nutzer, die sich
+          mit den Zusätzen \languagesqlplus{as sysdba} oder
+          \languagesqlplus{as sysoper} anmelden, werden standardmäßig
+          nicht auditiert. Ist es notwendig, eine Überwachung für diese
+          Nutzer zu aktivieren, geschieht dies mit Hilfe des
+          Initialisierungsparameters \parameter{audit\_sys\_operations}
+          (statischer Parameter). Der Standardwert für diesen Parameter ist
+          \enquote{false}. Wird dieser Wert auf \enquote{true} geändert,
+          aktiviert sich dadurch das Auditing für administratives Personal.
+          \begin{merke}
+            Alle Auditinginformationen über den Nutzer \identifier{sys} werden im Auditingtrail des Betriebssystems und nicht in der Datenbank aufbewahrt.
+          \end{merke}
+      \subsection{Der Audittrail}
+        \subsubsection{Informationen im Auditingtrail}
+          Ein Audittrail enthält unterschiedliche Informationen, abhängig davon, welche Ereignisse überwacht werden und wie das Auditing konfiguriert wurde. Der folgende Literaturhinweis zeigt eine Auflistung der Informationen, die immer im Auditingtrail, sowohl in der Datenbank, also auch im Betriebssystem, gespeichert werden.
+
+          \begin{literaturinternet}
+            \item \cite{BCGIDBFI}
+          \end{literaturinternet}
+
+          Ist es dem Audittrail nicht mehr möglich neue Einträge aufzunehmen, kann eine überwachte Aktion nicht durchgeführt werden und bricht mit einer Fehlermeldung ab.
+
+          Der Auditingtrail enthält keine Informationen über Werte, die in einem SQL-Statement verwendet wurden. Wird beispielsweise ein \languageorasql{UPDATE}-Statement überwacht, werden die alten und neuen Werte der Tabelle nicht mit aufgezeichnet. Dies kann jedoch durch das sogenannte \enquote{Fine-Grained-Auditing} erreicht werden.
+        \subsubsection{Die Wahl des Auditttrails}
+          Welcher Auditingtrail verwendet werden sollte, ist von verschiedenen Faktoren abhängig:
+          \begin{itemize}
+            \item Welche Aktivitäten sollen überwacht werden?
+            \item Kann Oracle den Auditingtrail des verwendeten Betriebssystems benutzen?
+            \item Welcher Auditingtrail kann besser gegen unerwünschte Zugriffe gesichert werden?
+          \end{itemize}
+          Beide Audittrails haben Vor- und Nachteile, die bei der Wahl berücksichtigt werden sollten. Die folgende Liste ist eine Gegenüberstellung der Vorteile beider Trails.
+
+          Datenbankauditingtrail:
+          \begin{itemize}
+            \item Die Ergebnisse des Auditings können, mit Hilfe von SQL oder PL/SQL und den vordefinierten Data Dictionary Views, schnell und einfach, in der Datenbank, analysiert werden.
+            \item Es kann sehr einfach ein Report über die Auditinginformationen aus der Datenbank erzeugt werden.
+          \end{itemize}
+          Betriebssystemauditingtrail:
+          \begin{itemize}
+            \item Auditinginformationen die im Auditingtrail des Betriebssystems geschrieben wurden, sind unter Umständen sicherer als im Datenbankauditingtrail, da für den Zugriff auf den Trail des Betriebssystems Berechtigungen benötigt werden, die meist nur ein Systemadministrator hat.
+            \item Die Informationen haben eine größere Verfügbarkeit, da sie auch dann noch erreichbar sind, wenn die Datenbank heruntergefahren wurde.
+            \item Die Auditinginformationen können als XML-Dateien an einen sicheren Ort im Netzwerk geschrieben werden. Mit Hilfe der View \identifier{v\$xml\_audit\_trail} kön\-nen diese Dateien ganz einfach durch SQL-Kommandos abgefragt werden.
+            \item Die Nutzung des Betriebssystemauditingtrails konsolidiert alle Auditinginformationen. Es können auf diese Art und Weise alle Auditinginformationen, aller Anwendungen an einer Quelle zusammengeführt werden, was eine zentrale Auswertung  ermöglicht.
+          \end{itemize}
+        \subsubsection{Konfiguration des Auditingtrails}
+          Der statische Parameter \parameter{audit\_trail} legt fest, welcher Audittrail genutzt wird. Er kann folgende Werte annehmen:
+          \begin{itemize}
+            \item \textbf{NONE}: Das Auditing ist deaktiviert, da kein Auditingtrail verwendet wird.
+            \item \textbf{DB}: Standardverhalten. Es wird der Auditingtrail der Datenbank benutzt, mit Ausnahme der Informationen, die immer in den Betriebssystemauditingtrail geschrieben werden.
+            \item \textbf{DB, EXTENDED}: Es wird der Auditingtrail der Datenbank benutzt und es werden zusätzliche Informationen gespeichert.
+            \item \textbf{OS}: Alle Auditinginformationen werden in den Betriebssystemauditingtrail geschrieben.
+            \item \textbf{XML}: Wie OS, nur das alle Informationen in XML-Dateien geschrieben werden.
+            \item \textbf{XML, EXTENDED} Wie XML, aber es werden zusätzliche Informationen gespeichert.
+          \end{itemize}
+          \begin{merke}
+            Der Hauptunterschied zwischen den beiden Einstellungen \enquote{DB} und \enquote{XML} zu ihren \enquote{EXTENDED} Varianten ist, dass bei \enquote{EXTENDED} der genaue Wortlaut des überwachten SQL-Statements mitgespeichert wird.
+          \end{merke}
+          \begin{lstlisting}[caption={Der Parameter \parameter{audit\_trail}},label=admin800,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET audit_trail=XML, EXTENDED SCOPE=spfile;
+          \end{lstlisting}
+        \subsubsection{Einen Speicherort für den Betriebssystemauditingtrail festlegen}
+          Wenn der Parameter \parameter{audit\_trail} einen der beiden Werte \enquote{OS} oder \enquote{XML} hat, legt der Parameter \parameter{audit\_file\_dest} ein Verzeichnis auf dem Datenträger fest, in dem die Datenbank ihre Auditinginformationen ablegt. Der \parameter{audit\_file\_dest}-Parameter ist dynamisch und kann mit Hilfe des Kommando \languageorasql{ALTER SYSTEM} wie folgt geändert werden:
+          \begin{lstlisting}[caption={Der Parameter \parameter{audit\_file\_dest}},label=admin801,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET audit_file_dest='/u01/app/oracle' DEFERRED;
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{i2282157}
+          \end{literaturinternet}
+
+          Der Standardwert für den Parameter \parameter{audit\_file\_dest} ist:
+          \begin{itemize}
+            \item Windows: \oscommand{\%ORACLE\_BASE\%\textbackslash admin\textbackslash \%ORACLE\_SID\%\textbackslash adump}
+            \item Linux/Unix: \oscommand{\$ORACLE\_BASE/admin/\$ORACLE\_SID/adump}
+          \end{itemize}
+
+      \begin{literaturinternet}
+        \item \cite{085271}
+      \end{literaturinternet}
+      \subsection{Standardauditing}
+        Unabhängig davon, ob das Datenbankauditing aktiviert wurde oder nicht, führt Oracle standardmäßig ein Auditing für bestimmte Aktivitäten durch und schreibt die Informationen in den Auditingtrail des Betriebssystems. Dies wird als \enquote{Standardauditing} bezeichnet. Es handelt sich dabei um die folgenden Aktivitäten:
+        \begin{itemize}
+          \item Verbindungen zur Instanz mit administrativen Privilegien
+
+            Es wird ein Eintrag im Betriebssystemauditingtrail erzeugt, der den Nutzernamen des Betriebssystemnutzers enthält, der sich mit einem der Zusätze \languagesqlplus{as sysdba} oder \languagesqlplus{as sysoper} angemeldet hat.
+          \item Hochfahren der Instanz
+
+            Es wird ein Eintrag im Betriebssystemauditingtrail erzeugt, der Informationen über den Nutzer enthält, der das Hochfahren der Instanz veranlasst hat.
+          \item Herunterfahren der Instanz
+
+            Es wird ein Eintrag im Betriebssystemauditingtrail erzeugt, der Informationen über den Nutzer enthält, der das Herunterfahren der Instanz veranlasst hat.
+        \end{itemize}
+        \begin{merke}
+          Als Auditingtrail wird das System bezeichnet, welches die Auditinginformationen aufnimmt. Dies kann z. B. eine Datenbanktabelle, eine XML-Datei, die Windowsereignisanzeige oder der Linux SysLog Daemon sein.
+        \end{merke}
+      \subsection{Statementauditing aktivieren}
+        \label{statementauditing}
+        Um Statementauditing zu konfigurieren, muss das \languageorasql{AUDIT}-Kommando zusammen mit einem Bezeichner aufgerufen werden, der vorgibt, welche Art von Statements zu auditieren sind.
+        \begin{merke}
+          Zum Überwachen von Systemprivilegien wird das Privileg \privileg{audit system} benötigt. Für Objektauditing wird das Privileg \privileg{audit any} benötigt.
+        \end{merke}
+        Ein einfaches Beispiel für Statementauditing ist:
+        \begin{lstlisting}[caption={Statementauditing aktivieren},label=admin802,language=oracle_sql]
+SQL> AUDIT TABLE;
+        \end{lstlisting}
+        Dieses Kommando sorgt dafür, dass alle \languageorasql{CREATE TABLE}-, \languageorasql{DROP TABLE}- und \languageorasql{TRUNCATE TABLE}-State\-ments auditiert werden.
+
+        \begin{literaturinternet}
+          \item \cite{i2059073}
+        \end{literaturinternet}
+
+        Mit Hilfe der \languageorasql{AUDITING BY}-Klausel kann das Auditing nach Nutzern eingeschränkt werden. Um beispielsweise alle \languageorasql{ALTER TABLE}-Statements des Nutzers \identifier{bank} zu auditieren wird das \languageorasql{AUDIT}-Statement wie folgt abgewandelt:
+        \begin{lstlisting}[caption={Statementauditing auf Nutzer einschränken},label=admin803,language=oracle_sql]
+SQL> AUDIT ALTER TABLE 
+  2  BY bank;
+        \end{lstlisting}
+        Um nur erfolgreiche \languageorasql{ALTER TABLE}-Statements des Nutzers \identifier{bank} zu überwachen, wird zusätzlich die Option \languageorasql{WHENEVER SUCCESSFUL} verwendet.
+        \begin{lstlisting}[caption={Nur erfolgreiche Statements auditieren},label=admin804,language=oracle_sql]
+SQL> AUDIT ALTER TABLE 
+  2  BY bank
+  3  WHENEVER SUCCESSFUL;
+        \end{lstlisting}
+        \begin{merke}
+          Das Gegenstück zur Option \languageorasql{WHENEVER SUCCESSFUL} ist die Option \languageorasql{WHENEVER NOT SUCCESSFUL} (Standardwert).
+        \end{merke}
+        Es ist möglich Auditingrichtlinien für mehrere Nutzer und mehrere
+        Ereignisse zu kombinieren. In einem solchen Fall, wird dann eine Liste
+        mit Benutzernamen in der \languageorasql{BY}-Klausel angegeben.
+        \begin{lstlisting}[caption={Statementauditingoptionen
+        kombinieren},label=admin805,language=oracle_sql]  
+SQL> AUDIT TABLE, ALTER TABLE 
+  2  BY bank, hr 
+  3  WHENEVER SUCCESSFUL;
+        \end{lstlisting}
+        \begin{merke}
+          Eine neue Session bezieht ihre Auditingeinstellungen aus dem Data Dictionary. Diese Einstellungen bleiben während der gesamten Lebensdauer der Session erhalten. Änderungen an den Auditingeinstellungen werden für eine Session erst nach einem Neustart wirksam.
+        \end{merke}
+        Um eine Übersicht darüber zu erhalten, welche
+        Statementauditingoptionen derzeit aktiviert sind, kann die View
+        \identifier{dba\_stmt\_audit\_opts} abgefragt werden.
+\clearpage
+        \begin{lstlisting}[caption={Aktvierte Statementauditingoptionen}, label=admin806,language=oracle_sql]
+SQL> SELECT user_name, audit_option, success, failure
+  2  FROM   dba_stmt_audit_opts;
+
+USER_NAME       AUDIT_OPTION                   SUCCESS    &FAILURE&
+--------------- ------------------------------ ---------- ----------
+                 &TABLE&                           &BY ACCESS&   &BY ACCESS&
+BANK             &ALTER TABLE&                      &BY ACCESS&   &BY ACCESS&
+HR               &ALTER TABLE&                      &BY ACCESS&   &NOT SET&
+BANK             &TABLE&                           &BY ACCESS&   &NOT SET&
+HR               &TABLE&                           &BY ACCESS&   &NOT SET&
+        \end{lstlisting}
+         \beispiel{admin806} zeigt, dass die Auditingstatements aus den
+         Beispielen \beispiel{admin802}, \beispiel{admin803},
+         \beispiel{admin804} und \beispiel{admin805} kumuliert werden. Für die
+         Einträge drei, vier und fünf wurde jeweils die Klausel
+         \languageorasql{WHENEVER SUCCESSFUL} angegeben, was am Wert
+         \enquote{NOT SET} in der Spalte \identifier{failure} erkennbar ist.
+      \subsection{Privilegeauditing aktivieren}
+           Das Auditieren von Systemprivilegien funktioniert auf die gleiche Art
+           und Weise wie das aktivierern von Statementauditing. Einziger
+           Unterschied ist, dass dem \languageorasql{AUDIT}-Statement ein oder
+           mehrere Systemprivilegien zur Überwachung übergeben werden
+           müssen.
+          \begin{lstlisting}[caption={Ein einfaches Privilegienauditing konfigurieren},label=admin807,language=oracle_sql]
+SQL> AUDIT &connect&;
+          \end{lstlisting}
+          Wie beim Statementauditing kann auch hier nach Nutzerkonten eingeschränkt werden.
+          \begin{lstlisting}[caption={Privilegienauditing nach Nutzern einschränken},label=admin808,language=oracle_sql]
+SQL> AUDIT &connect& 
+  2  BY bank;
+          \end{lstlisting}
+          Die Angabe der Klauseln \languageorasql{WHENEVER SUCCESSFUL} und \languageorasql{WHENEVER NOT SUCCESSFUL} ist ebenfalls möglich.
+          \begin{lstlisting}[caption={Nur erfolglose Anmeldungen überwachen},label=admin809,language=oracle_sql]
+SQL> AUDIT &connect&
+  2  BY bank
+  3  WHENEVER NOT SUCCESSFUL;
+          \end{lstlisting}
+          Die View \identifier{dba\_priv\_audit\_opts} dient dazu, die gesetzten
+          Privilegeauditingoptionen auszuwerten.
+\clearpage
+        \begin{lstlisting}[caption={Aktvierte Statementauditingoptionen}, label=admin810,language=oracle_sql]
+SQL> SELECT user_name, privilege, success, failure
+  2  FROM   dba_priv_audit_opts;
+
+USER_NAME       PRIVILEGE                                SUCCESS    &FAILURE&
+--------------- ---------------------------------------- ---------- ----------
+BANK             &CREATE SESSION&                             &NOT SET&     &BY ACCESS&
+                 &CREATE SESSION&                             &BY ACCESS&   &BY ACCESS&
+        \end{lstlisting}
+      \subsection{Objectauditing aktivieren}
+        Das Objectauditing ist dem Privilegeauditing sehr ähnlich. Statt Systemprivilegien werden Objektprivilegien verwendet und es müssen eines oder mehrere Objekte angegeben werden, auf die sich das Auditing bezieht.
+        \begin{lstlisting}[caption={Ein einfaches Objectauditing konfigurieren},label=admin811,language=oracle_sql]
+SQL> AUDIT SELECT, INSERT, UPDATE, DELETE ON bank.mitarbeiter
+  2  BY ACCESS
+  3  WHENEVER NOT SUCCESSFUL;
+        \end{lstlisting}
+        Ein weiterer Unterschied zum Statement- oder Privilegeauditing ist, dass
+        beim Objectauditing keine \languageorasql{AUDITING BY}-Klausel verwendet
+        werden kann, was bedeutet, dass nicht nach Nutzern eingeschränkt
+        werden kann. Neu beim Objectauditing ist, dass mit Hilfe der Angaben
+        \languageorasql{BY SESSION} und \languageorasql{BY ACCESS} gesteuert
+        werden kann, ob:
+        \begin{itemize}
+          \item \textbf{BY ACCESS}: Es wird bei jedem Auftreten eines Ereignisses ein Eintrag im Audittrail erzeugt.
+          \item \textbf{BY SESSION}: Nur beim ersten Auftreten eines Ereignisses ein Eintrag im Audittrail erzeugt wird.
+        \end{itemize}
+        \begin{lstlisting}[caption={Nur eine Warnung pro Session für ein Ereignis},label=admin812,language=oracle_sql]
+SQL> AUDIT select ON bank.Buchung
+  2  BY SESSION
+  3  WHENEVER SUCCESSFUL;
+        \end{lstlisting}
+        Auch für diese Art des Auditings existiert eine View, die eine Auswertung der Auditingoptionen erlaubt, \identifier{dba\_obj\_audit\_opts}. Sie gestaltet sich jedoch gänzlich anders, als \identifier{dba\_stmt\_audit\_opts} oder \identifier{dba\_priv\_audit\_opts}.
+
+        In der View \identifier{dba\_obj\_audit\_opts} existiert für jedes Objektprivileg eine eigene Spalte. Die Spaltenbezeichnungen sind Abkürzungen der betroffenen Privilegien. Beispielsweise beinhaltet die Spalte \identifier{alt} die Objectauditingoptions für das Objektprivileg \privileg{alter} oder die Spalte \identifier{sel} die Optionen für das \privileg{select}-Privileg.
+        \begin{lstlisting}[caption={Die View \identifier{dba\_obj\_audit\_opts}},label=admin813,language=oracle_sql]
+ Name                                      Null?    Type
+ ----------------------------------------- -------- --------------------
+ &OWNER&                                               &VARCHAR2&(30)
+ OBJECT_NAME                                        &VARCHAR2&(30)
+ OBJECT_TYPE                                        &VARCHAR2&(23)
+ ALT                                                &VARCHAR2&(3)
+ AUD                                                &VARCHAR2&(3)
+ COM                                                &VARCHAR2&(3)
+ DEL                                                &VARCHAR2&(3)
+ GRA                                                &VARCHAR2&(3)
+ IND                                                &VARCHAR2&(3)
+ INS                                                &VARCHAR2&(3)
+ LOC                                                &VARCHAR2&(3)
+ REN                                                &VARCHAR2&(3)
+ SEL                                                &VARCHAR2&(3)
+ UPD                                                &VARCHAR2&(3)
+ REF                                                &CHAR&(3)
+ EXE                                                &VARCHAR2&(3)
+ CRE                                                &VARCHAR2&(3)
+ REA                                                &VARCHAR2&(3)
+ WRI                                                &VARCHAR2&(3)
+ FBK                                                &VARCHAR2&(3)
+
+        \end{lstlisting}
+        Um die Auditingoptionen für die Objektprivilegien \privileg{select}, \privileg{insert}, \privileg{update} und \privileg{delete} abzufragen zu können, müssen die Spalten \identifier{sel}, \identifier{ins}, \identifier{upd} und \identifier{del} in die Abfrage einbezogen werden.
+        \begin{lstlisting}[caption={Objectauditingoptions abfragen},label=admin814,language=oracle_sql,alsolanguage=sqlplus]
+SQL> SELECT sel, ins, upd, del
+  2  FROM   dba_obj_audit_opts;
+
+SEL INS UPD DEL
+--- --- --- ---
+S/S A/- -/S A/A
+        \end{lstlisting}
+        Diese Angaben sind wie folgt zu interpretieren:
+
+        Der linke Buchstabe, steht für die Überwachung erfolgreich verlaufener Ereignisse (Klausel \languageorasql{WHENEVER SUCCESSFUL}). Hier gibt es drei Möglichkeiten:
+        \begin{itemize}
+          \item \textbf{S}: Es ist eine Überwachung erfolgreicher Ereignisse im Modus \languageorasql{BY SESSION} konfiguriert.
+          \item \textbf{A}: Es ist eine Überwachung erfolgreicher Ereignisse im Modus \languageorasql{BY ACCESS} konfiguriert.
+          \item \textbf{-}: Es wurde keine Überwachung erfolgreicher Ereignisse konfiguriert.
+        \end{itemize}
+        Der rechte Buchstabe, steht für eine Überwachung erfolglos verlaufener Ereignisse(Klausel \languageorasql{WHENEVER NOT SUCCESSFUL}). Hier gibt es widerum drei Möglichkeiten:
+        \begin{itemize}
+          \item \textbf{S}: Es ist eine Überwachung erfolgloser Ereignisse im Modus \languageorasql{BY SESSION} konfiguriert.
+          \item \textbf{A}: Es ist eine Überwachung erfolgloser Ereignisse im Modus \languageorasql{BY ACCESS} konfiguriert.
+          \item \textbf{-}: Es wurde keine Überwachung erfolgloser Ereignisse konfiguriert.
+        \end{itemize}
+        Das Ergebnis aus \beispiel{admin814} zeigt vier verschiedene Varianten:
+        \begin{itemize}
+          \item \texttt{sel (S/S)}: Für die Nutzung des \privileg{select}-Privilegs sollen sowohl erfolgreiche, als auch erfolglose Ereignisse, im Modus \languageorasql{BY SESSION} überwacht werden.
+          \item \texttt{ins (A/-)}: Für die Nutzung des \privileg{insert}-Privilegs werden nur erfolgreiche Ereignisse, im Modus \languageorasql{BY ACCESS} überwacht. Es erfolgt keine Überwachung erfolgloser Ereignisse.
+          \item \texttt{upd (-/S)}: Für das \privileg{update}-Privileg werden nur erfolglose Ereignisse, im Modus \languageorasql{BY SESSION}, überwacht. Es erfolgt keine Überwachung erfolgreicher Ereignisse.
+          \item \texttt{del (A/A)}: Für die Nutzung des \privileg{delete}-Privilegs sollen sowohl erfolgreiche, als auch erfolglose Ereignisse, im Modus \languageorasql{BY ACCESS} überwacht werden.
+        \end{itemize}
+      \subsection{Audittrails auswerten}
+        Genauso wichtig oder sogar noch wichtiger als die Auditingoptionen sind die Auditingergebnisse, die in den Audittrails stehen. Wie für viele andere Dinge, stellt auch hier Oracle entsprechende Views zur Verfügung. Die beiden wichtigsten sind \identifier{dba\_audit\_trail} und \identifier{dba\_common\_audit\_trail}.
+
+        \identifier{dba\_audit\_trail} zeigt den Inhalt des Datenbank\-audittrails für alle Auditingarten an. Um nach den unterschiedlichen Auditingarten zu untergliedern gibt es noch die folgenden Views:
+        \begin{itemize}
+          \item \identifier{dba\_audit\_statement}: Enthält alle Statementauditing-Einträge im Datenbank\-audit\-trail.
+          \item \identifier{dba\_audit\_object}: Enthält alle Objectauditing-Einträge im Datenbank\-audit\-trail.
+          \item \identifier{dba\_audit\_session}: Enthält alle connect und disconnect Einträge im Datenbank\-audit\-trail.
+        \end{itemize}
+\clearpage
+        \begin{merke}
+          Statt \identifier{dba\_audit\_trail} direkt abzufragen, sollten die spezialisierten Views genutzt werden, da diese die Informationen des Datenbankauditingtrails übersichtlicher darstellen.
+        \end{merke}
+        \begin{lstlisting}[caption={Den Datenbankauditingtrail nach connects auswerten},label=admin815,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col userhost format a30
+SQL> SELECT   username, userhost,
+              TO_CHAR(timestamp, 'DD.MM.YYYY HH24:MI') AS Time
+  2  FROM     dba_audit_session
+  3  ORDER BY timestamp;
+
+USERNAME        USERHOST                       &TIME&
+--------------- ------------------------------ ----------------
+ALICE           FEA11-119WS03.oracle.com       11.09.2013 12:09
+CHLOE           FEA11-119WS03.oracle.com       11.09.2013 12:12
+BANK            FEA11-119WS03.oracle.com       18.09.2013 10:59
+&SYSTEM&           FEA11-119WS03.oracle.com       18.09.2013 11:35
+&SYSTEM&           FEA11-119WS03.oracle.com       18.09.2013 11:44
+&SYSTEM&           FEA11-119WS03.oracle.com       18.09.2013 11:55
+&SYSTEM&           FEA11-119WS03.oracle.com       18.09.2013 12:00
+BANK            FEA11-119CL.oracle.com         14.10.2013 10:47
+BANK            FEA11-119CL.oracle.com         14.10.2013 10:49
+BANK            FEA11-119CL.oracle.com         14.10.2013 10:57
+        \end{lstlisting}
+        \beispiel{admin815} zeigt eine Auswertung des Audittrails bezüglich connect-Ereignissen.
+
+        Der Betriebssystemaudittrail, der XML-Audittrail und das Fine Grained
+        Auditing werden nur in der View \identifier{dba\_common\_audit\_trail}
+        angezeigt, was bedeutet, dass die drei oben genannten Views
+        \identifier{dba\_audit\_statement}, \identifier{dba\_audit\_object} und
+        auch  \identifier{dba\_audit\_session} nicht funktionieren. Um die
+        gleiche Auswertung zu erreichen, wie in \beispiel{admin814}, müsste
+        dann die Spalte \identifier{action} der View
+        \identifier{dba\_common\_audit\_trail} genutzt werden, um nach connect
+        und disconnect Ereignissen zu filtern.
+        \begin{lstlisting}[caption={Einen externen Audittrail auswerten},label=admin816,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col db_user format a10
+SQL> col userhost format a29
+SQL> col action format 999999
+SQL> col extended_timestamp format a31
+SQL> SELECT   db_user, userhost, action, extended_timestamp
+  2  FROM     dba_common_audit_trail
+  3  WHERE    action IN (100,101)
+  4  ORDER BY extended_timestamp;
+        \end{lstlisting}
+\clearpage
+        \begin{lstlisting}[caption={Einen externen Audittrail auswerten - Fortsetzung},language=oracle_sql,alsolanguage=sqlplus]
+DB_USER    USERHOST                      ACTION EXTENDED_TIMESTAMP
+---------- ----------------------------- ------ -------------------------------
+BANK       FEA11-119CL.oracle.com           101 14.10.13 10:57:52,477400 +02:00
+BANK       FEA11-119CL.oracle.com           100 14.10.13 11:03:32,648556 +02:00
+BANK       FEA11-119SRV.oracle.com          100 16.10.13 10:54:51,029779 +02:00
+BANK       FEA11-119SRV.oracle.com          101 16.10.13 10:54:53,737176 +02:00
+BANK       FEA11-119SRV.oracle.com          100 16.10.13 10:54:54,059818 +02:00
+BANK       FEA11-119SRV.oracle.com          100 16.10.13 10:54:57,221702 +02:00
+BANK       FEA11-119SRV.oracle.com          100 16.10.13 10:54:59,997771 +02:00
+BANK       FEA11-119SRV.oracle.com          101 16.10.13 10:55:02,779921 +02:00
+        \end{lstlisting}
+        Die Werte 100 und 101 der Spalte \identifier{action} stehen für
+        connect (100) und disconnect (101). Sollte es so sein, dass der
+        OS-Audittrail oder der XML-Audittrail genutzt werden, empfiehlt es sich
+        für den Administrator, die drei Views
+        \identifier{dba\_audit\_statement}, \identifier{dba\_audit\_object} und
+        \identifier{dba\_audit\_session} nach zu bauen. Als Beispiel wird hier
+        die View \identifier{common\_audit\_session} gezeigt, die alle connect
+        und disconnect Ereignisse, auf Basis der View
+        \identifier{dba\_common\_audit\_trail}   anzeigt.
+        \begin{lstlisting}[caption={Eine eigene View für dba\_common\_audit\_trail},label=admin817,language=oracle_sql]
+SQL> CREATE OR REPLACE VIEW common_audit_session
+(DB_USER, USERHOST, ACTION, EXTENDED_TIMESTAMP, EXTENDED_ACTION)
+  2  AS
+  3    SELECT   db_user, userhost, action, extended_timestamp,
+  4             DECODE(action, 100, 'CONNECT',
+  5                            101, 'DISCONNECT',
+  6                              0, 'CONNECT AS SYSDBA')
+  7    FROM     dba_common_audit_trail
+  8    WHERE    action IN (0, 100, 101)
+  9    ORDER BY extended_timestamp;
+
+View created.
+        \end{lstlisting}
+      \subsection{Auditing deaktivieren}
+        Das Kommando \languageorasql{NOAUDIT} deaktiviert eine konfigurierte Auditingeinstellung wieder. Es kön\-nen damit alle Auditingarten deaktiviert werden.
+
+        \begin{merke}
+          Das Kommando \languageorasql{NOAUDIT} kennt die beiden Optionen \languageorasql{BY ACCESS} und \languageorasql{BY SESSION} nicht. Deshalb können diese nicht verwendet werden.
+        \end{merke}
+        Im Folgenden werden einige Beispiele für das \languageorasql{NOAUDIT}-Kommando gezeigt.
+\clearpage
+        \begin{lstlisting}[caption={Statement- und Privilegeauditing deaktivieren},label=admin818,language=oracle_sql]
+SQL> NOAUDIT TABLE;
+SQL> NOAUDIT ALTER TABLE BY bank;
+SQL> NOAUDIT ALTER TABLE BY bank WHENEVER SUCCESSFUL;
+SQL> NOAUDIT connect;
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Alle AUDIT ALL-Statements
+        deaktivieren},label=admin819,language=oracle_sql]
+SQL> NOAUDIT ALL;
+SQL> NOAUDIT ALL BY bank;
+SQL> NOAUDIT ALL BY bank WHENEVER SUCCESSFUL;
+        \end{lstlisting}
+        \begin{merke}
+          Um alle Privilegeauditings zu deaktivieren gibt es das Schlüsselwort \languageorasql{ALL PRIVILEGES}.
+        \end{merke}
+        \begin{lstlisting}[caption={Alle Privilegeauditings deaktivieren},label=admin820,language=oracle_sql]
+SQL> NOAUDIT ALL PRIVILEGES;
+SQL> NOAUDIT ALL PRIVILEGES BY bank;
+SQL> NOAUDIT ALL PRIVILEGES BY bank
+  2  WHENEVER SUCCESSFUL;
+        \end{lstlisting}
+        Auch beim Objectauditing gibt es die Möglichkeit, alle Auditings direkt zu deaktivieren. Dies geschieht mit dem Statement \languageorasql{NOAUDIT ALL ON DEFAULT}.
+        \begin{lstlisting}[caption={Objectauditing deaktivieren},label=admin821,language=oracle_sql]
+SQL> NOAUDIT DELETE ON bank.mitarbeiter;
+SQL> NOAUDIT SELECT, UPDATE, INSERT ON bank.mitarbeiter;
+SQL> NOAUDIT SELECT ON bank.mitarbeiter
+  2  WHENEVER SUCCESSFUL;
+
+SQL> NOAUDIT ALL ON bank.mitarbeiter;
+SQL> NOAUDIT ALL ON DEFAULT;
+        \end{lstlisting}
+    \section{Die Nutzerauthentifizierung sicherer gestalten}
+      \subsection{Sichere Authentifizierung}
+        \subsubsection{Brute Force Protection}
+          Mit Oracle 11g kommt ein altes/neues Feature, welches als Schutz vor
+          Brute Force Attacken fungiert. Oracle verzögert bei fehlerhaften
+          Anmeldeversuchen den nächsten Anmeldevorgang. Es gilt:
+\clearpage
+          \begin{itemize}
+            \item Während der ersten drei Anmeldeversuche existiert noch keine Verzögerung
+            \item Ab dem vierten Versuch wird eine stetig ansteigende Verzögerung (max. 10 Sekunden) eingebaut.
+          \end{itemize}
+          Ein einfacher Test mit einem Java-Programm zeigt die Auswirkungen dieses neuen Features.
+          \begin{lstlisting}[caption={Logon Delay Test},language=terminal]
+[oracle@FEA11-119CL ~]$ /usr/java/jdk1.7.0_45/bin/java AuthDelayTest
+Connecting with URL=jdbc:oracle:oci8:@ORCL as bank/wrong_password
+Versuch: 0
+Delay: 0 Sek.
+Versuch: 1
+Delay: 0 Sek.
+Versuch: 2
+Delay: 0 Sek.
+Versuch: 3
+Delay: 1 Sek.
+Versuch: 4
+Delay: 2 Sek.
+Versuch: 5
+Delay: 3 Sek.
+Versuch: 6
+Delay: 4 Sek.
+Versuch: 7
+Delay: 5 Sek.
+Versuch: 8
+Delay: 6 Sek.
+Versuch: 9
+Delay: 7 Sek.
+Versuch: 10
+Delay: 0 Sek.
+Versuch: 11
+Delay: 0 Sek.
+Versuch: 12
+Delay: 0 Sek.
+Versuch: 13
+Delay: 0 Sek.
+          \end{lstlisting}
+          Das das Delay ab Versuch Nummer 10 wieder auf 0 zurückgeht, hängt
+         damit zusammen, dass der Account dann gesperrt ist.
+\clearpage
+        \subsubsection{max\_failed\_login\_attempts}
+          Mit dem Profilparameter \languageorasql{MAX\_FAILED\_LOGIN\_ATTEMPTS}
+          ist es möglich, für valide Nutzerkonten eine maximale Anzahl
+          fehlerhafter Anmeldeversuche festzulegen. Ein Konto wird gesperrt,
+          sobald das Passwort zu oft falsch eingegeben wurde. Dieser Mechanismus
+          schützt vor Brute Force Attacken, nicht aber vor dem Ausspähen von
+          Nutzernamen.
+
+          Mit dem neuen \parameter{sec\_max\_failed\_login\_attempts}-Parameter
+          kann die maximale Anzahl fehlerhafter Anmeldeversuche für einen
+          Client konfiguriert werden. Sendet der Client zu häufig eine falsche
+          Kombination aus Nutzername und Passwort, wird seine Netzwerkverbindung
+          zur Datenbank getrennt. Dieser Initialisierungsparameter bezieht sich
+          auch auf Anmeldeversuche mit nicht existenten Nutzerkonten, im
+          Unterschied zum Profilparameter
+          \languageorasql{MAX\_FAILED\_LOGIN\_ATTEMPTS}, der nur für existente
+          Konten gilt.
+          
+          Wenn beispielsweise ein Hacker einen Serverprozess startet um mittels
+          Brute Force unterschiedliche Kombinationen aus Nutzername und Passwort
+          zu testen, kann mittels dieses neuen Initialisierungsparameters
+          seine Verbindung zum Serverprozess nach n Versuchen getrennt werden. Ohne diesen
+          Parameter könnte der Hacker tausende von Versuchen
+          starten, ohne dabei unterbrochen zu werden.
+          \begin{lstlisting}[caption={Der Parameter \parameter{sec\_max\_failed\_login\_attempts}},label=admin825,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET sec_max_failed_login_attempts = 3
+  3  SCOPE=spfile;
+        \end{lstlisting}
+          Wird der Parameter wie in \beispiel{admin825} konfiguriert, bedeutet dies für alle Clients, dass nach drei falschen Anmeldeversuchen die Connection zum Datenbankserver getrennt wird.
+
+          Dieser Parameter ist statisch!
+      \subsection{Sichere Passwörter}
+        Bis zur Einführung von Oracle 11g waren alle Nutzerpasswörter,
+        inklusive der Administratorenpasswörter case insensitiv,
+        \enquote{HalloWelt} war gleich \enquote{hallowelt}. Durch den neuen
+        Initialisierungsparameter \parameter{sec\_case\_sensitive\_logon} ist es
+        nun möglich, Passwörter case sensitiv in der Datenbank zu speichern.
+        Der Kern dieses neuen Verfahrens ist der SHA1 Hashing Algorithmus.
+        Dieser ist im Gegensatz zum 3DES-Algorithmus in der Lage die
+        Passwörter case sensitiv zum hashen. Zusätzlich dazu bringt der
+        SHA1-Algorithmus ein Salt mit sich, der die Passwort-Hashes noch
+        sicherer macht.
+\clearpage
+        \begin{lstlisting}[caption={\parameter{sec\_case\_sensitive\_logon}},label=admin826,language=sqlplus]
+SQL> show parameter sec_case_sensitive_logon
+
+NAME                              &TYPE&         VALUE
+--------------------------------- ------------ ----------------
+sec_case_sensitive_logon          boolean      &TRUE&
+        \end{lstlisting}
+        Eine Stolperfalle, die es zu beachten gilt ist, dass die case-sensitivität von Administratorenpasswörtern nicht nur von \parameter{sec\_case\_sensitive\_logon} abhängig ist, sondern zusätzlich auch davon, wie die Passwortdatei erstellt wurde. Wird die Passwortdatei mit dem Parameter \texttt{ignorecase=y} erstellt, bleibt \parameter{sec\_case\_sensitive\_logon} für die Administratoren wirkungslos. Nur wenn \texttt{ignorecase=n} ist, haben auch Admins case-sensitive Passwörter.
+        \begin{merke}
+          In Oracle 12c ist gilt dieser Parameter als Deprecated (veraltet), da Passwörter in der Version 12c nur noch case sensitiv gespeichert werden.
+        \end{merke}
+    \section{Verschlüsselte Tablespaces}
+      Seit Oracle 11g ist es möglich, statt der gesamten Datenbank, nur
+      einzelne Tablespaces zu verschlüsseln. Dies hat den Vorteil, dass der
+      Administrator gezielt, sensitive Daten verschlüsseln kann. Der von
+      Oracle genutzte Verschlüsselungsmechanismus wird als Transparent Data
+      Encryption (TDE) bezeichnet. Das Schlüsselwort \enquote{Transparent}
+      bedeutet, dass alle Anwendungen, ohne Veränderung, die verschlüsselten
+      Daten nutzen können, als seien sie unverschlüsselt. Die Daten werden
+      sogar automatisch verschlüsselt im Undo Tablespace und in den Redo Logs
+      abgelegt, so dass auch dort Datendiebstahl nicht ohne weiteres erfolgen
+      kann.
+
+      Oracle benutzt zur Verschlüsselung Industriestandards, wie AES256,
+      AES192, AES128 und 3DES168. Welcher Standard genutzt werden soll, muss bei
+      der Erstellung des Tablespaces angegeben werden. Unterschiedliche
+      Tablespaces können unterschiedliche Verschlüsselungsverfahren nutzen.
+      \begin{merke}
+        Das Standardverfahren innerhalb der Oracle-Datenbank ist AES128.
+      \end{merke}
+      Grundlage für die Kryptierung ist ein Wallet.
+      \subsection{Vorbereiten der Tablespaceverschlüsselung}
+        \subsubsection{Wallets}
+          Ein Wallet\footnote{engl. Brieftasche} ist ein verschlüselter
+          Speicher für Zertifikate und Schlüssel. Es kann für
+          unterschiedliche Zwecke eingesetzt werden, wie z. B. Authentifizierung
+          oder Verschlüsselung. Wird das Wallet zur Verschlüsselung benutzt,
+          spricht man von einem \enquote{Encryptionwallet}.
+        \subsubsection{Erstellen eines Walletspeicherortes}
+          Um ein Wallet für die Verschlüsselung eines Tablespaces nutzen zu
+          können, müss vorher ein \enquote{Walletspeicher} definiert werden.
+          Hierbei handelt es sich um ein Verzeichnis, welches der Datenbank
+          bekannt gemacht werden muss. Dazu muss der Walletspeicher in der Datei
+          \oscommand{sqlnet.ora} eingetragen werden.
+          \begin{lstlisting}[caption={Ein Encryptionwallet
+          registrieren},label=admin837,language=configfile]
+ENCRYPTION_WALLET_LOCATION =
+  (SOURCE =
+    (METHOD = FILE)
+    (METHOD_DATA =
+      (DIRECTORY = /u01/app/oracle/wallets/))
+  )
+          \end{lstlisting}
+          Der \oscommand{sqlnet.ora}-Parameter \languageconfigfile{ENCRYPTION_WALLET_LOCATION} gibt an, wo das Wallet gespeichert werden soll. \languageconfigfile{METHOD = FILE} weisst darauf hin, dass das Wallet als Datei auf dem Dateisystem abgelegt wird. \languageconfigfile{DIRECTORY} gibt den eigentlichen Speicherort an.
+        \subsubsection{Erstellen des Encryptionwallets}
+          Das Encryptionwallet wird direkt mit SQL erzeugt.
+          \begin{lstlisting}[caption={Ein Encryptionwallet erzeugen},label=admin838,language=oracle_sql]
+SQL> ALTER SYSTEM SET ENCRYPTION KEY
+  2  IDENTIFIED BY "P@ssw0rd";
+          \end{lstlisting}
+      \subsection{Einen verschlüsselten Tablespace erstellen}
+        \subsubsection{Öffnen des Wallets}
+          Um ein Encryptionwallet nutzen zu können, muss es zuerst geöffnet werden.
+          \begin{lstlisting}[caption={Ein Encryptionwallet öffnen},label=admin839,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET ENCRYPTION WALLET OPEN
+  3  IDENTIFIED BY "P@ssw0rd";
+          \end{lstlisting}
+          Nach dem Öffnen des Wallets kann der Tablespace kreiert werden.
+        \subsubsection{Erstellen des Tablespaces}
+          Die Erstellung des verschlüsselten Tablespaces erfolgt mit Hilfe des SQL-Kommandos \languageorasql{CREATE TABLESPACE}.
+          \begin{lstlisting}[caption={Einen kryptierten Tablespace mit AES128-Verschlüsselung erstellen},label=admin840,language=oracle_sql]
+SQL> CREATE TABLESPACE crypto_ts
+  2  DATAFILE '/u02/oradata/orcl/crypto_ts01.dbf' SIZE 50M
+  3  ENCRYPTION
+  4  DEFAULT STORAGE(ENCRYPT);
+
+Tablespace created.
+          \end{lstlisting}
+          Die Zeilen 3 und 4 \languageorasql{ENCRYPTION} und \languageorasql{DEFAULT STORAGE(ENCRYPT)} sorgen für die Verschlüsselung. Die \languageorasql{ENCRYPTION}-Klausel kann variiert werden, um einen anderen Verschlüsselungsalgorithmus zu verwenden.
+          \begin{lstlisting}[caption={Einen kryptierten Tablespace mit alternativer Verschlüsselungsmethode erzeugen},label=admin841,language=oracle_sql]
+SQL> CREATE TABLESPACE crypto_ts_aes256
+  2  DATAFILE '/u02/oradata/orcl/crypto_ts_aes25601.dbf' SIZE 50M
+  3  ENCRYPTION USING 'AES256'
+  4  DEFAULT STORAGE(ENCRYPT);
+
+Tablespace created.
+          \end{lstlisting}
+          So wohl das Erstellen, als auch der Zugriff auf kryptierte Tablespaces funktioniert nur, wenn das Encryptionwallet geöffnet wurde.
+          \begin{lstlisting}[caption={Einen kryptierten Tablespace mit AES128-Verschlüsselung erstellen},label=admin842,language=oracle_sql]
+SQL> CREATE TABLESPACE crypto_ts_false
+  2  DATAFILE '/u02/oradata/orcl/crypto_ts_false01.dbf' SIZE 50M
+  3  ENCRYPTION
+  4  DEFAULT STORAGE(ENCRYPT);
+
+&\textcolor{red}{ORA-28365: wallet is not open}&
+          \end{lstlisting}
+          Oracle quittiert den Zugriff ohne geöffnetes Wallet mit dem Fehler ORA-28365.
+        \subsubsection{Schließen des Wallets}
+          Sollte das Wallet für keinen weiteren Vorgang gebraucht werden, ist es ratsam, das Wallet wieder zu schließen.
+          \begin{lstlisting}[caption={Das Encryptionwallet schließen},label=admin843,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET ENCRYPTION WALLET CLOSE
+  3  IDENTIFIED BY "P@ssw0rd";
+          \end{lstlisting}
+      \subsection{Umgang mit verschlüsselten Tablespaces}
+        \subsubsection{Informationen sammeln}
+          Informationen über die Verschlüsselung und den benutzten
+          Algorithmus liefert die View \identifier{v\$encrypted\_tablespaces}.
+          \begin{lstlisting}[caption={},label=admin844,language=oracle_sql]
+SQL> SELECT t.ts#, t.name, e.encryptionalg, e.encryptedts
+  2  FROM   v$tablespace t INNER JOIN v$encrypted_tablespaces e
+  3           ON (t.ts# = e.ts#);
+
+       TS# NAME                           ENCRYPT ENC
+---------- ------------------------------ ------- ---
+        16 CRYPTO_TS                      AES128  YES
+        17 CRYPTO_TS_AES256               AES256  YES
+          \end{lstlisting}
+        \subsubsection{Einschränkungen}
+          Im Umgang mit kryptierten Tablespaces existieren drei wesentliche Einschränkungen:
+          \begin{itemize}
+            \item Ein unverschlüsselter Tablespace kann nicht im Nachhinein verschlüsselt werden. Dies kann nur über Umwege, mittels der Oracle Data Pump erfolgen.
+            \item Verschlüsselte Tablespaces können nicht ohne Weiteres in eine andere Datenbank umgezogen werden.
+            \item Beim Wiederherstellen eines kryptierten Tablespaces muss vor der Recovery-Phase das Wallet geöffnet werden, da sonst der Oracle Recovery Manager die Datenblöcke nicht verarbeiten kann.
+          \end{itemize}
+
+          \begin{literaturinternet}
+            \item \cite{ADMIN12327}
+          \end{literaturinternet}
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        \begin{literaturinternet}
+          \item \cite{REFRN10019}
+          \item \cite{REFRN10274}
+          \item \cite{REFRN10299}
+        \end{literaturinternet}
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{sthref1850}
+          \item \cite{sthref1854}
+          \item \cite{sthref1856}
+          \item \cite{sthref1858}
+          \item \cite{sthref2293}
+          \item \cite{sthref2337}
+          \item \cite{sthref2472}
+          \item \cite{sthref2579}
+          \item \cite{REFRN30496}
+          \item \cite{REFRN30405}
+        \end{literaturinternet}
+      \subsection{Verzeichnis der Konfigurationsdateien und ihrer Parameter}
+        \begin{literaturinternet}
+          \item  \cite{NETRF006}
+        \end{literaturinternet}
+\clearpage

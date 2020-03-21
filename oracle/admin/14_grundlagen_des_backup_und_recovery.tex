@@ -1,0 +1,161 @@
+\chapter{Grundlagen des Backup und Recovery}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Was ist Backup and Recovery?}
+      Im Allgemeinen stehen die Begriffe Backup und Recovery für verschiedenste Strategien und Arbeitsabläufe, mit deren Hilfe versucht wird, eine Datenbank gegen Datenverlust zu schützen.
+      \subsection{Physische und logische Backups}
+        Ein Backup ist eine Kopie der Daten der Datenbank, das dazu genutzt werden kann, die Datenbank wiederherzustellen. Backups werden in physische und logische Backups unterteilt.
+        \begin{itemize}
+          \item \textbf{Physische Backups}: Dies sind Kopien von Datenbankdateien, d. h. sie enthalten sowohl die Datenbankstruktur, als auch die Daten selbst. Sie können in den verschiedensten Formen vorliegen, z. B. komprimiert oder auch als inkrementelles Backup.
+          \item \textbf{Logische Backups}: Solche Backups enthalten Nutz- und Metadaten von Datenbank\-objekten, die mit Hilfe von Oracle Utilities aus der Datenbank exportiert wurden. Hierbei handelt es sich nur um Datenexporte, nicht aber um vollständige Backups.
+        \end{itemize}
+        Physische Backups sind die Grundlage für jede Backup and Recovery Strategie. Logische Backups stellen in einigen Situationen eine hilfreiche Ergänzung zu den physischen Backups dar, sind jedoch kein ernstzunehmender Schutz für eine Datenbank gegen Datenverlust.
+
+        Dieser Teil der Unterrichtsunterlage kümmert sich im Wesentlichen nur um physische Backups. Daher wird mit dem Begriff Backup, wenn nicht anders angegeben, auch immer auf ein physisches Backup verwiesen.
+      \subsection{Ursachen die ein Recovery notwendig machen}
+        Obwohl es viele Ursachen gibt, die die normale Funktion einer Oracle Datenbank beeinträchtigen können, gibt es im Wesentlichen nur zwei, die das Eingreifen des Administrators erfordern:
+        \begin{itemize}
+          \item Medienfehler
+          \item Bedienerfehler
+        \end{itemize}
+        \subsubsection{Bedienerfehler}
+          Bedienerfehler liegen immer dann vor, wenn es entweder durch eine fehlerhafte Anwendungslogik oder durch eine direkte Fehleingabe eines Nutzers zu Datenverlust kommt. Dies äußert sich meist in fälschlicherweise geänderten oder gelöschten Daten. Obwohl durch Nutzerschulungen, sowie dem vorsichtigen und umsichtigen Umgang mit Privilegien, die meisten Bedienerfehler vermieden werden können, bestimmt die Backup und Recovery Strategie, wie einfach und unkompliziert der Administrator die verlorenen Daten wiederherstellen kann.
+        \subsubsection{Medienfehler}
+          Unter dem Begriff Medienfehler versteht man den Verlust von Daten, aufgrund der Fehlfunktion eines Datenträgers. Keine Datenbankdatei ist gegen diese Art von Fehler geschützt. Die passende Recovery Strategie für solche Fälle hängt davon ab, welche Datenbankdateien betroffen sind.
+    \section{Unterschiedliche Arten physischer Backups mit RMAN}
+      Physische Backups können nach den unterschiedlichsten Gesichtspunkten unterschieden werden, z. B. in welchem Zustand (geöffnet oder geschlossen) war die Datenbank zum Zeitpunkt des Backups, welche Teile der Datenbank wurden gesichert und in welcher Form wird das Backup gespeichert.
+
+      \subsection{Image Copies, Backup Sets und Backup Pieces}
+        \subsubsection{Image Copy}
+          RMAN (Recovery Manager) kann ein Backup entweder als Image Copy oder als Backup Set speichern. Eine Image Copy ist eine 1:1 Kopie einer Datei, die auch mit Hilfe von Betriebssystemmitteln erstellt werden könnte. Der Vorteil der Nutzung von RMAN bei der Erstellung von Image Copies ist, dass er bei diesem Vorgang den Inhalt der Image Copy auf korrupte Blöcke prüfen kann. Image Copies werden im RMAN Repository registriert.
+
+        \subsubsection{Backup Set}
+          Eine andere Form der Speicherung von Backups sind Backup Sets. Ein Backup Set besteht aus mehreren Backup Pieces. Ein Backup Piece ist eine binäre Archivdatei, welche mit einer ZIP-Datei verglichen werden kann. Ein mit RMAN durchgeführter Backup-Job kann eines oder mehrere Backup Sets erzeugen. Backup Sets können auch nur durch RMAN wieder zurückgeschrieben werden.
+
+        \begin{merke}
+          RMAN kann nur Backup Sets auf Bandlaufwerke übertragen.
+        \end{merke}
+
+        \bild{Backup Set und Image Copy}{backupset_and_imagecopy}{0.5}
+
+      \subsection{Konsistente und inkonsistente Backups}
+        Physische Backups werden in konsistente Backups (Cold Backup) und inkonsistente Back\-ups (Hot Backup) unterschieden. Ein Backup wird als konsistent bezeichnet, wenn die Datenbank zum Zeitpunkt des Backups in einem konsistenten Zustand war. Das ist dann der Fall, wenn alle Änderungen der Redo Logs in die Datendateien übertragen wurden. Dies geschieht nur, wenn die Datenbank ordnungsgemäß heruntergefahren wurde. Eine Datenbank, die aus einem konsistenten Backup wiederhergestellt wurde, kann sofort ohne weiteres Recovery geöffnet werden.
+
+        Es können aber auch Backups einer geöffneten Datenbank durchgeführt werden. Dabei handelt es sich dann um inkonsistente Backups, sogenannte Hot Backups. Wurde eine Datenbank aus einem inkonsistenten Backup wiederhergestellt, muss in jedem Falle ein Media Recovery durchgeführt werden, um alle Änderungen der Redo Logs in die Datendateien zu übernehmen. Da hier auch archivierte Redo Logs benötigt werden, muss sich die Datenbank im Archivelog-Modus befinden.
+      \subsection{Vollständige und inkrementelle Backups}
+        Als vollständig werden Backups dann bezeichnet, wenn sie komplette
+        Datendateien enthalten. Solche Backups können mit dem RMAN oder mit
+        Betriebssystemmitteln erzeugt werden. Inkrementelle Backups basieren auf
+        der Idee, nur die Datenblöcke einer Datendatei zu sichern, die sich
+        seit dem letzten vollständigen Backup geändert haben. Der Vorteil
+        dieser Methode ist, dass durch das Zurückschreiben kompletter
+        Datenblöcke der Zeitaufwand für das Zurückspielen der Redo Logs
+        erheblich reduziert und somit die gesamte Recovery Phase verringert
+        wird. Inkrementelle Backups können nur mit RMAN durchgeführt werden.
+\clearpage
+    \section{Oracle Backup and Recovery Lösungen}
+      Oracle kennt zwei verschiedene Möglichkeiten physische Backups zu erstellen.
+      \begin{itemize}
+        \item \textbf{Recovery Manager} (RMAN): Der RMAN ist ein Programm, das sowohl über die Kommandozeile als auch über den Enterprise Manager bedient werden kann. Er erstellt eigene Sessions auf dem Datenbankserver, um seine Backup- oder Recovery-Operationen durchzuführen.
+
+        \item \textbf{User-Managed Backup and Recovery}: Bei dieser Methode wird mit Hilfe von SQL*Plus und Betriebssystemkommandos ein Backup der Datenbank erstellt bzw. zurückgespielt. Hierbei ist der Administrator selbst für die Verwaltung der Backups zuständig.
+      \end{itemize}
+      Beide Methoden werden von Oracle unterstützt und sind vollständig dokumentiert. Die bevorzugte Variante stellt jedoch der RMAN dar. Er liefert eine einheitliche, betriebssystemunabhängige Bedienoberfläche und bietet zu dem Möglichkeiten die das User-Managed Backup and Recovery nicht kennt.
+      \subsection{Backup and Recovery Features des RMAN}
+        Wie bereits erwähnt, besitzt der RMAN einige wesentliche Vorteile gegenüber dem User-Managed Backup and Recovery. Die Wissenswertesten davon sind:
+        \begin{itemize}
+          \item \textbf{Inkrementelle Backups}: Inkrementelle Backups sind kompakter als vollständige Backups und können schneller durchgeführt werden. Sie verkürzen auch die Recovery Phase, da durch inkrementelle Backups weniger Redo Log-Informationen zurückgespielt werden müssen.
+          \item \textbf{Block media recovery}: Eine Datendatei welche nur einige wenige zerstörte Blöcke enthält, kann online repariert werden.
+          \item \textbf{Unused block compression}: RMAN kann in bestimmten Fällen unbenutzte Blöcke bei einem Backup auslassen.
+          \item \textbf{Binary compression}: Durch einen integrierten Kompressionsalgorithmus werden Backups komprimiert.
+          \item \textbf{Encrypted backups}: Backups können verschlüsselt werden.
+        \end{itemize}
+\clearpage
+        Der RMAN reduziert den administrativen Aufwand bei der Verwaltung von
+        Backups, da er ein eigenes Verzeichnis, das \textit{RMAN Repository}
+        führt, in dem  Informationen über Backups gespeichert werden. RMAN
+        kann mit Hilfe dieses Verzeichnisses genau bestimmen, welches das für
+        diese Situation optimalste Backup ist, das zum Restore benutzt werden
+        soll. Des Weiteren hat der Administrator die Möglichkeit, sich
+        Berichte aus dem RMAN Repository ausgeben zu lassen.
+
+        Primär speichert der RMAN seine benötigten Informationen in der Kontrolldatei der Datenbank. Es kann jedoch auch ein \textit{Recovery Catalog} erstellt werden, um das RMAN Repository zu erweitern. Dies ist ein Datenbankschema, in das der RMAN Informationen über eine oder mehrere Datenbanken speichern kann. Für den RMAN Catalog sollte eine eigenständige Datenbank verwendet werden.
+      \subsection{Welche Dateien kann RMAN sichern?}
+        RMAN kann alle für ein Recovery der Datenbank benötigten Dateien sichern. Im Einzelnen sind dies folgende:
+        \begin{itemize}
+          \item Datendateien und Image Copies von Datendateien
+          \item Kontrolldateien und Image Copies von Kontrolldateien
+          \item Archivierte Redo Logs
+          \item Das aktuelle SPFile
+          \item Backup pieces anderer RMAN Backups
+        \end{itemize}
+        Andere Dateien die für den Betrieb der Datenbank benötigt werden, wie z. B. Netzwerkkonfigurationsdateien (tnsnames.ora, listener.ora sqlnet.ora) oder die Passwortdatei, können nicht durch den RMAN gesichert werden. Für diese Dateien muss ein anderer Backupmechanismus eingesetzt werden.
+
+        Der RMAN kann Backups sowohl auf einem Storage-Laufwerk (Festplatte, RAID usw.), als auch auf Tapes erstellen. Bandlaufwerke werden of auch als SBT\footnote{SBT = System Backup to Tape}-Geräte bezeichnet. RMAN kommuniziert mit SBT-Geräten über einen sogenannten \textit{Media Management Layer}.
+    \section{Unterschiedliche Formen des Recovery}
+      \subsection{Data File Media Recovery}
+        Das Data File Media Recovery oder kurz Media Recovery ist die am häufigsten benötigte Form des Recovery. Es wird durchgeführt, um verlorene Datendateien, SPFiles oder Kontrolldateien wiederherzustellen. In den folgenden Situation ist ein Media Recovery notwendig:
+        \begin{itemize}
+          \item Es musste das Backup einer Datendatei wieder hergestellt werden.
+          \item Es wurde eine Backup-Kontrolldatei wieder hergestellt.
+          \item Eine Datendatei wurde ohne die Option \languageorasql{OFFLINE NORMAL} offline geschaltet
+        \end{itemize}
+        Damit das Recovery einer Datendatei durchgeführt werden kann, muss mindestens eine der folgenden Bedingungen erfüllt sein:
+        \begin{itemize}
+          \item Die betreffende Datenbank ist heruntergefahren
+          \item Die betreffende Datendatei ist offline, falls die Datenbank nicht heruntergefahren werden kann.
+        \end{itemize}
+        Eine Datendatei die ein Recovery benötigt, kann erst in den Online-Status gebracht werden, wenn das Recovery abgeschlossen wurde. Eine Datenbank kann nicht geöffnet werden, wenn eine ihrer Datendateien ein Recovery benötigt.
+        \subsubsection{Die Phasen eines Recovery-Prozesses}
+          Das Wiederherstellen von Teilen einer Datenbank oder einer kompletten Datenbank wird in zwei Phasen unterteilt:
+          \begin{itemize}
+            \item \textbf{Restore}: Unter dem Begriff Restore versteht man das Zurückspielen eines Backups auf den Datenträger.
+            \item \textbf{Recovery}: Als Recovery bezeichnet man den Prozess des Aktualisierens der zu\-rück\-ge\-spielten Datenbank\-dateien, mit den Informationen aus den (archivierten) Redo Log Dateien.
+          \end{itemize}
+          \abbildung{backup_and_recovery_basics} zeigt das Grundprinzip von Backup, Restore und Recovery.
+
+          \bild{Grund\-prin\-zi\-pien des Backup and Recovery}{backup_and_recovery_basics}{1}
+
+          In diesem Beispiel wird bei SCN\footnote{SCN = System Change Number} 75 ein vollständiges Backup der Datenbank gemacht. Die von der Datenbank erzeugten Redo Logs enthalten alle Änderungen von SCN 75 bis SCN 666. Gefüllte Redo Logs werden archiviert. Bei SCN 666 gehen Datendateien der Datenbank durch einen Medienfehler verloren. Durch ein Restore wird die Datenbank dann auf den Stand von SCN 75 zurückgebracht. Beim anschließenden Recovery, mit Hilfe der Redo Logs und der archivierten Redo Logs, wird die Datenbank wieder auf den Stand von SCN 666 überführt.
+        \subsubsection{Vollständiges und unvollständiges Recovery}
+          Beim Data File Media Recovery unterscheidet man zwei verschiedene Arten:
+          \begin{itemize}
+            \item Vollständiges Recovery
+            \item Unvollständiges Recovery
+          \end{itemize}
+          \begin{merke}
+            Unter einem vollständigen Recovery versteht man das Recovern der gesamten Datenbank oder auch nur von Teilen der Datenbank, bis auf den neuesten Stand. D. h. die Datenbank wird ohne den Verlust von abgeschlossenen Transaktionen wiederhergestellt.
+          \end{merke}
+
+          In einigen Fällen kann es jedoch notwendig sein, die Datenbank bis
+          zu einem ganz bestimmten Zeitpunkt zurückzusetzen. Wenn
+          beispielsweise durch einen Bedienerfehler eine Tabelle gelöscht
+          wurde, die noch benötigte Informationen enthält, muss die
+          Datenbank bis zu dem Zeitpunkt direkt vor dem Bedienerfehler
+          zurückgesetzt werden, so dass die betreffende Tabelle wieder
+          existiert.
+\clearpage
+          Diese Form des Recovery wird als unvollständiges Recovery
+          oder als Point-In-Time-Recovery bezeichnet. Ziel dieser Recoveryform
+          ist es, die Datenbank auf eine ganz bestimmte SCN oder einen
+          bestimmten Zeitpunkt zurückzusetzen, um die Folgen von
+          Bedienerfehlern zu beheben.
+
+          Point-In-Time-Recovery stellt auch die einzige Reaktionsmöglichkeit dar, wenn der Administrator feststellt, das eines oder mehrere archivierte Redo Logs verloren gegangen sind, die für ein vollständiges Recovery benötigt würden.
+
+          \begin{merke}
+            Bemerkt der Administrator im laufenden Betrieb der Datenbank, dass Redo Log Dateien verloren gegangen sind, sollte augenblicklich ein vollständiges Backup der Datenbank durchgeführt werden.
+          \end{merke}
+      \subsection{Instance Recovery / Crash Recovery}
+        Wird eine Oracle Datenbank neu gestartet, prüft der SMON, ob ein automatisches Recovery der Datendateien notwendig ist. Ziel dieser Form des Recovery ist es, die Datenbank vor dem Öffnen auf einen konsistenten Stand zu bringen, ohne abgeschlossene Transaktionen zu verlieren.
+
+        Instance Recovery und Media Recovery haben ähnliche Ziele. Es existieren jedoch auch einige Unterschiede zwischen den beiden Formen.
+        \begin{itemize}
+          \item Media Recovery muss durch einen Nutzer eingeleitet werden, es wird niemals automatisch durchgeführt.
+          \item Media Recovery behandelt nur die durch ein Restore wiederhergestellten Datendateien, jedoch keine Datendateien die während des Crashes online waren.
+          \item Media Recovery benötigt die Online Redo Logs und die archivierten Redo Logs um die Datenbank vollständig wiederherstellen zu können.
+        \end{itemize}
+        Im Gegensatz zum Media Recovery benötigt das Instance Recovery nur die Online Redo Logs und es wirkt sich nur auf die Datendateien aus, die während des Neustarts der Datenbank den Status online hatten. Es werden keine archivierten Redo Logs benötigt und es wird auch kein Restore durchgeführt.
+
+        Die Datenbank rollt beim Instance Recovery alle offenen Transaktionen zurück (Rollback-Phase) und wendet anschließend den Inhalt der Online Redo Logs auf die Datendateien an (Rollforward-Phase). So wird die Datenbank auf den neuesten Stand vor dem Crash gebracht.

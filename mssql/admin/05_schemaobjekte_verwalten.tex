@@ -1,0 +1,1565 @@
+  \chapter{Schemaobjekte verwalten}
+  \chaptertoc{}
+  \cleardoubleevenpage
+    \section{Heap Organized Tables}
+      Heap-Organized Tables sind die Basisdatenstruktur einer Datenbank.
+      Daten werden in Zeilen und Spalten abgelegt. Jede Tabelle wird mit einem
+      Namen und einer Anzahl von Spalten definiert. Jede Spalte hat einen
+      Bezeichner, einen Datentyp und eine L\"ange.
+
+      Bei dieser Art von Tabelle werden die Zeilen unsortiert, in der
+      Reihenfolge ihrer Erstellung abgelegt, was sich jedoch mit der Zeit ändern
+      kann. Wird ein Heap über einen längeren Zeitraum genutzt, passiert es
+      früher oder später, dass die Database Engine Zeilen verschiebt, um diese
+      effizienter zu speichern. Somit ist die Reihenfolger der Zeilen in einem
+      Heap nicht klar vorhersagbar.
+      \bild{Heap-Organized Table}{heap_organized_table}{1.75}
+      \abbildung{heap_organized_table} zeigt, dass die Tabellenzeilen, hier
+      durch rote, blaue, gr\"une und gelbe K\"astchen dargestellt, einfach
+      nacheinander abgelegt werden. Dies ist vergleichbar mit einem
+      \enquote{Haufen} (engl. Heap) bei dem alle Elemente einfach aufeinander
+      geworfen werden. 
+      \bild{Die Struktur eines Heaps}{heap_structure}{1.75}
+\clearpage
+      \abbildung{heap_structure} zeigt den Aufbau einer als Heap
+      organisierten Tabelle. Jede Tabelle dieser Art:
+      \begin{itemize}
+        \item besteht aus einer oder mehreren Partitionen,
+        \item in jeder Partition liegt ein Heap und
+        \item jeder Heap besteht im Minimum aus einer \enquote{Data
+        Allocation Unit} und kann zusätzlich noch \enquote{LOB Allocation
+        Units} und \enquote{Row Overflow Space} enthalten.
+      \end{itemize}
+      \subsection{Partitionen}
+        Den Begriff \enquote{Partition} definiert Microsoft wie folgt:
+        \enquote{A partition is a user-defined unit of data organization}.
+        Das heißt, dass Partition benutzerdefinierte Datenstrukturen sind, die
+        eine Tabelle oder einen Index enthalten können. Partitionen im Sinne
+        des Microsoft SQL Server kann man sich genauso vorstellen, wie
+        Partitionen in Bezug auf Festplatten. Sie dienen dazu, ein großes
+        Ganzes in mehrere Stücke zu unterteilen (eine Datendatei wird in
+        Stücke unterteilt $\rightarrow$ eine Festplatte wird in mehrere Stücke
+        unterteilt). Eine Partition hat folgende Eigenschaften:
+        \begin{itemize}
+          \item In einer Partition ist immer nur eine Tabelle/ein Index
+          enthalten.
+          \item Jede Partition gehört zu genau einer Dateigruppe. Sie kann
+          sich nicht auf mehrere verteilen.
+          \item Wenn eine SQL-Abfrage auf eine Tabelle ausgeführt wird, werden
+          automatisch alle Partitionen, aus denen die Tabelle besteht
+          zusammengefasst, d. h., dass Partitionen in einem \SELECT-Statement
+          nicht berücksichtigt werden müssen. Daraus folgt: Partitionen sind
+          für den Benutzer absolut transparent.
+          \item Partitionen können mittels der View
+          \languagemssql{sys.partitions} angezeigt werden.
+        \end{itemize}
+        \begin{merke}
+          Besteht eine Tabelle aus mehreren Partitionen, liegt in jeder
+          Partition eine Heap-Struktur. Die Zeilen der Tabelle werden dann
+          horizontal über die Heaps verteilt. Gleiches gilt für Indizes.
+        \end{merke}
+      \subsection{Allocation Units}
+        Jeder Heap wird nochmals unterteilt in sogenannten
+        \enquote{Allocation Units}. Eine Allocation Unit ist eine Sammlung von
+        Seiten (Datenseiten, Indexseiten, LOB-Seiten, usw.) und dient dazu,
+        die Verwaltung der Seiten zu vereinfachen. Es gibt drei verschiedene
+        Seitentypen:
+        \begin{itemize}
+            \item \textbf{IN\_ROW\_DATA}: Diese Allocation Units enthalten nur
+            Daten- oder Indexseiten und dienen zur Speicherung von
+            \enquote{normalen} Daten (Textdaten bis zu einer Länge von 8.060
+            Byte).
+            \item \textbf{ROW\_OVERFLOW\_DATA}: Hier werden Daten von
+            Datentypen mit variabler länge (VARCHAR, NVARCHAR, VARBINARY oder
+            SQL\_VARIANT) abgelegt, sobald deren Inhalt die Länge von 8.060
+            Byte überschreitet.
+            \item \textbf{LOB\_DATA}: Unter einem LOB\footnote{LOB = Large
+            Object Block} versteht man umfangreiche Text- oder Binärdaten,
+            welche die Datenbank unformatiert ablegen soll. So kann z. B. ein
+            MS Word-Dokument als LOB in einer Datenbank gespeichert werden.
+            Zur Ablage von LOBs werden heutzutage hauptsächlich die
+            vier Datentypen VARCHAR(max), NVARCHAR(max), VARBINARY(max) und XML
+            genutzt.
+        \end{itemize}
+        \begin{merke}
+          Jeder Heap kann maximal eine Allocation Unit von jedem Typ in einer
+          Partition haben!
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{ms175012}
+          \item \cite{ms188706}
+          \item \cite{ms189051}
+        \end{literaturinternet}
+      \subsection{Index Allocation Maps}
+        Index Allocation Maps - kurz IAM-Pages - haben die Aufgabe, eine
+        Verkettung zwischen allen Speicherseiten/Extents herzustellen, die zu
+        einer Allocation Unit gehören. Mit ihrer Hilfe kann also erkannt werden,
+        welche Page bzw. welches Extent zu welcher Allocation Unit gehört. 
+        
+        Diese Seiten können einen bis zu 4 GB großen Bereich in einer
+        Datendatei, der als \enquote{GAM interval} bezeichnet wird, verwalten.
+        An der Bezeichnung \enquote{GAM interval} kann man erkennen, dass sie in
+        engem Zusammenhang mit den GAM- und SGAM-Seiten einer Datenbank steht,
+        denn zu jeder GAM-/SGAM-Seitenkombination gibt es eine IAM-Page.
+        \begin{merke}
+          Eine IAM-Page kann immer nur den Speicherplatz eines einzelnen GAM
+          intervalls verwalten. Ist eine Datendatei größer als 4 GB oder besteht
+          eine Datenbank aus mehr als einer Datendatei, werden mehrere
+          verkettete IAM-Pages angelegt. Man spricht in so einem Fall von einer
+          \enquote{IAM-Chain}.
+        \end{merke}         
+        Ihr Aussehen unterscheidet sich von dem anderer Seiten leicht. Nach dem
+        üblichen 96 Byte großen Header kommt in einer IAM-Page ein
+        \enquote{IAM-Header}. Dieser Header zeigt auf die erste Speicherseite,
+        die von dieser IAM-Page verwaltet wird. Des Weiteren enthält der
+        IAM-Header insgesamt acht Einträge, in denen auf die ersten acht Extents
+        (Mixed Extents) einer Allocation Unit verwiesen wird.
+        \begin{lstlisting}[language=terminal,caption={Inhalt eines IAM-Page
+        Headers}, label=admin05_01]
+PAGE HEADER:
+
+Page @0x00000000F16FA000
+
+&\colorbox{red!30}{m\_pageId = (1:120)}&        m_headerVersion = 1         &\colorbox{red!30}{m\_type = 10}&
+m_typeFlagBits = 0x0    m_level = 0                 m_flagBits =0x200 
+m_objId (AllocUnitId.idObj) = 120          m_indexId (AllocUnitId.idInd) = 256
+
+Metadata: AllocUnitId = 72057594045792256 
+Metadata: PartitionId = 72057594040549376                  Metadata: IndexId = 0
+Metadata: ObjectId = 245575913  m_prevPage = (0:0)         m_nextPage = (0:0) 
+pminlen = 90                    m_slotCnt = 2              m_freeCnt = 6
+m_freeData = 8182               m_reservedCnt = 0          m_lsn = (97:106:7)
+m_xactReserved = 0              m_xdesId = (0:0)           m_ghostRecCnt = 0
+m_tornBits = -1344281328        DB Frag ID = 1                      
+
+Allocation Status
+
+&\colorbox{red!30}{GAM (1:2) = ALLOCATED}&             &\colorbox{red!30}{SGAM(1:3) = ALLOCATED}&
+PFS (1:1) = 0x70 IAM_PG MIXED_EXT ALLOCATED   0_PCT_FULL    DIFF (1:6) = CHANGED
+ML (1:7) = NOT MIN_LOGGED           
+
+IAM: Header @0x0000000007C6A064 Slot 0, Offset 96
+
+sequenceNumber = 0                  status = 0x0           objectId = 0
+indexId = 0                         page_count = 0                     
+&\colorbox{red!30}{start\_pg = (1:0)}&
+
+
+IAM: Single Page Allocations @0x0000000007C6A08E
+
+Slot 0 = (1:166)      Slot 1 = (1:178)      Slot 2 = (1:179)
+Slot 3 = (1:180)      Slot 4 = (1:181)      Slot 5 = (1:183)
+Slot 6 = (1:184)      Slot 7 = (1:188)                    
+\end{lstlisting}
+        Die rot markierten Bereiche in \beispiel{admin05_01} zeigen:
+        \begin{itemize}
+          \item die PageID (1:120),
+          \item den Seitentyp einer IAM-Seite (10),
+          \item die SeitenIDs der GAM- (1:2) und SGAM-Pages (1:3),
+          \item die erste Speicherseite, die sich im GAM interval dieser
+          IAM-Page befindet (1:0)
+          \item und die Liste der \enquote{IAM Single Page Allocations} mit
+          ihren acht Slots, in die die ersten acht Seiten einer Allocation Unit
+          eingetragen werden.
+        \end{itemize}
+        \begin{merke}
+          Wenn eine Allocation Unit mehr als eine IAM-Page hat, wird nur bei der
+          ersten IAM-Page der Bereich \enquote{IAM Single Page Allocations}
+          gefüllt.
+        \end{merke}
+        Der Speicherbereich nach dem IAM Header wird von einer 8.000 Bit großen
+        Bitmap belegt. Genau wie bei einer GAM-Page steht jedes Bit
+        stellvertretend für ein Extent, genauer gesagt für ein Uniform Extent.
+        \begin{lstlisting}[language=terminal,caption={Die Extent Allocation
+        Status Slots einer IAM-Page}, label=admin05_02]
+IAM: Extent Alloc Status Slot 1 @0x0000000007C6A0C2
+
+(1:0)        - (1:240)      = NOT ALLOCATED                              
+(1:248)      -              =     ALLOCATED                              
+(1:256)      -              = NOT ALLOCATED                              
+(1:264)      - (1:272)      =     ALLOCATED                              
+(1:280)      - (1:312)      = NOT ALLOCATED                              
+(1:320)      -              =     ALLOCATED                              
+(1:328)      -              = NOT ALLOCATED                              
+(1:336)      - (1:352)      =     ALLOCATED                              
+(1:360)      - (1:384)      = NOT ALLOCATED                              
+(1:392)      -              =     ALLOCATED                              
+(1:400)      -              = NOT ALLOCATED                              
+(1:408)      - (1:672)      =     ALLOCATED                              
+(1:680)      - (1:792)      = NOT ALLOCATED                              
+        
+        \end{lstlisting}
+        \beispiel{admin05_02} zeigt diese Bitmap in Textform. Die Bedeutung
+        dieser Anzeige ist:
+        \begin{itemize}
+          \item Der Bereich mit den Datapages 0 bis einschließlich 240 in
+          Datendatei Nummer 1 ist nicht von der hier verwalteten Allocation
+          Unit belegt.
+          \item Das Extent mit den Speicherseiten 248 bis einschließlich 255
+          ist durch die aktuell Allocation Unit belegt.
+          \item Das Extent beginned bei Datapage 256 ist nicht durch diese
+          Allocation Unit belegt.
+        \end{itemize}
+        Die restlichen Zeilen aus \beispiel{admin05_02} sind analog zu
+        interpretieren.
+        \begin{literaturinternet}
+          \item \cite{sqlityTIAMLSWwt}
+          \item \cite{ms187501}
+          \item \cite{ms188270}
+        \end{literaturinternet}
+      \subsection{Die Zeilen ID - RID}
+        Eine Zeilen ID\footnote{engl. Row ID} (kurz RID) ist ein eindeutiges
+        Identifikationsmerkmal für eine Zeile in einem Heap. Sie besteht aus:
+        \begin{itemize}
+            \item der Dateinummer,
+            \item der Datenseitenummer,
+            \item und einer Slotnummer (Row Offset)
+        \end{itemize}
+        Mit diesen drei Angaben kann die Position einer Zeile innerhalb einer
+        SQL Server Datenbank eindeutig bestimmt werden. Intern wird die RID
+        als \enquote{Physical Locator}, kurz \enquote{physloc} bezeichnet.
+        
+        Dem Administrator ist es möglich, die RID sichtbar zu machen. Dies kann
+        er mit Hilfe einer undokumentierten Pseudospalte namens
+        \identifier{\%\%physloc\%\%} und der ebenfalls undokumentierten
+        Funktion \identifier{sys.fn\_PhysLocFormatter}.
+        \begin{lstlisting}[language=ms_sql, caption={Auslesen der RID},
+        label=admin05_03]
+USE [demo_grafisch]
+GO
+
+SELECT %%physloc%% AS [%%physloc%%],
+       sys.fn_PhysLocFormatter(%%physloc%%) AS [File:PageID:Slot]
+FROM   dbo.TESTTAB          
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{stovfl909155}
+          \item \cite{hh213609}
+        \end{literaturinternet}
+    \section{Speicheroptimierte Tabellen (SOT)}
+      Mit dem SQL Server 2014 kommt eine neue Form der Datenspeicherung und
+      Verarbeitung, das \enquote{In-Memory OLTP}. In-Memory OLTP ist direkt
+      in die Database Engine des SQL Server integriert. Es ist keine
+      zusätzliche Anwendung notwendig, um diese neue Technologie zunutzen.
+      In-Memory OLTP wird durch zwei Dinge umgesetzt:
+      \begin{itemize}
+        \item Speicheroptimierte Tabellen (SOT)
+        \item Systeminterne Kompilierung
+      \end{itemize}
+      \subsection{Das Konzept der Speicheroptimierten Tabellen}
+        \subsubsection{Aufbau und Erstellung}
+          Diese Art von Tabellen trägt ihren Namen, da sie, im Gegensatz zu den
+          Heaps, komplett im Arbeitsspeicher gehalten wird. Auch die
+          Verarbeitung der Daten geschieht direkt im Arbeitsspeicher. 
+
+          Die Zeilen in einer SOT werden mit Hilfe von 8-Byte Zeigern adressiert
+          und nicht, wie die Zeilen in einem Heap, mit Seitennummern und Offsets.
+          \begin{merke}
+            Eine Datenbank kann sowohl Heaps als auch SOTs enthalten!
+          \end{merke}
+          Um Speicheroptimierte Tabellen nutzen zu können, muss eine neue Art
+          von Dateigruppe, mit der Option \languagemssql{CONTAINS
+          MEMORY_OPTIMIZED_DATA}, erstellt werden.
+          \begin{lstlisting}[language=ms_sql, caption={Erstellen einer
+          In-Memory Dateigruppe}, label=admin05_04]
+USE [master]
+GO
+
+ALTER DATABASE [demo_grafisch] 
+ADD FILEGROUP [in_memory_oltp]
+CONTAINS MEMORY_OPTIMIZED_DATA 
+GO
+
+ALTER DATABASE [demo_grafisch]
+ADD FILE (
+  NAME = 'in_memory_oltp',
+  FILENAME = 'D:\u01\demo_grafisch\in_memory\in_memory_oltp'
+)
+GO
+          \end{lstlisting}
+          \begin{merke}
+            Wurde eine In-Memory-Filegroup erst einmal angelegt, kann sie nicht
+            mehr gelöscht werden. Hierzu müsste die gesamte Datenbank gelöscht
+            und neuangelegt werden.
+          \end{merke}
+          Nach dem Erstellen der Dateigruppe kann eine erste SOT erstellt
+          werden. Dies geschieht jedoch nicht wie gewohnt mittels eines
+          grafischen Dialogs, sondern mit Hilfe einer TSQL-Vorlage. Dies kann
+          mittels des Kontextmenüs im Objekt-Explorer aufgerufen werden (NEU
+          $\rightarrow$ Neue Speicheroptimierte Tabelle).
+\clearpage
+          \bild{Eine SOT erstellen}{neue_sot}{2}
+          \begin{lstlisting}[language=ms_sql, caption={Erstellen einer
+          Speicheroptimierten Tabelle}, label=admin05_05]
+--======================================================
+-- Create Memory Optimized Table Template
+-- Use the Specify Values for Template Parameters command (Ctrl-Shift-M)
+-- to fill in the parameter values below.
+-- This template creates a memory optimized table and indexes on
+-- the memory optimized table.
+-- The database must have a MEMORY_OPTIMIZED_DATA filegroup before the
+-- memory optimized table can be created.
+--======================================================
+USE <database, sysname, AdventureWorks>
+GO
+
+--Drop table if it already exists.
+IF OBJECT_ID('<schema_name, sysname, dbo>.
+              <table_name,sysname,sample_memoryoptimizedtable>','U') IS NOT NULL
+    DROP TABLE <schema_name, sysname, dbo>.
+               <table_name,sysname,sample_memoryoptimizedtable>
+GO
+
+CREATE TABLE <schema_name, sysname, dbo>.
+             <table_name,sysname,sample_memoryoptimizedtable> (
+  <column_in_primary_key, sysname, c1> 
+     <column1_datatype, , int> <column1_nullability, , NOT NULL>, 
+  <column2_name, sysname, c2> 
+     <column2_datatype, , float> <column2_nullability, , NOT NULL>,
+  <column3_name, sysname, c3> 
+     <column3_datatype, , decimal(10,2)> <column3_nullability, , NOT NULL>
+  INDEX
+  <index3_name, sysname, index_sample_memoryoptimizedtable_c3> 
+    NONCLUSTERED (<column3_name, sysname, c3>),
+  CONSTRAINT <constraint_name, sysname, PK_sample_memoryoptimizedtable> 
+    PRIMARY KEY NONCLUSTERED (<column1_name, sysname, c1>),
+  INDEX <index2_name, sysname, hash_index_sample_memoryoptimizedtable_c2> HASH
+ (<column2_name, sysname, c2>) WITH 
+   (BUCKET_COUNT = <sample_bucket_count, int, 131072>) )
+   WITH (MEMORY_OPTIMIZED = ON, 
+         DURABILITY = <durability_type, ,
+         SCHEMA_AND_DATA>)
+GO
+          \end{lstlisting}
+          Die entscheidende Klausel, die bewirkt, dass eine Speicheroptimierte
+          Tabelle erstellt wird, steht am Ende des \languagemssql{CREATE
+          TABLE}-Statements und lautet \languagemssql{WITH MEMORY_OPTIMIZED
+          = ON}.
+          
+          Zu beachten ist der Kommentar im Kopf der Vorlage.
+          Es wird daraufhingewiesen, dass durch das Drücken von
+          \oscommand{STRG+SHIFT+M} ein Dialogfenster zur Ersetzung der
+          Vorlageparameter geöffnet werden kann. Dies erspart dem Nutzer
+          lässtiges Suchen und Ersetzen von Werten.
+          \bild{Werte für Vorlagenparameter
+          angeben}{strg_shift_m_in_a_template}{1.8}
+          Ein einfaches Beispiel für eine SOT könnte so aussehen:
+          \begin{lstlisting}[language=ms_sql, caption={Erstellen einer
+          Speicheroptimierten Tabelle}, label=admin05_06]
+USE [demo_grafisch]
+GO
+
+IF OBJECT_ID('dbo.aktie_in_memory','U') IS NOT NULL
+    DROP TABLE dbo.aktie_in_memory
+GO
+
+CREATE TABLE dbo.aktie_in_memory
+( Aktie_ID NUMERIC NOT NULL, 
+  Name     VARCHAR(25) NOT NULL,
+  WKN      NUMERIC,
+  ISIN     VARCHAR(12) NOT NULL,
+  CONSTRAINT aktie_in_memory_pk PRIMARY KEY NONCLUSTERED (Aktie_ID)
+) 
+WITH (MEMORY_OPTIMIZED = ON, 
+      DURABILITY = SCHEMA_AND_DATA)
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{dn205318}
+          \end{literaturinternet}
+        \subsubsection{Beständigkeit der Daten - Persistenz}
+          Obwohl eine SOT vollständig im Arbeitsspeicher liegt, garantiert
+          Microsoft, dass Inhalt und Änderungen an einer SOT konsistent und
+          persistent sind. Das heißt, dass alle Regeln bezüglich der Veränderung
+          von Daten (\INSERT, \UPDATE{} und \DELETE) auch für SOTs gelten. Um die
+          Daten persistieren zu können, existiert eine Kopie der Tabelle auf dem
+          Datenträger.
+        \subsubsection{Einschränkungen bei der Benutzung}
+          Für die Benutzung Speicheroptimierter Tabellen gibt es einige
+          Einschränkungen:
+          \begin{itemize}
+            \item es können keine \FOREIGNKEY- oder \CHECK-Constraints benutzt
+            werden,
+            \item es können keine Trigger für SOTs erstellt werden,
+            \item die Tabellendefinition kann nicht mittels
+            \languagemssql{ALTER TABLE} geändert werden.
+            \item es können keine clustered Indizes für SOTs erstellt werden,
+            \item um Indizes auf Character-Spalten erstellen zu
+            können, muss eine binäre Sortierreihenfolge für die Datenbank
+            gewählt werden, z. B. \identifier{Latin1\_General\_BIN2}
+          \end{itemize}
+          Diese Liste von Einschränkungen zeigt nur die Wesentlichsten, sie ist
+          nicht vollständig.
+          \begin{literaturinternet}
+            \item \cite{dn133182}
+          \end{literaturinternet}
+        \subsubsection{Vorteile Speicheroptimierter Tabellen}
+          Ob die Nutzung einer SOT vorteilig, im Vergleich zur Nutzung eines
+          Heaps ist, hängt von der genutzten Anwendung ab. Eine generelle
+          Aussage kann hierzu nicht getroffen werden.
+          
+          SOTs entfallten ihre Vorteile, wenn:
+          \begin{itemize}
+            \item eine Anwendung hauptsächlich umfangreiche gespeicherte
+            Prozeduren nutzt, anstatt kurzer TSQL-Aufrufe.
+            \item hauptsächlich mit systemintern kompilierten Prozeduren
+            zugegriffen wird und nicht Adhoc-TSQL
+            \item die Anwendung Parallelität in hohem Maße nutzt.
+          \end{itemize}
+          Zusammenfassend kann man sagen, dass SOTs für große Anwendung, die
+          eine hohe Zahl von Transaktionen pro Minute verarbeiten müssen
+          vorteilhaft sind.
+          \begin{literaturinternet}
+            \item \cite{dn511014}
+          \end{literaturinternet}         
+      \subsection{Systeminterne Kompilierung}
+        Unter der Systeminternen Kompilierung versteht Microsoft, dass für den
+        Zugriff auf SOTs, statt interpretiertem TSQL, nativ kompilierter
+        TSQL-Code genutzt wird. 
+        \subsubsection{Was ist interpretierter TSQL-Code?}
+          Wenn ein Nutzer ein SQL-Statement an den SQL Server schickt, wird dies
+          durch die Relational Engine aufgenommen und verarbeitet. Wie in
+          \ref{relengine} beschrieben, nimmt zuerst der Command Parser seine
+          Arbeit auf und verwandelt das lesbare SQL-Statement in den sogenannten
+          Query Tree. Dieser wird durch den Query Optimizer verändert/verbessert
+          und zuletzt durch den Query Executor, Zeile für Zeile, ausgeführt.
+          
+          Das zeilenweise Analysieren und Ausführen von Quellcode wird als
+          \enquote{Interpretieren} bezeichnet. Diese Form der Programmausführung
+          bietet ein hohes Maß an Flexibilität. Sie hat allerdings den
+          Nachteilt, dass sie sehr langsam ist, weil für jede einzelne Zeile
+          alle Vorgänge (Einlesen, Analysieren, Ausführen) erneut durchgeführt
+          werden müssen.
+        \subsubsection{Was versteht man unter nativ kompiliert?}
+          Ein Kompiler hat, genauso wie ein Interpreter, die Aufgabe, Quellcode
+          für die Ausführung durch die CPU vorzubereiten. Der Unterschied
+          zwischen den Beiden besteht im jeweils angewendeten Verfahren. Ein
+          Kompiler übersetzt ein Programm vollständig in eine
+          \enquote{maschinenlesbare Sprache}. Bezogen auf TSQL heißt das, dass
+          der Kompiler das komplette TSQL-Statement in eine Sprache übersetzt,
+          die ohne Umwege von der CPU ausgeführt werden kann\footnote{Der
+          Begriff \enquote{nativ} bezieht sich darauf, dass die Sprache direkt
+          von der CPU ausgeführt werden kann}.
+      \subsection{Systemintern kompilierte Tabellen und Prozeduren}
+        \subsubsection{Systemintern kompilierte Tabellen}
+          Wird eine Tabelle erstellt, wird deren Definition in die Metadaten der
+          betreffenden Datenbank eingetragen. Dies gilt sowohl für Heaps, als
+          auch für Speicheroptimierte Tabellen. Bei den letzteren wird die
+          Definition zusätzlich auch in nativ kompilierter Form, in einer
+          DLL-Datei abgelegt. So kann eine SOT den immensen
+          Geschwindigkeitsvorteil erreichen, denn ihre Definition liegt immer in
+          prozessorlesbarer Form vor und muss nicht erst bei Bedarf neu
+          interpretiert werden.
+        \subsubsection{Ändern von systemintern kompilierten Tabellen}
+          Da die Definition einer systemintern kompilierten Tabelle nicht nur in
+          den Metadaten einer Datenbank, sondern auch in einer DLL-Datei
+          gespeichert ist, kann sie nicht so einfach geändert werden, wie bei
+          einer normalen Tabelle.
+          
+          Da der Vorgang zum Ändern der Definition einer systemintern
+          kompilierten Tabelle sehr umständlich und komplex ist, wird an dieser
+          Stelle lediglich auf die Microsoft MSDN verwiesen.
+          \begin{literaturinternet}
+            \item \cite{dn269114}
+          \end{literaturinternet}                   
+        \subsubsection{Systemintern kompilierte gespeicherte Prozeduren}
+          Gespeicherte Prozeduren sind kleine, in der Sprache TSQL geschriebene,
+          Programme. Dies müssen, genau wie jedes andere TSQL-Statement, bei
+          jeder Ausführung interpretiert werden. Um auch hier einen
+          Geschwindigkeitsvorteil erzielen zu können, gibt es seit SQL Server
+          2014 die Möglichkeit auch solche Programme in nativen Code kompilieren
+          zu lassen. Es gilt somit das Gleiche, wie für nativ kompilierte
+          Tabellen.
+         
+          Haupteinsatzzweck von systemintern kompilierten gespeicherte
+          Prozeduren ist die Implementierung von Geschäftslogik für SOTs, da es
+          für diese ja keine Foreign Key und Check-Constraints geben kann.
+          \begin{merke}
+            Zum besseren Verständnis der Thematiken \enquote{Speicheroptimierte
+            Tabellen} und \enquote{Systeminterne Kompilierung} empfiehlt es
+            sich, den Artikel \parencite{dn205319} zu lesen.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{DynLinLib}
+            \item \cite{KleKonSS2IMOAid}
+            \item \cite{dn249342}
+            \item \cite{dn205319}
+          \end{literaturinternet}         
+    \section{B\"aume in der Informatik}
+      Indizes sind optionale, mit einer Tabelle verbundene, Strukturen.
+      Sie werden benutzt, um die Geschwindigkeit von Abfragen zu erh\"ohen. Dies
+      geschieht, indem sie die Anzahl der Datentr\"agerzugriffe pro Abfrage
+      verringern.
+
+      Es k\"onnen beliebig viele Indizes zu einer Tabelle erstellt werden,
+      solange sich die Kombinationen der Schlüsselspalten f\"ur die Indizes
+      unterscheiden. Dabei kann eine Spalte in mehreren Kombinationen vorkommen
+      und ein Index kann sich \"uber mehrere Spalten erstrecken.
+
+      Indizes sind logisch und physisch unabh\"angig von den Daten in der
+      Tabelle, an die sie angeh\"angt sind. Deshalb ben\"otigen Sie ihren
+      eigenen Speicherplatz auf dem Datentr\"ager. Ein Index kann erstellt und
+      gel\"oscht werden, ohne das dadurch Tabellen oder andere
+      Speicherstrukturen beeinflusst werden. Ihre Verwaltung geschieht
+      automatisch durch die Datenbank, wenn DML-Operationen auf ihren
+      Basistabellen stattfinden. Auch Anwendungen werden durch das L\"oschen
+      eines Index nicht beeintr\"achtigt, nur der Zugriff auf die Nutzdaten kann
+      langsamer werden.
+      
+      B\"aume stellen in der Informatik eine wichtige hierarchische
+      Datenstruktur dar, die f\"ur unterschiedlichste Zwecke genutzt werden
+      kann. Das bekannteste Beispiel f\"ur B\"aume sind die
+      \enquote{Verzeichnisb\"aume} eines Dateisystems.
+      \begin{center}
+        \scalebox{1}{
+          \begin{tikzpicture}[->, >=stealth',level/.style={sibling distance = 3cm/#1, level distance = 1.5cm}]
+            \node[arn_root] {/}
+              child {node[arn_first] {etc}
+                child {node [arn_second] {httpd}}
+                child {node [arn_second] {mail}}
+              }
+              child {node [arn_first] {home}
+                child {node [arn_second] {bin}}
+              }
+              child {node [arn_first] {var}
+                child{node[arn_second] {run}}
+              }
+              child {node[arn_first] {usr}
+                child{node[arn_second]{bin}}
+                child{node[arn_second]{share}}
+              };
+          \end{tikzpicture}
+        }
+      \end{center}
+      Die Abbildung zeigt den Unix-Verzeichnisbaum, anhand dessen einige
+      Merkmale eines Baumes erkennbar sind.
+      \begin{itemize}
+        \item Jedes Element eines Baumes wird als \enquote{Knoten} bezeichnet.
+        \item Die Verbindungslinien/Pfeile zwischen den Knoten sind
+        \enquote{Kanten}.
+        \item Ein Knoten, der keinen Vorg\"anger hat, wird als
+        \enquote{Wurzel} bezeichnet (im Diagramm rot).
+        \item Alle Knoten ohne Nachfolger sind \enquote{Bl\"atter} bzw.
+        \enquote{Leafs} (im Diagramm gr\"un)
+        \item Knoten, die sowohl einen Vorg\"anger als auch einen Nachfolger,
+        besitzen sind \enquote{Zweige} oder \enquote{Branches} (im Diagramm blau).
+      \end{itemize}
+      \subsection{Wichtige Eigenschaften von B\"aumen}
+        Es gibt diverse Arten von B\"aumen in der Informatik (z. B.
+        Bin\"arbaum, B-Baum, B$^+$-Baum oder B$^*$-Baum, uvm.). Die einfachste
+        Form ist der Bin\"arbaum. Daher wird dieser hier dazu benutzt werden,
+        um die wichtigsten Grundlagen f\"ur das Verst\"andnis von B\"aumen zu
+        legen.
+
+        Der im Folgenden abgebildete Bin\"arbaum dient als Grundlage f\"ur
+        alle weiteren Erl\"auterungen.
+        \begin{center}
+          \scalebox{0.8}{
+            \begin{tikzpicture}[->, >=stealth',level/.style={sibling distance = 8cm/#1, level distance = 1.5cm}]
+              \node[arn_root] {24}
+                child{node[arn_first] {17}
+                  child{node[arn_second] {15}
+                    child{node[arn_third] {13}}
+                    child{node[arn_third] {16}}
+                  }
+                  child{node[arn_second] {21}
+                    child{node[arn_third] {19}}
+                    child{node[arn_third] {23}}
+                  }
+                }
+                child {node [arn_first] {30}
+                  child {node [arn_second] {28}
+                    child{node[arn_third] {26}}
+                    child{node[arn_third] {29}}
+                  }
+                  child {node [arn_second] {34}
+                    child{node[arn_third] {31}}
+                    child{node[arn_third] {38}}
+                  }
+                };
+            \end{tikzpicture}
+          }
+        \end{center}
+        \subsubsection{Von Knoten, Kanten und Ebenen}
+          Wichtige Eigenschaften eines Baumes sind:
+          \begin{itemize}
+            \item \textbf{Tiefe}: Die Tiefe eines Knotens ist sein Abstand zur
+            Wurzel (Anzahl der Kanten zwischen ihm und der Wurzel).
+            \item \textbf{Ebene/Level}: Die Menge aller Knoten der gleichen
+            Tiefe wird als Ebene bzw. Level bezeichnet.
+            \item \textbf{Baumh\"ohe}: Die H\"ohe eines Baumes wird durch die
+            maximale Tiefe, die ein Knoten erreichen kann, bestimmt.
+            \item \textbf{Vollst\"andigkeit}: Ein Baum gilt als vollst\"andig,
+            wenn alle Ebenen, bis auf die Unterste, komplett gef\"ullt sind. Die
+            unterste Ebene muss von links nach rechts gef\"ullt sein.
+          \end{itemize}
+          Daraus ergibt sich, f\"ur den Bin\"arbaum, folgendes:
+          \begin{itemize}
+            \item Die blauen Knoten bilden eine Ebene mit der Tiefe 1.
+            \item Die gr\"unen Knoten bilden eine Ebene mit der Tiefe 2.
+            \item Die gelben Knoten bilden eine Ebene mit der Tiefe 3.
+            \item Die H\"ohe des Baumes ist mit dem Wert 3 anzugeben. Dabei
+            werden alle Ebenen, au\ss{}er der Wurzel gez\"ahlt.
+            \item Der Baum ist vollst\"andig, da die blaue Ebene mit zwei Knoten
+            und die gr\"une Ebene mit vier Knoten voll besetzt ist.
+            \item B\"aume wachsen in der Informatik von oben nach unten.
+          \end{itemize}
+          Die folgende Abbildung zeigt einen unvollst\"andigen Bin\"arbaum.
+          \begin{center}
+            \scalebox{0.8}{
+              \begin{tikzpicture}[->, >=stealth',level/.style={sibling distance = 8cm/#1, level distance = 1.5cm}]
+                \node[arn_root] {24}
+                  child{node[arn_first] {17}
+                    child{node[arn_second] {15}
+                      child{node[arn_third] {13}}
+                      child{node[arn_third] {16}}
+                    }
+                    child{node[arn_second] {21}
+                      child{node[arn_third] {19}}
+                      child{node[arn_third] {23}}
+                    }
+                  }
+                  child {node [arn_first] {30}
+                    child {node [arn_second] {28}}
+                  };
+              \end{tikzpicture}
+            }
+          \end{center}
+          In der zweiten Ebene (gr\"un) fehlt ein Element. Sie ist nicht mehr
+          voll besetzt, was bedeutet, dass der Baum unvollst\"andig ist.
+        \subsubsection{Elemente und H\"ohe des Bin\"arbaumes}
+          Um die Anzahl der Elemente eines beliebigen vollst\"andigen
+          Bin\"arbaumes zu berechnen, m\"ussen verschiedene Informationen
+          bekannt sein:
+          \begin{itemize}
+            \item In einem Bin\"arbaum hat jeder Knoten h\"ochstens zwei
+            Nachfolger.
+            \item Die H\"ohe des Baumes ist f\"ur die Berechnung notwendig.
+            \item Die Ebenen werden nummeriert, beginnend mit dem Wert 0 bei der
+            Wurzel.
+          \end{itemize}
+          Mit Hilfe dieser Informationen kann nun die maximale Anzahl der
+          Elemente des Baumes (hier mit dem Buchstaben $n$ bezeichnet) berechnet
+          werden:
+          \begin{center}
+            $ n = 2^0 + 2^1 + 2^2 + 2^3$ \\
+            $ n = 15$
+          \end{center}
+          Der Wert 2 in dieser Formel r\"uhrt daher, dass jeder Knoten
+          h\"ochstens zwei Nachfolger haben kann. Die Exponenten 0, 1, 2 und 3
+          sind die Nummern der Ebenen. Berechnet man die einzelnen
+          Zweierpotenzen ergibt sich:
+          \begin{center}
+          $ n= 1 + 2 + 4 + 8$
+          \end{center}
+          Die Wurzelebene hat genau ein Element. Die zweite Ebene hat
+          h\"ochstens zwei, die dritte Ebene h\"ochstens 4 und die Blatt ebene
+          h\"ochstens 8 Elemente. Diese Formel l\"asst sich auf folgende
+          Schreibweise verk\"urzen: $n = 2^{h + 1} - 1$. Denn es gilt:
+          \begin{center}
+          $ 2^{h+1}-1 = (2^0 + 2^1 + 2^2 + \dots + 2^h) - 1$
+          \end{center}
+          Der Buchstabe $h$ steht f\"ur die H\"ohe des Baumes.
+
+          Dieses Rechenbeispiel zeigt, dass die H\"ohe des Baumes und die Anzahl
+          der Elemente in einer direkten Beziehung zu einander stehen. Daraus
+          folgt, wenn die Anzahl der Elemente des Bin\"arbaumes bekannt ist,
+          kann die H\"ohe des Baumes errechnet werden. Dies geschieht durch
+          Umstellen der Formel: $n = 2^{h + 1} - 1$.
+          \begin{align}
+            &2^{h + 1} - 1 &&= n            &&| + 1\\
+            &2^{h + 1}     &&= n + 1        &&| log_2\\
+            &h + 1         &&= log_2(n + 1) &&| - 1\\
+            &h             &&= log_2(n + 1) - 1 && = log_2(n) abgerundet
+          \end{align}
+          Das $log_2(n + 1) - 1 = log_2(n) abgerundet$ gilt l\"asst sich
+          beweisen:
+          \begin{align}
+            &n                 &&= 15 \\
+            &log_2(15 + 1) - 1 &&= 3 \\
+            &log_2(15)         &&= 3.91 (Abrunden!)
+          \end{align}
+          \begin{merke}
+            Mit Hilfe der Formel $log_2(n)$ kann die H\"ohe eines Bin\"arbaumes
+            berechnet werden. Dabei ist zu beachten, dass das Ergebnis immer auf
+            die ganze Zahl \textbf{abgerundet} werden muss.
+          \end{merke}
+          Zur Wiederholung: Die H\"ohe eines Baumes wird durch die maximale
+          Tiefe, die ein Knoten erreichen kann, bestimmt. Die Tiefe eines
+          Knotens ist sein Abstand von der Wurzel (Anzahl der Kanten zwischen
+          ihm und der Wurzel).
+
+          Die Zahl 3 aus dem vorangegangenen Beispiel gibt somit die Anzahl der
+          Kanten zwischen dem Wurzelknoten und einem Blattknoten an. Damit ist
+          aber noch nicht die Frage gekl\"art: \enquote{Wie viele Knoten
+          m\"ussen maximal gelesen werden, um ein bestimmtes Objekt
+          aufzufinden?}. Die Antwort lautet: Die maximale Anzahl der
+          Lesezugriffe ist die H\"ohe des Baumes + 1.
+
+          Dies kann am Beispiel des Knotens mit der Nummer \enquote{19}
+          nachgewiesen werden. Um diesen Knoten aufzufinden, m\"ussen die Knoten
+          \enquote{24}, \enquote{17} und \enquote{21} gelesen werden.
+          Anschlie\ss{}end noch die \enquote{19} selbst. Dies sind vier
+          Zugriffe. Die H\"ohe des Baumes wird mit $h = log_2(n) = 3.91$
+          berechnet, was abgerundet $3$ ergibt. F\"ur die Anzahl der
+          Lesezugriffe muss die Zahl $3.91$ aufgerundet werden, was den Wert $4$
+          ergibt.
+        \subsubsection{B\"aume als Hilfsmittel zur Suche von Datens\"atzen}
+          Um demonstrieren zu k\"onnen, welch wichtige Rolle B\"aume beim
+          Auffinden von Datens\"atzen spielen, wird zu aller erst eine Tabelle
+          ben\"otigt. Dies soll hier die Tabelle \identifier{Kunde}, aus dem
+          Schema \identifier{bank}, sein. Sie umfasst insgesamt 561 Zeilen.
+
+          Um nun einen bestimmten Datensatz zu finden, gibt es zwei
+          unterschiedliche Verfahren:
+          \begin{itemize}
+            \item \textbf{Full Table Scan}: Das zeilenweise Durchsuchen der
+            Tabelle, bis zum Auffinden des richtigen Datensatzes wird als Full
+            Table Scan bezeichnet.
+            \item \textbf{Index Scan}: Bei einem Index Scan wird der
+            Suchbaum/Index nach dem gew\"unschten Datensatz durchsucht.
+          \end{itemize}
+          Diese beiden Methoden unterscheiden sich wesentlich in der Anzahl der
+          Lesevorg\"ange, die zum Auffinden eines Datensatzes ben\"otigt werden.
+          Beim Full Table Scan gilt die Formel: $x = \frac{n}{2}$, wobei $x$ die
+          Anzahl der Lesevorg\"ange und $n$ die Anzahl der Datens\"atze darstellt.
+          F\"ur die Tabelle \identifier{Kunde} bedeutet dies konkret: $x =
+          \frac{561}{2} \rightarrow x \approx 280$. Es werden also ca. 280
+          Lesevorg\"ange ben\"otigt, um in der Tabelle \identifier{Kunde} einen
+          ganz bestimmten Datensatz zu finden.
+
+          Anders sieht dies bei der Nutzung eines Suchbaumes aus. Wie zuvor
+          beschrieben, wird in einem Bin\"arbaum die Anzahl der Lesevorg\"ange
+          mit der Formel: $log_2(n)$ angegeben, wobei $n$ die Anzahl der
+          Datens\"atze darstellt. Bezogen auf die Tabelle \identifier{Kunde}
+          bedeutet dies: $x = log_2(561) \rightarrow log_2(561) = 9.13
+          \rightarrow x \approx 10$. Mit Hilfe eines Suchbaumes w\"urden also
+          nur durchschnittlich 10 Zugriffe, statt der 280 ben\"otigt. Dies
+          stellt eine Kostenreduzierung von ca. 96 \% dar.
+          \begin{merke}
+            In modernen Datenbanken kommen keine Bin\"arb\"aume, sondern
+            B*-B\"aume zum Einsatz! Der Bin\"arbaum wurde hier nur als einfaches
+            Beispiel gew\"ahlt.
+          \end{merke}
+      \subsection{B*-Baum Indizes}
+        B*-B\"aume (gesprochen B-Stern Baum) sind eine vielfach
+        weiterentwickelte Variante der Bin\"arb\"aume. Urheber dieser Baumart
+        ist Donald Ervin Knuth\footnote{Donal Ervin Knuth: US-Amerikanischer
+        Informatiker und Professor an der Stanford University. Autor der
+        Buchserie: \enquote{The Art of Computer Programming} und Erfinder des
+        Textsatzsystems \enquote{\TeX}}. Einer der wesentlichsten Unterschiede
+        zu den Bin\"arb\"aumen ist, dass in einem B*-Baum ein Knoten beliebig
+        viele Nachfolger haben kann, nicht mehr nur Zwei. Das bedeutet, dass
+        die Kosten f\"ur die Suche eines Datensatzes noch weiter reduziert
+        werden, da der Baum sehr viel breiter und damit flacher wird.
+
+        B*-Baum Indizes sind die h\"aufigste Index-Variante in einer
+        Datenbank. Sie bestehen aus einer Reihe von Seiten (Daten- und
+        Indexseiten) und enthalten die indizierten Werte in sortierter
+        Reihenfolge. Jedem Wert muss dabei ein Schl\"ussel zugeordnet werden,
+        mit dessen Hilfe der Wert gefunden werden kann.
+
+       Wird beispielsweise die Spalte \identifier{Name} der Tabelle
+       \identifier{Bank} indiziert, legt Microsoft SQL Server den Namen der
+       jeweiligen Bank als Schl\"ussel und ein Merkmal zur Identifizierung
+       der betreffenden Tabellenzeile im Index ab. Mit besagtem Merkmal ist
+       es möglich, eine Tabellenzeile direkt, ohne Umwege, aufzufinden und zu
+       lesen.
+        \abbildung{b_tree} zeigt beispielhaft, wie ein B*-Baum Index aussehen
+        k\"onnte.
+        \bild{Ein B*-Baum Index}{b_tree}{1.1}
+        Der Rootnode und die Branchnodes enthalten die Schl\"usselwerte, in
+        der Form: von - bis und die Adresse des dazugeh\"origen Indexblockes.
+        Zum Beispiel bedeutet 0 -7 0, dass die Schl\"usselwerte null bis
+        sieben im Branchnode Nummer null zu finden sind. Die erste Zeile in
+        den Branchnodes ist die Indexblocknummer (0, 1 und 2).
+
+        In den Leafnodes stehen dann die indizierten Schl\"usselwerte und die
+        Zeilenidentifikationsmerkmale. Alle Leafnodes sind untereinander
+        verbunden, so dass ein direkter Wechsel von einem Leafnode in den
+        n\"achsten stattfinden kann, ohne dabei \"uber den zust\"andigen
+        Branchnode gehen zu m\"ussen.
+    \section{Indexentwurf im SQL Server}
+      Der Microsoft SQL Server kennt eine Reihe verschiedener Indextypen. Die
+      meisten davon sind in der soeben vorgestellten Form, dem B*-Baum,
+      implementiert. Die Gemeinsamkeit aller Indextypen ist, dass sie einem
+      Objekt, meist einer Tabelle, fest zugeordnet sind.
+      
+      Der richtige Indexentwurf stellt für den Administrator eine große
+      Herausforderung dar, da diese Thematik sehr komplex ist und viele Dinge
+      gut bedacht werden müssen. Jeder Index stellt eine Verbesserung der
+      Leseperformance dar, er bringt aber auch Kosten mit sich, da er gepflegt
+      werden muss. Eine Formel für den richtigen Indexentwurf gibt es nicht.
+      Oftmals hilfe nur das Experimentieren mit unterschiedlichen Entwürfen.     
+      \subsection{Allgemeine Hilfestellungen für den Indexentwurf}
+        Wie bereits erwähnt, gibt es keinen roten Faden, der den Administrator
+        durch den Arbeitsprozess des Indexentwurfes leiten könnten. Es gibt aber
+        durchaus einige Überlegungen von Microsoft, die dem Admin als
+        Hilfestellung dienen können.
+        \subsubsection{Welche Merkmale hat die Datenbank?}
+          Datenbanken können im Wesentlichen auf zwei unterschiedliche Arten
+          genutzt werden:
+          \begin{itemize}
+            \item Als \textbf{Online Transaction Processing Database} (OLTP):
+            Die Datenbank besteht aus eine vielzahl kleiner und Großer
+            Tabellen. Die Anzahl der DML-Vorgänge in der Datenbank ist
+            mindestens genauso hoch, wie die Anzahl der Lesevorgänge.
+            \item Als \textbf{Decision Support System} (DSS): Die Datenbank
+            besteht aus einigen wenigen extrem großen Tabellen und einer kleinen bis
+            mittleren Anzahl kleiner Tabellen. Schreibvorgänge sind sehr sehr
+            selten. Neue Daten werden ausschließlich mittels eines
+            täglichen Importvorganges eingefügt. Die Anzahl der Lesevorgäng
+            ist hoch und auch die komplexität der Abfragen ist groß.
+          \end{itemize}
+        \subsubsection{Indizes in einer OLTP-Datenbank}
+          Bei einer OLTP-Datenbank besteht das Problem, dass vor der
+          Indexerstellung immer eine Kostennutzenabwägung getroffen werden muss,
+          da bei jedem DML-Vorgang die betroffenen Indizes gepflegt werden
+          müssen. Microsoft empfiehlt hier:
+          \begin{itemize}
+            \item Die Anzahl der Indizes sollte gering gehalten werden, so viele
+            wie nötig, aber nur so wenige wie möglich.
+            \item Sofern sich Indizes auf eine kombination von Spalten beziehen,
+            sollte diese so schmal wie möglich gehalten werden.
+            \item Auf einer Tabelle mit sehr geringer
+            Volatilität\footnote{Volatilität = Änderungshäufigkeit} kann dem
+            Optimizer eine bereite Auswahl an verschiedenen Indizes geboten
+            werden, damit diese sich den Besten heraussuchen kann.
+            \item Kleine Tabellen sollten unter Umständen überhaupt nicht
+            indiziert werden, da es kostengünstiger sein kann die gesamte
+            Tabelle zu lesen, anstatt einen passenden Index auszuwählen.
+            \item Indizes sollten für solche Spalten erstellt werden die häufig
+            in Prädikaten (\WHERE-Klauseln) vorkommen.
+            \item Bedenken Sie die Reihenfolge, in der Sie die Spalten in den
+            Index aufnehmen gut. Diese sollte sich immer nach der Häufigkeit der
+            Nutzung einer Spalte richten.
+          \end{itemize}
+          Die letzte Aussage der vorangegangenen Aufzählung soll hier mit einem
+          Beispiel erläutert werden. Ein Index wird über die Spalten
+          \identifier{plz} und \identifier{ort} der Tabelle
+          \identifier{mitarbeiter} werden in der genannten Reihenfolge in einem
+          Index erfasst.
+          
+          Ein Benutzer führt eine Abfrage mit dem Prädikat:
+          \languagemssql{WHERE plz = 90411 AND ort = 'Nürnberg'} durch. In
+          diesem Fall kommt der Index zur bestmöglichen Anwendung, da die
+          Spaltenreihenfolge in der \WHERE-Klausel und die im Index die gleiche
+          ist.
+          
+          Der gleiche Benutzer führ nun erneut eine Abfrage aus und ändert dabei
+          das Prädikat folgendermaßen:
+          \languagemssql{WHERE ort = 'Nürnberg'  AND plz = 90411} durch. Auch
+          hier kann der Index genutzt werden, da jedoch die Spaltenreihenfolge
+          in der \WHERE-Klausel eine andere ist, als im Index ist die
+          Performance nicht so hoch, wie im ersten Beispiel.
+          
+          Ein weiteres Beispiel: Der Nutzer fragt nur nach der Postleistzahl
+          (\languagemssql{WHERE plz = 90411}). Wiederum kann der Index zur
+          Anwendung gebracht werden. Die Leseperformance ist genauso hoch, wie
+          im ersten Fall, allerdings sollte der Admin überlegen, ob er den Index
+          nicht auf die Spalte \identifier{plz} begrenzt, wenn die Benutzer nur
+          sehr selten nach dem Ort fragen.
+          
+          Im vierten und letzten Beispiel gibt der Nutzer folgendes Prädikat an:
+          \languagemssql{WHERE ort = 'Nürnberg'}. In diesem Fall kann der Index
+          nicht zum Einsatz gebracht werden, da die Sortierung/Gruppierung im
+          Index die Spalte \identifier{ort} von der Spalte \identifier{plz}
+          abhängig macht.
+        \subsubsection{Indizes in einer DSS-Datenbank}
+          Grundsätzlich gelten in einer DSS-Datenbank die gleichen Regeln für
+          den Indexentwurf, wie in einer OLTP-Datenbank. Folgendes sollte aber
+          trotzdem beachtet werden:
+          \begin{itemize}
+              \item Da Abfragen in einem DSS meist sehr komplex und
+              zeitaufwendig sind, sollte gerade hier darauf wertgelegt werden,
+              dass die Spaltenreihenfolge und die Spaltenauswahl im Index, der
+              Spaltenreihenfolge und der Spaltenauswahl der meisten Prädikate
+              entsprichen. So kann eine bestmögliche Ausnutzung der Indizes
+              gewährleistet werden.
+              \item Für DSS-Datenbanken kennt der SQL Server seit der Version
+              2012 einen neuen Indextyp, den Columnstore-Index. Dieser bietet
+              wesentliche Performancesteigerungen im DSS-Bereich, ist jedoch in
+              einer OLTP-Datenbank völlig fehl an Platz.
+          \end{itemize}
+      \subsection{Die Sortierreihenfolge von Indizes festlegen}
+        \label{indexsort}
+        Beim Anlegen eines Indizes kann eine Sortierreihenfolge für die
+        Schlüsselspalten angegeben werden. Sofern die Zeilen einer Tabelle
+        häufig in sortierter Reihenfolge ausgegeben werden, ist es ratsam,
+        einen sortierten Index auf die Spalten zu legen, nach denen in den
+        Abfragen sortiert wird. Findet eine Abfrage einen vorsortierten Index,
+        müssen die Ergebnisszeilen nicht erneut sortiert werden.
+\clearpage
+        Ein Beispiel hierzu: 
+        
+        Auf den Spalten \identifier{vorname} und \identifier{nachname} der
+        Tabelle \identifier{Mitarbeiter} liegt ein Index mit der Sortierung
+        \languagemssql{nachname DESC, vorname ASC}. Ein Benutzer gibt in
+        seiner Abfrage die \ORDERBY-Klausel \languagemssql{ORDER BY Nachname
+        DESC, vorname ASC} an. Da Vor- und Nachnamen im Index schon
+        vorsortiert sind, kann bei der Ausführung der Abfrage die
+        \ORDERBY-Klausel vernachlässigt werden.
+        
+        In einer weiteren Abfrage ändert der Nutzer seine \ORDERBY-Klausel
+        dahingehend, dass er die Sortierung der beiden spalten vertauscht: 
+        \languagemssql{ORDER BY nachname ASC, vorname DESC}. Hier zeigt sich nun
+        die Flexibilität des SQL Servers, denn dieser kann auch hier den Index
+        benutzen, obwohl die \ORDERBY-Klausel eine andere Sortierung vorgibt,
+        als der Index.
+        \begin{literaturinternet}
+          \item \cite{jj835095}
+        \end{literaturinternet}
+    \section{Die verschiedenen Indextypen und deren Merkmale}
+      \subsection{Gruppierte Indizes - Clustered Indexes}
+        Gruppierte Indizes sind eine Mischung aus einem Index und einer Tabelle.
+        Sie stellen ein B-Baumstruktur für die effiziente Datensatzsuche bereit
+        und gleichzeitig speichern sie selbst die Daten (Der Index ist die
+        Tabelle - die Tabelle ist der Index). Nachdem bei dieser Indexstruktur
+        die Daten direkt im Index gespeichert sind, entfällt der zusätzlich
+        Zugriff auf eine Heap-Struktur, was wiederum für ein hohes Maß an
+        Leseperformance sorgt.
+        \bild{Schematische Darstellung eines clustered
+        Index}{clustered_index}{1}
+        Eine wichtige Eigenschaft des gruppierten Indexes ist es, dass er die
+        Daten in sortierter Form speichert. Die Sortierung erfolgt mit Hilfe der
+        Schlüsselwerte, wobei der Administrator entscheiden kann, ob er eine
+        auf- oder absteigende Sortierung haben möchte. Dadurch, dass die
+        Daten im Index sortiert sind, kann eine Abfrage, die nach einem
+        Wertebereich fragt (z. B. \languagemssql{WHERE bankfiliale_ID BETWEEN
+        10 AND 15} oder \languagemssql{WHERE geburtsdatum >= '01.01.1993'}) sehr
+        performant ausgeführt werden, weil die benötigten Zeilen physikalisch
+        nebeneinander liegen.
+        
+        Des Weitere bringt die Vorsortierung einen Performance gewinn, da eine
+        Abfrage mit einer \ORDERBY-Klausel die Daten schon in passender Form
+        vorfindet (siehe \ref{indexsort}).
+        
+        Ein gruppierter Index kann auf zwei Arten erstellt werden:
+        \begin{itemize}
+          \item mit Hilfe des \languagemssql{CREATE INDEX}-Statemens
+          \item oder durch das Anlegen eines \PRIMARYKEY-Constraints.
+        \end{itemize}
+        \begin{lstlisting}[language=ms_sql, caption={Erstellen eines
+        gruppierten Indizes}, label=admin05_07]
+USE [demo_grafisch]
+GO
+
+CREATE CLUSTERED INDEX idx_cl_aktie
+ON demo_grafisch.dbo.aktie(aktie_ID DESC)
+GO
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{ms186342}
+        \end{literaturinternet}
+      \subsection{Nicht gruppierte Indizes - Nonclustered Indexes}
+        Ein nicht gruppierter Index ist eine eigenständige Struktur, die
+        zu einem bestimmten Objekt, Tabelle oder View, gehört. Er enthält in
+        seiner Leaf-Ebene Indexschlüsselwerte (z. B. Nachnamen, Postleitzahlen,
+        Personalnummern) und Zeilenlokatoren (RID oder Schlüssel eines
+        gruppierten Indizes). Die Indexschlüsselwerte dienen als Suchwerte und
+        die RIDs zum Auffinden der betroffenen Zeilen.
+        \bild{Schematische Darstellung eines Nonclustered
+        Index}{non_clustered_index}{1.2}
+        Ideal ist diese Art von Index für Abfragen, die nach einem ganz
+        bestimmten Wert oder nach Werten aus einem Bereich suchen, sofern das
+        Prädikat der Abfrage eine genaue Übereinstimmung verlangt.
+        Beispielsweise sind Klauseln wie \languagemssql{WHERE plz = 90411}
+        beziehungsweise
+        \languagemssql{WHERE plz IN ('90411', '90762', '83262')}
+        Prädikate mit genauer Übereinstimmung. Im Gegensatz dazu verlangt das
+        Prädikat \languagemssql{WHERE nachname LIKE 'WEI\%'} keine genaue
+        Übereinstimmung.
+        \begin{literaturinternet}
+          \item \cite{ms189605}
+        \end{literaturinternet}
+        Genau wie gruppierte Indizes werden die nicht gruppierten Indizes
+        ebenfalls mit dem \languagemssql{CREATE INDEX}-Statement erstellt,
+        allerdings kommt hier das Schlüsselwort \languagemssql{NONCLUSTERED} hinzu.
+        \begin{lstlisting}[language=ms_sql, caption={Erstellen eines
+        nicht gruppierten Index}, label=admin05_08]
+USE [demo_grafisch]
+GO
+
+CREATE NONCLUSTERED INDEX idx_isin
+ON demo_grafisch.dbo.aktie(isin DESC)
+GO
+        \end{lstlisting}
+        \beispiel{admin05_08} zeigt die Erstellung eines nicht gruppierten
+        Indizes auf die Spalte \identifier{isin}, der Tabelle
+        \identifier{aktie}. Die Sortierung der Spalte \identifier{isin} wird in
+        diesem Beispiel explizit mit angegeben, da eine absteigende Sortierung
+        gewünscht ist.
+        \begin{merke}
+          Es können maximal 999 verschiedene Indizes auf einer Tabelle erstellt
+          werden.
+        \end{merke}
+        Soll sich ein Index über mehrere Spalten erstrecken, müssen diese als
+        Kommaseparierte Liste in den runden Klammern angegeben werden.
+        \begin{lstlisting}[language=ms_sql, caption={Erstellen eines
+        nicht gruppierten Index mit mehreren Spalten}, label=admin05_09]
+USE [demo_grafisch]
+GO
+
+CREATE NONCLUSTERED INDEX idx_aktie
+ON demo_grafisch.dbo.aktie(isin DESC, name ASC)
+GO
+        \end{lstlisting}
+        \begin{merke}
+          Die Anzahl der Schlüsselspalten in einem Index ist auf 16 begrenzt.
+          Weiterhin darf der Indexschlüssel die maximale Breite von 900 Byte
+          nicht überschreiten.
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{ms189280}
+        \end{literaturinternet}       
+      \subsubsection{Datenspalten in einen Index einschließen}
+        SQL Server bietet die Möglichkeit an, in einen nicht gruppierten Index,
+        zusätzlich zu den Schlüsselspalten, auch Nichtschlüsselspalten
+        aufzunehmen. Diese zusätzlichen Spalten werden zwar bei der
+        Indexdurchsuchung nicht berücksichtigt, aber sie können die Performance
+        einer Abfrage deutlich erhöhen, da die Ergebnisse direkt aus dem Index
+        ausgegeben werden. Auf diese Weise unterbleiben weitere Zugriffe auf
+        Tabellen oder gruppierte Indizes. Im Idealfall enthält ein nicht
+        gruppierter Index alle Spalten als Nichtschlüsselspalten, die von einer
+        Abfrage benötigt werden. Dadurch wäre die größt mögliche Performance
+        gegeben.
+        \begin{merke}
+          Enthält ein Index alle Spalten, die von einer Abfrage benötigt werden,
+          in Form von Schlüssel- oder Nichtschlüsselspalten, wird als
+          \enquote{abdeckend} bezeichnet.
+        \end{merke}
+        Mit Hilfe von Nichtschlüsselspalten in einem Index ist es möglich, die
+        Größenbeschränkung für Indexschlüssel, die bei 900 Byte liegt, zu
+        umgehen, bzw. die Breite der Indexschlüssel möglichst klein zu halten.
+        Hierzu ein Beispiel:
+        
+        Es wird ein Index auf die drei folgenden Spalten gelegt:
+        \begin{itemize}
+            \item \identifier{vorname} VARCHAR(30)
+            \item \identifier{nachname} VARCHAR(35)
+            \item \identifier{sozversnr} VARCHAR(20)
+        \end{itemize}
+        Bei Spalten des Typs VARCHAR wird 1 Byte pro Zeichen benötigt, d. h. die
+        Schlüsselbreite des Indexes beträgt 85 Byte. Die Abfragen, welche diesen
+        Index benutzen lauten meist so ähnlich, wie das folgende Beispiel:
+        \begin{lstlisting}[language=ms_sql, caption={Beispielabfrage},
+        label=admin05_10] 
+USE [bank]
+GO
+
+SELECT vorname, nachname
+FROM   Mitarbeiter
+WHERE  SozVersNr = 'D370941F-6CD-6C07977'
+        \end{lstlisting}
+        \beispiel{admin05_10} zeigt, dass eigentlich nur die Spalte
+        \identifier{sozversnr} zur Suche genutzt wird. Daraus folgt, dass auch
+        nur die Spalte \identifier{sozversnr} als Schlüsselspalte in den Index
+        aufgenommen werden müsste. Die Spalten \identifier{vorname} und
+        \identifier{nachname} könnten stattdessen als Nichtschlüsselspalten in
+        den Index aufgenommen werden, wodurch sich die Schlüsselbreite
+        verringern und der Index effizienter werden würde. Auch würde dadurch
+        dessen Pflege einfacher und zusätzlich könnten die Werte der Spalten
+        \identifier{vorname} und \identifier{nachname} trotzdem direkt aus dem
+        Index gelesen werden.
+        
+        Nichtschlüsselspalten werden mittels der \languagemssql{INCLUDE}-Klausel
+        in einen Index aufgenommen. \beispiel{admin05_11} zeigt, wie der in
+        \beispiel{admin05_09} thematisierte Index, jetzt mit
+        \identifier{vorname} und \identifier{nachname} als Nichtschlüsselspalten
+        erstellt wird.
+        \begin{lstlisting}[language=ms_sql, caption={Ein Index mit
+        Nichtschlüsselspalten}, label=admin05_11] 
+USE [bank]
+GO
+
+CREATE NONCLUSTERED INDEX idx_sozversnr
+ON bank.dbo.mitarbeiter(sozversnr ASC)
+INCLUDE (vorname, nachname)
+GO
+        \end{lstlisting}
+        \begin{merke}
+          Ein Index kann maximal 1024 Spalten haben. Davon muss eine Spalte als
+          Schlüsselspalte genutzt werden und bis zu 1023 können als
+          Nichtschlüsselspalten genutzt werden.
+        \end{merke}
+        Bei der Nutzung der \languagemssql{INCLUDE}-Klausel müssen einige Regeln
+        beachtet werden:
+        \begin{itemize}
+            \item Nichtschlüsselspalten können nur für nicht gruppierte Indizes
+            angegeben werden
+            \item Spalten mit einem der Datentypen \identifier{text},
+            \identifier{ntext} und \identifier{image} können nicht als
+            Nichtschlüsselspalten genutzt werden.
+            \item Berechnete Spalten können unter bestimmten Bedingungen als
+            Nichtschlüsselspalten genutzt werden.
+            \item Spalten dürfen nicht als Schlüssel- und gleichzeitig als
+            Nichtschlüsselspalten angegeben werden.
+            \item Spaltennamen dürfen sich in der \identifier{INCLUDE}-Klausel
+            nicht wiederholen.
+            \item Soll eine Nichtschlüsselspalte aus ihrer Tabelle gelöscht
+            werden, so müssen erst alle betroffenen Indizes gelöscht werden.
+            \item Ist eine Tabellenspalte als Nichtschlüsselspalte in einem
+            Index aufgenommen kann an ihr nur die \languagemssql{NULL}- bzw.
+            \languagemssql{NOT NULL}-Eigenschaft geändert werden. Außerdem darf
+            die Länge von Spalten der Typen \identifier{varchar},
+            \identifier{nvarchar} und \identifier{varbinary} vergrößert werden.
+        \end{itemize}
+        \begin{literaturinternet}
+          \item \cite{ms190806}
+        \end{literaturinternet}
+    \subsection{Eigenschaften von Indizes}
+      \subsubsection{Eindeutigkeit}
+        Die Aufgabe eines eindeutigen Indexes ist es, zu garantieren, dass in
+        der indizierten Spalte keine redundanten Werte vorkommen. Die Nutzung
+        eines solchen Indexes ist jedoch nur dann sinnvoll, wenn die Werte einer
+        Spalte dafür geeignet sind. Häufig sind dies Spalten mit IDs oder
+        anderen Nummern, während Spalten wie \identifier{vorname},
+        \identifier{nachname} oder \identifier{geburtsdatum} fast immer
+        redundante Werte enthalten und somit nicht geeignet sind.
+        \begin{merke}
+          Das Attribute der Eindeutigkeit kann sich sowohl auf gruppierte, als
+          auch auf nicht gruppierte Indizes beziehen, wobei gruppierte Indizes
+          immer als eindeutige Indizes angelegt werden. Dies gelingt durch einen
+          einfachen Trick auch dann, wenn die Werte der indizierten Spalte
+          Redundanzen enthalten.
+        \end{merke}
+        Wird ein eindeutiger Index auf eine Gruppe von Spalten, z. B.
+        \identifier{vorname}, \identifier{nachname} und
+        \identifier{geburtsdatum} gelegt, so erzwingt er die Eindeutigkeit der
+        Kombinationen dieser Werte. Es dürfen dann niemals zwei Zeilen über die
+        gleiche Wertekombination verfügen.
+        
+        Um einen eindeutigen Index zu erstellen gibt es zwei Wege:
+        \begin{itemize}
+            \item Erstellen eines \PRIMARYKEY- oder \UNIQUE-Constraints
+            \item Ausführen einer \languagemssql{CREATE UNIQUE INDEX}-Anweisung.
+        \end{itemize}
+        Da ein eindeutiger Index fast immer zur Gewährleistung der Eindeutigkeit
+        von Werten eingesetzt wird, empfiehlt Microsoft, den Index nicht manuell,
+        sondern mit einem \UNIQUE- oder \PRIMARYKEY-Constraint zusammen
+        anzulegen. Denn beide Constraints erstellen automatisch einen
+        eindeutigen Index im Hintergrund. Bei einem \PRIMARYKEY-Constraint ist
+        zusätzlich zu beachten, dass automatisch ein gruppierter Index erstellt
+        wird, sofern der Administrator dies nicht explizit anders wünscht.
+        \begin{merke}
+          Auch eindeutige Indizes dürfen zusätzliche Nichtschlüsselspalten
+          enthalten.
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{ms187019}
+        \end{literaturinternet}
+      \subsubsection{Filterung}
+        Ein nicht gruppierter Index kann für bestimmte Zwecke mit einem Filter
+        ausgestattet werden. Das bedeutet, dass er nicht mehr alle Werte seiner
+        indizierten Spalten enthält, sondern nur noch solche, die einem
+        Filterprädikat genügen. Somit eignen sich solche optimierten Indizes
+        besonder für Abfragen, die meist mit einer fest definierten Teilmenge
+        der Daten einer Tabelle arbeiten.
+        
+        Durch die Anwendung eines Filters auf einem Index können folgende
+        Vorteile erreicht werden:
+        \begin{itemize}
+            \item Verbesserung der Abfrageperformance,
+            \item reduzierter Pflegeaufwand für den Index,
+            \item reduzierter Speicherplatzbedarf
+        \end{itemize}
+        Die Abfrageperformance kann sich bei der Nutzung eines gefilterten
+        Indizes deutlich verbessern, da der Index weniger Daten enthält und
+        somit kleiner und auch genauer ist. Der Pflegeaufwand für den Index
+        reduziert sich, weil ein Index nur dann gewartet werden muss, wenn sich
+        einer der Werte ändert, der im Index aufgenommen wurde. Da in einem
+        gefilterten Index nur noch relevante Werte enthalten sind, ist die
+        Wahrscheinlichkeit, dass sich einer davon ändert geringer.
+        
+        Besonders nützlich sind gefilterte Indizes beispielsweise dann, wenn
+        eine Spalte sehr viele NULL-Werte enthält oder wenn einige fest
+        Datenkategorien in ihr vorkommen. 
+        
+        Die Spalte \identifier{Staatsangehoerigkeit} der Tabelle
+        \identifier{Eigenkunde} enthält nur die Werte \enquote{Belgisch},
+        \enquote{Dänisch}, \enquote{Deutsch} und \identifier{Türkisch}. Wenn
+        sich eine Abfrage häufig nur auf deutsche Staatsbürger bezieht könnte
+        hier ein gefilterter Index Vorteile bringen.
+        
+        Um einen gefilterten Index anzulegen, der sich nur auf deutsche
+        Staatsbürger bezieht, wird dem \languagemssql{CREATE INDEX}-Kommando
+        eine \WHERE-Klausel angehängt.
+        \begin{lstlisting}[language=ms_sql, caption={Einen gefilterten Index
+        erstellen}, label=admin05_12]
+USE [bank]
+GO
+
+CREATE NONCLUSTERED INDEX idx_staatsangehoerigkeit
+ON bank.dbo.eigenkunde(staatsangehoerigkeit
+WHERE staatsangehoerigkeit = 'Deutsch'
+GO
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{cc280372}
+        \end{literaturinternet}
+      \subsection{Der Columnstore-Index}
+        Der mit dem SQL Server 2012 eingeführte Columstore-Index speichert die
+        Daten in einer völlig anderen Art und Weise als die herkömmlichen
+        B*-Baum-Indizes und ist speziell für DSS-System entwickelt worden. Er
+        bietet im DSS-Umfeld eine bis zu zehnfache Abfrageleistung und eine bis
+        zu siebenfache höhere Kompressionsrate an, als dies bei normalen Indizes
+        möglich ist. Besonders wichtig für seinen Einsatz ist, dass die Daten
+        hauptsächlich durch Dataloads (Massenladevorgänge) geschrieben werden.
+        \begin{literaturinternet}
+          \item \cite{gg492088}
+        \end{literaturinternet}
+    \section{Administrative Tätigkeiten an Indizes}
+      \subsection{Indizes reorganisieren}
+        Indizes müssen bei jeder DML-Aktion von der Database Engine gepflegt
+        werden, d. h. dem Index werden neue Datensätze hinzugefügt oder es
+        werden bestehende gelöscht bzw. geändert. Durch diese Tätigkeiten bilden
+        sich mit der Zeit \enquote{Lücken} im Index. Die Informationen im Index
+        liegen nicht mehr in der korrekten logischen Reihenfolge vor, sondern
+        sie sind verstreut. Die Folge davon ist, dass die logische Reihenfolge
+        der Indexeinträge nicht mehr zur physikalischen Reihenfolge der
+        indizierten Datensätze passt. Beim Lesen der Datensätze kann kein
+        sequenzieller Zugriff mehr erfolgen, es muss \enquote{hin und her
+        gesprungen} werden, um die Datensätze zu lesen.
+        Die beiden folgenden Abbildungen sollen den Unterschied zwischen einem
+        fragmentierten und einem nicht fragmentierten Index verdeutlichen. In
+        \abbildung{non_fragmented_index} ist die Reihenfolge der Indexeinträge
+        1., 2. und 3. (hier rot, grün und blau dargestellt) die gleiche, wie die
+        der Indizierten Zeilen in der abhängigen Tabelle. Sollen mit einer
+        Abfrage beispielsweise die Zeilen 2 und 3 gelesen werden, kann dies mit
+        einem einfachen sequenziellen Zugriff erfolgen.
+        \bild{Ein nicht fragmentierter Index}{non_fragmented_index}{0.6}
+        
+        \abbildung{fragmented_index} zeigt eine fragmentierten Index. Die
+        Reihenfolge der Indexeinträge und die Reihenfolge der indizierten Zeilen
+        in der Tabelle stimmen nicht mehr überein. Das Lesen der Datensätze wird
+        dadurch aufwendiger.
+        
+        Die Fragmentierung eines Indexes kann durch eine Neuerstellung oder eine
+        Neuorganisation behoben werden. Im Folgenden werden diese beiden
+        unterschiedlichen Methoden näher erläutert.
+        \bild{Ein fragmentierter Index}{fragmented_index}{0.6}
+        \subsubsection{Indexfragmentierung erkennen}
+          Um den Grad der Fragmentierung eines Indexes feststellen zu können,
+          bringt SQL Server die Systemfunktion
+          \identifier{sys.dm\_db\_index\_physical\_stats} mit. Diese liefert dem
+          User drei Angaben:
+          \begin{itemize}
+            \item \textbf{avg\_fragmentation\_in\_percent}: Prozentsatz der
+            logischen Fragmentierung des Indizes (falsche Reihenfolge der Seiten
+            im Index)
+            \item \textbf{fragment\_count}: Anzahl der Fragmente im Index
+            (physisch aufeinanderfolgende Blattseiten)
+            \item \textbf{avg\_fragment\_size\_in\_pages}: Durchschnittliche
+            Anzahl der Seiten in einem Fragment im Index.
+          \end{itemize}
+          Für die Entschiedung, ob der Index Neuorganisiert oder Neuerstellt
+          werden muss ist der Werte der Spalte
+          \identifier{avg\_fragmentation\_in\_percent} entscheident. Microsoft
+          liefert folgenden Anhalt:
+          \begin{itemize}
+            \item $5 \% < x <= 30 \% $ : Der Index sollte Neuorganisiert werden
+            \item $30 \% < x$ : Der Index sollte Neuerstellt werden.
+          \end{itemize}
+          \begin{merke}
+            Diese Richtwerte sind nur ein grober Anhalt, wann die eine und wann
+            die andere Methode zur Anwendung kommen sollte. Der Administrator
+            muss durch Experimentieren herausfinden, was für sein eigenes System
+            adäquat ist.
+          \end{merke}
+        \subsubsection{Fragmentierung sehr kleiner Indizes}
+          Wenn ein Index sehr klein ist (kleiner als 8 Indexseiten) kann es
+          sein, dass der Administrator einer Fragmentierung nicht entgegenwirken
+          kann, weil die Indexseiten in Mixed-Extents gespeichert werden. Da in
+          einem Mixed-Extent Seiten von mehreren Objekten liegen, kann diese
+          Form von Extent nicht einfach Neuorganisiert/Umsortiert werden.
+        \subsubsection{Neuorganisieren}
+          Beim Neuorganisieren eines Indexes werden die Seiten der Blattebene
+          physisch neu angeordnet, so dass sie wieder in der richtigen
+          Reihenfolge vorliegen. Diese Vorgehensweise ist dann interessant, wenn
+          nur einige Teile des Indexes betroffen sind. Wenn beispielsweise in
+          den ersten 10 \% eines Indexes eine hohe Fragmentierung herscht,
+          während die restlichen 90 \% vollkommen in Ordnung sind, kann eine
+          Neuorganisation gegenüber einer Neuerstellung von Vorteil sein. Die
+          Neuorganisation betrachtet nur die fragmentierten 10 \% des Indexes
+          und lässt den Rest unangetastet, was sehr viel Zeit und Rechenleistung
+          spart.
+          \begin{lstlisting}[language=ms_sql, caption={Den
+          Fragmentierungsgrad eines Indizes feststellen}, label=admin05_12]
+USE [bank]
+GO
+
+SELECT a.index_id, name, avg_fragmentation_in_percent
+FROM   sys.dm_db_index_physical_stats(DB_ID(N'Bank'), OBJECT_ID('dbo.konto'), 
+         NULL, NULL, NULL) AS a
+       JOIN sys.indexes AS b
+         ON (a.object_id = b.object_id AND a.index_id = b.index_id)
+GO
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{index\_id}} &
+                \multicolumn{1}{l}{\textbf{name}} &
+                \multicolumn{1}{l}{\textbf{avg\_fragmentation\_in\_percent}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{1 Zeile ausgew\"ahlt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{1 Zeile ausgew\"ahlt}} \\
+              }
+              \begin{mssql}
+                \begin{supertabular}{lll}
+                  1 & konto\_pk & 23,0769230769231 \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+          \beispiel{admin05_12} zeigt eine logsiche Fragmentierung von 23 \% für
+          den gruppierten Index \identifier{konto\_pk} an. Gemäß der Empfehlung
+          von Microsoft ist hier eine Neuorganisation angebracht.
+          \begin{lstlisting}[language=ms_sql, caption={Den Index
+          \identifier{konto\_pk} reorganisieren}, label=admin05_13]
+USE [bank]
+GO
+
+ALTER INDEX konto_pk
+ON dbo.Konto
+REORGANIZE;
+GO
+          \end{lstlisting}
+          Nach erfolgreicher Neuorganisierung des Indizes wird eine verbleibende
+          Fragmentierung von 16,66 \% für diesen Index angezeigt. Die
+          Fragmentierung konnte also um ca. $\frac{1}{3}$ reduziert werden.
+          \begin{merke}
+            Die Neuorganisation eines Indexes erfolgt immer online, d. h.
+            Benutzer können während der Reorganisation weiter auf den Index
+            zugreifen. Indexoptionen können während der Neuorganisation nicht
+            geändert werden.
+          \end{merke}
+        \subsubsection{Neuerstellen eines Indexes}
+          Beim Neuerstellen eines Indexes wird der komplette Index neu gebaut.
+          Dieser Prozess kann wahlweise online (nur in der Enterprise Edition)
+          oder offline erfolgen.
+          
+          Der Fragmentierungsgrade des Indizes \identifier{eingenkunden\_pk}
+          wird aktuell mit ca. 94 \% angegeben. Laut Microsoft könnte hier
+          mittels des Neuaufbauens des Indexes die Fragmentierung reduziert
+          werden.
+          \begin{lstlisting}[language=ms_sql, caption={Den Index
+          \identifier{eigenkunden\_pk} neuerstellen}, label=admin05_14]
+USE [bank]
+GO
+
+ALTER INDEX eigenkunden_pk
+ON dbo.Eigenkunden
+REBUILD
+WITH (ONLINE = ON);
+GO
+          \end{lstlisting}
+          \beispiel{admin05_14} zeigt wie der Index \identifier{eigenkunden\_pk}
+          online neuerstellt wird.
+          \begin{merke}
+            Es sei daraufhingewiesen, dass die Online-Neuerstellung eines
+            Indexes ein vielfaches mehr an Resourcen kostet, als die
+            Offline-Variante. Zudem wird auch das Transaktionsprotokoll stärker
+            belastet, wenn der Index online neuerstellt wird.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms189858}
+            \item \cite{mssRSSiutOo}
+          \end{literaturinternet}
+\clearpage
+      \subsection{Deaktivieren von Indizes}
+        Durch das Deaktivieren eines Indexes werden alles lesenden und
+        schreibenden Zugriffe auf ihn unterbunden. Bei einem gruppierten
+        Index werden sogar alle Zugriff auf die zugrundeliegenden
+        Tabellendaten unmöglich. Dies wird häufig vor Massenladevorgängen
+        gemacht oder wenn ein Index konstant für schlechte Abfrageperformance
+        sorgt.
+        
+        Wird ein Index deaktiviert, so gilt grundsätzlich:
+        \begin{itemize}
+            \item Die Metadaten (Definition) eines deaktivierten Indexes, der
+            auf eine Tabelle verweist, werden beibehalten, d. h. der Index geht
+            nicht verloren.
+            \item Der Index wird bei DML-Vorgängen nicht mehr gewartet.
+            \item Er wird nicht mehr bei der Erstellung von Ausführungsplänen
+            berücksichtigt.
+            \item Es kann kein neuer Index erstellt werden, der den gleichen
+            Namen benutzt, wie ein bereits vorhandener deaktivierter Index.
+            \item Mit Hilfe von \languagemssql{ALTER INDEX ALL REBUILD} können
+            alle deaktivierten Indizes auf einer Tabelle neuerstellt und
+            aktiviert werden.
+            \item Ein deaktivierter Index kann nicht gelöscht werden.
+        \end{itemize}
+        \subsubsection{Deaktivieren von gruppierten Indizes}
+          Zusätzlich zu den allgemeinen Regeln gelten beim Deaktivieren eines
+          gruppierten Indexes gelten die folgenden Regeln:
+          \begin{itemize}
+              \item Es werden alle \FOREIGNKEY-Constraints deaktiviert, die sich
+              auf den deaktivierten gruppierten Index beziehen. 
+              \item Wenn es sich bei dem gruppierten Index um einen
+              eindeutigen Index handelt, werden auch alle \PRIMARYKEY- und
+              \UNIQUE-Constraints deaktiviert,die sich auf den Index beziehen.
+              \item Beim Deaktivieren eines gruppierten Indexes werden auch alle
+              nicht gruppierten Indizes deaktiviert, die sich auf den
+              gruppierten Index beziehen.
+              \item \languagemssql{DBCC CHECKDB} kann keine Informationen zu
+              einem deaktivierten gruppierten Index liefern.
+          \end{itemize}
+        \subsubsection{Deaktivieren von nicht gruppierten Indizes}
+          Zusätzlich zu den allgemeinen Regeln gelten beim Deaktivieren eines
+          nicht gruppierten Indexes folgende Regeln:
+          \begin{itemize}
+              \item Ein deaktivierter nicht gruppierter Index kann online oder
+              offline neuerstellt werden.
+          \end{itemize}
+        \subsubsection{Indizes mit TSQL deaktivieren}
+          Sowohl gruppierte als auch nicht gruppierte Indizes können mit Hilfe
+          des \languagemssql{ALTER INDEX}-Kommando deaktiviert werden.
+          \begin{lstlisting}[language=ms_sql, caption={Den Index
+          \identifier{eigenkunden\_pk} deaktivieren}, label=admin05_15]
+USE [bank]
+GO
+
+ALTER INDEX eigenkunden_pk
+ON dbo.Eigenkunden
+DISABLE;
+GO
+          \end{lstlisting}
+          Zum Deaktivieren aller Indizes, die auf ein bestimmtes Objekt zeigen,
+          existiert die Anweisung \languagemssql{ALTER INDEX ALL}.
+          \begin{lstlisting}[language=ms_sql, caption={Alle Indizes auf der
+          Tabelle \identifier{eigenkunden}}, label=admin05_16]
+USE [bank]
+GO
+
+ALTER INDEX ALL
+ON dbo.Eigenkunden
+DISABLE;
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{ms177456}
+          \end{literaturinternet}
+      \subsection{Aktivieren von Indizes}
+        Bevor ein deaktivierter Index wieder genutzt werden kann, muss er zuerst
+        aktiviert werden. Dies gilt nicht nur für den betroffenen Index, sondern
+        auch für alle von ihm abhängigen Indizes und evtl. auch Constrains.
+        \subsubsection{Auswirkungen auf Constraints}
+          \begin{itemize}
+            \item Nach dem Neuerstellen/Aktivieren eines Indexes müssen alle
+            Constraints, manuell, durch das Kommando \languagemssql{ALTER TABLE
+            CHECK CONSTRAINT}, aktiviert werden.
+            \item \PRIMARYKEY- und \UNIQUE-Constraints werden durch die
+            Neuerstellung eines Indizes, von dem sie abhängig sind, automatisch
+            aktiviert.
+          \end{itemize}       
+        \subsubsection{Auswirkungen auf gruppierte Indizes}
+          \begin{itemize}
+            \item Gruppierte Indizes können nicht online neuerstellt werden.
+          \end{itemize}
+        \subsubsection{Auswirkungen auf nicht gruppierten Indizes}
+          \begin{itemize}
+            \item Deaktivierte nicht gruppierte Indizes müssen explizit, mittels
+            \languagemssql{ALTER INDEX}-Kommando reaktiviert werden, es sei denn
+            ein gruppierter Index, von dem sie abhängig sind, wird mittels
+            \languagemssql{ALTER INDEX ALL} neuerstellt.
+          \end{itemize}
+          Weiterhin tretten die folgenden Auswirkungen auf einen deaktivierten
+          nicht gruppierten Index auf:
+          \begin{center}
+            \begin{small}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{Aktion auf gruppierten Index}} &
+                \multicolumn{1}{l}{\textbf{Ergebnis für nicht gruppierten Index}}  \\
+                \hline
+              }
+            \tablehead{
+            }
+            \tabletail {
+              \hline
+            }
+            \tablelasttail {
+              \hline
+            }
+              \begin{supertabular}{|l|l|}
+              ALTER INDEX REBUILD & \textbf{Er bleibt
+              deaktiviert} \\
+              \hline
+              ALTER INDEX REBUILD ALL & \textbf{Er wird neu erstellt und
+              aktiviert} \\
+              \hline
+              DROP INDEX & \textbf{Er bleibt
+              deaktiviert} \\
+              \hline
+              CREATE INDEX WITH DROP\_EXISTING & \textbf{Er bleibt
+              deaktiviert} \\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+          Wird der gruppierte Index neu erstellt, treten die gleichen
+          Auswirkungen auf, wie bei einem \languagemssql{ALTER INDEX ALL
+          REBUILD}.
+          Die folgende Tabelle zeigt auf, welche Aktionen für einen nicht
+          gruppieten Index, der einem gruppierten Index zugeordnet ist, zulässig
+          sind und welche Auswirkungen diese haben.
+          \begin{center}
+            \begin{small}
+              \tablefirsthead {
+                \multicolumn{1}{p{7cm}}{\textbf{Aktion auf nicht gruppierten
+                Index}} & \multicolumn{1}{p{3.2cm}}{\textbf{Beide Indizes sind
+                deaktiviert}} &
+                \multicolumn{1}{p{3.75cm}}{\textbf{Der gruppierte Index ist
+                aktiviert}}
+                \\
+                \hline
+              }
+            \tablehead{
+            }
+            \tabletail {
+              \hline
+            }
+            \tablelasttail {
+              \hline
+            }
+              \begin{supertabular}{|p{7cm}|p{3.2cm}|p{3.75cm}|}
+              ALTER INDEX REBUILD &  Fehler & Aktion erfolgreich \\
+              \hline
+              DROP INDEX & Aktion erfolgreich & Aktion erfolgreich \\
+              \hline
+              CREATE INDEX WITH DROP\_EXISTING & Fehler & Aktion erfolgreich \\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+          \begin{literaturinternet}
+            \item \cite{ms190645}
+            \item \cite{ms177456}
+          \end{literaturinternet}
+      \subsection{Verschieben eines Indexes in eine andere Dateigruppe}
+        Indizes können mittels der Anweisung \languagemssql{CREATE INDEX WITH
+        DROP_EXISTING = ON} in eine andere Dateigruppe verschoben werden. Sollte
+        es sich bei einem Index um einen gruppierten Index handeln, werden die
+        Tabellendaten zusammen mit dem Index verschoben.
+        
+        Das folgende Beispiel zeigt, wie der Index \identifier{eigenkunden\_pk}
+        in die Dateigruppe \identifier{indexdata} verschoben wird.
+        \begin{lstlisting}[language=ms_sql, caption={Den Index
+        \identifier{eigenkunden\_pk} in eine andere Dateigruppe verschieben},
+        label=admin05_17]
+USE [bank]
+GO
+
+CREATE UNIQUE CLUSTERED INDEX eigenkunden_pk
+ON dbo.Eigenkunden (eigenkunden_id)
+WITH (DROP_EXISTING = ON)
+ON Indexdata;
+GO
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{ms175905}
+        \end{literaturinternet}

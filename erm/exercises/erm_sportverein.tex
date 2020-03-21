@@ -1,0 +1,28 @@
+      \subsection{Übungsaufgabe Sportverein}
+        Entwerfen Sie, basierend auf der folgenden Lage, ein ER-Modell inklusive der Beziehungen zwischen
+        den Entit\"{a}ten.
+
+        Ein Sportverein will zur besseren Verwaltung seiner eigenen Sportabteilungen, Trainer und
+        Sportler eine Datenbank entwerfen. In der Datenbank soll ersichtlich werden, welcher Trainer
+        welche Sportart trainiert und welcher Sportler in der jeweiligen Abteilung aktiv ist.
+
+        Im Folgenden werden die angesprochenen Datenbankinhalte spezifiziert:
+        \begin{itemize}
+          \item Zu jeder Sportabteilung muss eine eindeutige ID und deren vereinsinterne
+          Bezeichnung gespeichert werden.
+          \item Für jede Sportart ist eine ID und deren Bezeichnung wichtig. Eine Sportart wird in genau einer
+          Abteilung durchgeführt, wobei in einer Abteilung mindestens eine Sportart durchgeführt wird.
+          \item Für den jeweiligen Trainer ist der Vor- und Nachname, das Geburtsdatum
+          und das Eintrittsdatum in den Verein zu speichern. Ein Trainer trainiert mindestens eine Sportart.
+          Eine Sportart wird von höchstens einem Trainer trainiert, wobei es vorkommen kann, dass beim
+          Ausscheiden eines Trainers aus dem Verein, eine Sportart kurzzeitig keinen Trainer hat.
+          \item Jede Sportart wird von mindestens einem Sportler ausgeübt. Ein Sportler hingegen kann mehrere
+          Sportarten ausüben, wobei es keine passiven Mitglieder/Sportler im Verein gibt. Bis auf die
+          Trainernummer sind für den Sportler die selben Daten zu erheben, wie für die Trainer.
+          \item Jede Sportabteilung hat mindestens einem Trainingsort (Adresse). Es kann sein, dass an
+          einem Trainingsort mehrere Sportabteilungen trainieren. Bei der Adressspeicherung sind die
+          Postleitzahl (PLZ), der Ort, die Straß e und die Hausnummer relevant.
+          \item Jeder Trainer und jeder Sportler wohnen bei genau einer Adresse. Es ist auch möglich,
+          dass mehrere Trainer oder Sportler an der selben Adresse wohnen.
+        \end{itemize}
+\clearpage

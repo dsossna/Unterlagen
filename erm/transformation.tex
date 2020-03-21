@@ -1,0 +1,1824 @@
+\chapter{Transformation}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+    Bei der Beschreibung der Realität, mit Hilfe eines Entity-Relationship-Modells, bestand die Zielrichtung darin, Objekttypen und Beziehungstypen unabhängig vom später einzusetzenden Datenbankmanagementsystem und somit auch unabhängig von einem speziellen Datenbankmodell zu beschreiben. Nun muss der Versuch unternommen werden, das durch die Modellierung entstandene Datenmodell möglichst ohne semantische\footnote{Semantik = Bedeutungslehre, bezeichnen, anzeigen} Einbuß en mit den Strukturierungsmitteln der verfügbaren Datenbankmanagementsysteme wiederzugeben. Dieser Vorgang wird als Transformation bezeichnet. Es ist die Umsetzung des konzeptionellen Datenmodells, welches nur die möglichen Beziehungen zwischen den Objekttypen beschreibt, in das physische Datenmodell. Das physische Datenmodell berücksichtigt, wie die Beziehungen zwischen den Objekttypen auf Datenbankebene effektiv umgesetzt werden. Das physische Datenmodell wird in verschiedenen Quellen auch als relationales Modell
+bezeichnet.
+
+    Eine komplette Gleichsetzung ist je nach Interpretation nicht möglich, hier soll jedoch nicht weiter unterschieden werden.
+
+    Im Vorfeld sind diese beiden Fragen zu beantworten.
+    \begin{enumerate}
+      \item Welches Datenbankmodell soll der zu erstellenden Datenbank zugrunde liegen?
+      \item Welche Möglichkeiten bietet das zu verwendende Datenbankmanagementsystem für die Gestaltung der Datenstrukturen?
+    \end{enumerate}
+    Hinsichtlich der ersten Frage hat heutzutage das relationale Datenbankmodell die meiste Relevanz. Was die zweite Fragestellung anbetrifft, so kommen hier nur die beiden Datenbankmanagementsysteme \textit{ORACLE} und \textit{Microsoft SQL Server} zum Einsatz. Bei beiden Systemen handelt es sich um relationale Datenbankmanagementsysteme (RDBMS), welche ihre Vor- und Nachteile besitzen, auf die im Unterricht kurz eingegangen werden soll.
+
+    Dieses Kapitel schafft einheitliche Begriffe und stellt Regeln für die Transformation eines ER-Modells in ein relationales Modell auf.
+\clearpage
+    \section{Grundlagen}
+      \subsection{Begriffsdefinitionen}
+        \label{basics_definitions}
+        Im vorangegangenen Kapitel wurde der Begriff \enquote{Schlüssel} erläutert, der an dieser Stelle aber noch weiter differenziert werden muss.
+        \subsubsection{Identifikationsschlüssel (ID-Schlüssel)}
+          Jedes Objekt einer Objektmenge muss eindeutig identifizierbar sein. Dies kann durch eine Eigenschaft/Attribut oder eine Kombination von Eigenschaften/Attributen gewährleistet werden. Beispielsweise ist ein Soldat der Bundeswehr eindeutig durch die Personalnummer identifizierbar. Der Name einer Person kann \textbf{kein} Identifikationsschlüssel sein, weil es sehr wahrscheinlich ist, dass es mehrere Personen mit dem gleichen Namen gibt (z. B. mehrere Meier).
+
+          Der Identifikationsschlüssel muss folgende Kriterien erfüllen:
+          \begin{itemize}
+           \item Jedes Objekt muss eindeutig identifizierbar sein. Es dürfen nicht mehrere Objekte einen ID-Schlüssel mit dem gleichen Wert aufweisen.
+           \item Jedem neuen Objekt muss augenblicklich ein Identifikationsschlüssel zugeteilt werden können, da sonst keine Speicherung des Objektes erfolgen darf.
+           \item Der ID-Schlüsselwert eines Objektes darf sich während dessen Existenz nicht verän\-dern.
+          \end{itemize}
+        \subsubsection{Primärschlüssel}
+          Der Primärschlüssel wird häufig mit dem Begriff \enquote{Identifikationsschlüssel} gleichgesetzt. Diese beiden Begriffe sind aber nicht geichbedeutend. Der Primärschlüssel (PK - primary key) wird direkt in die Speicherorganisation einbezogen und ist somit dem physischen Datenmodell zugeordnet. Der ID-Schlüssel hingegen ist dem konzeptionellen Datenmodell zugeordnet. Ansonsten gelten für die Eigenschaftswerte eines PK dieselben Bedingungen, wie beim ID-Schlüssel beschrieben. Jeder transformierte Objekttyp kann nur einen PK haben. Da jedes Objekt eindeutig über den PK identifiziert werden soll, ergibt sich automatisch die Bedingung, dass der Wert des PK einmalig (unikal) und nicht NULL (leer) sein muss. Daneben kann es aber auch weitere Eigenschaften mit eindeutigen Werten geben, die nicht zum PK gehören.
+\clearpage
+        \subsubsection{Fremdschlüssel}
+          Ein Fremdschlüssel (FK = Foreign Key) ist ein Attribut, welches zur Verknüpfung zweier Tabellen dient. Ein Fremdschlüsselattribut wird in eine Tabelle eingefügt, welche sich als untergeordnete Tabelle auf eine andere bezieht. Das Fremschlüsselattribut bezieht sich dabei immer auf den Primärschlüssel oder aber auf ein anderes, eindeutiges Attribut der übergeordneten Tabelle. Genauso wie der Primärschlüssel kann auch der Fremdschlüssel aus einer Kombination von Attributen bestehen. Im Gegensatz zum PK kann der FK NULL-Werte beinhalten.
+        \subsubsection{NULL bzw. NOT NULL}
+          Ein Eigenschaftswert kann in einer Datenbank verschiedene Einschränkungen haben, um die Konsistenz der Daten zu gewährleisten. Eine dieser Einschränkungen (engl. constraint) ist das NOT NULL constraint, welches im SQL Teil näher erläutert wird. Es wird damit festgelegt, ob der Eigenschaftswert beim Anlegen eines Datensatzes vorhanden sein muss (NOT NULL, Abk. [NN]) oder ob er leer sein darf (NULL, Standard). Damit kann in der Datenbank die Forderung nach der Eigenschaft \enquote{eingabepflichtig} (Teil der Transformation) realisiert werden.
+        \subsubsection{UNIQUE}
+          Bei dem Begriff UNIQUE (Abk. [UN]) handelt es sich ebenfalls um ein constraint (Er\-läu\-terung\-en im SQL Teil). Mit diesem constraint kann die Forderung nach der \enquote{Unikalität}, die sich durch die Transformation ergibt, erfüllt werden. Das UNIQUE (einmalig) constraint sorgt dafür, dass die Eigenschaftswerte eines Objekttyps nicht doppelt vorkommen. Im RDBMS Oracle bildet hier der NULL-Wert eine Ausnahme, d.h. es können mehrere NULL Werte innerhalb einer Spalte vorkommen. In Microsoft SQL Server ist dies nicht der Fall.
+      \subsection{Kurzschreibweise der Tabellen}
+        Den Aufbau einer Tabelle kann man mit folgender Kurzschreibweise darstellen:
+
+        \centerline{Tabellenname(\pk{ID-Schlüssel}, Attribut$_1$, Attribut$_2$, Attribut$_3$, ..., Attribut$_n$)}
+
+        Falls der PK aus zusammengesetzten Attributen besteht, werden alle erforderlichen Attribute unterstrichen:\\
+        \hspace*{12mm}Tabellenname(\pk{Teil-ID-Schlüssel$_1$}, \pk{Teil-ID-Schlüssel$_2$}, Attribut$_1$, Attribut$_2$,\\
+        \hspace*{40mm}Attribut$_3$, ..., Attribut$_n$)
+    \section{Transformation von Objekttypen}
+      Die Objekttypen des ER-Modells stellen das Haupt-Ordnungsprinzip der Datenmodellierung dar. Sie beschreiben die Klassen-Struktur, in die die speicherrelevanten Objekte der abzubildenden Realität eingeordnet werden. Im physischen Datenbankmodell wird diese Klassen-Struktur durch einen Satz von Tabellen wiedergegeben.
+
+      Für jeden Objekttyp des ER-Modells wird eine Tabelle vereinbart. Dabei gilt die Transformationsregel T01.
+      \subsubsection{Transformationsregel T01 (Objekttyp)}
+      \tablefirsthead{%
+        \hline
+          \multicolumn{1}{|l}{\textbf{konzeptionelles Datenmodell}} &
+          \multicolumn{1}{|l}{\textbf{ }} &
+          \multicolumn{1}{|l|}{\textbf{physisches Datenmodell}} \\
+        \hline
+      }
+      \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+        \hline
+        \footnotesize Objekttypname & $\Rightarrow$ & \footnotesize Tabellen-Bezeichnung\\
+        \hline
+        \footnotesize (Teil-)Identifizierende Eigenschaft & $\Rightarrow$ & \footnotesize Primärschlüssel-Attribut\\
+        \hline
+        \footnotesize Beschreibende Eigenschaft & $\Rightarrow$ & \footnotesize Spalten-Bezeichnung\\
+        \hline
+      \end{supertabular}
+
+      \begin{center}
+        \scalebox{.7}{
+          \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](obj1){Objekttypname};
+              \node[attribute](teil1)[above left = of obj1]{\key{Teilidentifizierendes Attribut 1}} edge (obj1);
+              \node[attribute](teil2)[above right = of obj1]{\key{Teilidentifizierendes Attribut 2}} edge (obj1);
+              \node[attribute](beschr)[below = of obj1]{Beschreibendes Attribut} edge (obj1);
+        \end{tikzpicture}
+        }
+      \end{center}
+    \section{Transformation binärer Beziehungstypen}
+      In vorangegangenen Abschnitten wurde festgestellt, dass sich Beziehungstypen im physischen Datenbankmodell nur dadurch repräsentieren lassen, dass der Primärschlüssel (PK) einer Tabelle \enquote{gedoppelt} und als Fremdschlüssel an \enquote{anderer Stelle} aufgenommen wird. Handelt es sich bei dieser \enquote{anderen Stelle} um eine andere Tabelle, wird ein binärer Beziehungstyp dargestellt, der den sachlogischen Zusammenhang zwischen zwei Objekten aus verschiedenen Objekttypen beschreibt.
+
+      Liegt diese \enquote{andere Stelle} dagegen in derselben Tabelle, aus der der PK stammt, wird ein rekursiver Beziehungstyp repräsentiert. Hier wird der sachlogische Zusammenhang zwischen zwei Objekten widergespiegelt, die demselben Objekttyp angehören. Nachfolgend werden die zehn möglichen binären und die sieben rekursiven Beziehungstypen in (Min,Max)-Notation erläutert.
+      \subsection{Der (1,1):(1,1) Beziehungstyp}
+        Beim (1,1):(1,1) Beziehungstyp ist jedes Objekt des Objekttyps A mit genau einem Objekt des Objekttyps B verbunden und umgekehrt. Je ein A-Objekt und ein B-Objekt gehen eine feste Paarung ein, wie \abbildung{rel1111} zeigt. %oder auch in Abbildung \ref{fig:rel1111}.
+
+        %\begin{figure}[!htb]
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \label{rel1111}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1} edge (a1);
+                \node[bluespot](b2) at (5, 0.8) {b2} edge (a2);
+                \node[bluespot](b3) at (4.6, 0.3) {b3} edge (a3);
+                \node[bluespot](b4) at (3.7, -0.4) {b4} edge (a4);
+                \node[bluespot](b5) at (4.3, -0.8) {b5} edge (a5);
+            \end{tikzpicture}
+          }
+        \end{center}
+        (1,1):(1,1) Beziehungstypen sind bereits im ER-Modell kritisch zu betrachten, weil sie meist über\-flüs\-sig sind. Ist nämlich jedes Objekt-A mit genau einem Objekt-B - und umgekehrt - verbunden, dann bildet sich eine derart feste Kopplung, dass sie als ein einziges, komplexes Objekt betrachtet werden können. Die Umsetzung erfolgt, in dem alle Attribute von B in die Tabelle A eingefügt werden. Die Kopplung wird dadurch erzwungen, dass der Schlüssel von B in der Tabelle A als eingabepflichtig (NOT NULL, NN) und als unikal (UNIQUE, UN) deklariert wird. Ein B-Objekt kann nun nicht losgelöst von \enquote{seinem} Objekt A gespeichert werden.
+
+        \subsubsection{Beispiel (1,1):(1,1) Beziehungstyp}
+          Betrachten wir zunächst einen \enquote{überflüssigen} (1,1):(1,1) Beziehungstyp: Mitarbeiter eines Unternehmens, von denen jeder genau einen Dienstausweis besitzt. Ein gegebener Dienstausweis ist natürlich für genau einen Mitarbeiter ausgestellt.
+
+          Da das Attribut \enquote{Ausweisnummer} eingabepflichtig ist, muss jeder gespeicherte Mitarbeiter einen Ausweis haben. Andererseits ist das Attribut unikal, so dass eine Ausweisnummer nur einem Mitarbeiter zugeordnet sein kann.
+
+          Es gibt aber auch Fälle, bei denen ein (1,1):(1,1) Beziehungstyp durchaus sinnvoll ist. Will man beispielsweise die Informationen über Objekte in öffentliche (z.B. Mitarbeiter-\\Offen(\pk{Personalnummer}, Name, TelNr, Abteilung)) und vertrauliche Daten (z.B. Mitar-\\beiterVS(\pk{Personalnummer}, Gehalt, Konfession)) unterteilen, kann man zwei Objekttypen A und B mit demselben Schlüssel \pk{S} ins Datenmodell aufnehmen. Dann wird sowohl der Schlüssel \pk{S} von A in B als unikaler eingabepflichtiger Fremdschlüssel vereinbart und umgekehrt, der Schlüssel \pk{S} von B wird in A als unikaler eingabepflichtiger FK deklariert. Die folgende Tabelle zeigt die entsprechende Transformationsregel T02.
+\clearpage
+        \subsubsection{Transformationsregel T02 für sinnvolle (1,1):(1,1) Beziehungen}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{konzeptionelles Datenmodell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \tabletail{%
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{S} & $\Rightarrow$ & \footnotesize Tabelle A mit PK \pk{S}\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{S} & $\Rightarrow$ & \footnotesize Tabelle B mit PK \pk{S}\\
+            \hline
+            \footnotesize (1,1):(1,1) Beziehungstyp & $\Rightarrow$ & \footnotesize \pk{S} wird sowohl in A als auch in B als unikaler [UN], eingabepflichtiger [NN] Fremdschlüssel vereinbart (\fk{S})\\
+            \hline
+            \multicolumn{3}{|l|}{Alternative bei unterschiedlichen Schlüsseln:} \\
+            \hline
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow$ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{SB} & $\Rightarrow$ & \footnotesize Tabelle B mit PK \pk{SB}\\
+            \hline
+            \footnotesize (1,1):(1,1) Beziehungstyp & $\Rightarrow$ & \footnotesize Es wird \pk{SA} in B und \pk{SB} in A als unikaler [UN], eingabepflichtiger [NN] Fremdschlüssel eingefügt (\fk{SA} und \fk{SB})\\
+          \end{supertabular}
+
+          Ein Fremdschlüssel wird in die Verweispfeile eingeschlossen - \fk{xyz}. Sollte der Fremd\-schlüs\-sel seinerseits wieder Fremd\-schlüs\-sel enthalten, werden für die inneren Fremd\-schlüs\-sel die Verweispfeile weggelassen. Ist der Fremdschlüssel in der Tabelle für sich wiederum ein Primärschlüssel, so wird der FK unterstrichen und fett gedruckt - \fk{\pk{xyz}}.
+
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){A};
+                \node[attribute](S)[left = of A]{\key{S}} edge (A);
+              \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(1,1)}(A);
+              \node[entity](B)[right = of rel1]{B} edge node[auto,swap] {(1,1)} (rel1);
+                \node[attribute](S)[right = of B]{\key{S}} edge (B);
+          \end{tikzpicture}
+          }
+        \end{center}
+
+        \bild{}{transformationsregel_02_tabellen}{0.45}
+
+          Bei diesem Beziehungstyp kann ein neues Objekt weder allein in A noch allein in B gespeichert werden. Das würde der Forderung nach Nichtoptionalität beider Beziehungstyprichtungen (siehe den jeweiligen Min-Wert) widersprechen. Deswegen muss vom Anwendungsprogramm im Rahmen einer Transaktion erreicht werden, dass zu einem neuen Schlüsselwert je eine Zeile in die Tabellen A und B eingetragen wird.
+
+          \begin{merke}
+            Eine Transaktion ist eine Folge von Operationen, bei der sichergestellt wird, dass entweder alle Operationen fehlerfrei beendet werden oder das keine der Operationen ausgeführt wird.
+          \end{merke}
+        \subsubsection{Beispiel - Mitarbeiteradresse}
+          Werden in einer Datenbank Adressen für mehrere Objekttypen gespeichert, z. B. Mitarbeiter und Kunden, kann es sinnvoll sein, einen eigenen Objekttyp \enquote{Adresse} zu erstellen.
+
+					Da die Fremdschlüssel jeweils auf die andere Tabelle verweisen, muss es nach den Regeln der referentiellen Integrität zu jedem FK genau einen Datensatz in der anderen Tabelle geben.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.2cm, every edge/.style={link}]
+                \node[entity](A){Mitarbeiter};
+                  \node[attribute](a1)[left = of A]{\key{Personalnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Name} edge (A);
+                  \node[attribute](a3)[below left = of A]{Telefon} edge (A);
+                \node[relationship](rel1)[right = of A]{wohnt an} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{Adresse} edge node[auto,swap] {(1,1)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Adresse\_ID}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Strasse} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Mitarbeiter(\pk{Personalnummer}, Name, Telefon, \un{\nn{\fk{Adresse\_ID}}})
+
+            Adresse(\pk{Adresse\_ID}, Strasse, Hausnummer, PLZ, Ort, \un{\nn{\fk{Personalnummer}}})
+          \end{small}
+      \subsection{Der (1,1):(0,1) Beziehungstyp}
+        Beim (1,1):(0,1) Beziehungstyp ist jedes Objekt des Objekttyps A mit genau einem Objekt des Objekttyps B verbunden. Ein Objekt aus B kann aber nur mit höchstens einem Objekt aus A gekoppelt sein. Die Information(en) im A-Objekt können als fakultative\footnote{wahlfreie, beliebige, optionale} ergänzende Angaben zum B-Objekt interpretiert werden. \abbildung{rel1101} verdeutlicht dies.
+
+        \begin{center}
+        \label{rel1101}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1} edge (a1);
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3} edge (a3);
+                \node[bluespot](b4) at (3.7, -0.4) {b4} edge (a2);
+                \node[bluespot](b5) at (4.3, -0.8) {b5};
+            \end{tikzpicture}
+          }
+        \end{center}
+
+        Die Art der Transformation richtet sich nun danach, wie hoch der Anteil jener B-Objekte ist, für die ergänzende Angaben gemacht werden, die also in Beziehung zu einem A-Objekt stehen. Oder anders gefragt, ob der Objekttyp B wesentlich mehr Objekte enthält als der Objekttyp A.
+        \subsubsection{Fall 1:\#A unwesentlich kleiner als \#B}
+          Gibt es bei einem (1,1):(0,1) Beziehungstyp nur unwesentlich mehr B-Objekte als A-Objekte, können die Daten beider Objekttypen in einer Tabelle zusammengefasst werden. Die Eigenschaften von A werden dabei als nicht-eingabepflichtig deklariert.
+\clearpage
+          Der Schlüssel \pk{SA} von A wird in der Tabelle B jedoch als unikal deklariert. Ein A-Objekt, das damit nur zu einem einzigen B-Objekt gehören kann, kann nicht losgelöst von \enquote{seinem} B-Objekt gespeichert werden. Bei den wenigen B-Objekten, die nicht mit einem A-Objekt verbunden sind, nehmen die A-Attribute den Wert NULL an.
+        \subsubsection{Transformationsregel T03 für den (1,1):(0,1) Beziehungstyp (selten realisierte Optionalität)}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{konzeptionelles Datenmodell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow$ & \footnotesize Alle Eigenschaften von A werden als nicht-eingabe-pflichtige Attribute in B aufgenommen. SA wird auß{}erdem als unikal [UN] deklariert\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{SB} & $\Rightarrow$ & \footnotesize Tabelle B mit PK \pk{SB} \\
+            \hline
+            \footnotesize (1,1):(0,1) Beziehungstyp & $\Rightarrow$ & \footnotesize wird nicht gesondert dargestellt\\
+          \end{supertabular}
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](SA)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{B} edge node[auto,swap] {(0,1)} (rel1);
+                  \node[attribute](SB)[right = of B]{\key{SB}} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Beispiel - Mitarbeiterhandy}
+          Werden fast alle Mitarbeiter eines Unternehmens mit genau einem Handy ausgestattet, so sind die ergänzenden Angaben für das Handy bei nahezu allen Mitarbeitern erforderlich. Die entsprechende Transformation zeigt die folgende Abbildung.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Handy};
+                  \node[attribute](Inventarnummer)[left = of A]{\key{Inventarnummer}} edge (A);
+                  \node[attribute](Mobilfunknummer)[above left = of A]{Mobilfunknummer} edge (A);
+                \node[relationship](rel1)[right = of A]{hat} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{Mitarbeiter} edge node[auto,swap] {(0,1)} (rel1);
+                  \node[attribute](Personalnummer)[right = of B]{\key{Personalnummer}} edge (B);
+                  \node[attribute](Name)[above right = of B]{Name} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Mitarbeiter(\pk{Personalnummer}, Name, \un{Handy-Inventarnummer}, Mobilfunknummer)
+          \end{small}
+
+          Die ursprüngliche Eigenschaftsbezeichnung \enquote{Inventarnummer}
+          wurde durch den Zusatz\\ \enquote{Handy} in ihrem neuen Kontext
+          \enquote{sprechender} gewählt. Die Handyspalten der Tabelle
+          Mitarbeiter sind nicht-eingabepflichtig, d.h. sie nehmen für jene
+          Mitarbeiter, die nicht mit einem Handy ausgestattet sind, den
+          NULL-Wert an. Dadurch, dass das Attribut
+          \enquote{Handy-Inventarnummer} als unikal deklariert ist, kann ein und
+          dasselbe Handy nicht mehreren Mitarbeitern zugeordnet werden.
+\clearpage
+        \subsubsection{Fall 2: \#A ist wesentlich kleiner als \#B}
+          Betrachten wir nun den Fall, dass es wesentlich mehr B-Objekte als A-Objekte gibt. Würde man jetzt die beiden Objekttypen in einer Tabelle vereinen, hätten die Attribute der A-Objekte in vielen Zeilen den NULL-Wert. Um dies zu vermeiden, werden zwei Tabellen angelegt: eine B-Tabelle für alle B-Objekte und eine A-Tabelle für die seltenen A-Objekte, die durch einen eingabepflichtigen Fremdschlüssel jeweils auf \enquote{ihr} B-Objekt verweisen. Die Kardinalität \enquote{1} von (0,1) auf der B-Seite wird dadurch erzwungen, dass der Fremdschlüssel in A als unikal deklariert wird. Diese Umsetzung entspricht der Transformationsregel T04.
+        \subsubsection{Transformationsregel T04 für den (1,1):(0,1) Beziehungstyp (oft realisierte Optionalität)}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{konzeptionelles Datenmodell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7,25cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{SB} & $\Rightarrow $ & \footnotesize Tabelle B mit PK \pk{SB}\\
+            \hline
+            \footnotesize (1,1):(0,1) Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SB} wird in A als ein\-ga\-be\-pflich\-tiger uni\-kaler Fremd\-schlüssel auf\-ge\-nommen (\fk{SB}[NN, UN])\\
+          \end{supertabular}
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](SA)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{B} edge node[auto,swap] {(0,1)} (rel1);
+                  \node[attribute](SB)[right = of B]{\key{SB}} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Beispiel - Projektleiter}
+          Soll beispielsweise festgehalten werden, welcher Mitarbeiter ein - und höchstens ein - Projekt leitet, wobei für jedes Projekt genau ein Mitarbeiter verantwortlich ist, so wird es viele Mitarbeiter ohne Projektverantwortung geben. Daher ist in diesem Fall die Transformationsregel T04 anzuwenden.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Projekt};
+                  \node[attribute](a1)[left = of A]{\key{Projeknummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Bezeichnung} edge (A);
+                \node[relationship](rel1)[right = of A]{leitet} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{Mitarbeiter} edge node[auto,swap] {(0,1)} (rel1);
+                  \node[attribute](Personalnummer)[right = of B]{\key{Personalnummer}} edge (B);
+                  \node[attribute](Name)[above right = of B]{Name} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (A:) Projekt(\pk{Projeknummer}, Bezeichnung, \fk{Personalnummer} [NN, UN])
+
+            (B:) Mitarbeiter(\pk{Personalnummer}, Name)
+          \end{small}
+
+          Da der Fremdschlüssel \fk{ Personalnummer } eingabepflichtig ist, muss jedes Projekt genau einen Projektleiter haben. Andererseits ist der Fremdschlüssel unikal, so dass ein Mitarbeiter nur für ein Projekt als Leiter ausgewiesen sein kann. Da es nicht möglich ist sicherzustellen, dass jede Personalnummer eines Mitarbeiters auch tatsächlich als Wert in der Fremdschlüsselspalte auftritt, kann es Mitarbeiter geben, die mit keinem Projekt als Leiter verbunden sind.
+      \subsection{Der (0,1):(0,1) Beziehungstyp}
+        Beim (0,1):(0,1) Beziehungstyp ist jedes Objekt des Typs A mit keinem oder einem Objekt des Typs B verbunden und umgekehrt. Es gibt also A-Objekte ohne B-Partner und B-Objekte ohne A-Partner. Jedes der Objekte kann aber höchstens einen Partner haben. Schematisch ist dies in der folgenden Abbildung dargestellt.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1} edge (a1);
+                \node[bluespot](b2) at (5, 0.8) {b2} edge (a3);
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+                \node[bluespot](b4) at (3.7, -0.4) {b4};
+                \node[bluespot](b5) at (4.3, -0.8) {a4};
+            \end{tikzpicture}
+          }
+        \end{center}
+        Wir nehmen für die folgenden Betrachtungen - ohne Beschränkung der Allgemeinheit - an, dass es höchstens so viele B-Objekte gibt wie A-Objekte (\#A $\geq$ \#B, andernfalls müssen die Objekttpypen einfach die Seiten tauschen). Da sowohl die A-Objekte als auch die B-Objekte unabhängig voneinander existieren können, müssen sie jeweils in einer eigenen Tabelle gespeichert werden.
+
+        Bei den B-Objekten wird ein Verweis auf \enquote{ihren} A-Partner hinterlegt. Bei den \enquote{partnerlosen} B-Objekten hat dieser Verweis dann den NULL-Wert. Deshalb wird der Pri\-mär\-schlüs\-sel von A in der Tabelle B als nicht-eingabepflichtiger Fremdschlüssel aufgenommen. Fordert man für den Fremdschlüssel ausserdem die Unikalität, kann auf ein A-Objekt nur von höchstens einem B-Objekt aus verwiesen werden. Die Regel T05 zeigt diesen Sachverhalt.
+        \subsubsection{Transformationsregel T05 für den (0,1):(0,1) Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{konzeptionelles Datenmodell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7,25cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{SB} & $\Rightarrow $ & \footnotesize Tabelle B mit PK \pk{SB}\\
+            \hline
+            \footnotesize (0,1):(0,1) Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SA} wird in B als nicht-ein\-gabe\-pflichtiger uni\-kaler Fremd\-schlüssel auf\-ge\-nommen (\un{\fk{SA}})\\
+          \end{supertabular}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](SA)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(0,1)}(A);
+                \node[entity](B)[right = of rel1]{B} edge node[auto,swap] {(0,1)} (rel1);
+                  \node[attribute](SB)[right = of B]{\key{SB}} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \bild{}{transformationsregel_05_tabellen}{0.35}
+
+        \subsubsection{Beispiel - Ehe ohne Scheidung}
+          In einem hier nicht näher genannten Land wird die monogame Ehe praktiziert, jedoch mit dem Unterschied zu Deutschland, dass eine Scheidung rechtlich nicht vorgesehen ist. Die Eheschließ{}ung zweier Personen ließ{}e sich somit als binärer (0,1):(0,1)-Beziehungstyp darstellen, da jede Frau höchstens einen Mann und jeder Mann höchstens eine Frau heiraten kann.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Frau};
+                  \node[attribute](a1)[left = of A]{\key{Personen\_ID}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Name} edge (A);
+                \node[relationship](rel1)[right = of A]{heiratet} edge node[auto,swap] {(0,1)}(A);
+                \node[entity](B)[right = of rel1]{Mann} edge node[auto,swap] {(0,1)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Personen\_ID}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Name} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (A:) Frau(\pk{Personen\_ID}, Name)
+
+            (B:) Mann(\pk{Personen\_ID}, Name, \un{\fk{ Ehegatten\_ID}})
+          \end{small}
+
+         Nicht verheiratete Männer haben, statt des Verweises auf die \fk{Personen\_ID} des Ehegatten, einen NULL-Wert. Wegen der Unikalität des Fremdschlüssels kann eine Frau höchs\-tens einen Mann heiraten.
+      \subsection{Der (1,1):(0,*) Beziehungstyp}
+        Beim (1,1):(0,*) Beziehungstyp ist jedes Objekt B mit keinem, einem oder
+        mehreren Objekten des Objekttyps A verbunden. Ein A-Objekt ist dagegen
+        immer mit genau einen B-Objekt gekoppelt. Die folgende Abbildung zeigt
+        dies schematisch.
+
+        \begin{center}
+          \scalebox{0.97}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1};
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+                \node[bluespot](b4) at (3.7, -0.4) {b4};
+                \node[bluespot](b5) at (4.3, -0.8) {b5};
+              \path (a1) edge (b1)
+                (a2) edge (b2)
+                (a3) edge (b3)
+                (a4) edge (b3)
+                (a5) edge (b4);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Der Beziehungstyp wird im physischen Datenbankmodell durch je eine
+        Tabelle für die A-Objekte und die B-Objekte repräsentiert, wobei der
+        PK \pk{SB} von B als eingabepflichtiger Fremdschlüssel in A
+        aufgenommen wird. Jedes A-Objekt muss dann auf genau ein B-Objekt
+        verweisen. Da der Fremdschlüssel aber nicht als unikal vereinbart ist,
+        können mehrere A-Objekte mit demselben B-Objekt gekoppelt sein.
+\clearpage
+        \subsubsection{Transformationsregel T06 für den (1,1):(0,*) Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{konzeptionelles Datenmodell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{SB} & $\Rightarrow $ & \footnotesize Tabelle B mit PK \pk{SB}\\
+            \hline
+            \footnotesize (1,1):(0,*) Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SB} wird in A als ein\-ga\-be\-pflich\-tiger nicht-unikaler Fremd\-schlüssel auf\-ge\-nom\-men (\nn{\fk{SB}})\\
+          \end{supertabular}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{B} edge node[auto,swap] {(0,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{SB}} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Beispiel - Gehaltsgruppen}
+          Beispielsweise kann eine Gehaltsgruppe noch keinem, erst einem Mitarbeiter oder bereits mehreren Mitarbeitern zugeordnet sein. Andererseits wird jeder Mitarbeiter in genau eine Gehaltsgruppe eingeordnet.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Mitarbeiter};
+                  \node[attribute](a1)[left = of A]{\key{Personalnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Name} edge (A);
+                \node[relationship](rel1)[right = of A]{hat} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{Gehaltsgruppe} edge node[auto,swap] {(0,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Gruppennummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Gehalt} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (B:) Gehaltsgruppe(\pk{Gruppennummer}, Gehalt)
+
+            (A:) Mitarbeiter(\pk{Personalnummer}, Name, \nn{\fk{Gruppennummer}})
+          \end{small}
+
+          Da der Fremdschlüssel \fk{Gruppennummer} eingabepflichtig ist, muss jedem Mitarbeiter genau eine Gehaltsgruppe zugeordnet werden. Andererseits ist der Fremdschlüssel nichtunikal, so dass mehrere Mitarbeiter auf dieselbe Gehaltsgruppe verweisen können. Da nicht zu fordern ist, dass jeder Wert des Primärschlüssels \pk{Gruppennummer} auch tatsächlich als Wert des Fremdschlüssels \fk{Gruppennummer} auftreten muss, kann es Gehaltsgruppen geben, auf die noch nicht verwiesen wird.
+      \subsection{Der (0,1):(0,*) Beziehungstyp}
+        Beim (0,1):(0,*) Beziehungstyp kann ein Objekt des Typs B mit keinem, einem oder mehreren A-Objekten gekoppelt sein. Ein A-Objekt kann aber zu höchstens einem B-Objekt in Beziehung stehen.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1};
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+                \node[bluespot](b4) at (3.7, -0.4) {b4};
+                \node[bluespot](b5) at (4.3, -0.8) {b5};
+              \path (a1) edge (b1)
+                (a2) edge (b2)
+                (a3) edge (b3)
+                (a4) edge (b3);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Die Transformation dieses Beziehungstyps erfolgt, indem der Primärschlüssel von B als nicht-ein\-ga\-be\-pflich\-ti\-ger und nicht-unikaler Fremdschlüssel in A aufgenommen wird.
+        \subsubsection{Transformationsregel T07 für den (0,1):(0,*) Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{konzeptionelles Datenmodell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{SB} & $\Rightarrow $ & \footnotesize Tabelle B mit PK \pk{SB}\\
+            \hline
+            \footnotesize (0,1):(0,*) Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SB} wird in A als nicht\-ein\-ga\-be\-pflich\-tiger nicht-uni\-kaler Fremd\-schlüssel auf\-ge\-nommen (\fk{SB})\\
+          \end{supertabular}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(0,1)}(A);
+                \node[entity](B)[right = of rel1]{B} edge node[auto,swap] {(0,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{SB}} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Beispiel - Abteilungsmitarbeiter}
+          Betrachten wir eine Abteilung, die noch keinen, schon einen oder bereits mehrere Mitarbeiter hat. Die meisten Mitarbeiter sind in eine Abteilung eingeordnet, einige wenige - mit zentralen Aufgaben - gehören jedoch zu keiner Abteilung.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Mitarbeiter};
+                  \node[attribute](a1)[left = of A]{\key{Personalnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Name} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(0,1)}(A);
+                \node[entity](B)[right = of rel1]{Abteilung} edge node[auto,swap] {(0,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Abteilungsnummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Jahresbudget} edge (B);
+                  \node[attribute](b3)[below right = of B]{Bezeichnung} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (B:) Abteilung(\pk{Abteilungsnummer}, Jahresbudget, Bezeichnung)
+
+            (A:) Mitarbeiter(\pk{Personalnummer}, Name, \fk{Abteilungsnummer})
+          \end{small}
+
+          Bei den mit zentralen Aufgaben betrauten Mitarbeitern wird in der Fremdschlüsselspalte \fk{Abteilungsnummer} ein NULL-Wert stehen. Da der Fremdschlüssel nicht-unikal ist, können mehrere Mitarbeiter mit derselben Abteilung in Verbindung gebracht werden.
+
+          Da es ohnehin nicht möglich ist zufordern, dass jeder Wert eines Primärschlüssels auch in der Spalte des Fremdschlüssels \fk{Abteilungsnummer} auftritt, kann es Abteilungen ohne Mitarbeiter geben.
+      \subsection{Der (1,1):(1,*) Beziehungstyp}
+        Der (1,1):(1,*) Beziehungstyp unterscheidet sich vom (1,1):(0,*) Beziehungstyp nur dadurch, dass jedes Objekt des Objekttyps B mit mindestens einem Objekt des Objekttyps A verbunden sein muss.
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1};
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+                \node[bluespot](b4) at (3.7, -0.4) {b4};
+              \path (a1) edge (b1)
+                (a2) edge (b2)
+                (a3) edge (b3)
+                (a4) edge (b3)
+                (a5) edge (b4);
+            \end{tikzpicture}
+          }
+        \end{center}
+        In der Literatur zum physischen Datenbankmodell (auch relationales Modell) wird der Beziehungstyp (1,1):(1,*) gewöhnlich als \enquote{meistverbreitetste} Art von Beziehungstypen bezeichnet. Das ist aber falsch, denn dieser Beziehungstyp lässt sich im physikalischen Datenbankmodell gar nicht re\-präs\-en\-tie\-ren. Der Grund dafür liegt darin, dass es auf der Ebene der Tabellen-Typ\-be\-schrei\-bung\-en keine Möglichkeit gibt, die Nichtoptionalität der Beziehungstyprichtung von B zu A zu repräsentieren.
+
+        Betrachten wir die Situation im Einzelnen. Die letzten Lösungen zur Transformation eines Beziehungstyps bestanden darin, den PK der B-Tabelle in die A-Tabelle als FK aufzunehmen. Soll nun jedes B-Objekt mit mindestens einem A-Objekt gekoppelt sein, so ist das gleichbedeutend mit der Forderung, das jeder Wert, den der PK B annimmt, wenigstens einmal als Wert des FK in A auftauchen muss. Diese Forderung hat nichts mit der referentiellen Integrität zu tun. Diese fordert nur, dass jeder Wert des FK in A entweder der NULL-Wert sein oder aber als Wert des PK in B vorhanden sein muss. Die Umkehrrichtung, dass jeder Wert des PK auch als Wert des FK auftauchen muss, lässt sich im physischen Datenbankmodell nicht formulieren.
+
+        Die Transformation des (1,1):(1,*) Beziehungstyps in das physische Datenbankmodell erfolgt deshalb auf die gleiche Weise, wie die des (1,1):(0,*) Beziehungstyps, gemäß\ T06. Dabei muss allerdings in Kauf genommen werden, dass wichtige semantische Informationen, die im konzeptionellen Datenmodell repräsentiert werden, verloren gehen. Diese Informationen können nur im Rahmen der Anwendungsprogrammierung berücksichtigt werden.
+        \subsubsection{Beispiel Kundenbestellung}
+          Betrachten wir ein Unternehmen, in dem eine Geschäftsregel besagt, dass ein Kunde erst dann gespeichert wird, wenn er die erste Bestellung vornimmt. Im Laufe der Zeit können einem Kunden natürlich mehrere Bestellungen zugeordnet werden. Jede Bestellung kommt von genau einem Kunden. Ein Kunde, für den keine Bestellung mehr besteht (weil er alle seine Bestellungen storniert hat), wird wieder gelöscht. Das Datenmodell muss nach der Transformationsregel T06, entsprechend dem folgenden Bild, umgesetzt werden.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Bestellung};
+                  \node[attribute](a1)[left = of A]{\key{Bestellnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Datum} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(1,1)}(A);
+                \node[entity](B)[right = of rel1]{Kunde} edge node[auto,swap] {(1,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Kundennummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Name} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (B:) Kunde(\pk{Kundennummer}, Name)
+
+            (A:) Bestellung(\pk{Bestellnummer}, Datum, \nn{\fk{Kundennummer}})
+          \end{small}
+
+          Der FK \fk{Kundennummer} ist eingabepflichtig: Jede Bestellung wird also genau einem Kunden zugeordnet. Der FK ist nicht-unikal: Mehrere Bestellungen können also auf denselben Kunden verweisen. Es wird aber nicht gesichert, dass jeder Kunde mit mindestens einer Bestellung verknüpft ist. Diese Geschäftsregel kann nicht beim Datenbankentwurf \enquote{festgeschrieben} werden, sondern muss durch die Anwendungssoftware erzwungen werden.
+      \subsection{Der (0,1):(1,*) Beziehungstyp}
+        Der (0,1):(1,*) Beziehungstyp unterscheidet sich vom (1,1):(1,*) Beziehungstyp dadurch, dass nicht jedes Objekt des Objekttyps A mit einem Objekt des Objekttyps B gekoppelt sein muss. Es müssen aber wieder alle Objekte aus B mindestens eine Beziehung zu Objekten aus A haben.
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1};
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+              \path (a1) edge (b1)
+                (a2) edge (b2)
+                (a3) edge (b3)
+                (a4) edge (b3);
+            \end{tikzpicture}
+          }
+        \end{center}
+\clearpage
+        Wie schon beim (1,1):(1,*) Beziehungstyp, so ist auch hier die Nichtoptionalität der Beziehungstyprichtung von B zu A im physischen Datenbankmodell nicht zu erzwingen. Die Transformation des (0,1):(1,*) Beziehungstyps kann nur wie beim (0,1):(0,*) Beziehungstyp erfolgen, also gemäß\ T07. Es muss auch hier der Verlust von semantischen Informationen in Kauf genommen werden.
+       \subsubsection{Beispiel - Exklusivangebotsbestellung}
+          Betrachten wir als Beispiel einen Versandhandel, der Exklusivangebote für seine Kunden erstellt. Jeder Kunde kann zu einem Angebot höchstens eine Bestellung abschicken, er muss es aber nicht tun (Kardinalität (0,1)). In einer Bestellung kann der Kunde sich aber nicht nur auf ein Angebot beziehen, sondern auch auf mehrere (Kardinalität (1,*)).
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Angebot};
+                  \node[attribute](a1)[left = of A]{\key{Angebotsnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Angebotsdatum} edge (A);
+                \node[relationship](rel1)[right = of A]{enthält} edge node[auto,swap] {(0,1)}(A);
+                \node[entity](B)[right = of rel1]{Bestellung} edge node[auto,swap] {(1,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Bestellnummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Bestelldatum} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (B:) Bestellung(\pk{Bestellnummer}, Bestelldatum)
+
+            (A:) Angebot(\pk{Angebotsnummer}, Angebotsdatum, \fk{Bestellnummer})
+          \end{small}
+          Der FK \fk{Bestellnummer} ist nicht-eingabepflichtig: Ein Angebot muss also nicht unbedingt eine Bestellung hervorrufen. Der FK ist nicht-unikal: Mehrere Angebote können in einer Bestellung genutzt werden. Es lässt sich aber nicht erzwingen, dass jede Bestellung sich auf mindestens ein Angebot bezieht. Die Datenbank würde also durchaus zulassen, dass ein Kunde eine Bestellung tätigt, ohne ein entsprechendes Angebot vorliegen zu haben. Will man diesen, in der Praxis nicht hinnehmbaren Fehler vermeiden, kann dies nur durch eine entsprechende Gestaltung der Anwendungssoftware erreicht werden.
+      \subsection{Der (0,*):(0,*) Beziehungstyp}
+        Beziehungstypen, die in beiden Richtungen die Kardinalität \enquote{*} aufweisen, lassen sich nicht direkt im physischen Datenbankmodell darstellen. Der Grund dafür liegt in der Tatsache, dass Attributwerte nur atomare Werte haben dürfen. Der Wert eines FK kann somit nur auf eine Zeile und nicht auf mehrere Zeilen verweisen.
+
+        Beim (0,*):(0,*) Beziehungstyp kann ein Objekt des Objekttyps A jedoch nicht nur mit keinem oder einem, sondern auch mit mehreren Objekten des Objekttyps B verbunden sein. Ebenso wie ein B-Objekt mit keinem, einem oder mehreren A-Objekten gekoppelt sein kann. Folgende Abbildung zeigt dafür ein Beispiel.
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1};
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+                \node[bluespot](b4) at (3.7, -0.4) {b4};
+                \node[bluespot](b5) at (4.3, -0.8) {b5};
+              \path (a1) edge (b1)
+                (a1) edge (b2)
+                (b3) edge (a3)
+                (b3) edge (a4)
+                (a5) edge (b4);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Die Repräsentation ist im physischen Datenbankmodell nur dadurch möglich, dass man einen neuen - rein technisch bedingten - Hilfsobjekttyp A/B einführt. In mancher Literatur wird auch von einem Koppel-Objekttyp gesprochen. A/B wird mit den Objekttypen A und B jeweils durch einen (0,*):(1,1) Beziehungstyp verbunden.
+          \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleC](C) at (4.5, 0){Hilfstyp AB};
+                \node[yellowspot](c1) at (4.5, 1.3) {c1};
+                \node[yellowspot](c2) at (5.0, 0.8) {c2};
+                \node[yellowspot](c3) at (4.6, 0.3) {c3};
+                \node[yellowspot](c4) at (3.7, -0.4) {c4};
+                \node[yellowspot](c5) at (4.3, -0.8) {c5};
+              \node[circleB](B) at (9, 0){Objekttyp B};
+                \node[bluespot](b1) at (9.0, 1.3) {b1};
+                \node[bluespot](b2) at (9.5, 0.8) {b2};
+                \node[bluespot](b3) at (9.1, 0.3) {b3};
+                \node[bluespot](b4) at (8.2, -0.4) {b4};
+                \node[bluespot](b5) at (8.8, -0.8) {b5};
+              \path (a1) edge (c1)
+                    (a1) edge (c2)
+                    (a3) edge (c3)
+                    (a4) edge (c4)
+                    (a5) edge (c5)
+                    (c1) edge (b1)
+                    (c2) edge (b2)
+                    (c3) edge (b3)
+                    (c4) edge (b3)
+                    (c5) edge (b4);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Die beiden (1,1):(0,*) Beziehungstypen werden gemäß\ T06 umgewandelt. Zusammenfassend gilt für den (0,*):(0,*) Beziehungstyp die Transformationsregel T08.
+        \subsubsection{Transformationsregel T08 für den (0,*):(0,*) Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{ER-Modell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.75cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize Objekttyp B mit Schlüssel \pk{SB} & $\Rightarrow $ & \footnotesize Tabelle B mit PK \pk{SB}\\
+            \hline
+            \footnotesize (0,*):(0,*) Beziehungstyp & $\Rightarrow $ & \footnotesize Hilfstabelle A/B. \pk{SA} und \pk{SB} werden als eingabepflichtige nicht-unikale Fremdschlüssel in A/B aufgenommen. Die Kombination der FK \fk{SA} und \fk{SB} als unikal vereinbart. Sie bildet den PK von A/B\\
+          \end{supertabular}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{} edge node[auto,swap] {(0,*)}(A);
+                \node[entity](B)[right = of rel1]{B} edge node[auto,swap] {(0,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{SB}} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \bild{}{transformationsregel_08_tabellen}{0.85}
+        \subsubsection{Beispiel - Projektmitarbeiter}
+          Als Beispiel betrachten wir noch einmal die Mitarbeiter, die an keinem, einem oder mehreren Projekten beteiligt sein können, wobei ein Projekt (noch) von keinem, einem oder auch von mehreren Mitarbeitern bearbeitet wird.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Projekt};
+                  \node[attribute](a1)[left = of A]{\key{Projeknummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Bezeichnung} edge (A);
+                \node[relationship](rel1)[right = of A]{arbeitet} edge node[auto,swap] {(0,*)}(A);
+                \node[entity](B)[right = of rel1]{Mitarbeiter} edge node[auto,swap] {(0,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Personalnummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Name} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (B:) Mitarbeiter(\pk{Personalnummer}, Name)
+
+            (A:) Projekt(\pk{Projektnummer}, Bezeichnung)
+
+            (A/B:) MitarbeiterProjekt(\fk{\pk{Personalnummer + Projektnummer}})
+          \end{small}
+          Eine Zeile der Hilfstabelle \enquote{MitarbeiterProjekt} verweist auf genau einen Mitarbeiter und auf genau ein Projekt. Da der FK \fk{Personalnummer} für sich alleine nichtunikal ist, kann es mehrere Zeilen der Hilfstabelle geben, die auf denselben Mitarbeiter verweisen. Die Nichtunikalität des FK \fk{Projektnummer} ermöglicht es, dass mehrere Zeilen der Hilfstabelle mit demselben Projekt verknüpft sind. Erst die Kombination \fk{Personalnummer +  Projektnummer} ist als unikal vereinbart und bildet den PK der Hilfstabelle.
+      \subsection{Der (1,*):(0,*) Beziehungstyp}
+        Beim (1,*):(0,*) Beziehungstyp muss ein Objekt des Objekttyps A mit mindestens einem oder mehreren Objekten des Objekttyps B verbunden sein, ein B-Objekt jedoch mit keinem, einem oder aber mehreren A-Objekten.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1};
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+                \node[bluespot](b4) at (3.7, -0.4) {b4};
+                \node[bluespot](b5) at (4.3, -0.8) {b5};
+                \node[bluespot](b6) at (5.2, -1) {b6};
+              \path (a1) edge (b1)
+                    (a1) edge (b2)
+                    (b3) edge (a3)
+                    (b3) edge (a4)
+                    (a2) edge (b4)
+                    (a5) edge (b5);
+            \end{tikzpicture}
+          }
+        \end{center}
+
+        Analog zum (0,*):(0,*) Beziehungstyp muss der (1,*):(0,*) Beziehungstyp vor seiner Transformation in das physische Datenbankmodell durch die Einführung eines neuen Objekttyps A/B in einen (1,1):(0,*) Beziehungstyp und einen (1,*):(1,1) Beziehungstyp umgewandelt werden.
+\clearpage
+        \begin{merke}
+          Es wurde bereits gezeigt, dass der (1,*):(1,1) Beziehungstyp im physischen Datenbankmodell lediglich als (0,*):(1,1) Beziehungstyp dargestellt werden kann. Die Transformation des (1,*):(0,*) Beziehungstyps erfolgt damit nach der Transformationsregel T08.
+        \end{merke}
+        \subsubsection{Beispiel - ärzte mit Operation(en)}
+          Als Beispiel betrachten wir ärzte, die Operationen durchführen. Eine Operation ohne ärzte gibt es nicht. Mitunter wird eine Operation aber von mehreren ärzten ausgeführt.
+          \begin{center}
+            \scalebox{.65}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Operation};
+                  \node[attribute](a1)[left = of A]{\key{Operationsnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Bezeichnung} edge (A);
+                \node[relationship](rel1)[right = of A]{führt durch} edge node[auto,swap] {(1,*)}(A);
+                \node[entity](B)[right = of rel1]{Arzt} edge node[auto,swap] {(0,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Personalnummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Name} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (B:) Arzt(\pk{Personalnummer}, Name)
+
+            (A:) Operation(\pk{Operationsnummer}, Bezeichnung)
+
+            (B/A:) ArztOperation(\fk{\pk{Personalnummer + Operationsnummer}})
+          \end{small}
+          Durch jede Zeile der Hilfstabelle \enquote{ArztOperation} wird ein Arzt mit einer Operation in Verbindung gebracht. Keiner der beiden Fremdschlüssel \fk{Personalnummer} beziehungsweise \fk{Operationsnummer} muss für sich genommen unikal sein. Damit können mehrere Zeilen der Hilfstabelle auf denselben Arzt verweisen. Ebenso können mehrere Zeilen dieselbe Operation betreffen.
+
+          Es kann aber durch die Tabellentypbeschreibungen nicht erzwungen werden, dass jede Operationsnummer auch tatsächlich als FK in der Hilfstabelle auftaucht. In der DB kann also die falsche Aussage gespeichert werden, dass einer Operation kein Arzt zugeordnet ist. Dieser Fehler kann wiederum nur software-technisch vermieden werden.
+      \subsection{Der (1,*):(1,*) Beziehungstyp}
+        Beim (1,*):(1,*) Beziehungstyp ist jedes Objekt des Objekttyps A mit einem oder mehreren Objekten des Objekttyps B verbunden, ebenso wie jedes B-Objekt mit einem oder mehreren A-Objekten gekoppelt ist.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}
+              \node[circleA](A) at (0,0){Objekttyp A};
+                \node[redspot](a1) at (0, 1.3) {a1};
+                \node[redspot](a2) at (0.5, 0.8){a2};
+                \node[redspot](a3) at (0.1, 0.3){a3};
+                \node[redspot](a4) at (-0.8, -0.4){a4};
+                \node[redspot](a5) at (-0.2, -0.8){a5};
+              \node[circleB](B) at (4.5, 0){Objekttyp B};
+                \node[bluespot](b1) at (4.5, 1.3) {b1};
+                \node[bluespot](b2) at (5, 0.8) {b2};
+                \node[bluespot](b3) at (4.6, 0.3) {b3};
+                \node[bluespot](b4) at (3.7, -0.4) {b4};
+                \node[bluespot](b5) at (4.3, -0.8) {b5};
+              \path (a1) edge (b1)
+                (a2) edge (b2)
+                (a3) edge (b3)
+                (a4) edge (b3)
+                (a5) edge (b4)
+                (a5) edge (b5);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Dieser Beziehungstyp muss vor der Transformation in einen (1,*):(1,1) und einen\\ (1,1):(1,*) Beziehungstyp umgeformt werden. Beide neuen Beziehungstypen müssen wiederum nur unter Semantikverlust in (0,*):(1,1) bzw. (1,1):(0,*) Beziehungstypen über\-führt werden. Die Transformation des (1,*):(1,*) Beziehungstyps erfolgt damit - so wie für den (1,*):(0,*) Beziehungstyp - nach der Transformationsregel T08.
+        \subsubsection{Beispiel - Büchersachgruppe}
+          Als Beispiel betrachten wir eine Bibliothek, in der die Bücher den
+          einzelnen Sachgruppen zugeordnet werden. Ein Buch wird meist nur für
+          eine Sachgruppe, mitunter aber auch zu mehreren Sachgruppen
+          zugeordnet. Eine Sachgruppe wird erst dann eingeführt, wenn sie
+          wenigstens ein Buch enthält. Die Transformation sieht folgendermaß
+          en aus.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Buch};
+                  \node[attribute](a1)[left = of A]{\key{ISBN}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Titel} edge (A);
+                \node[relationship](rel1)[right = of A]{gehört zu} edge node[auto,swap] {(1,*)}(A);
+                \node[entity](B)[right = of rel1]{Sachgruppe} edge node[auto,swap] {(1,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Sachgruppencode}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Bezeichnung} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (A:) Buch(\pk{ISBN}, Titel)
+
+            (B:) Sachgruppe(\pk{Sachgruppencode}, Bezeichnung)
+
+            (A/B:) BuchSachgruppe(\fk{\pk{ISBN + Sachgruppencode}})
+          \end{small}
+          
+          Eine Zeile der Hilfstabelle \enquote{Buch/Sachgruppe} ordnet ein Buch
+          einer Sachgruppe zu. Da weder der FK \fk{ISBN} noch der FK
+          \fk{Sachgruppencode} für sich unikal sind, können mehrere Zeilen
+          der Hilfstabelle auf dasselbe Buch oder auch auf dieselbe Sachgruppe
+          verweisen. Die Tabellentypbeschreibungen sichern aber weder, dass
+          einem Buch wenigstens eine Sachgruppe zugeordnet wird, noch können
+          sie garantieren, dass es keine \enquote{leere} Sachgruppe gibt. Diese
+          Geschäftsregeln müssen von der Anwendungssoftware durchgesetzt
+          werden.
+      \subsection{Transformation von Beziehungsattributen}
+        Bei der Transformation von Eigenschaften eines Beziehungstyps (Beziehungsattributen) kann folgende Verallgemeinerung angewandt werden:
+        \begin{itemize}
+          \item Das Beziehungsattribut \enquote{wandert} in die Tabelle auf der 1-Seite des Beziehungstyps.
+          \item Gibt es auf beiden Seiten einen * in der Kardinalität, dann \enquote{wandert/wandern} das/die Beziehungsattribut(e) in das Hilfsobjekt.
+          \item Gibt es keine *-Seite, dann muss die angewandte Transformationsregel betrachtet und geprüft werden, in welcher Tabelle das Beziehungsattribut am sinnvollsten ist. Normalerweise ist dies die Tabelle mit dem FK.
+        \end{itemize}
+        \subsubsection{Transformation von Beziehungsattributen bei einer m:n-Beziehung}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Maschine};
+                  \node[attribute](a1)[left = of A]{\key{Maschinennummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Bezeichnung} edge (A);
+                \node[relationship](rel1)[right = of A]{stellt her} edge node[auto,swap] {(1,*)}(A);
+                  \node[attribute](rel11)[above = of rel1]{Zeitstempel} edge (rel1);
+                \node[entity](B)[right = of rel1]{Bauteil} edge node[auto,swap] {(1,*)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Teilenummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Bezeichnung} edge (B);
+            \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (A:) Maschine(\pk{Maschinennummer}, Bezeichnung)
+
+            (B:) Bauteil(\pk{Teilenummer}, Bezeichnung)
+
+            (A/B:) Herstellung(\fk{\pk{Maschinennummer + Teilenummer}}, Zeitstempel)
+          \end{small}
+        \subsubsection{Transformation von Beziehungsattributen bei einer 1:n-Beziehung}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Maschine};
+                  \node[attribute](a1)[left = of A]{\key{Maschinennummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Bezeichnung} edge (A);
+                \node[relationship](rel1)[right = of A]{stellt her} edge node[auto,swap] {(1,*)}(A);
+                  \node[attribute](rel11)[above = of rel1]{Zeitstempel} edge (rel1);
+                \node[entity](B)[right = of rel1]{Bauteil} edge node[auto,swap] {(1,1)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Teilenummer}} edge (B);
+                  \node[attribute](b2)[above right = of B]{Bezeichnung} edge (B);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            (B): Maschine(\pk{Maschinennummer}, Bezeichnung)
+
+            (A): Bauteil(\pk{Teilenummer}, Bezeichnung, \fk{Maschinennummer}, Zeitstempel)
+          \end{small}
+        \subsubsection{Transformation von Beziehungsattributen bei einer 1:1-Beziehung}
+          Da bei Beziehungen des Typs 1:1 nur extrem selten Beziehungsattribute vorkommen, muss in solchen Fällen eine Einzelfallbetrachtung durchgeführt werden. Daher wird an dieser Stelle auf ein Transformationsbeispiel verzichtet.
+\clearpage
+			\section{Transformation des Begleitbeispiels Bundeswehr}
+        In diesem Abschnitt sollen die bis hier erlernten Dinge praktisch geübt werden. Aufgabe soll es sein, für das begleitende Beispiel \enquote{Bundeswehr}, ein ER-Modell zu konzipieren und dieses anschließ end, mittels der in den vorigen Abschnitten kennengelernten Tranformationsregeln, in ein relationales Modell umzuandeln.
+
+        Nachfolgendes ER-Modell kann als Lösungsansatz für das Beispiel \enquote{Bundeswehr} gewählt werden.
+
+					\begin{tabular}{>{\textbf\bgroup}p{5cm}<{\egroup}>{\small}p{10.1cm}}
+						Dienstposten & (\pk{Dienstposten\_ID}, Beginndatum, Enddatum, Aufgabenbeschreibung) \\
+						Soldat & (\pk{Personen\_ID}, PK, Vorname, Nachname, Dienstgrad) \\
+						Ausrüstung & (\pk{Versorgungsnummer}, Bezeichnung, Verwendungszweck, Material, Farbe) \\
+						Dieststelle & (\pk{Dienststellennummer}, Bezeichnung, Typ, Größ e) \\
+						Standort & (\pk{Ort\_ID}, PLZ, Ort, Straß e, Hausnummer) \\
+						& Auflösen des Beziehungstyps (besetzt) mit T04) \\
+						& Auflösen des Beziehungstyps (besteht aus) mit T06) \\
+						& Auflösen der Beziehungstypen (besitzt, befindet sich an) mit T08) \\
+						& Auflösen des Beziehungstyps (ist untergeordnet) mit T11) \\
+						DienststelleStandort & (\fk{\pk{Dienststellennummer + Ort\_ID}}) \\
+						SoldatAusrüstung & (\fk{\pk{Personen\_ID + Versorgungsnummer}}) \\
+					\end{tabular}
+
+        \begin{center}
+            \scalebox{.5}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](dienstposten){Dienstposten};
+                  \node[attribute](dienstpostenid)[above left = of dienstposten]{\key{Dienstposten\_ID}} edge (dienstposten);
+                  \node[attribute](begindatum)[above right = of dienstposten]{Beginndatum} edge (dienstposten);
+                  \node[attribute](enddatum)[below right = of dienstposten]{Enddatum} edge (dienstposten);
+                  \node[attribute](aufgabenbeschreibung)[below left = of dienstposten]{Aufgabenbeschreibung} edge (dienstposten);
+                \node[relationship](besetzt)[left = 5.1cm of dienstposten]{besetzt} edge node[auto,swap] {(0,1)}(dienstposten);
+                \node[entity](soldat)[below left = 7cm of dienstposten]{Soldat} edge node [auto,swap] {(1,1)}(besetzt);
+                  \node[attribute](personenid)[above left = 1.6cm of soldat]{\key{Personen\_ID}} edge (soldat);
+                  \node[attribute](pk)[above right = of soldat]{PK} edge (soldat);
+                  \node[attribute](name)[below right = of soldat]{Nachname} edge (soldat);
+                  \node[attribute](vorname)[below left = of soldat]{Vorname} edge (soldat);
+                  \node[attribute](dienstgrad)[left = of soldat]{Dienstgrad} edge (soldat);
+                \node[relationship](besitzt)[below = 3cm of soldat]{besitzt} edge node[auto,swap] {(0,*)}(soldat);
+                \node[entity](ausruestung)[below = 8cm of soldat]{Ausrüstung} edge node[auto,swap] {(0,*)}(besitzt);
+                  \node[attribute](versorgungsnummer)[above left = of ausruestung]{\key{Versorgungsnummer}} edge (ausruestung);
+                  \node[attribute](bezeichnung)[left = of ausruestung]{Bezeichnung} edge (ausruestung);
+                  \node[attribute](verwendungszweck)[above right = of ausruestung]{Verwendungszweck} edge (ausruestung);
+                  \node[attribute](material)[below right = of ausruestung]{Material} edge (ausruestung);
+                  \node[attribute](farbe)[below left = of ausruestung]{Farbe} edge (ausruestung);
+                \node[relationship](bestehtaus)[right = 4.7cm of dienstposten]{besteht aus} edge node[auto,swap] {(1,1)}(dienstposten);
+
+                \node[entity](dienststelle)[below right = 7cm of dienstposten]{Dienststelle} edge node [auto,swap] {(1,*)}(bestehtaus);
+
+                  \node[attribute](dienststellennummer)[above left = of dienststelle]{\key{Dienststellennummer}} edge (dienststelle);
+                  \node[attribute](bezeichung)[below left = of dienststelle]{Bezeichnung} edge (dienststelle);
+                  \node[attribute](groesse)[below right = 0.9cm of dienststelle]{Größ e} edge (dienststelle);
+                  \node[attribute](typ)[above right = 0.9cm of dienststelle]{Typ} edge (dienststelle);
+
+                \node[relationship](istuntergeordnet)[right = 2cm of dienststelle]{ist untergeordnet};
+                  \node[auto,swap](l1) at (11,-3.6) {(1,1)};
+                  \node[auto,swap](l2) at (11,-8.7) {(0,*)};
+                  \path [draw, -] (dienststelle) |- ($(dienststelle.south) +(1.5, -1.5)$) -| (istuntergeordnet);
+                  \path [draw, -] (dienststelle) |- ($(dienststelle.north) +(1.5, 1.5)$) -| (istuntergeordnet);
+
+                \node[relationship](befidetsichan)[below = 2cm of dienststelle]{befindet sich an} edge node[auto,swap] {(1,*)}(dienststelle);
+                \node[entity](standort)[below = 8cm of dienststelle]{Standort} edge node[auto,swap] {(1,*)}(befidetsichan);
+                  \node[attribute](ortid)[above left = of standort]{\key{Ort\_ID}} edge (standort);
+                  \node[attribute](plz)[left = of standort]{PLZ} edge (standort);
+                  \node[attribute](ort)[above right = of standort]{Ort} edge (standort);
+                  \node[attribute](strasse)[below right = of standort]{Straß e} edge (standort);
+                  \node[attribute](hausnummer)[below left = of standort]{Hausnummer} edge (standort);
+              \end{tikzpicture}
+            }
+            \end{center}
+      Bei weiterer Betrachtung des ER-Modells sollte auffallen, dass die Anzahl an Ausrüstungsgegenständen eines Soldaten nicht berücksichtigt wurde. In der Tabelle \enquote{SoldatAusrüstung} kann ein Attribut \enquote{Anzahl} aufgenommen werden, welches die jeweilige Anzahl an Ausrüstungsgegenständen eines Soldaten enthält. Die neue Tabelle sieht dann folgendermaß en aus:
+
+      \begin{small}
+        SoldatAusrüstung(\fk{\pk{Personen\_ID + Versorgungsnummer}}, Anzahl)
+      \end{small}
+
+      Dieser Fall muss sich dann mit einem Beziehungsattribut (vgl. Abschnitt \ref{attributes_of_entities}) im ER-Modell wiederfinden. Das angepasste ER-Modell sieht folgendermaß en aus:
+      \begin{center}
+        \scalebox{.5}{
+        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+          \node[entity](dienstposten){Dienstposten};
+            \node[attribute](dienstpostenid)[above left = of dienstposten]{\key{Dienstposten\_ID}} edge (dienstposten);
+            \node[attribute](begindatum)[above right = of dienstposten]{Begindatum} edge (dienstposten);
+            \node[attribute](enddatum)[below right = of dienstposten]{Enddatum} edge (dienstposten);
+            \node[attribute](aufgabenbeschreibung)[below left = of dienstposten]{Aufgabenbeschreibung} edge (dienstposten);
+          \node[relationship](besetzt)[left = 5.1cm of dienstposten]{besetzt} edge node[auto,swap] {(0,1)}(dienstposten);
+          \node[entity](soldat)[below left = 7cm of dienstposten]{Soldat} edge node [auto,swap] {(1,1)}(besetzt);
+            \node[attribute](personenid)[above left = 1.6cm of soldat]{\key{Personen\_ID}} edge (soldat);
+            \node[attribute](pk)[above right = of soldat]{PK} edge (soldat);
+            \node[attribute](name)[below right = of soldat]{Name} edge (soldat);
+            \node[attribute](vorname)[below left = of soldat]{Vorname} edge (soldat);
+            \node[attribute](dienstgrad)[left = of soldat]{Dienstgrad} edge (soldat);
+          \node[relationship](besitzt)[below = 3cm of soldat]{besitzt} edge node[auto,swap] {(0,*)}(soldat);
+            \node[attribute](anzahl)[right  = of besitzt]{Anzahl} edge (besitzt);
+
+          \node[entity](ausruestung)[below = 8cm of soldat]{Ausrüstung} edge node[auto,swap] {(0,*)}(besitzt);
+            \node[attribute](versorgungsnummer)[above left = of ausruestung]{\key{Versorgungsnummer}} edge (ausruestung);
+            \node[attribute](bezeichnung)[left = of ausruestung]{Bezeichnung} edge (ausruestung);
+            \node[attribute](verwendungszweck)[above right = of ausruestung]{Verwendungszweck} edge (ausruestung);
+            \node[attribute](material)[below right = of ausruestung]{Material} edge (ausruestung);
+            \node[attribute](farbe)[below left = of ausruestung]{Farbe} edge (ausruestung);
+          \node[relationship](bestehtaus)[right = 4.7cm of dienstposten]{besteht aus} edge node[auto,swap] {(1,1)}(dienstposten);
+
+          \node[entity](dienststelle)[below right = 7cm of dienstposten]{Dienststelle} edge node [auto,swap] {(1,*)}(bestehtaus);
+
+            \node[attribute](dienststellennummer)[above left = of dienststelle]{\key{Dienststellennummer}} edge (dienststelle);
+            \node[attribute](bezeichung)[below left = of dienststelle]{Bezeichnung} edge (dienststelle);
+            \node[attribute](groesse)[below right = 0.9cm of dienststelle]{Größ e} edge (dienststelle);
+            \node[attribute](typ)[above right = 0.9cm of dienststelle]{Typ} edge (dienststelle);
+
+          \node[relationship](istuntergeordnet)[right = 2cm of dienststelle]{ist untergeordnet};
+            \node[auto,swap](l1) at (11,-3.6) {(0,1)};
+            \node[auto,swap](l2) at (11,-8.7) {(0,*)};
+            \path [draw, -] (dienststelle) |- ($(dienststelle.south) +(1.5, -1.5)$) -| (istuntergeordnet);
+            \path [draw, -] (dienststelle) |- ($(dienststelle.north) +(1.5, 1.5)$) -| (istuntergeordnet);
+
+          \node[relationship](befidetsichan)[below = 2cm of dienststelle]{befindet sich an} edge node[auto,swap] {(1,*)}(dienststelle);
+          \node[entity](standort)[below = 8cm of dienststelle]{Standort} edge node[auto,swap] {(1,*)}(befidetsichan);
+            \node[attribute](ortid)[above left = of standort]{\key{Ort\_ID}} edge (standort);
+            \node[attribute](plz)[left = of standort]{PLZ} edge (standort);
+            \node[attribute](ort)[above right = of standort]{Ort} edge (standort);
+            \node[attribute](strasse)[below right = of standort]{Straß e} edge (standort);
+            \node[attribute](hausnummer)[below left = of standort]{Hausnummer} edge (standort);
+        \end{tikzpicture}
+        }
+      \end{center}
+
+    \section{Transformation rekursiver Beziehungstypen}
+      \label{recursive_relatiaons}
+      Da bei Rekursiv-Beziehungstypen die miteinander gekoppelten Objekte beide im selben Objekttyp liegen, können sie nicht - wie bei den binären Beziehungstypen - durch ihre Zugehörigkeit zum jeweiligen Objekttyp unterschieden werden. Bei Rekursiv-Be\-ziehungs\-typen müssen die Objekte hinsichtlich ihrer Rolle unterschieden werden. Deshalb soll folgende Sprachregelung eingeführt werden. Wir sprechen bei einem Rekursiv-Beziehungstyp allgemein von einem \enquote{Sender} (rechte Seite), der eine Nachricht an einen \enquote{Empfänger} (linke Seite) sendet. Als Beispiel dafür ist in der folgenden Abbildung ein (0,1):(0,*) Rekursiv-Beziehungstyp dargestellt.
+
+      \begin{center}
+        \scalebox{.7}{
+          \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](A){A};
+              \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+            \node[relationship](rel1)[right = of A]{};
+            \node[auto,swap](l1) at (5.6,-1.4) {(0,*) empfängt Nachricht};
+            \node[auto,swap](l2) at (5.6,1.4) {(0,1) sendet Nachricht};
+            \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+            \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+          \end{tikzpicture}
+        }
+      \end{center}
+
+      An dieser Stelle sei auf den Abschnitt \ref{syntaxofrecursiverelationtypes} mit der \tabelle{combinationsrecurisverelationtyps} verwiesen. In der \tabelle{combinationsrecurisverelationtyps} sind die 7 möglichen Rekursiv-Beziehungstypen aufgelistet.
+
+      \subsection{Der (1,1):(1,1) Rekursiv-Beziehungstyp}
+        Beim (1,1):(1,1) Beziehungstyp muss jedes Objekt des Objekttyps genau eine Nachricht an ein Objekt desselben Objekttyps senden. Umgekehrt muss jedes Objekt genau eine Nachricht von einem anderen Objekt empfangen. Die folgende Abbildung zeigt die vorliegenden Verhältnisse.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[]
+              \node[circleA](A){Objekttyp A};
+              \node[redspot](a1) at (1.0, 0.5){a1};
+              \node[redspot](a2) at (0.0, 1.7){a2};
+              \node[redspot](a3) at (-1.0, 0.5){a3};
+              \node[redspot](a4) at (-0.5, -0.4) {a4};
+
+      \path[->] (a1) edge[bend right=45] (a2)
+                (a2) edge[bend right=45] (a3)
+                (a3) edge[bend right=45] (a1)
+                (a4) edge[loop right, out=270, in = 0, looseness=18] (a4);
+            \end{tikzpicture}
+          }
+        \end{center}
+
+        Wie man sehen kann, können ausschließ lich Objekt-Zyklen gebildet werden ($a_1 \rightarrow a_2 \rightarrow a_3 \rightarrow a_1$). Im Minimalfall gibt es nur ein Objekt, welches dann einen Ein-Objekt-Zyklus bildet ($a_1 \rightarrow a_1$).
+
+        Bei der Repräsentation von Rekursiv-Beziehungstypen im physischen Datenbankmodell muss zu\-näch\-st jedes Objekt des Objekttyps A - unabhängig von den anderen Objekten - in einer Tabellenzeile gespeichert werden. Die Beziehung zwischen zwei Objekten $a_1$ und $a_2$ kann nun dadurch ausgedrückt werden, dass in der Tabellenzeile von $a_2$ (beim Empfänger) auf das Objekt $a_1$ (auf den Sender) verwiesen wird. Der Verweis wird, wie schon bei den binären Beziehungstypen, durch Abspeichern des Indentifikators von $a_1$ realisiert. Dieser Identifikator ist aber der Wert, den der Primärschlüssel von A im Falle des Objekts $a_1$ annimmt. Die Tabelle für den Objekttyp A muss somit den Schlüssel des Objekttyps A in doppelter Ausführung aufnehmen:
+\clearpage
+        \begin{enumerate}
+          \item als Primärschlüssel, um eine Zeile der Tabelle eindeutig identifizieren zu können;
+          \item als Fremdschlüssel, um auf eine andere (oder auch auf dieselbe) Zeile der Tabelle, nämlich auf den Sender verweisen zu können.
+        \end{enumerate}
+        Da die Spaltenbezeichnungen einer Tabelle voneinander verschieden sein müssen, ist es erforderlich, für das Attribut (bzw. die Attribute) des PK im Falle ihrer \enquote{Wiedergeburt} als FK, andere Bezeichnungen zu vergeben.
+
+        Im physischen Datenbankmodell lässt sich die Forderung, dass jedes Objekt genau eine Nachricht empfangen muss, einfach dadurch sichern, dass der FK, der auf den Sender verweist, als \textit{eingabepflichtig} deklariert wird, dass also jedes Objekt auf \enquote{sein} Senderobjekt verweisen muss. Dass ein und dasselbe Objekt nicht von mehreren Empfängern als ihr Sender angegeben werden kann, wird durch die Unikalität des FK erreicht.
+        \subsubsection{Transformationsregel T09 für den (1,1):(1,1) Rekursiv-Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{ER-Modell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize (1,1):(1,1) Rekursiv-Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SA} wird in A mit einer anderen Attributbezeichnung \enquote{gedoppelt} und als eingabepflichtiger unikaler FK \fk{SA'} vereinbart, der auf den Sender verweist.
+            (\fk{SA'} [NN, UN])\\
+          \end{supertabular}
+
+      \begin{center}
+        \scalebox{.7}{
+          \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](A){A};
+              \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+            \node[relationship](rel1)[right = of A]{};
+            \node[auto,swap](l1) at (5.6,-1.4) {(1,1) empfängt Nachricht};
+            \node[auto,swap](l2) at (5.6,1.4) {(1,1) sendet Nachricht};
+            \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+            \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+          \end{tikzpicture}
+        }
+      \end{center}
+
+      \bild{}{transformationsregel_09_tabellen}{0.35}
+
+        \subsubsection{Beispiel - Kreis einer Turnergruppe}
+          Als Beispiel betrachten wir eine Turnergruppe, die bei einem Sportfest einen Kreis bilden soll. Für jeden Turner wird festgelegt, wer sein rechter Nachbar ist.
+
+          Von jedem Turner wird obligatorisch auf seinen (einzigen) rechten Nachbarn verwiesen. Durch die Unikalität des FK wird auß erdem gesichert, dass ein Turner nur für einen anderen Turner rechter Nachbar sein kann. Da jedem Turner ein rechter Nachbar zugeordnet wird, muss auch jeder Turner rechter Nachbar genau eines anderen Turners sein. Damit ist die Kreisstruktur der Aufstellung der Turner erzwungen. Allerdings lässt sich durch die Tabellentypbeschreibung nicht ausschließ en, dass ein Turner als sein eigener rechter Nachbar eingesetzt wird. (Ein-Objekt-Zyklus).
+
+          Schwierig wird bei diesem Beziehungstyp die Speicherung der Daten so vorzunehmen, dass keine Integritätsverletzung auftritt. Es sind entsprechende software-technische Maß nahmen zu treffen, die hier nicht weiter erläutert werden sollen.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Turner};
+                  \node[attribute](a1)[left = of A]{\key{Mitgliedsnummer}} edge (A);
+                  \node[attribute](a2)[above left= of A]{Name} edge (A);
+                  \node[attribute](a3)[below left = of A]{rechter-Nachbar} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(1,1) ist rechter Nachbar};
+                \node[auto,swap](l2) at (5.6,1.4) {(1,1) hat rechten Nachbar};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Turner(\pk{Mitgliedsnummer}, Name, \fk{rechter-Nachbar} [NN, UN])
+          \end{small}
+      \subsection{Der (0,1):(0,1) Rekursiv-Beziehungstyp}
+        Beim (0,1):(0,1) Rekursiv-Beziehungstyp kann ein Objekt keine oder eine Nachricht an ein anderes Objekt (oder an sich selbst) senden. Andererseits kann ein Objekt keine oder eine Nachricht empfangen.
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[]
+              \node[circleA](A){Objekttyp A};
+              \node[redspot](a1) at (1.0, 0.5){a1};
+              \node[redspot](a2) at (0, 1.7){a2};
+              \node[redspot](a3) at (-1.0, 0.5){a3};
+              \node[redspot](a4) at (-1, -0.6) {a4};
+              \node[redspot](a5) at (1, -0.4) {a5};
+              \node[redspot](a6) at (0.5, -0.8) {a6};
+              \node[redspot](a7) at (0, -1.2) {a7};
+              \node[redspot](a8) at (0, 0.85){a8};
+
+      \path[->] (a1) edge[bend right=45] (a2)
+                (a2) edge[bend right=45] (a3)
+                (a3) edge[bend right=45] (a1)
+                (a4) edge[loop right, out=270, in = 0, looseness=18] (a4)
+                (a5) edge (a6)
+                (a6) edge (a7);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Beim (0,1):(0,1) Rekursiv-Beziehungstyp sind also - wie schon beim (1,1):(1,1) Rekursiv-Be\-zieh\-ungs\-typ - Objekt-Zyklen ($a_1 \rightarrow a_2 \rightarrow a_3 \rightarrow a_1$) möglich, die im Minimalfall Ein-Objekt-Zyklen ($a_4 \rightarrow a_4$) sind. Darüber hinaus kann es Objekt-Ketten ($a_5 \rightarrow a_6 \rightarrow a_7$) geben, die gegebenenfalls nur ein einziges Objekt enthalten ($a_8$). Ein solches Objekt ist dann weder Sender noch Empfänger.
+
+        Für die Umsetzung im physischen Modell, betrachten wir den Fall, dass die Objekte einen Verweis auf \enquote{ihren} Sender benötigen. Dieser Sender kann der Empfänger selbst oder ein anderes A-Objekt sein. Da nicht jedes Objekt ein Empfänger ist, muss der FK, der auf den Sender verweist, als nicht-eingabepflichtig deklariert werden. Andererseits muss er unikal sein, damit ein $a_1$ Objekt nur von höchstens einem Objekt $a_2$ als \enquote{sein} Sender ausgewiesen werden kann. Zusammengefasst ist dies die Transformationsregel T10.
+\clearpage
+        \subsubsection{Transformationsregel T10 für den (0,1):(0,1) Rekursiv-Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{ER-Modell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize (0,1):(0,1) Rekursiv-Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SA} wird in A mit einer anderen Attributbezeichnung \enquote{gedoppelt} und als nicht-eingabepflichtiger unikaler FK \fk{SA'} vereinbart, der auf den Sender verweist. (\un{\fk{SA'}})\\
+          \end{supertabular}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(0,1) empfängt Nachricht};
+                \node[auto,swap](l2) at (5.6,1.4) {(0,1) sendet Nachricht};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+
+          \bild{}{transformationsregel_10_tabellen}{0.35}
+
+        \subsubsection{Beispiel - Ersatzbus}
+          Nehmen wir als Beispiel an, dass in einem Busreiseunternehmen festgelegt wird, welcher Bus als Ersatz verwendet werden soll, wenn ein Bus defekt ist. Dabei soll ein Bus höchstens für einen anderen als Ersatz dienen. Für die wenigen neuen Busse mit geringer Ausfallwahrscheinlichkeit wird kein Ersatz vorgesehen und sie können auch nicht als Ersatz dienen, da sie ständig im Einsatz sind. Für andere Busse wird festgelegt, dass sie bei Schäden schnell repariert werden; sie sind dann Ersatz für sich selbst (Ein-Objekt-Zyklen). Typischerweise wird für jeden Bus ein anderer als Ersatz festgelegt und jeder Bus kann als Ersatz für einen anderen Bus dienen (Objekte in einem Mehr-Objekte-Zyklus oder \enquote{innere Objekte} in einer Objekt-Kette). Es ist in seltenen Fällen aber auch nicht auszuschließ en, dass ein Bus zwar nicht als Ersatz dienen kann, aber einen Ersatz braucht (Anfangsglied einer Kette). Ebenso kann ein Bus in Reserve gehalten werden, also nur als Ersatz
+dienen, ohne selbst einen Ersatz zu benötigen (Endglied einer Kette).
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Bus};
+                  \node[attribute](a1)[left = of A]{\key{PolKennzeichen}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Sitzplatzanzahl} edge (A);
+                  \node[attribute](a3)[below left = of A]{ErsatzbusKennzeichen} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(0,1) ist Ersatz für};
+                \node[auto,swap](l2) at (5.6,1.4) {(0,1) hat als Ersatz};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Bus(\pk{PolKennzeichen}, Sitzplatzanzahl, \un{\fk{ErsatzbusKennzeichen}})
+          \end{small}
+\clearpage
+          Da der FK \fk{ErsatzbusKennzeichen} als nicht-eingabepflichtig deklariert ist, kann ein Bus auf keinen oder auf einen anderen Bus (evtl. auf sich selbst) als Ersatzbus verweisen. Da der FK unikal ist, kann auf einen Ersatzbus nur von \textit{einem} anderen Bus verwiesen werden. Andererseits ist nicht gefordert - und kann auch gar nicht gefordert werden -, dass jeder Wert des PK \pk{PolKennzeichen} auch tatsächlich als FK auftritt. Somit kann es Busse geben, die nicht durch einen FK-Wert als Ersatzbusse ausgewiesen sind.
+      \subsection{Der (1,1):(0,*) Rekursiv-Beziehungstyp}
+        Beim (1,1):(0,*) Rekursiv-Beziehungstyp kann ein Objekt keine, eine oder mehrere Nachrichten senden, es muss aber stets genau eine Nachricht empfangen werden. Das entspricht den Bedingungen des (1,1):(1,1) Rekursiv-Beziehungstyps, zuzüglich der Möglichkeit eines Objekts, entweder gar nicht als Sender oder aber als Sender mehrerer Nachrichten aufzutreten.
+
+        Da jedes Objekt des Objekttyps A genau eine Nachricht empfangen muss, müssen auch \#A Nachrichten gesendet werden. Für jedes Nicht-Sender-Objekt, muss somit ein anderes - gewissermaß en sein Vertreter - eine zusätzliche Nachricht senden.
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[]
+              \node[circleA](A){Objekttyp A};
+              \node[redspot](a1) at (1.0, 0.5){a1};
+              \node[redspot](a2) at (0.0, 1.6){a2};
+              \node[redspot](a3) at (-1.0, 0.5){a3};
+              \node[redspot](a4) at (-1, -0.6) {a4};
+              \node[redspot](a5) at (1, -0.4) {a5};
+              \node[redspot](a6) at (0.5, -0.8) {a6};
+              \node[redspot](a7) at (-0.2, -0.5) {a7};
+              \node[redspot](a8) at (0.5, 1) {a8};
+              \node[redspot](a9) at (0, 0.4){a9};
+
+      \path[->] (a1) edge[bend right=45] (a2)
+                (a2) edge[bend right=45] (a3)
+                (a3) edge[bend right=45] (a1)
+                (a4) edge[loop right, out=270, in = 0, looseness=18] (a4)
+                (a8) edge[bend right=45] (a9)
+                (a1) edge[bend left=45] (a5)
+
+                (a5) edge (a6)
+                (a5) edge (a7)
+                (a1) edge (a8);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Bei der Transformation, muss der Identifikator des Senders eingabepflichtig beim Empfänger hinterlegt werden. Wird der FK auß erdem als nicht-unikal deklariert, kann ein Objekt von mehreren Empfänger-Objekten als \enquote{ihr} Sender ausgewiesen werden. Folgend ist die Transformationsregel T11 dargestellt.
+\clearpage
+        \subsubsection{Transformationsregel T11 für den (1,1):(0,*) Rekursiv-Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{ER-Modell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize (1,1):(0,*) Rekursiv-Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SA} wird in A mit anderen Attributbezeichnungen \enquote{gedoppelt} und als eingabepflichtiger nicht-unikaler FK \fk{SA'} vereinbart, der auf den Sender verweist. (\nn{\fk{SA'}})\\
+          \end{supertabular}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(1,1) empfängt Nachricht};
+                \node[auto,swap](l2) at (5.6,1.4) {(0,*) sendet Nachricht};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \bild{}{transformationsregel_11_tabellen}{0.35}
+
+        \subsubsection{Beispiel - Fotos der Vereinsmitglieder}
+          Nehmen wir als Beispiel an, dass für die Festzeitschrift eines Vereins von allen Mitgliedern ein Foto benötigt wird. Im Interesse der Kostendämpfung wird kein externer Fotograf hinzugezogen. Jedes Mitglied muss genau einmal fotografiert werden. Manche Mitglieder fotografieren gar nicht, andere müssen dafür umso mehr Fotos machen. Damit auch wirklich jeder Fotograf selbst auf einem Foto zu sehen ist, ist letztlich erforderlich, dass sich ein Fotograf entweder selbst fotografiert (Ein-Objekt-Zyklus) oder dass ihn jemand fotografiert, der selbst bereits fotografiert wurde (Mehr-Objekte-Zyklus). Die erforderliche Transformation ist in folgender Abbildung dargestellt.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Mitglied};
+                  \node[attribute](a1)[left = of A]{\key{Mitgliedsnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Name} edge (A);
+                  \node[attribute](a3)[below left = of A]{FotografenNr} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5,-1.4) {(0,*) fotografiert};
+                \node[auto,swap](l2) at (5.6,1.4) {(1,1) wird fotografiert von};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Mitglied(\pk{Mitgliedsnummer}, Name, \nn{\fk{FotografenNr}})
+          \end{small}
+      \subsection{Der (0,1):(0,*) Rekursiv-Beziehungstyp}
+        Der (0,1):(0,*) Rekursiv-Beziehungstyp unterscheidet sich vom (1,1):(0,*) Rekursiv-Be\-zieh\-ungs\-typ nur durch die Aufhebung der Forderung, dass jedes Objekt eine Nachricht empfangen muss. Die folgende Abbildung zeigt dafür ein Beispiel.
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[]
+              \node[circleA](A){Objekttyp A};
+              \node[redspot](a1) at (1.2, 0.75){a1};
+              \node[redspot](a2) at (0.0, 1.6){a2};
+              \node[redspot](a3) at (-1.3, 0.5){a3};
+              \node[redspot](a4) at (-1, -0.6) {a4};
+              \node[redspot](a5) at (1.3, -0.4) {a5};
+              \node[redspot](a6) at (0.6, -0.9) {a6};
+              \node[redspot](a7) at (-0.2, -0.5) {a7};
+              \node[redspot](a8) at (0.5, 1) {a8};
+              \node[redspot](a9) at (0, 0.6) {a9};
+              \node[redspot](a10) at (-0.7, 1) {a10};
+              \node[redspot](a11) at (-0.2, -1.4){a11};
+
+
+      \path[->] (a1) edge[bend right=45] (a2)
+                (a2) edge[bend right=45] (a3)
+                (a3) edge[bend right=45] (a1)
+                (a4) edge[loop right, out=270, in = 0, looseness=18] (a4)
+                (a5) edge (a6)
+                (a5) edge (a7)
+                (a1) edge (a8)
+                (a9) edge (a10);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Dieser Rekursiv-Beziehungstyp ist prädestiniert für die Repräsentation von Monohierarchien, wie sie in der Praxis in Form von Organigrammen oder Stücklisten auftreten. Als Sonderfall eines \enquote{Baumes} ist eine Liste ($a_{9} \rightarrow a_{10}$) möglich, die evtl. auch nur aus einem Element ($a_{11}$) bestehen kann.
+
+        Bei der Transformation dieses Rekursiv-Beziehungstyps in das physische Datenbankmodell wird der FK als nicht-eingabepflichtig und nicht-unikal deklariert. Die entsprechende Transformation ist in T12 zusammengefasst.
+        \subsubsection{Transformationsregel T12 für den (0,1):(0,*) Rekursiv-Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{ER-Modell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize (0,1):(0,*) Rekursiv-Beziehungstyp & $\Rightarrow $ & \footnotesize \pk{SA} wird in A mit anderen Attributbezeichnungen \enquote{gedoppelt} und als nicht-eingabepflichtiger nicht-unikaler FK \fk{SA} vereinbart, der auf den Sender verweist. (\fk{SA'})\\
+          \end{supertabular}
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(0,1) empfängt Nachricht};
+                \node[auto,swap](l2) at (5.6,1.4) {(0,*) sendet Nachricht};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \bild{}{transformationsregel_12_tabellen}{0.35}
+\clearpage
+				\subsubsection{Beispiel - Unternehmenshierarchie}
+          Betrachten wir als Beispiel die Leitungshierarchie im Unternehmen. Ein Mitarbeiter kann ohne Leitungsfunktion sein, er kann aber auch mehrere andere Mitarbeiter anleiten. Dies kann über mehrere Hierarchiestufen erfolgen. Andererseits haben die meisten Mitarbeiter genau einen Chef. Mitarbeiter der obersten Leitungsebene haben keinen Chef. Die Transformation ist in der folgenden Abbildung dargestellt.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Mitarbeiter};
+                  \node[attribute](a1)[left = of A]{\key{Personalnummer}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Name} edge (A);
+                  \node[attribute](a2)[below left = of A]{Chef-Personalnummer} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(0,1) wird angeleitet von};
+                \node[auto,swap](l2) at (5.6,1.4) {(0,*) leitet an};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Mitarbeiter(\pk{Personalnummer}, Name, $\Uparrow$Chef-Personalnummer$\Uparrow $)
+          \end{small}
+
+          Der FK \fk{Chef-Personalnummer} ist nicht-eingabepflichtig, somit kann es Mitarbeiter ohne Chef geben. Da der FK nicht-unikal ist, können mehrere Mitarbeiter auf denselben Chef verweisen. An diesem Beispiel sieht man, dass der (0,1):(0,*) Rekursiv-Beziehungstyp wesentlich mehr Objekt-Strukturen umfasst, als für die Repräsentation monohierarchischer Zusammenhänge benötigt werden:
+
+          \begin{itemize}
+            \item \textit{Mehr-Objekt-Zyklen:} Der Mitarbeiter mit der Personalnummer \enquote{0815} kann Chef des Mitarbeiters \enquote{0816} sein. Dieser kann den Mitarbeiter \enquote{0817} anleiten, der wiederum Chef des Mitarbeiters \enquote{0815} ist.
+            \item \textit{Ein-Objekt-Zyklen:} Ein Mitarbeiter kann als sein eigener Chef ausgewiesen werden, wenn näm\-lich in einem Datensatz die Werte von PK und FK identisch sind.
+            \item \textit{Mehr-Objekt-Ketten:} Ein Mitarbeiter kann einen einzigen Mitarbeiter anleiten, der wiederum Chef eines einzigen Mitarbeiter ist.
+            \item \textit{Ein-Objekt-Ketten:} Ein Mitarbeiter, der keinen Chef hat, leitet selbst auch niemanden an.
+          \end{itemize}
+          In der Praxis sind solche Situationen gewöhnlich verboten, sie können aber durch die Tabellentypbeschreibung nicht verhindert werden. Die Anwendungssoftware muss sichern, dass die beschriebenen Fälle nicht realisiert werden, sofern es nicht gewollt ist.
+\clearpage
+      \subsection{Der (0,*):(0,*) Rekursiv-Beziehungstyp}
+        Der (0,*):(0,*) Rekursiv-Beziehungstyp stellt keinerlei einschränkende Bedingungen an die Struktur, nach der die Objekte eines Objekttyps A miteinander in Beziehung stehen. Jedes Objekt kann keine, eine oder mehrere Nachrichten senden oder empfangen. Die nachstehende Abbildung vermittelt davon einen Eindruck, ohne dass sie alle Möglichkeiten berücksichtigen kann.
+
+        Es lassen sich beliebig strukturierte Netzwerke darstellen. Insbesondere können dies Polyhierarchien sein. In einer Polyhierarchie hat jedes Objekt keines, eines oder mehrere untergeordnete Objekte. Jedes Objekt kann keines, eines oder mehrere übergeordnete Objekte besitzen. Als Sonderfall sind natürlich auch Monohierarchien möglich, diese entarten aber mitunter zur Objektkette, die evtl. auch nur aus einem Element bestehen kann. Die Objektkette kann in sich geschlossen sein und wird dann zum Objekt-Zyklus, der im Minimalfall ein Ein-Objekt-Zyklus ist.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[]
+              \node[circleA](A){Objekttyp A};
+              \node[redspot](a1) at (1.2, 0.75){a1};
+              \node[redspot](a2) at (0.0, 1.6){a2};
+              \node[redspot](a3) at (-1.3, 0.5){a3};
+              \node[redspot](a4) at (-1, -0.6) {a4};
+              \node[redspot](a5) at (1.3, -0.4) {a5};
+              \node[redspot](a6) at (0.6, -0.9) {a6};
+              \node[redspot](a7) at (-0.2, -0.5) {a7};
+              \node[redspot](a8) at (0.5, 1) {a8};
+              \node[redspot](a9) at (0, 0.6) {a9};
+              \node[redspot](a10) at (-0.7, 1) {a10};
+              \node[redspot](a11) at (-0.2, -1.4){a11};
+              \node[redspot](a12) at (0.4, -0.2){a12};
+
+      \path[->] (a1) edge[bend right=45] (a2)
+                (a2) edge[bend right=45] (a3)
+                (a3) edge[bend right=45] (a1)
+                (a5) edge[bend right=45] (a1)
+                (a4) edge[loop right, out=270, in = 0, looseness=18] (a4)
+                (a5) edge (a6)
+                (a6) edge (a7)
+                (a1) edge (a8)
+                (a9) edge (a10)
+                (a6) edge (a11);
+            \end{tikzpicture}
+          }
+        \end{center}
+
+        Der (0,*):(0,*) Rekursiv-Beziehungstyp lässt sich in das physische Datenbankmodell nur nach vorheriger Umwandlung in einen neuen Objekttyp überführen. Diese Umwandlung erfolgt mit Hilfe eines Koppel-Objekttyps, der als \enquote{Sendung} bezeichnet werden soll. Er repräsentiert die Sender-Empfänger-Beziehung zwischen den Objekten des Objekttyps A. Der Objekttyp A ist mit dem Objekttyp \enquote{Sendung} durch zwei (1,1):(0,*) Beziehungen zu verbinden.
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){A};
+                \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+              \node[relationship](rel1)[right = of A]{};
+              \node[auto,swap](l1) at (5.6,-1.4) {(0,*) empfängt Nachricht};
+              \node[auto,swap](l2) at (5.6,1.4) {(0,*) sendet Nachricht};
+              \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+              \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+            \end{tikzpicture}
+          }
+        \end{center}
+        wird umgewandelt in:
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){A};
+                \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+              \node[relationship](rel1) at (4, 0){1};
+              \node[entity](B)[right = of rel1]{Sendung};
+              \node[relationship](rel2) at (4, -2){2};
+              \node[auto,swap](l1) at (1, -1.5){(0,*)};
+              \node[auto,swap](l2) at (6, -1.5){(1,1)};
+              \path (A) edge node[auto,swap]{(0,*)} (rel1)
+                (rel1) edge node[auto,swap]{(1,1)} (B);
+              \path[draw, -] (A.south) |- (rel2.west)
+                (rel2.east) -| (B.south);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Stellt man den Objekttyp \enquote{Sendung} im physischen Datenbankmodell als Koppel-Tabelle A/A dar, so enthält er den PK des Objekttyps A zweimal, als eingabepflichtige FK, die auf den Empfänger bzw. auf den Sender einer Nachricht verweisen. Beide FK sind für sich genommen nicht-unikal, so dass ein Objekt in mehreren Tabellenzeilen als Empfänger bzw. als Sender auftreten kann. Die Kombination dieser beiden FK stellt den PK der Koppel-Tabelle dar. Dieses Vorgehen ist in der Transformationsregel T13 dargestellt.
+        \subsubsection{Transformationsregel T13 für den (0,*):(0,*) Rekursiv-Beziehungstyp}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{ER-Modell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|l|l|p{7.5cm}|}
+            \footnotesize Objekttyp A mit Schlüssel \pk{SA} & $\Rightarrow $ & \footnotesize Tabelle A mit PK \pk{SA}\\
+            \hline
+            \footnotesize (0,*):(0,*) Rekursiv-Beziehungstyp & $\Rightarrow $ & \footnotesize Koppel-Tabelle A/A, die \pk{SA} in zwei Exemplaren, als eingabepflichtige, nicht-unikale Fremdschlüssel enthält: als Empfänger-Fremdschlüssel \fk{SA} und als Sender-Fremdschlüssel \fk{SA'}. Die Kombination beider Fremdschlüssel bildet den Primärschlüssel von A/A.\\
+          \end{supertabular}
+
+          \bild{}{transformationsregel_13_tabellen}{0.35}
+
+        \subsubsection{Beispiel - komplexes Bauteil}
+          Zur Veranschaulichung der Transformationsregel T13 betrachten wir eine Stückliste, die den Aufbau eines komplexen Bauteils - z.B. eines Autos - aus kleineren Bauteilen beschreibt. Ein Bauteil kann elementar sein, kann sich also nicht mehr in kleinere Bauteile zerlegen lassen (z.B. Schraube). Andere Bauteile lassen sich, wie z.B. der Motor, in kleinere Einzelteile zerlegen. Des Weiteren ist es möglich, dass ein gegebenes Bauteil nicht Bestandteil eines größ eren Bauteils ist, wenn es nämlich beispielsweise das komplette Auto darstellt. Es kann aber auch Bestandteil mehrerer größ erer Bauteile sein, wenn ein bestimmter Motor in mehrere Modelle eingebaut werden kann. Die erforderliche Transformation zeigt die folgende Abbildung.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Bauteil};
+                  \node[attribute](a1)[left = of A]{\key{Bauteilnummer}} edge (A);
+                  \node[attribute](a1)[above left = of A]{Bezeichnung} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(0,*) ist zerlegbar in};
+                \node[auto,swap](l2) at (5.6,1.4) {(0,*) ist Bestandteil von};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Bauteil(\pk{Bauteilenummer}, Bezeichnung)
+
+            BauteilBauteil(\pk{\fk{Grossteilnummer + Kleinteilnummer}})
+          \end{small}
+
+          Jeder der beiden FK ist für sich nicht-unikal, so dass mehrere Bauteile jeweils als Groß teil bzw. Kleinteil in der Stückliste auftreten können. Es kann sein, dass eine bestimmte Bauteilnummer nicht als Wert des FK \fk{Grossteilnummer} auftritt. Dann ist dieses Bauteil nicht weiter zerlegbar. Ist die Bauteilnummer nie Wert des FK \fk{Kleinteilnummer}, dann gehört dies zu keinem größ eren Bauteil.
+
+          Die Tabellentypbeschreibungen lassen allerdings wiederum einige Situationen zu, welche man im angegebenen Praxisfall eigentlich ausschließ en möchte. Dazu gehören beispielsweise:
+          \begin{itemize}
+            \item \textit{Mehr-Objekte-Zyklen:} Das Bauteil \enquote{1001} hat als eines seiner Bestandteile das Bauteil \enquote{1002}, für das wiederum als eines seiner Bestandteile das Bauteil \enquote{1003} angegeben ist. Für das Bauteil \enquote{1003} ist aber angegeben, dass es das Bauteil \enquote{1001} als Bestandteil enthält. Die Koppel-Tabelle \enquote{BauteilBauteil} enthält dann folgende Zeilen.
+
+            \tablefirsthead{%
+            \hline
+              \multicolumn{1}{|l}{\textbf{Grossteilnummer}} &
+              \multicolumn{1}{|l|}{\textbf{Kleinteilnummer}} \\
+            \hline
+            }
+            \begin{supertabular}[h]{|l|p{5cm}|}
+              \hline
+              .... & ....\\
+              \hline
+              1001 & 1002\\
+              \hline
+              1002 & 1003\\
+              \hline
+              1003 & 1001\\
+              \hline
+              ... & ...\\
+              \hline
+            \end{supertabular}
+            \item \textit{Ein-Objekt-Zyklen:} Ein Bauteil kann als sein eigenes Bestandteil ausgewiesen werden, wenn seine Bauteilnummer in einer Zeile der Koppel-Tabelle als Wert beider FK angegeben wird.
+            \item \textit{Mehr-Objekte-Ketten:} Ein Bauteil kann als Bestandteil nur ein einziges anderes Bauteil haben. Seine Nummer kommt dann in der Koppel-Tabelle \enquote{BauteilBauteil} nur einmal als Wert des FK \fk{Grossteilnummer} vor. Das ist eine unsinnige Konstruktion, denn ein Bauteil lässt sich entweder nicht zerlegen oder es ist mindestens in zwei Bestandteile zerlegbar.
+            \item \textit{Ein-Objekt-Ketten:} Die Typbeschreibungen lassen die Speicherung eines Bauteils zu, das weder zerlegbar, noch Bestandteil eines größ eren Bauteils ist. Das wäre beispielsweise eine Schraube, die in keinem weiteren größ eren Bauteil Verwendung findet. Ihre Bauteilnummer taucht dann in der Koppel-Tabelle \enquote{BauteilBauteil} an keiner Stelle auf, die Speicherung solcher Bauteile ist im betrachteten Zusammenhang jedoch sinnlos.
+          \end{itemize}
+          Die beschriebenen Situationen kann das Datenbankmanagementsystem nicht verhindern. Sie müssen durch die entsprechende Anwendungsprogrammierung unterbunden werden.
+      \subsection{Der (1,*):(0,*) Rekursiv-Beziehungstyp}
+        Beim (1,*):(0,*) Rekursiv-Beziehungstyp kann ein Objekt keine, eine oder mehrere Nachrichten senden, es muss aber stets mindestens eine Nachricht empfangen. Die folgende Abbildung vermittelt einen Eindruck von möglichen Beziehungsstrukturen, ohne alle Varianten abzudecken.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[]
+              \node[circleA](A){Objekttyp A};
+              \node[redspot](a1) at (1.2, 0.75){a1};
+              \node[redspot](a2) at (0.0, 1.6){a2};
+              \node[redspot](a3) at (-1.3, 0.5){a3};
+              \node[redspot](a5) at (1.3, -0.4) {a5};
+              \node[redspot](a6) at (0.6, -0.9) {a6};
+              \node[redspot](a7) at (-0.2, -0.5) {a7};
+              \node[redspot](a8) at (0.5, 1) {a8};
+              \node[redspot](a9) at (0, 0.6) {a9};
+              \node[redspot](a10) at (-0.7, 1) {a10};
+              \node[redspot](a11) at (-0.3, -1.3) {a11};
+              \node[redspot](a12) at (-1.0, -0.3) {a12};
+
+      \path[->] (a1) edge[bend right=45] (a2)
+                (a3) edge[bend right=45] (a1)
+                (a5) edge (a6)
+                (a5) edge[bend right=45] (a1)
+                (a6) edge (a7)
+                (a1) edge (a8)
+                (a1) edge (a5)
+                (a8) edge (a9)
+                (a10) edge (a3)
+                (a9) edge (a10)
+                (a6) edge (a11)
+                (a12) edge[loop right, out=270, in = 0, looseness=15] (a12);
+            \end{tikzpicture}
+          }
+        \end{center}
+
+        Der (1,*):(0,*) Rekursiv-Beziehungstyp lässt sich erst nach Umwandlung, mit Hilfe eines Koppel-Objekttyps \enquote{Sendung}, in das physische Modell überführen. Der Objekttyp A ist mit dem Objekttyp \enquote{Sendung} durch einen (1,1):(0,*) und (1,1):(1,*) verbunden. Die folgende Abbildung zeigt das Schema der Umwandlung.
+        \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (5.6,-1.4) {(1,*) empfängt Nachricht};
+                \node[auto,swap](l2) at (5.6,1.4) {(0,*) sendet Nachricht};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          wird umgewandelt in:
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){A};
+                  \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+                \node[relationship](rel1) at (4, 0){1};
+                \node[entity](B)[right = of rel1]{Sendung};
+                \node[relationship](rel2) at (4, -2){2};
+                \node[auto,swap](l1) at (1, -1.5){(1,*)};
+                \node[auto,swap](l2) at (6, -1.5){(1,1)};
+                \path (A) edge node[auto,swap]{(0,*)} (rel1)
+                  (rel1) edge node[auto,swap]{(1,1)} (B);
+                \path[draw, -] (A.south) |- (rel2.west)
+                  (rel2.east) -| (B.south);
+              \end{tikzpicture}
+            }
+          \end{center}
+\clearpage
+        Nun haben wir bei den binären Beziehungstypen gesehen, dass sich ein (1,1):(1,*) Beziehungstyp im physischen Datenbankmodell nur als (1,1):(0,*) Beziehungstyp repräsentieren lässt. Damit kann der (1,*):(0,*) Rekursiv-Beziehungstyp nur gemäß{} der Transformationsregel T13 wie ein (0,*):(0,*) Rekursiv-Beziehungstyp dargestellt werden.
+        \subsubsection{Beispiel - Literaturverweis}
+          Betrachten wir als Beispiel Literaturverweise in Lehrbüchern. Jedes Lehrbuch verweist auf mindestens ein Vorgänger-Lehrbuch. Auf ein gerade erst erschienenes Lehrbuch kann noch nicht verwiesen werden. Handelt es sich um ein interessantes Lehrbuch, so wird im Laufe der Zeit von vielen Nachfolge-Lehrbüchern zitiert.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Lehrbuch};
+                  \node[attribute](a1)[left = of A]{\key{ISBN}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Titel} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (4,-1.4) {(0,*) wird zitiert von};
+                \node[auto,swap](l2) at (4,1.4) {(1,*) verweist auf};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+        \begin{small}
+          Lehrbuch(\pk{ISBN}, Titel)
+
+          LehrbuchLehrbuch(\pk{\fk{VorgaengerISBN + NachfolgerISBN}})
+        \end{small}
+
+          Jeder der beiden FK ist für sich nicht-unikal, so dass ein gegebenes Lehrbuch mehrmals als Vorgänger bzw. als Nachfolger in Erscheinung treten kann. Ist eine Lehrbuch ISBN kein einziges Mal Wert des FK \fk{VorgaengerISBN}, dann wurde dieses Lehrbuch noch nicht zitiert.
+
+          Die Tabellentypbeschreibungen lassen folgende Situationen zu, die nicht der Semantik entsprechen.
+          \begin{itemize}
+            \item \textit{Vernachlässigung der Nichtoptionalität:} Die nicht-optionale Beziehungstyprichtung\\ \enquote{Lehrbuch verweist auf Lehrbuch} wird als optionale Beziehungtyprichtung repräsentiert. Es ist somit möglich, dass eine Lehrbuch ISBN nie als Wert des Fremdschlüssels \fk{NachfolgerISBN} auftaucht. Dann ist dieses Lehrbuch nicht als Nachfolger eines anderen Lehrbuchs ausgewiesen, d.h. es verweist - entgegen der Praxisregel - auf kein Vorgängerlehrbuch.
+            \item \textit{Zyklen:} Ein Lehrbuch kann auf sich selbst als Vorgänger verweisen oder eine Objektekette kann sich schließ en. Da Vorgänger-Verweise immer \enquote{in die Vergangenheit} zeigen, sind Zyklen eigentlich verboten.
+          \end{itemize}
+          Die beschriebenen \enquote{pathologischen} Situationen lassen sich nur durch die Anwendungsprogrammierung vermeiden.
+      \subsection{Der (1,*):(1,*) Rekursiv-Beziehungstyp}
+        Der (1,*):(1,*) Rekursiv-Beziehungstyp unterscheidet sich nur in einem Punkt, vom zuvor behandelten Rekursiv-Beziehungstyp (1,*):(0,*). Ein Objekt muss mindestens eine Nach\-richt senden. Diese Forderung hat jedoch entscheidende Konsequenzen für die mög\-lichen Beziehungsstrukturen, von denen in der folgenden Abbildung einige abgebildet sind.
+
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[]
+              \node[circleA](A){Objekttyp A};
+              \node[redspot](a1) at (1.2, 0.75){a1};
+              \node[redspot](a2) at (0.0, 1.6){a2};
+              \node[redspot](a3) at (-1.3, 0.5){a3};
+              \node[redspot](a5) at (1.3, -0.4) {a5};
+              \node[redspot](a6) at (0.6, -0.9) {a6};
+              \node[redspot](a7) at (-0.2, -0.5) {a7};
+              \node[redspot](a8) at (0.5, 1) {a8};
+              \node[redspot](a9) at (0, 0.6) {a9};
+              \node[redspot](a10) at (-0.7, 1) {a10};
+              \node[redspot](a11) at (-0.3, -1.3) {a11};
+              \node[redspot](a12) at (-1.0, -0.3) {a12};
+
+      \path[->] (a1) edge[bend right=45] (a2)
+                (a2) edge[bend right=45] (a3)
+                (a3) edge[bend right=45] (a1)
+                (a5) edge (a6)
+                (a6) edge (a7)
+                (a7) edge (a3)
+                (a1) edge (a8)
+                (a1) edge (a5)
+                (a8) edge (a9)
+                (a10) edge (a3)
+                (a9) edge (a10)
+                (a6) edge (a11)
+                (a11) edge (a7)
+                (a12) edge[loop right, out=270, in = 0, looseness=15] (a12);
+            \end{tikzpicture}
+          }
+        \end{center}
+
+        Auch der (1,*):(1,*) Rekursiv-Beziehungstyp lässt sich in das physische Modell, nur nach vorheriger Umwandlung in einen neuen Objekttyp, überführen. Der Objekttyp A ist mit dem Koppel-Objekttyp \enquote{Sendung} durch zwei (1,1):(1,*) Beziehungstypen verbunden.
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){A};
+                \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+              \node[relationship](rel1)[right = of A]{};
+              \node[auto,swap](l1) at (5.6,-1.4) {(1,*) empfängt Nachricht};
+              \node[auto,swap](l2) at (5.6,1.4) {(1,*) sendet Nachricht};
+              \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+              \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+            \end{tikzpicture}
+          }
+        \end{center}
+        wird umgewandelt in:
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){A};
+                \node[attribute](a1)[left = of A]{\key{SA}} edge (A);
+              \node[relationship](rel1) at (4, 0){1};
+              \node[entity](B)[right = of rel1]{Sendung};
+              \node[relationship](rel2) at (4, -2){2};
+              \node[auto,swap](l1) at (1, -1.5){(1,*)};
+              \node[auto,swap](l2) at (6, -1.5){(1,1)};
+              \path (A) edge node[auto,swap]{(1,*)} (rel1)
+                (rel1) edge node[auto,swap]{(1,1)} (B);
+              \path[draw, -] (A.south) |- (rel2.west)
+                (rel2.east) -| (B.south);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Da sich ein (1,1):(1,*) im physischen Modell nur als (1,1):(0,*) Beziehungstyp repräsentieren lässt, muss der (1,*):(1,*) Rekursiv-Beziehungstyp - unter Verlust von semantischen Informationen - gemäß{} der Transformationsregel T13 wie ein (0,*):(0,*) Rekursiv-Beziehungstyp dargestellt werden.
+\clearpage
+        \subsubsection{Beispiel - Pianisten}
+          Als Beispiel betrachten wir eine Kunsthochschule, die Informationen über Pianisten sammelt, die in der Ausbildung tätig sind. Wir nehmen der Einfachheit halber an, dass die Pianisten eindeutig durch ihren Namen unterschieden werden können. Jeder dieser Pianisten hat wenigstens einen anderen Pianisten als Schüler. Andererseits ist jeder Pianist Schüler eines oder mehrerer anderer Pianisten (Autodidakten werden nicht berücksichtigt).
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A){Pianist};
+                  \node[attribute](a1)[left = of A]{\key{Name}} edge (A);
+                  \node[attribute](a2)[above left = of A]{Geburtsdatum} edge (A);
+                \node[relationship](rel1)[right = of A]{};
+                \node[auto,swap](l1) at (4,-1.4) {(1,*) hat Schüler};
+                \node[auto,swap](l2) at (4,1.4) {(1,*) ist Schüler von};
+                \path [draw, -] (A) |- ($(A.south) + (0.5,-0.5)$) -| (rel1);
+                \path [draw, -] (A) |- ($(A.north) +(0.5, 0.5)$) -| (rel1);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \begin{small}
+            Pianist(\pk{Name}, Geburtsdatum)
+
+            PianistPianist(\pk{\fk{LehrerName + SchuelerName}})
+          \end{small}
+
+          Jeder der beiden FK ist für sich nicht-unikal, so dass ein Pianist mehrmals als Lehrer bzw. Schüler in Erscheinung treten kann.
+
+          Die Tabellentypbeschreibungen ermöglichen Beziehungsstrukturen, die in der Praxis unzulässig sind, so beispielsweise:
+          \begin{itemize}
+            \item \textit{Vernachlässigung der Nichtoptionalität:} Die beiden nicht-optionalen Beziehungstyprichtungen \enquote{Pianist hat als Schüler Pianist} und \enquote{Pianist ist Schüler von Pianist} werden als optionale Beziehungstyp-Richtungen repräsentiert. Es ist somit möglich, dass ein Pianist keine Schüler hat und dass ein Pianist nicht Schüler eines anderen Pianisten ist.
+            \item \textit{Zyklen:} Ein Pianist kann sein eigener Schüler sein (Ein-Objekt-Zyklus) oder eine Schü\-ler-Kette kann zu ihrem Ausgangspunkt zurückkehren (Mehr-Objekte-Zyklus).
+          \end{itemize}
+
+          Diese unzulässigen Strukturen sind durch die Anwendungsprogrammierung zu verhindern.
+    \section{Transformation von Kardinalitäts-Beschränkungen}
+      Bei den Beziehungstypen gibt es im ER-Modell die Möglichkeit einschränkende Bedingungen für die Kardinalität anzugeben, wenn diese durch die \enquote{Geschäftsregeln} der Realität vorgegeben sind. Nehmen wir z.B. an, dass ein Unternehmen Informationen über die Dienstwagen und über die (Sommer- und Winter-) Räder speichern will. Jedes Auto ist mit genau 5 Rädern ausgerüstet (inklusive Ersatzrad). Einige Räder werden als Reserve im Lager aufbewahrt. Dies entspricht einem (0,1):(1,*) Beziehungstyp, für den (1,*) nicht beliebige Werte annehmen kann, sondern nur den Wert 5.
+
+      Wie wird diese Beschränkung in der Tabellentypbeschreibung berücksichtigt? Leider gar nicht! Es gibt im physischen Modell keine Möglichkeit die Kardinalität einzugrenzen. Das gilt für den binären wie auch für den rekursiven oder ternären Beziehungstyp. Für die Repräsentation von Kardinalitätsbeschränkungen gilt also die negative Transformationsregel T14, welche im Folgenden dargestellt ist.
+      \begin{center}
+        \scalebox{.7}{
+          \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](A){Auto};
+              \node[attribute](a1)[left = of A]{\key{PolKennzeichen}} edge (A);
+              \node[attribute](a2)[above left = of A]{Marke} edge (A);
+            \node[relationship](rel1)[right = of A]{zugeordnet} edge node[auto,swap] {(5,5)} (A);
+            \node[entity](B)[right = of rel1]{Rad} edge node[auto,swap] {(0,1)} (rel1);
+              \node[attribute](b1)[right = of B]{\key{Inventarnummer}} edge (B);
+              \node[attribute](b2)[below right = of B]{Typ} edge (B);
+          \end{tikzpicture}
+        }
+      \end{center}
+        \subsubsection{Transformationsregel T14 Kardinalitäts-Beschränkung}
+          \tablefirsthead{%
+          \hline
+            \multicolumn{1}{|c}{\textbf{ER-Modell}} &
+            \multicolumn{1}{|l}{\textbf{ }} &
+            \multicolumn{1}{|c|}{\textbf{physisches Datenmodell}} \\
+          \hline
+          }
+          \begin{supertabular}[h]{|p{7cm}|l|p{7cm}|}
+            \footnotesize Kardinalitäts-Beschränkung eines Be\-zieh\-ungs\-typs & $\Rightarrow $ & \footnotesize Eine Beschränkung lässt sich nicht in der Typ\-be\-schrei\-bung repräsentieren.\\
+            \hline
+          \end{supertabular}
+
+          Auch wenn sich die Kardinalitäts-Beschränkungen nicht in das physische Modell transformieren lassen, sollte ihre Notierung im ER-Modell dennoch erfolgen, weil sie wichtige Geschäftsregeln darstellen. Diese müssen dann bei der Anwendungsprogrammierung berück\-sichtigt werden.
+    \section{Transformation der Spezialisierung / Generalisierung}
+      Die Transformation der Spezialisierung kann nicht in eigenständige Regeln gefasst werden, da der Einzelfall zu betrachten ist. Es sollen hier nur allgemeine Hinweise für die überführung in das physische Modell gegeben werden, welche endgültig in Kombination mit den Transformationsregeln der binären Beziehungstypen erfolgt.
+      \begin{center}
+        \scalebox{.8}{
+          \begin{tikzpicture}
+            \node[entity](obj1){Person};
+            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
+            \node[entity](obj2)[below left = of isa]{Student};
+            \node[entity](obj3)[below right = of isa]{WiMa};
+            \path[draw, -] (isa.west) -| (obj2.north);
+            \path[draw, -] (isa.east) -| (obj3.north);
+          \end{tikzpicture}
+        }
+      \end{center}
+      \begin{center}
+        \scalebox{.8}{
+          \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](A){Person};
+            \node[relationship](rel1)[below left = of A]{};
+            \node[relationship](rel2)[below right = of A]{};
+            \node[entity](B)[below = of rel1]{Student} edge node[auto,swap]{(1,1)} (rel1);
+            \node[entity](C)[below = of rel2]{WiMa} edge node[auto,swap]{(1,1)} (rel2);
+            \node[auto,swap](l1) at (3.1,-1.0) {(0,1)};
+            \node[auto,swap](l2) at (-1.9,-1.0) {(0,1)};
+            \path [draw, -] (A.west) -| (rel1.north);
+            \path [draw, -] (A.east) -| (rel2.north);
+          \end{tikzpicture}
+        }
+      \end{center}
+      Die Transformation erfolgt mit T03 bzw. T04 und zusätzlichen programmtechnischen Maß nahmen, um die Disjunktion zu gewährleisten.

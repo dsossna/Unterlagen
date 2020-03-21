@@ -1,0 +1,106 @@
+\clearpage
+    \section{\"Ubungen - Verwalten einer SQL Server-Instanz}
+      \begin{enumerate}
+        %Richten Sie auf Ihrem Übungsserver alle notwendigen Werkzeuge ein, um
+        % mit der Domäne \identifier{MS-C-IX-04.FUS} arbeiten zu können.
+        \input{admin/uebungen/admin_chapter_03/item_a}
+
+        %Nehmen Sie Ihren Übungsserver in die Domäne
+        %\identifier{MS-C-IX-04.FUS} auf. Achten Sie darauf, dass das
+        %Computerkonto Ihres Datenbankservers in der 
+        %Organisationseinheit \oscommand{IT-SysAdmin\textbackslash
+        %EXER\textbackslash Serverxx\textbackslash Computers} abgelegt wird,
+        % bzw. verschieben Sie es dorthin.
+        \input{admin/uebungen/admin_chapter_03/item_b}
+        
+        %Deaktivieren Sie den Zugriff mittels Shared Memory auf Ihre SQL
+        %Server-Instanz!
+        \input{admin/uebungen/admin_chapter_03/item_c}
+        
+        %Der Zugriff auf Ihre SQL Server-Instanz soll nur noch mittels der 
+        %öffentlichen IP-Adresse 192.168.111.xx erfolgen können! Alle anderen
+        % IPs müssen deaktiviert werden!
+        \input{admin/uebungen/admin_chapter_03/item_d}
+        
+        %Richten Sie die im Folgenden aufgeführten gMSAs in der
+        %Organisationseinheit \oscommand{IT-SysAdmin\textbackslash
+        %EXER\textbackslash Serverxx\textbackslash MSAs} für die Dienste Ihrer
+        % SQL Server-Instanz ein. Ersetzen Sie dabei \enquote{xx} durch Ihre Platznummer!
+        \input{admin/uebungen/admin_chapter_03/item_e}
+
+        %Stoppen Sie die beiden Dienste \identifier{SQL Server Reporting
+        %Services} und \identifier{SQL Server Integration Services 12.0}.
+        %Konfigurieren Sie beide so, dass Sie manuell gestartet werden müssen.
+        \input{admin/uebungen/admin_chapter_03/item_f}
+
+        %Konfigurieren Sie Ihre Instanz MSSQLSERVER so, dass Sie immer
+        %mindestens 200M Arbeitsspeichern zur Verfügung hat und nie mehr als 2G
+        %benutzt!
+        \input{admin/uebungen/admin_chapter_03/item_g}
+
+        %Schreiben Sie eine SQL-Abfrage, die anzeigen, ob die Einstellungen
+        %aus der vorangegangenen Aufgabe bereits wirksam geworden sind oder
+        %nicht!
+        \input{admin/uebungen/admin_chapter_03/item_h}
+        
+        %Deaktivieren Sie die Überwachung von fehlerhaften Anmeldungen. Es
+        %soll keine Anmeldeüberwachung geben!
+        \input{admin/uebungen/admin_chapter_03/item_i}
+
+        %Fügen Sie Ihre Instanz MSSQLSERVER die Datenbank \identifier{Bank
+        %2014} hinzu. Der Aufbau der Datenbank kann der folgenden Tabelle
+        %entnommen werden. Die Namen der Dateigruppen sind in den logischen
+        % Namen der Datendateien enthalten (Primary, HR, CRM, KAM und MAIL).
+        \input{admin/uebungen/admin_chapter_03/item_j}
+        
+        %Fügen Sie der \identifier{Bank 2014} die Dateigruppe
+        %\identifier{staging} hinzu. Benutzen Sie dazu die folgenden Angaben:
+        \input{admin/uebungen/admin_chapter_03/item_k}
+        
+        %Fügen Sie der Dateigruppe \identifier{crm} eine weitere Datendatei
+        %hinzu. Verwenden Sie dazu die folgenden Angaben:
+        \input{admin/uebungen/admin_chapter_03/item_l}
+        
+        %Nehmen Sie die im Folgenden beschriebenen Verändernungen an den
+        %Datendateien Ihrer Datenbank \identifier{Bank 2014} vor.
+        \input{admin/uebungen/admin_chapter_03/item_m}
+      
+        %Schreiben Sie eine Abfrage, um zu überprüfen, ob die Datendatei
+        %ordnungsgemäß angefügt wurde.
+        \input{admin/uebungen/admin_chapter_03/item_n}
+        
+        %Verschieben Sie die Datendatei mit dem Namen
+        %\identifier{bank\_2014\_kam\_01} nach \oscommand{D:\textbackslash
+        %u01\textbackslash bank\_2014\textbackslash data}.
+        \input{admin/uebungen/admin_chapter_03/item_o}
+        
+        %Machen Sie die Dateigruppe \identifier{CRM} zur Standarddateigruppe
+        %der Datenbank \identifier{Bank 2014}.
+        \input{admin/uebungen/admin_chapter_03/item_p}
+        
+        %Konfigurieren Sie für die Datenbankoption
+        %\identifier{quoted\_identifier} den Wert \identifier{true}.
+        \input{admin/uebungen/admin_chapter_03/item_q}
+        
+        %Ermitteln Sie welchen Wert die Datenbankoption
+        %\identifier{auto\_close} hat und recherchieren Sie, welche Bedeutung
+        % diese Option hat bzw. was sie bewirkt.
+        \input{admin/uebungen/admin_chapter_03/item_r}
+
+\clearpage
+        %\item Verschieben Sie Ihre Datenbank \identifier{tempdb} gemäß den
+        %folgenden Angaben:
+        \input{admin/uebungen/admin_chapter_03/item_s}
+      
+        %Verschieben Sie das Fehlerprotokoll Ihrer Instanz nach
+        %\oscommand{D:\textbackslash u01\textbackslash errorlog}.
+        \input{admin/uebungen/admin_chapter_03/item_t}
+        
+        %Beim Anlegen der Datenbank ist Ihnen ein Fehler unterlaufen. Statt
+        %die Datenbank \identifier{Bank\_2014} zu nennen, haben Sie sie
+        %\identifier{Bank 2014} genannt. Recherchieren Sie, wie eine
+        %Datenbank umbenannt werden kann und ersetzten Sie das Leerzeichen im
+        %Datenbanknamen durch einen Unterstrich!
+        \input{admin/uebungen/admin_chapter_03/item_u}
+        
+    \end{enumerate}

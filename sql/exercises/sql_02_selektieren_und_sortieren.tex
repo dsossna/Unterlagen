@@ -1,0 +1,323 @@
+\clearpage
+    \section{Übungen - Selektieren und Sortieren}
+      \begin{enumerate}
+        \item Erstellen Sie eine Abfrage, die die Konto\_ID und das aktuelle
+        Guthaben des Girokontos der Bankkunden anzeigt, die weniger als 1000 EUR
+        Guthaben besitzen.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{KONTO\_ID}} &
+              \multicolumn{1}{r}{\textbf{GUTHABEN}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{55 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{55 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rr}
+                15 & -10496,4 \\
+                16 & -54593,2 \\
+                43 & -42144,1 \\
+                48 & -140505,1 \\
+                57 & -1088,4 \\
+                59 & 760,1 \\
+                83 & 336,2 \\
+                87 & -9009,1 \\
+                99 & -69705,6 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die die Mitarbeiter\_ID und den
+        Nachnamen der Mitarbeiter mit der Vorgesetzter\_ID \enquote{2} anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rl}
+                4 & Schwarz \\
+                5 & Sindermann \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die die Konto\_ID und das aktuelle
+        Guthaben des Girokontos der Bankkunden anzeigt, deren Guthaben nicht
+        zwischen 1000 EUR und 1500 EUR liegt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{KONTO\_ID}} &
+              \multicolumn{1}{r}{\textbf{GUTHABEN}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+%               \multicolumn{2}{l}{\textbf{428 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{428 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rr}
+                1 & 111316,9 \\
+                2 & 96340,2 \\
+                3 & 59633 \\
+                5 & 98449 \\
+                6 & 26130,7 \\
+                7 & 23128,7 \\
+                9 & 8857,6 \\
+                10 & 68001,3 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Lassen Sie sich die Kunden\_ID und das Geburtsdatum aller
+        Eigenkunden anzeigen, die zwischen dem 20. Februar 1980 und dem 02.
+        März 1988 geboren sind. Zusätzlich soll die Abfrage nach
+        dem Geburtsdatum in aufsteigender Reihenfolge sortiert werden.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{KUNDEN\_ID}} &
+              \multicolumn{1}{l}{\textbf{GEBURTSDATUM}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{124 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{124 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rl}
+                391 & 01.03.80 \\
+                387 & 03.03.80 \\
+                339 & 22.03.80 \\
+                75 & 22.03.80 \\
+                458 & 07.05.80 \\
+                50 & 21.05.80 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Zeigen Sie, in alphabetischer Reihenfolge, die Mitarbeiter\_ID und
+        den Nachnamen der Mitarbeiter an, die die Vorgesetzter\_ID \enquote{5}
+        oder \enquote{6} haben.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{10 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{10 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rl}
+                17 & Becker \\
+                16 & Berger \\
+                20 & Große \\
+                13 & Kaiser \\
+                18 & Köhler \\
+                14 & Lorenz \\
+                22 & Rollert \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die den Nachnamen und die
+        Bankfiliale\_ID der Mitarbeiter ausgibt, die die Vorgesetzten\_ID
+        \enquote{5} oder \enquote{6} haben und deren Bankfiliale\_ID zwischen
+        \enquote{10} und \enquote{20} ist. Die Spalten sollen mit
+        \enquote{Mitarbeiter} und \enquote{Bankfiliale} benannt werden.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{MITARBEITER}} &
+              \multicolumn{1}{r}{\textbf{BANKFILIALE}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+%               \multicolumn{2}{l}{\textbf{6 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{6 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lr}
+                Becker & 10 \\
+                Köhler & 11 \\
+                Weber & 12 \\
+                Große & 13 \\
+                Walther & 14 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Zeigen Sie die Mitarbeiter\_ID und den Nachnamen des Mitarbeiters
+        an, der keinen Vorgesetzten hat.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rl}
+                1 & Winter \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Zeigen Sie die Kunden\_ID und das Geburtsdatum derjenigen Eigenkunden an, die im Jahre 1980 geboren sind.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{KUNDEN\_ID}} &
+              \multicolumn{1}{l}{\textbf{GEBURTSDATUM}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{14 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{14 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rl}
+                387 & 03.03.80 \\
+                538 & 22.01.80 \\
+                161 & 17.08.80 \\
+                254 & 12.09.80 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die den Nachnamen, das Gehalt und die
+        Provision für alle Mitarbeiter anzeigt, die eine Provision erhalten.
+        Sortieren Sie die Ausgabe in absteigender Reihenfolge nach dem Gehalt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{GEHALT}} &
+              \multicolumn{1}{r}{\textbf{PROVISION}} \\
+              \cmidrule(l){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{33 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{33 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lrr}
+                Hartmann & 4000 & 30 \\
+                Roth & 3500 & 20 \\
+                Walther & 3500 & 20 \\
+                Wagner & 3500 & 20 \\
+                Zimmermann & 3500 & 30 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Zeigen Sie die Nachnamen aller Mitarbeiter an, in deren Nachname
+        an dritter Stelle ein \enquote{a} vorkommt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+%               \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{l}
+                Haas \\
+                Haas \\
+                Krause \\
+                Krause \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Zeigen Sie die Nachnamen aller Mitarbeiter an, deren Nachname ein
+        kleines \enquote{a} und ein kleines \enquote{e} enthält.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{24 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{l}
+                Sindermann \\
+                Kaiser \\
+                Zimmermann \\
+                Walther \\
+                Neumann \\
+                Lehmann \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+      \end{enumerate}

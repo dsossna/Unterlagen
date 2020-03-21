@@ -1,0 +1,222 @@
+  \chapter{Auditing}
+    \setcounter{page}{1}\kapitelnummer{chapter}
+    \minitoc
+\newpage
+      Auditing ist das \"Uberwachen und Aufzeichnen von ausgew\"ahlten Aktionen,
+      die innerhalb der Datenbank stattfinden. Es kann auf Einzelnen oder auf
+      einer Kombination von Faktoren (z. B. Nutzername, Anwendung, Anmeldezeit,
+      usw.) basieren. Auditing \"ublicherweise f\"ur die folgenden Zwecke
+      genutzt:
+      \begin{itemize}
+        \item Abschreckung von Nutzern, vor unerlaubten Zugriffen auf Objekte,,
+        au\ss erhalb ihres Verantwortungsbereiches.
+        \item Daten \"uber bestimmte Aktivit\"aten in der Datenbank sammeln
+        \item Verd\"achtige Nutzeraktivit\"aten aufdecken
+        \item Aufdecken von Problemen mit Autorisations- und Zugriffskontrollmechanismen
+      \end{itemize}
+      In Microsoft SQL Server kann das Auditing auf zwei Ebenen stattfinden, als
+      Serverüberwachung oder als Datenbanküberwachung.
+      \begin{merke}
+        Datenbanküberwachungen sind nicht in allen SQL Server Editionen
+        verfügbar. Sie existieren lediglich in der Enterprise, der Developer
+        oder der Eval-Edition.
+      \end{merke}
+    \section{Bestandteile des SQL Server Auditings}
+      \subsection{Überwachungen}
+        Überwachungen sind Objekte die auf Server-Instanzebene erstellt
+        werden. Sie regeln verschiedene Dinge, wie z. B.:
+        \begin{itemize}
+          \item Was passiert, wenn das Auditing nicht durchgeführt werden
+          kann?
+          \item Wo werden die Auditing-Daten gespeichert?
+          \item Maximale Größe/Anzahl der Auditing-Dateien?
+        \end{itemize}
+        Überwachungen stellen die Grundlage für das Auditing dar. Alle
+        weiteren Komponenten basieren auf Ihnen und können deshalb auch nur
+        dann erstellt werden, wenn eine Überwachung existiert.
+      \subsection{Serverüberwachungsspezifikationen}
+        In einer Serverüberwachungsspezifikation kann der Administrator
+        eine Liste von Überwachungsaktionsgruppen erstellen, um so
+        verschiedene Ereignisse/Aktionen auf Server-Instanzebene zu
+        überwachen.
+        
+        Nach Aktivierung der Serverüberwachungsspezifikation werden die
+        gesammelten Überwachungsdaten an eine Überwachung gesendet, die diese
+        wiederum in einem Überwachungsziel speichert.
+        \begin{merke}
+          Überwachungen und Serverüberwachungsspezifikationen stehen in einer
+          1:1-Beziehung zueinander. Jede Überwachung kann nur mit genau einer
+          Serverüberwachungsspezifikation verbunden werden und eine
+          Serverüberwachungsspezifikationen ist ohne Überwachung nicht
+          funktionsfähig.
+        \end{merke}
+      \subsection{Datenbanküberwachugnsspezifikationen}
+        Datenbanküberwachugnsspezifikationen sind in ihrer Arbeits- und
+        Funktionsweise mit den Serverüberwachungsspezifikationen identisch.
+        Sie zeichnen Überwachungsaktionen auf und leiten diese an eine
+        Überwachung weiter.
+        \begin{merke}
+          Genau wie bei den Serverüberwachungsspezifikationen gilt auch hier,
+          dass zwischen Datenbanküberwachugnsspezifikation und Überwachung
+          eine 1:1-Beziehung existiert.
+        \end{merke}
+      \subsection{Überwachungsaktionen und Überwachungsaktionsgruppen}
+        Unter Überwachungsaktionen bzw. Aktionsgruppen versteht man einzelne
+        Ereignisse und Gruppen von Ereignissen, die im SQL Server auf treten
+        und überwacht werden können. Sie existieren auf Server- und
+        Datenbankebe, außerdem gibt es Überwachungsereignisse, die zur
+        Überwachung des Auditing notwendig sind.
+        \begin{merke}
+          Diese Ereignisse bzw. Gruppen basieren auf den \enquote{Extended
+          Events}, welche noch an späterer Stelle in dieser Unterlage behandelt
+          werden.
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{cc280663}
+        \end{literaturinternet}
+      \subsection{Überwachungsziele}
+        Unter dem Begriff \enquote{Überwachungsziel} versteht der SQL Server
+        einen Speicherort für die Auditing-Datensätze. Hierfür stehen drei
+        Möglichkeiten zur Verfügung:
+        \begin{itemize}
+          \item \textbf{Datei}: Die Auditing-Datensätze werden in einer Datei
+          bzw. eine Gruppe von Dateien auf einem Datenträger abgelegt.
+          \item \textbf{Anwendungsprotokoll}: SQL Server kann seine
+          Auditing-Daten in das zentrale Auditing-Protokoll des
+          Betriebssystems, das Anwendungsprotokoll schreiben.
+          \item \textbf{Sicherheitsprotokoll}: SQL Server kann seine
+          Auditing-Daten in das Sicherheitsprotokoll, eine gut geschützte
+          Alternative zum Anwendungsprotokoll, schreiben.
+        \end{itemize}
+    \section{Erstellen und verwalten von Überwachungen}
+      \subsection{Konfiguration und Benutzung von Überwachungszielen}
+        Für die Erstellung einer Überwachung muss ein Überwachungsziel
+        ausgewählt werden. Dieses Ziel bestimmt, wo die Überwachungsdaten
+        gespeichert werden.
+        \subsubsection{Ein Dateipfad als Überwachungsziel}
+        
+        \subsubsection{Datensätze in das Anwendungsprotokoll schreiben}
+          Das Windows-Anwendungsprotokoll ist eine zentrale Sammelstelle für
+          Ereignisse des Betriebssystems und anderer Softwareprodukte.
+          Grundsätzlich kann jede Software auf unkomplizierte Weise ihre
+          Einträge in das Anwendungsprotokoll schreiben und jeder Benutzer hat
+          lesenden Zugriff darauf. Es ist kein zusätzlicher
+          Konfigurationsaufwand notwendig, um dieses Protokoll zu
+          benutzen. Daraus resultiert, dass das Anwendungsprotokoll zwar einfach
+          und praktisch zu Handhaben, jedoch auch sehr unsicher ist.
+          \begin{merke}
+            Dieses Überwachungsziel ist ungeeignet, wenn der Administrator des
+            SQL Servers und der \enquote{Sicherheitsbeauftragte} zwei
+            unterschiedliche Personen sind, da der SQL Server Administrator
+            nicht am Zugriff auf das Anwendungsprotokoll gehindert werden kann.
+          \end{merke}
+        \subsubsection{Benutzung des Sicherheitsprotokolls vorbereiten}
+      \subsection{Erstellen von Überwachungen mit dem SSMS}
+        \subsubsection{Erstellen der Überwachung}
+          \begin{enumerate}
+            \item Wählen Sie im Objekt-Explorer das Menü \enquote{Sicherheit} auf
+            Instanzebene und öffnen Sie dort das Kontextmenü des Punktes
+            \enquote{Überwachungen}.
+            \bild{Erstel-len einer Über-wachung}{create_audit_spec_1}{1.3}
+            \item Klicken Sie auf \enquote{Neue Überwachung\ldots}
+            \bild{Erstel-len einer Über-wachung}{create_audit_spec_2}{1.3}
+            \item Es öffnet sich der Dialog \enquote{Überwachung erstellen}
+            \bild{Erstel-len einer Über-wachung}{create_audit_spec_3}{1.1}
+            \item Tragen Sie die folgenden Angaben ein:
+            \begin{itemize}
+              \item \textbf{Überwachungsname}: Serverüberwachungen
+              \item \textbf{Überwachungsziel}: Datei
+              \item \textbf{Dateipfad}: \oscommand{D:\textbackslash
+              audit\textbackslash mssqlserver} (Pfad vorher anlegen)
+              \item \textbf{Überwachungsdateien}: Option \enquote{Unbegrenzt}
+              entfernen
+              \item \textbf{Anzahl der Dateien}: 10
+              \item \textbf{Maximale Dateigröße}: 10 MB
+            \end{itemize}
+            \item Klicken Sie auf OK.
+          \end{enumerate}
+        \subsubsection{Bedeutung der Optionen für das Überwachungsziel}
+          \begin{itemize}
+            \item \textbf{Dateipfad}: In diesem Verzeichnis wird ein Ordner
+            angelegt, welcher die Überwachungsdaten aufnimmt.
+            \item \textbf{Anzahl der Dateien}: Durch diese Angabe wird
+            festgelegt, nach wie vielen Dateien der SQL Server anfängt, die
+            erste Datei wieder zu überschreiben (Rollover). Dadurch wird eine
+            zyklische Wiederverwendung der Audit-Dateien erreicht.
+            \item \textbf{Maximale Dateigröße}: Gibt die maximale Größe einer
+            Audit-Datei an.
+          \end{itemize}
+        \subsubsection{Bedeutung der Optionen für Überwachungsprotokollfehler}
+          Es kann vorkommen, dass der SQL Server aus einem unbekannten Grund
+          nicht mehr in der lage ist die Daten des Auditings zu speichern. Da
+          Auditing aber meist dazu benutzt wird, um sicherheitskritische
+          Systeme zu überwachen, ist der Ausfall des Überwachungszieles selbst
+          auch ein als kritisch zu bewertender Vorfall. Der Administrator hat
+          drei verschiedene Optionen zur Verfügung, um das Verhalten des SQL
+          Servers in einem solchen Fall zu beeinflussen und angemessen auf den
+          Ausfall zu reagieren.
+          \begin{itemize}
+            \item \textbf{Weiter}: Das Auditing läuft weiter und der SQL Server
+            versucht auch weiterhin Daten in das Überwachungsziel zu schreiben.
+            Diese Option ermöglich es unter Umständen, dass Benutzer Aktivitäten
+            auf dem Server ausführen, welche durch Ihre Sicherheitsrichtlinien
+            verboten sind, ohne das dies Protokolliert werden kann.
+            \begin{merke}
+              Wählen Sie diese Option nur dann aus, wenn die Verfügbarkeit des
+              Datenbankmoduls wichtiger ist als die Sicherheit des Systems.
+            \end{merke}
+            \item \textbf{Server herunterfahren}: Ist diese Option ausgewählt,
+            wird der Server automatisch beim Ausfall des Überwachungszieles
+            heruntergefahren.
+            \begin{merke}
+              Das Herunterfahren des Servers bietet zwar ein hohes Maß an
+              Sicherheit, es kann aber auch für Denial-Of-Service Attacken
+              genutzt werden. Verwenden Sie diese Option nur dann, wenn die
+              Sicherheit des Servers höher bewertet wird, als die Verfügbarkeit.
+            \end{merke}
+            \item \textbf{Fehlerhafter Vorgang}: Diese Option stellt einen
+            Kompromiss aus \enquote{Weiter} und \enquote{Server herunterfahren}
+            dar. Der Server blockiert alle Aktionen, welche eine Überwachung
+            nach sich ziehen würden. Andere nicht überwachte Aktivitäten sind
+            problemlos möglich. Der Server belibt verfügbar.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{cc280525}
+          \end{literaturinternet}
+      \subsection{Erstellen von Überwachungen mit SQL}
+        Wahlweise kann eine Überwachung auch mittels SQL-Statement erstellt
+        werden.
+        \begin{lstlisting}[language=ms_sql,caption={Erstellen
+        einer Überwachung},label=sql21_01]
+USE [master]
+GO
+
+CREATE SERVER AUDIT [Serverüberwachungen]
+TO FILE 
+( FILEPATH = N'D:\audit\mssqlserver',
+  MAXSIZE = 10 MB,
+  MAX_ROLLOVER_FILES = 10,
+  RESERVE_DISK_SPACE = OFF
+)
+WITH
+( QUEUE_DELAY = 1000,
+  ON_FAILURE = CONTINUE
+);
+
+GO          
+        \end{lstlisting}
+        \beispiel{sql21_01} zeigt, wie die Überwachung
+        \enquote{Serverüberwachung}, die zuvor mit Hilfe des SSMS erstellt wurde
+        mittels SQL-Kommand kreiert wird.
+      \subsection{Überwachungsziel Datei}
+        \subsubsection{NTFS-Berechtigungen}
+      
+      \subsection{Überwachungsziel Anwendungsprotokoll}
+      
+      \subsection{Überwachungsziel Sicherheitskprotokoll}
+      
+    \section{Auditing auf Serverebene}
+      
+      \subsection{Serverüberwachungsspezifikationen} 
+    \section{Auditing auf Datenbankebene}
+    

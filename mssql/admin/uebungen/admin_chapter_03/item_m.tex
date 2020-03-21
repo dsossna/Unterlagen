@@ -1,0 +1,34 @@
+\item Nehmen Sie die im Folgenden beschriebenen Verändernungen an den
+Datendateien Ihrer Datenbank \identifier{Bank 2014} vor.
+\begin{center}
+  \begin{small}
+    \changefont{pcr}{m}{n}
+    \tablefirsthead {
+      \multicolumn{1}{c}{\textbf{Name}} &
+      \multicolumn{1}{c}{\textbf{Größe}} &
+      \multicolumn{1}{c}{\textbf{Wachstum}} &
+      \multicolumn{1}{c}{\textbf{G Max.}} &
+      \multicolumn{1}{c}{\textbf{Pfad}} \\
+    }
+    \tablehead{
+    }
+    \tabletail {
+    }
+    \tablelasttail {
+    }
+    \begin{supertabular}{lrrrl}
+        bank\_2014\_primary\_01 &  10 M &  + 10 M & \color{red}{768 M} &
+        D:\textbackslash u01\textbackslash bank\_2014\textbackslash data \\
+        \hline
+        bank\_2014\_hr\_01     & 100 M & \color{red}{+ 50 M}&
+        \color{red}{1 G} & D:\textbackslash u01\textbackslash
+        bank\_2014\textbackslash data \\
+        bank\_2014\_hr\_02     & 100 M & \color{red}{+ 50 M}&
+        \color{red}{1 G} & D:\textbackslash u01\textbackslash
+        bank\_2014\textbackslash data \\
+        \hline
+        bank\_2014\_kam\_01    & \color{red}{500 M} & + 100 M & \color{red}{2 G} &
+        E:\textbackslash u02\textbackslash bank\_2014\textbackslash data \\
+    \end{supertabular}
+  \end{small}
+\end{center}

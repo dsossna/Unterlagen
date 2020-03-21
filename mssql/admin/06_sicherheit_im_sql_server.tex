@@ -1,0 +1,2893 @@
+  \chapter{Sicherheit im SQL Server}
+  \chaptertoc{}
+  \cleardoubleevenpage
+    \begin{merke}
+      Die in diesem Kapitel genannten Informationen beziehen sich nurauf das
+      Absichern einer SQL Server-Instanz. Für andere Softwareprodukte können
+      unter Umständen andere bzw. zusätzliche Einstellungen und Maßnahmen
+      notwendig sein.
+    \end{merke}
+    Das Absichern von Anwendungen und Diensten ist eine vielschichtige Aufgabe
+    und bedarf genauer Planung, sowie guter Kenntnis der Materie. Grundsätzlich
+    sind es vier Ebenen, die es abzusichern gilt:
+    \begin{itemize}
+        \item Der Serverraum
+        \item Das Netzwerk
+        \item Das Betriebssystem
+        \item Die Anwendung / der Dienst
+    \end{itemize}
+    Abhängig davon, wie sensibel die zu schützenden Daten sind, muss jede
+    dieser Ebene mit entsprechendem Aufwand gesichert werden.
+    \section{Sicherheit auf Betriebssystemebene}
+      Ein wesentlicher Bestandteil der Sicherheit auf Betriebssystemebene ist
+      ein gut durchdachtes Rollen und Rechtekonzept. Jeder Benutzer sollte nur
+      auf die Bestandteile des Betriebssystems Zugriff haben, auf die er auch
+      Zugriff haben muss. Das beginnt damit, das jeder Benutzer ein eigenes
+      Nutzerkonto hat, das mit den notwendigen Berechtigungen ausgestattet ist.
+      
+      Zu beachten ist hierbei, dass nicht nur \enquote{Benutzer aus Fleisch und
+      Blut} Nutzerkonten verwenden. Jeder Windowsdienst wird im Kontext eines
+      Benutzerkontos ausgeführt, was bedeutet, dass der Dienst die
+      Berechtigungen seines Nutzerkontos besitzt und einsetzen kann.
+      \begin{merke}
+        Benutzerkonten, die von Windowsdiensten verwendet werden, werden im
+        Folgenden als \enquote{Dienstkonten} bezeichnet.
+      \end{merke}
+      Um unliebsame Zwischenfälle zu vermeiden sollte der Administrator das
+      \enquote{Priciple of least privilege} (POLP) beachten. Dieses Prinzip
+      besagt, dass jeder Benutzer nur die Rechte eingeräumt bekommt, die er für
+      seine Arbeit zwingend braucht.
+      \subsection{NTFS-Zugriffsrechte}
+        Der Microsoft SQL Server speichert verschiedene Dateiarten in
+        unterschiedlichen Verzeichnissen. Bei fast allen dieser Ordner muss nur
+        der SQL Server-Dienst selbst Zugriff haben, der Datenbankadministrator
+        benötigt dagegen nur in Ausnahmefällen Zugriff.
+        \subsubsection{Die Standardverzeichnisse des SQL Server}
+          In Kapitel \ref{installation_of_sql_server_2014} wurde bereits das
+          Standardinstallationsverzeichnis des SQL Server angesprochen. Es
+          befindet sich in \oscommand{C:\textbackslash Program Files\textbackslash Microsoft SQL
+          Server}. In diesem Ordner liegen die folgenden Bestandteile:
+          \begin{itemize}
+            \item die instanzabhängigen Komponenten der Database Engine, der
+            Reporting Services und der Analysis Services
+            \item die gemeinsam genutzten Komponenten,
+            \item das Datenverzeichnis \oscommand{data},
+            \item das Protokollverzeichnis \oscommand{data}
+            \item und das Sicherungsverzeichnis \oscommand{backup}
+          \end{itemize}
+          Für all diese Verzeichnisse gilt: Normale Benutzer benötigen keinen
+          Zugriff und auch Administratoren müssen dort nur in äußerst seltenen
+          Fällen zugreifen. Nur die SQL Server-Dienste müssen Vollzugriff auf
+          die dort befindlichen Dateien haben.
+          \begin{merke}
+            Anmerkung des Autors: Im Unterverzeichnis \oscommand{binn} liegen
+            die ausführbaren Dateien für das Management Studio und alle anderen
+            Komponenten, die Sie während dieses Lehrgangs benötigen. Aus diesem
+            Grund werden Kerbdie Zugriffsrechte für dieses Verzeichnis nicht
+            verändert. Im Normalfall hat der Administrator einen eigenen
+            \enquote{Adminrechner}, auf dem die Client-Tools, samt Management
+            Studio, installiert sind, weshalb auch er dort keinen Zugriff haben
+            muss.
+          \end{merke}
+        \subsubsection{Erstellen einer sinnvollen Verzeichnisstruktur}
+          Sofern der SQL Server mit Standardeinstellungen betrieben wird, werden
+          neue Datenbanken im Datenverzeichnis \oscommand{data}, unterhalb des
+          Installationsordners angelegt. Da dieser Ordner üblicherweise auf dem
+          Systemdatenträger \oscommand{C:\textbackslash} liegt, sollten dort
+          keine Datenbanken liegen, weil sonst die Gefahr besteht, das dieser
+          Datenträger volläuft und das gesamte System blockiert wird. Des
+          Weiteren sollten, wie in \ref{movedatabases} bereits erwähnt,
+          bestimmte Datenbanken, wie z. B. die \identifier{tempdb}, auch aus
+          Performancegründen auf andere Datenträger verteilt werden.
+          
+          Die Aufgabe des Administrators ist es nun, sich eine sinnvolle
+          Verzeichnisstruktur für die Verteilung zu überlegen. Besagte Struktur
+          sollte dabei die folgenden Punkte berücksichtigen:
+          \begin{itemize}
+            \item Anwendungsdaten (Programme und Programmbibliotheken) und
+            Datenbanken sollten getrennt von einander liegen.
+            \item Es sollte möglich sein, ein \enquote{Inplace Upgrade} der
+            Datenbanksoftware durchzuführen. Dazu müssen kurzzeitig zwei
+            Versionen des SQL Servers auf einem Server betrieben werden können.
+            \item Datenbanken und Protokolldateien sollten auf getrennten
+            Datenträgern liegen.
+            \item Möglichst einfach durch NTFS-Rechte zu sichernde
+            Verzeichnisstruktur.
+          \end{itemize}
+          Verschiedene Softwareanbieter haben bereits solche Lösungen erarbeitet
+          und stellen diese der Allgemeinheit zur Verfügung. Ein Lösungsansatz,
+          der all diese Punkte berücksichtigt, ist die \enquote{Oracle Flexible
+          Architecture} - kurz OFA. Auch wenn die OFA für die Aufteilung von
+          Oracle-Datenbankdateien gedacht ist, ist sie dennoch so allgemein
+          gehalten, das sie auch auf andere DBMS, wie z. B. den SQL Server,
+          anwendbar ist.
+          
+          Die OFA-Struktur sieht folgendes vor:
+          \begin{itemize}
+            \item Ein Verzeichnisbaum beginnt mit einem kurzen, eindeutigen
+            Namen, der von keinen äußeren Faktoren, wie z. B. einer
+            Hardwarebezeichnung, abhängig ist. Außerdem sollte der
+            Verzeichnisname eine laufende Nummer enthalten.
+            \item Das erste Unterverzeichnis drückt etwas über seinen Inhalt
+            aus, z. B. \oscommand{app} für Applications oder \oscommand{data}
+            für Datenbankdateien.
+            \item In der zweiten Verzeichnisebene kann die Versionsnummer des
+            genutzten DBMS dargestellt werden, z. B. \oscommand{120} für den SQL
+            Server 2014.
+            \item Die nächste Verzeichnisebene gibt den Namen der Datenbank an,
+            z. B. \oscommand{Bank\_2014}
+          \end{itemize}
+          Beispiele für eine OFA-Kompatible Verzeichnisstruktur könnten somit
+          sein:
+          
+          \oscommand{D:\textbackslash u01\textbackslash data\textbackslash
+          120\textbackslash Bank\_2014}
+          
+          \oscommand{D:\textbackslash u01\textbackslash filestream\textbackslash
+          120\textbackslash Bank\_2014}
+          
+          \oscommand{D:\textbackslash u01\textbackslash log\textbackslash
+          120\textbackslash Bank\_2014}
+          
+          \oscommand{D:\textbackslash u01\textbackslash backup\textbackslash
+          120\textbackslash Bank\_2014}
+          
+        \subsubsection{Festlegen der NTFS-Rechte mit Hilfe der OFA}
+          Die einfachste Möglichkeit, die passenden NTFS-Berechtigungen
+          innerhalb der OFA zu verteilen besteht darin, den Mechanismus der
+          \enquote{Vererbung} auszunutzen. Der Administrator muss lediglich die
+          NTFS-Rechte an der obersten Verzeichnisebene, im vorangegangenen
+          Beispiel war dies \oscommand{u01}, ändern und diese werden weiter
+          nach unten vererbt. Orientiert man sie dabei, wie von Microsoft
+          empfohlen, am AGDLP-Schema, so bedeutet dies:
+          \begin{enumerate}
+            \item Erstellen einer globalen Gruppe im AD, z. B. mit dem Namen
+            \identifier{g-mssqlserver120}.
+            \item Aufnehmen der gMSAs aller SQL Server-Dienste in die globale
+            Gruppe.
+            \item Erstellen einer domänenlokalen Gruppe im Active Directory,
+            beispielsweise mit dem Namen \identifier{l-mssqlserver120}.
+            \item Aufnehmen der globalen Gruppe in die domänenlokale Gruppe.
+            \item Deaktivieren der Vererbung für den Ordner
+            \oscommand{D:\textbackslash u01}
+            \item Zuteilen des NTFS-Rechts \enquote{Vollzugriff} an die
+            domänenlokale Gruppe auf das Verzeichnis \oscommand{D:\textbackslash
+            u01}.
+            \item Aufrufen der Erweiteren Sicherheitseinstellungen und
+            ausführen der Funktion \enquote{Alle Berechtigungseinträge für
+            untergeordnete Objekte durch vererbbare Berechtigungseinträge von
+            diesem Objekt ersetzen}. Dadurch werden alle Unterodner mit den
+            korrekten Berechtigungen versehen.
+            \item Kontrollieren, dass die Vererbung des NTFS-Rechte für alle
+            Unterordner von \oscommand{D:\textbackslash u01} aktiviert ist.
+            \item Zuteilen des NTFS-Rechts \enquote{Vollzugriff} an die weiteren
+            Ordner \oscommand{u02}, \oscommand{u03}, usw.
+          \end{enumerate}    
+      \subsection{Die Windows-Firewall}
+        Mit Hilfe der Windows-Firewall kann ein weiteres Stück Sicherheit erzeugt
+        werden. Sie ermöglicht es, die Kommunikation zwischem dem
+        Datenbankserver und seinen Clients sowohl mit statischen als auch mit
+        dynamischen Ports zu regeln.
+        \begin{merke}
+          Da es die unterschiedlichsten Firewall-Produkte auf dem Markt gibt,
+          wird die Windows-Firewall hier nur als stellvertretendes Beispiel
+          herangezogen, um aufzuzeigen, wie die Netzwerkkommunikation zwischen
+          Client und Server gesichert werden kann.
+        \end{merke}
+        Die Verwaltung der Windows-Firewall erfolgt mit dem MMC-Plugin
+        \enquote{Windows-Firewall mit erweiterter Sicherheit}. Dieses kann
+        durch die \enquote{Ausführen}-Funktion des Windows Startmenüs mit
+        \oscommand{WF.msc} gestartet werden.
+        \begin{enumerate}
+          \item Klicken Sie im Firewallmenü, links außen, auf die Option
+          \enquote{Eingehende Regel}.
+          \bild{Das Windows-Firewall MMC-Plugin}{windows_firewall_1}{1.8}
+          \item Öffnen Sie mit der rechten Maustaste das Kontextmenü und
+          wählen Sie die Option \enquote{Neue Regel}.
+          \bild{Neue eingehende Regel erstellen}{windows_firewall_2}{1.2}
+          \item Wählen Sie in Schritt eins, des \enquote{Assistenten für
+          eingehende Regeln} die Option \enquote{Port}.
+          \bild{Eine Regel für Ports erstellen}{windows_firewall_3}{1.3}
+          \item Klicken Sie auf \enquote{Weiter}
+          \item Wählen Sie in Schritt zwei die Optionen \enquote{TCP} und
+          \enquote{Bestimmte lokale Ports} und geben Sie die Portnummer 1433
+          an.
+          \bild{TCP-Port 1433 ansprechen}{windows_firewall_4}{1.3}
+          \item Klicken Sie auf \enquote{Weiter}.
+          \item Im Schritt \enquote{Aktion} des Assistenten muss die Option
+          \enquote{Verbindung zulassen} aktiviert bleiben.
+          \bild{Zulassen der Verbindung}{windows_firewall_5}{1.3}
+            \item Klicken Sie auf Weiter
+\clearpage
+            \item Die eingehende Regel soll für alle drei Profile
+            gelten.
+            \bild{Anwenden der Regel auf alle
+          Netzwerkprofile}{windows_firewall_6}{1}
+          \item Vergeben Sie den Namen \enquote{Database Engine} für die
+          Policy.
+          \bild{Fertigstellen des Assistenten}{windows_firewall_7}{1.3}
+        \end{enumerate}
+        \begin{literaturinternet}
+          \item \cite{ms175043}
+        \end{literaturinternet}
+    \section{Konfigurieren der Authentifizierung}
+      Für die Authentifizierung der Clients kann der SQL Server zwei
+      verschiedene Protokolle benutzen: NTLM und Kerberos. NTLM ist die
+      Standardmethode und wird immer dann genutzt, wenn
+      Kerberos nicht konfiguriert wurde oder nicht genutzt werden kann.
+      \subsection{Unterschiede zwischen NTLM und Kerberos}
+        \subsubsection{NT LAN Manager Authentifizierung (NTLM)}
+          Das LAN Manager-Protokoll, ursprünglich von Microsoft entwickelt,
+          kam lange Zeitnur in Microsoftprodukten vor. Mit Hilfe von
+          Reverse Engineering hat dieses Protokoll aber auch Einzug in andere
+          Softwareprodukte erhalten. Ende der 1990er Jahre erfolgte dann die
+          Weiterentwicklung des LAN Manager-Protokolls zum NT LAN
+          Manager-Protokoll. NTLM basiert auf der folgenden Vorgehensweise:
+          \begin{enumerate}
+            \item Der Client sendet seinen Benutzernamen im Klartext an den
+            Server.
+            \item Der Server sendet im zweiten Schritt eine Zufallszahl an den
+            Client. Diese Zahl wird als \enquote{Challenge} bezeichnet.
+            \item Der Client sendet eine mit dem Hash-Wert seines
+            Benutzerpasswortes verschlüsselte Anwort, die \enquote{Response}
+            zurück.
+            \item Der Server verschlüsselt nun seinerseits die Challenge mit dem
+            Benutzerpasswort und vergleicht das Ergebnis mit der Response. Bei
+            Wertgleichheit gilt der Client als authentifiziert.
+          \end{enumerate}
+          Die Größte Schwachstelle dieses Protokolls ist die unverschlüsselte
+          Übertragung des Benutzernamens. Außerdem konnte es bei der ersten
+          Version des NTLM-Protokolls vorkommen, dass lange Passwörter schwächer
+          waren als Kurze, weshalb NTLMv2 entwickelt wurde.
+        \subsubsection{Das Kerberos-Protokoll}
+          Das Kerberos-Protokoll hat seinen Ursprung im
+          \enquote{Needham-Schroeder-Protokoll}, welches 1978 als Protokoll zur
+          Authentifizierung in unsicheren Netzwerken entworfen wurde. Kerberos
+          gilt als äußerst sicher, weshalb Microsoft die Nutzung von Kerberos
+          als Standard vorschlägt. Die Authentifizierung wird durch einen extra
+          Kerberos-Dienst vorgenommen, der als \enquote{vertrauenswürdige dritte
+          Partei} (Trusted Third Party) oder auch als \enquote{Key Distribution
+          Center} (KDC) bezeichnet wird. In der Welt von Microsoft übernimmt die
+          Rolle des KDC der Domain Controller einer Active Directory Domäne. Die
+          Vorteile von Kerberos gegenüber NTLM sind:
+          \begin{itemize}
+            \item \textbf{Multilaterale Authentifizierung}: Kerberos-Dienst,
+            Zielserver und Client authentifizieren sich gegenseitig, wodurch
+            Man-In-The-Middle-Attacken vermieden werden.
+            \item \textbf{Sichere Datenübertragung}: Verschlüsselte
+            Übertragung aller Informationen.
+            \item \textbf{Single-Sign-On}: Vermeidung mehrfacher
+            Anmeldevorgänge.
+          \end{itemize}
+           Der Mechanismus den Kerberos verwendet basiert auf der Verteilung von
+           verschlüsselten Tickets. Diese Tickets stellen für die Clients die
+           Berechtigung dar auf bestimmte Dienste (die Services) zuzugreifen.
+           Für jeden Service den ein Client benutzen möchte muss er sich ein eigenes
+           Ticket holen.
+           
+           Ein Kerberos-Authentifizierungsvorgang läuft wie folgt ab:
+          \begin{enumerate}
+            \item Der Client meldet sich beim Kerberos-Server und fordert ein
+            \enquote{Ticket Granting Ticket} (TGT) an. Bei einem TGT handelt es
+            sich um eine kleine verschlüsselte Datei, welche die IP-Adresse des
+            Clients, eine Session-ID und eine Gültigkeitsdauer beinhaltet. Zur
+            Anforderung des TGT muss der Client unter Umständen ein Passwort
+            angeben.
+            \item Der Server prüft, ob sich der Client in seiner
+            \enquote{Realm DB} befindet und erteilt dem Client das TGT.
+            \item Der Client kann nun ein \enquote{Service Ticket} für einen
+            speziellen Dienst beim KDC anfordern. Hierfür sendet er sein TGT
+            und den SPN des gewünschten Dienstes an den KDC.
+            \item Der KDC erteilt dem Client das Service Ticket
+            \item Der Client kann mit Hilfe des Service Tickets nun den
+            gewünschten Service benutzen.
+          \end{enumerate}
+          \begin{literaturinternet}
+            \item \cite{cc280744}
+            \item \cite{cc280745}
+            \item \cite{wikipTicketGrantingTicket}
+          \end{literaturinternet}
+          \bild{Das Kerberos\-verfahren}{kerberos}{1.5}
+      \subsection{Service Principal Names (SPN)}
+        In einer Active Directory Umgebung darf kein Zugriff auf einen
+        Dienst, ohne eine vorherige Authentifizierung des Clients erfolgen. Für die
+        Authentifizierung benutzt Microsoft Windows das Protokoll \enquote{Kerberos}, und ein
+        Bestandteil dieses Protokolls sind die sogenannten \enquote{Service
+        Principal Names}, abgekürzt \enquote{SPN}. Ein SPN, zu Deutsch
+        \enquote{Dienst Prinzipal Name}, ist vereinfacht ausgedrückt ein Name für
+        einem Windows Dienst, mit dem dieser sich im Active Directory registriert.
+        \subsubsection{Aufbau eines SPN}
+          Ein SPN besteht aus maximal vier Teilen, die durch Slashes ( / ) von
+          einander getrennt werden.
+        
+          \texttt{<service class>/<host>:<port number>/<service name>}
+        
+          \begin{itemize}
+            \item \textbf{service class}: Eine Zeichenfolge, welche die Art des
+            Dienstes identifiziert, beispielsweise steht \identifier{MSSQLSvc} für
+            den SQL Server Dienst.
+            \item \textbf{host}: Abhängig vom jeweiligen Dienst ist dies die
+            IP-Adresse, der NetBIOS-Name oder der FQDN\footnote{FQDN = Fully
+            Qualified Domain Name} des betreffenden Servers auf dem der Dienst
+            bereitgestellt wird. Dieser Teil wird manchmal auch als
+            \enquote{Instance Name} bezeichnet.
+            \item \textbf{port number}: Eine optional anzugebende Portnummer, mit
+            deren Hilfe mehrere Instanzen, des gleichen Dienstes, auf einem Host
+            unterschieden werden können.
+            \item \textbf{service name}: Ebenfalls eine optionale Angabe, die zur
+            Unterscheidung unterschiedlicher Instanzen ein und des selben Dienstes
+            auf einem Host benutzt werden kann.
+          \end{itemize}
+          Der Teil Service Class wird oft auch als \enquote{Service Type}
+          bezeichnet. Es existieren eine Reihe sogenannter \enquote{Well-known
+          services}, wie z. B. \identifier{www} für Web Services, \identifier{http} für
+          Webseiten/-server oder auch \identifier{ldap} für Directory Services.
+          Grundsätzlich muss der Service Type aber nicht mehr als eine eindeutige
+          Zeichenfolge sein.
+
+          Der SPN der SQL Server Standardinstanz besteht aus zwei bis drei
+          Bestandteilen:
+          
+          \texttt{MSSQLSvc/fea11-119srv20.ms-c-ix-04.fus}
+          
+          Das Beispiel zeigt einen SPN des Typs SQL Server, der auf dem Host
+          \identifier{fea11-119srv20.ms-c-ix-04.fus} bereitgestellt wird. Optional
+          kann hier auch eine Portnummer mit aufgenommen werden, falls der SQL
+          Server nicht auf seinem Standardport 1433 betrieben wird.
+          
+          \texttt{MSSQLSvc/fea11-119srv20.ms-c-ix-04.fus:1423}
+
+          Da der SQL Server ein replizierbarer Dienst ist, kann es mehrere
+          parallele Instanzen auf einem Host geben. In solch einem Fall ist
+          der Service Name von Bedeutung, da er den Namen der benannten SQL
+          Server Instanz enthält.
+          
+          \texttt{MSSQLSvc/fea11-119srv20.ms-c-ix-04.fus/CRM}
+          
+          \texttt{MSSQLSvc/fea11-119srv20.ms-c-ix-04.fus/ERM}
+          
+          Beidesmals sind die zwei vorderen Teile gleich, nur der Service
+          Name ist unterschiedlich.
+          \begin{merke}
+            Wichtig ist der Service Name besonders dann, wenn ein
+            Verbindungsprotokoll zum Einsatz kommt, dass keine Portnummern kennt,
+            wie z. B. Named Pipes.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms677601}
+            \item \cite{qzaidi20101012}
+          \end{literaturinternet}
+        \subsubsection{Verbreitung von SPNs - Service Publication}
+          Wie eingangs bereits erwähnt, muss ein Dienst seinen SPN im Active
+          Directory registrieren, damit Clients zu ihm Kontakt aufnehmen können.
+          Der Vorgang während dem der Dienst seinen SPN im AD registriert wird
+          als \enquote{Service Publication} bezeichnet.
+
+          Unter normalen Umständen wird ein SPN von einem Setup-Programm erzeugt
+          und im Active Directory registriert. Bei SQL Server 2014 werden in einem
+          Installationsschritt die Dienstkonten für die verschiedenen Konten
+          abgefragt und nach Abschluß des Schrittes im AD registriert.
+          \begin{merke}
+            Damit die Service Publication funktionieren kann, muss der Benutzer,
+            der die Installationsroutine ausführt die Berechtigung besitzen
+            Objekte im Active Directory anzulegen.
+          \end{merke}
+          Wird nach erfolgter Service Publication das Konto eines Dienstes
+          geändert, muss die SPN beim alten Dienstkonto gelöscht und mit dem neuen
+          registriert werden. Dieser Schritt kann entfallen, wenn MSAs genutzt
+          werden, da diese ihre SPN selbst verwalten.
+        \subsubsection{Wo werden die SPN-Informationen abgelegt?}
+          Ein SPN ist immer mit einem Benutzer- oder Computerkonto verknüpft.
+          Welche Kontoart benutzt wird hängt davon ab, welcher Kontotyp als
+          Dienstkonto festgelegt wurde.
+          \begin{itemize}
+            \item \textbf{Virtual Account}: Da ein virtuelles Konto das
+            Computerkonto des lokalen Computers benutzt, um auf
+            Netzwerkresourcen zuzugreifen, wird in diesem Fall der SPN mit dem
+            Computerkonto registriert.
+            \item \textbf{Benutzerkonto/MSA}: Hier wird der SPN mit dem
+            betreffenden Benutzerkonto registriert. Der einzige Unterschied
+            zwischen Benutzerkonto und MSA ist der, dass MSAs die notwendigen
+            Berechtigungen haben, um ihre SPNs selbst zu verwalten.
+          \end{itemize}
+          \begin{merke}
+            SPNs werden im LDAP-Attribut \enquote{servicePrincipalName}
+            aufgelistet. Dessen Inhalt kann im ADSI-Editor sichtbar gemacht
+            werden.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms191153}
+            \item \cite{cc755804}
+          \end{literaturinternet}
+      \subsection{Umstellung auf Kerberos}
+        Um das Authentifizierungsverfahren auf Kerberos umzustellen muss der
+        Administrator lediglich einen einzigen Schritt durchführen:
+      
+        Dem SQL Server-Dienstkonto muss ein gülter Service Principal Name (SPN)
+        zugeordnet werden.
+
+        Die Zuordnung des SPN kann manuell oder automatisch erfolgen.
+        \subsubsection{Automatische zuordnung eines SPN}
+          Die automatische Zuordnung eines SPN für den SQL Server-Dienst geschieht
+          beim Starten des Dienstes. Die Voraussetzung dafür ist, dass sein
+          Dienstkonto die Berechtigung hat einen SPN zu registrieren.
+          Standardmäßig haben nur die Konten \enquote{Lokale System} und
+          \enquote{Netzwerk Dienst} die Berechtigung einen SPN zu registrieren.
+          Allen anderen Konten muss dieses Recht erst erteilt werden. Gehen Sie
+          hierzu wie folgt vor:
+          \begin{enumerate}
+            \item Starten Sie das MMC-Plugin \enquote{ADSI-Editor}
+            \bild{Starten des ADSI-Editors}{adsi_editor_1}{1.3}
+            \item Öffnen Sie per Rechtsklick auf \enquote{ADSI-Editor} das
+            Kontextmenü und klicken Sie auf \enquote{Verbindung herstellen}.
+            \bild{Herstellen einer Verbindung zur Domäne}{adsi_editor_2}{1.3}
+            \item Klicken Sie auf OK um die Verbindung zur Domäne herzustellen.
+            \bild{Verbindungs\-einstellungen}{adsi_editor_3}{1.3}
+            \item Navigieren Sie im Verzeichnisbaum bis zum gewünschten gMSA.
+            \bild{Navigation im Verzeichni}{adsi_editor_4}{1.3}
+            \item Öffnen Sie das Kontextmenü des gMSA und klicken Sie auf
+            \enquote{Eigenschaften}
+\clearpage
+            \item Wählen Sie die Registerkarte \enquote{Sicherheit} und klicken
+            Sie auf das Benutzerkonto \enquote{SELBST}.
+            \bild{Der Eigenschaften\-dialog des gMSA}{adsi_editor_5}{1.3}
+            \item Klicken Sie auf \enquote{Erweitert}.
+            \item Wählen Sie im Dialog \enquote{Erweiterte
+            Sicherheitseinstellungen} den Benutzer \enquote{SELBST} aus. Dieser
+            Eintrag existiert u. U. mehrfach. Klicken Sie auf die Schaltfläche
+            \enquote{Bearbeiten} sobald Sie den richtigen Benutzer gefunden
+            haben.
+            \bild{Erweiterte
+            Sicherheits\-einstellungen}{adsi_editor_6}{1.3}
+            \item Scrollen Sie im Dialog \enquote{Berechtigungseintrag} soweit
+            nach unten, bis Sie die beiden Berechtigungen
+              \begin{itemize}
+                \item ServicePrincipalName lesen
+                \item ServicePrincipalName schreiben
+              \end{itemize}
+            gefunden haben und wählen Sie diese aus.
+\clearpage
+            \bild{Auswählen der Berechtigungen}{adsi_editor_7}{1.3}
+            \item Schließen Sie die Eigenschaftsdialoge und den ADSI-Editor.
+            \item Starten Sie den SQL Server-Dienst neu.
+          \end{enumerate}
+          Im ErrorLog des SQL Server kann nach dem Neustart ersehen werden, ob
+          die automatische Zuordnung des SPN funktioniert hat. Es erscheint die
+          folgende Meldung:
+          
+          The SQL Server Network Interface library successfully registered the
+          Service Principal Name (SPN) MSSQLSvc/FEA11-119SRVXX.ms-c-ix-04.fus
+          for the SQL Server service.
+          
+          Beim Fehlschlagen der Zuordnung wird die folgende Fehlermeldung
+          angezeigt:
+          
+          The SQL Server Network Interface library could nat register the
+          Service Principal Name (SPN) MSSQLSvc/FEA11-119SRVXX.ms-c-ix-04.fus
+          for the SQL Server service. Windows return code: 0xXXXXX, state: 15.
+          Failure to register a SPN might cause integrated authentication to use
+          NTLM instead of Kerberos.
+          
+          Sollte diese Fehlermeldung erscheinen, kann sie durch die manuelle
+          Zuordnung eines SPN behoben werden.
+          \begin{literaturinternet}
+            \item \cite{btmcm210tsnilwutrs}
+            \item \cite{mswcttssnilcnrtspns}
+            \item \cite{ms191153}
+          \end{literaturinternet}
+        \subsubsection{Manuelle zuordnung eines SPN}
+          \begin{enumerate}
+            \item Starten Sie das MMC-Plugin \enquote{ADSI-Editor}
+            \item Öffnen Sie per Rechtsklick auf \enquote{ADSI-Editor} das
+            Kontextmenü und klicken Sie auf \enquote{Verbindung herstellen}.
+            \item Klicken Sie auf OK um die Verbindung zur Domäne herzustellen.
+            \item Navigieren Sie im Verzeichnisbaum bis zum gewünschten gMSA.
+            \item Öffnen Sie das Kontextmenü des gMSA und klicken Sie auf
+            \enquote{Eigenschaften}
+            \item Scrollen Sie auf der Registerkarte \enquote{Attribut-Editor}
+            soweit nach unten, bis Sie den Eintrag
+            \enquote{servicePrincipalName} gefunden haben. Wählen Sie ihn aus
+            und klicken Sie auf \enquote{Bearbeiten}.
+            \bild{Der Attribut-Editor}{adsi_editor_8}{1.3}
+            \item Fügen Sie den SPN MSSQLSvc/FEA11-119SRVXX.ms-c-ix-04.fus
+            hinzu.
+            \bild{Das Attribut service\-Principal\-Name}{adsi_editor_9}{1.3}
+            \item Schließen Sie alle Dialogfenster und den ADSI-Editor.
+            \item Starten Sie den SQL Server-Dienst neu.
+          \end{enumerate}
+        \subsubsection{Die Zuordnung eines SPN überprüfen}
+          Ob die Zuordnung des SPN funktioniert hat kann mit Hilfe des Kommandos
+          \oscommand{setspn} in einer Eingabeaufforderung überprüft werden.
+          
+          \oscommand{setspn -L MS-C-IX-04\textbackslash MSSQLSERVER12\$}
+          
+          Bei erfolgreicher Zuordnung erscheint eine Liste der SPNs, die dem
+          gMSA MSSQLSERVER12\$ zugeordnet sind.
+          \bild{Ergebnis von setspn.exe}{setspn_1}{1.5}
+        \subsubsection{Wird Kerberos nun wirklich verwendet?}
+          Die Katalogsicht \identifier{sys.dm\_exec\_connections} kann darüber
+          Auskunft geben, ob Kerberos für die Authentifizierung genutzt wird
+          oder nicht.
+          \begin{lstlisting}[language=ms_sql,caption={Wie wird
+        authentifiziert?},label=sql19_01]
+SELECT net_transport, client_net_address, encrypt_option, auth_scheme
+FROM   sys.dm_exec_connections;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead{
+                \multicolumn{1}{l}{\textbf{NET\_TRANSPORT}} &
+                \multicolumn{1}{l}{\textbf{CLIENT\_NET\_ADDRESS}} &
+                \multicolumn{1}{l}{\textbf{ENCRYPT\_OPTION}} &
+                \multicolumn{1}{l}{\textbf{AUTH\_SCHEME}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+                }
+              \tablehead{}
+              \tabletail{
+                \multicolumn{2}{l}{\textbf{1 Zeile ausgew\"ahlt}} \\
+              }
+              \tablelasttail{
+                \multicolumn{2}{l}{\textbf{1 Zeile ausgew\"ahlt}} \\
+              }
+              \begin{mssql}
+                \begin{supertabular}{llll}
+                  TCP & 192.168.111.43 & TRUE & KERBEROS \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+    \section{Von Privilegien, Rollen, Prinzipalen und Securables}
+      \subsection{Privilegien}
+        \subsubsection{Zuweisen, Entziehen und Verweigern}
+          Um mit Datenbankobjekten arbeiten zu können, müssen Benutzer dazu
+          berechtigt werden bestimmte Aktionen auszuführen. Dies kann z. B. das
+          Verbinden mit der SQL Server-Instanz, das Lesen von Tabellenzeilen
+          oder auch das Ändern von Werten in Tabellen sein. Solche
+          Berechtigungen werdem im Datenbankumfeld als \enquote{Privilegien}
+          bezeichnet. Privilegien können Nutzern zugewiesen oder entzogen
+          werden. Zusätzlich dazu kennt der Microsoft SQL Server auch die
+          Möglichkeit einem Benutzer ein Privileg explizit zu verweigern.
+          
+          Die Auswirkungen beim Zuweisen, Entziehen oder Verweigern von
+          Privilegien sind vergleichbar mit den Auswirkungen bei der
+          Verwaltung von NTFS-Rechten.
+          \begin{itemize}
+            \item \textbf{Zuweisung}: Einem Benutzer wird ein Privileg erteilt.
+            Er kann dadurch eine bestimmte Aktion ausführen.
+            \item \textbf{Entzug}: Einem Benutzer wird ein zugeteiltes Privileg
+            weggenommen, er kann eine Aktion nicht mehr ausführen.
+            \item \textbf{Verweigerung}: Einem Benutzer wird die Ausübung eines
+            Privileges explizit verboten. Dabei ist es unerheblich, ob dem
+            betroffenen Benutzer ein Privileg erteilt wurde oder nicht. Durch
+            die Verweigerung kann er bestimmte Aktionen nicht ausführen.
+          \end{itemize}
+          \begin{merke}
+            Zuteilung, Entzug und Verweigerung von Privilegien wirken sich immer
+            augenblicklich auf den oder die betroffenen Benutzer aus.
+          \end{merke}
+          Bei der Zuteilung von Privilegien an Benutzer sollte immer nach dem
+          LUA-Prinzip (\enquote{\textbf{L}east-Privileged \textbf{U}ser
+          \textbf{A}ccount}) vorgegangen werden, was bedeutet, dass einem
+          Benutzer immer nur ein minimaler Privilegiensatz zugwiesen werden
+          soll. Wichtig ist, dass dieses Prinzip auch schon bei der Entwicklung
+          von Datenbankanwendungen genutzt wird, da nur so ein konsequent nach
+          LUA erstelltes Rollen- Rechtekonzept entsteht.
+        \subsubsection{Durchführung der Berechtigungsprüfung}
+          Um zu überprüfen, ob ein Prinzipal den Zugriff auf eine Resource
+          erhält oder nicht, muss der SQL Server einen relativ komplexen Vorgang
+          ausführen, in dessen Rahmen nach einer Berechtigungszuteilung gesucht
+          wird, die einen Prinzipal mit ausreichenden Berechtigungen ausstattet.
+          Hierbei müssen aber blockierende \DENY-Anweisungen, überlappende
+          Gruppenmitgliedschaften oder Besitzverkettungen berücksichtigt werden.
+          
+          Die folgende Aufzählung zeigt, welche Schritte der SQL Server bei der
+          Berechtigungsprüfung vollziehen muss. Die Reihenfolge kann von Vorgang
+          zu Vorgang etwas anders sein.
+          \begin{enumerate}
+            \item Umgehe die gesamte Berechtigungsprüfung, wenn der betroffene
+            Prinzipal ein Administrator (festen Serverrolle
+            \privileg{sysadmin}) oder der Eigentümer einer Datenbank ist.
+            \item Erteilung des Zugriffs, sofern die Besitzverkettung anwendbar
+            ist.
+            \item Identiäten, die dem Betroffenen User zuordenbar sind,
+            aggregieren, um den Sicherheitskontext zu erstellen.
+            \begin{merke}
+              Als Sicherheitskontext wird die Gruppe der Prinzipale bezeichnet,
+              die sich auf das aktuelle Login bzw. den Benutzer beziehen und die
+              Berechtigungen für die Zugriffüberprüfung einbringen. 
+            \end{merke}
+            \item Auflisten der Berechtigungen, die für diesen
+            Berechtigungsbereich zugteilt oder verweigert worden sind.
+            \begin{merke}
+              Als Berechtigungsbereich wird das Securable und alle Securable
+              Classes bezeichnet, in denen sich das Securable befindet.
+              Beispielsweise befindet sich eine Tabelle (Securable) in einem
+              Schema (Securable Class) welches sich in einer Datenbank
+              (weitere Securable Class) befindet.)
+            \end{merke}
+            \item Analysieren, welche Berechtigung für den aktuellen Vorgang
+            benötigt wird.
+            \item Die Berechtigungsprüfung ist beendet (erfolgreich oder nicht
+            erfolgreich).
+          \end{enumerate}
+          Die Prüfung gilt als erfolgreich, wenn die benötigte Berechtigung für
+          eine Identität innerhalb des Sicherheitskontextes für ein Securable im
+          Berechtigungsbereich gefunden wurde (in Kurzform: Wenn der betroffene
+          Benutzer das entsprechende Zugriffsrecht hat).
+        \subsubsection{Namenskonventionen für Privilegien}
+          Microsoft hat die Privilegien, die innerhalb des SQL Server zur
+          Verfügung stehen, nach dem folgenden Namensschema benannt:
+          \begin{itemize}
+            \item \privileg{alter}: Räumt einem Prinzipal die Möglichkeit ein
+            alle Eigenschaften, mit Ausnahme des Besitzes, eines Securables zu
+            ändern. Wird dieses Privileg auf einen Gültigkeitsbereich erteilt,
+            so ist damit nicht nur das Ändern, sondern auch das Erstellen und
+            das Löschen von Securables enthalten.
+            \item \privileg{alter any}: Durch den Zusatz \privileg{any} ist es
+            möglich alle Securables eines Types zu Erstellen, zu Ändern oder zu
+            Löschen. Diese Berechtigung kann nur für die Gültigkeitsbereiche
+            Datenbank oder Server erteilt werden und betrifft, im Gegensatz zu
+            \privileg{alter}, automatisch immer alle Securables in einem dieser
+            Bereiche.
+            \item \privileg{view definition}: Ermöglich dem Empfänger Einsicht
+            in die Metadaten eines Securables zu nehmen.
+            \item \privileg{control}: Erteilt Privilegien, die denen des
+            Besitzers eines Securables sehr ähnlich sind. Der Empfänger kann alle
+            Eigenschaften eines Securables ändern (wie bei \privileg{alter}) und
+            er kann auch Berechtigungen auf das Securable erteilen.
+          \end{itemize}
+          Diese Liste zeigt nur einen kurzen Ausschnitt aus dem
+          Benennungsschema. Die vollständige Version, sowie eine Liste alle in
+          SQL Server enthaltenen Privilegien kann unter dem folgenden
+          Literaturhinweis eingesehen werden.
+          \begin{literaturinternet}
+            \item \cite{ms191291}
+          \end{literaturinternet}
+      \subsection{Rollen}
+        Rollen Sie für eine Datenbank das, was unter Microsoft Windows Gruppen
+        sind. Mit Hilfe von Rollen können Benutzer gruppiert und Privilegien
+        zugeteilt werden. Sie werden benutzt, um die Erstellung und die
+        Verwaltung eines Rechtekonzeptes zu vereinfachen. Grundsätzlich ist es
+        einfacher eine Rolle mit Privilegien auszustatten und anschließend
+        Benutzer der Rolle zuzuweisen bzw. sie daraus zu entfernen, als jedem
+        Benutzer einen eigenen Privilegiensatz zu geben. Übersichtlichkeit
+        und Verwaltbarkeit eines Systems werden durch die Nutzung von Rollen
+        deutlich gesteigert.
+        
+        \begin{merke}
+          Rollen können geschachtelt werden (Rollen werden Rollen zugewiesen).
+          Jedoch sollte der Administrator/Entwicklern von einer allzu tiefen
+          Verschachtelung absehen, da sonst die Performance einer Anwendung
+          verschlechtert werden kann.
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{bb669084}
+        \end{literaturinternet}
+      \subsection{Prinzipale}
+        Ein Prinzipal ist ein Objekt bzw. eine Entität, die in der Lage ist
+        Resourcen anzufordern und zu benutzen. In Bezug auf Microsoft Windows
+        sind Benutzerkonten und Sicherheitsgruppen Prinzipale, da sowohl
+        Benutzern als auch Gruppen Rechte zugewiesen werden können, mit deren
+        Hilfe die Prinzipale dann Resourcen, wie z. B. Dateien benutzen
+        können.
+        
+        Der SQL Server versteht unter anderem Rollen, Logins und
+        Datenbankbenutzer als Prinzipale.
+        \begin{literaturinternet}
+          \item \cite{ms181127}
+        \end{literaturinternet}
+      \subsection{Securables - Sicherungsfähige Elemente}
+        Securables (deutsche Übersetzung: Sicherungsfähige Elemente) sind
+        Entitäten die durch Privilegien gesichert werden können. Sie stellen
+        das Gegenstück zu den Prinzipalen dar. Ein Prinzipal muss bestimmte
+        Privilegien besitzen, um auf ein Securable zugreifen zu können. Durch
+        die Möglichkeit Securables in einander zu schachteln entstehen
+        hierarchische Bereiche in der Datenbank, die wiederum selbst
+        Securables darstellen und somit auch durch das Autorisierungssystem
+        des SQL Server geschützt werden können.
+        \begin{literaturinternet}
+          \item \cite{ms190401}
+        \end{literaturinternet}
+    \section{Sicherheit auf Serverebene}
+      \subsection{Securables und Prinzipale}
+        \subsubsection{Securables}
+          Auf Serverebene kennt der Microsoft SQL Server die folgenden
+          Securables:
+          \begin{itemize}
+            \item Anmeldungen (Logins)
+            \item Datenbanken
+            \item Serverrollen
+            \item Endpunkte
+            \item Verfügbarkeitsgruppen
+          \end{itemize}
+          Einige diese Securables werden im weiteren Verlauf dieser
+          Unterrichtsunterlagen noch näher erläutert.
+          \begin{literaturinternet}
+            \item \cite{ms190401}
+          \end{literaturinternet}
+        \subsubsection{Prinzipale}
+          Auf Serverebene kennt der SQL Server zwei Prinzipale: Anmeldungen
+          (Logins) und Serverrollen.
+          
+          Die Verknüpfung eines Benutzerkontos mit dem SQL Server wird als
+          \enquote{Login}, zu Deutsch \enquote{Anmeldung} bezeichnet. Der SQL
+          Server kennt drei verschiedene Arten von Anmeldungen:
+          \begin{itemize}
+            \item Windows-Benutzer-Logins
+            \item Windows-Gruppen-Logins
+            \item SQL Server-Logins
+          \end{itemize}
+          Zusätzlich zu den aufgelisteten Anmeldetypen gibt es noch weitere, die
+          allerdings lediglich zur Codesignierung genutzt werden können.         
+      \subsection{Serverrollen}
+        Seit SQL Server 2005 werden Rollen auf Serverebene bereitgestellt, um
+        dem Administrator die Verwaltung der Privilegie auf einem Server zu
+        vereinfachen.
+        \subsubsection{Feste Serverrollen}
+          Der SQL Server 2014 bringt 9 feste Serverrollen mit, wobei jede dieser
+          Rollen einen unveränderlichen Satz von Berechtigungen besitzt.
+          \begin{itemize}
+              \item \privileg{sysadmin}: Mitglieder werden zu
+              Serveradministratoren, da die Rolle alle Privilegien beinhaltet,
+              die auf Serverebene existieren.
+              \item \privileg{bulkadmin}: Mitglieder können die SQL-Anweisung
+              \languagemssql{BULK INSERT}-Ausführen.
+              \item \privileg{dbcreator} Diese Rolle enthält alle Privilegien,
+              um ihren Mitgliedern das Erstellen, Ändern, Löschen und
+              Wiederherstellen von beliebigen Datenbanken zu ermöglichen.
+              \item \privileg{diskadmin}: Mitglieder dieser Rolle können die
+              Dateien der Datenbanken auf dem Datenträger verwalten.
+              \item \privileg{processadmin} Mitglieder können Prozesse
+              beenden, die innerhalb einer SQL Server-Instanz laufen.
+              \item \privileg{public}: Diese Rolle verhält sich wie die
+              Windows-Benutzergruppe \privileg{Jeder}.
+              \item \privileg{securityadmin}: Mitglieder dieser Rolle können
+              Anmeldungen verwalten und Berechtigungen auf Serverebene zuteilen,
+              entziehen oder verweigern. Sofern ein Mitglied Zugriff auf eine
+              Datenbank hat kann es auch dort Privilegien zuteilen, verweigern
+              oder entziehen. Die Rolle \privileg{securityadmin} sollte mit
+              der Rolle \privileg{sysadmin} gleichgestellt werden.
+              \item \privileg{serveradmin}: Mitglieder dieser Rolle können
+              Serverkonfigurationsoptionen verändern und den Server
+              herunterfahren.
+              \item \privileg{setupadmin}: Diese Rolle ermöglicht es ihren
+              Mitgliedern Verbindungsserver mit Hilfe von T-SQL hinzuzufügen und
+              zu entfernen.
+          \end{itemize}
+          \begin{merke}
+            Bei der Benutzung von Festen Serverrollen ist große Vorsicht
+            geboten. Jedes Mitglied einer Festen Serverrolle kann andere
+            Anmeldungen als Mitglied zur eigenen Rolle hinzufügen.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms188659}
+            \item \cite{defsafdr2}
+          \end{literaturinternet}
+        \subsubsection{Eigene Serverrollen erstellen}
+          \begin{enumerate}
+            \item Erweitern Sie im Objekt-Explorer die SQL Server-Instanz
+            innerhalb derer die neue Serverrolle erstellt werden soll.
+            \item Wählen Sie das Register \enquote{Sicherheit} und darin
+            \enquote{Serverrollen}.
+            \item Öffnen Sie das Kontextmenü des Registers
+            \enquote{Serverrrollen} und klicken Sie auf \enquote{Neue
+            Serverrolle\ldots}. Es erscheint der Dialog \enquote{Neue
+            Serverrolle}
+            \bild{\enquote{Neue Serverrolle\ldots}}{create_server_role_1}{1.5}
+            \item Geben Sie einen Namen für die Serverrolle ein und wählen Sie
+            das Securable, dessen Privilegien Sie verwalten möchten.
+            \bild{Der Dialog \enquote{Neue
+            Serverrolle}}{create_server_role_2}{1.5}
+            \item Wählen Sie im unteren Bereich des Dialogs die benötigten
+            Privilegien aus.
+            \item Klicken Sie auf \enquote{OK}.
+          \end{enumerate}
+          \beispiel{sql19_02} zeigt den Vorgang der Rollenerstellung mit Hilfe
+          von T-SQL.
+          \begin{lstlisting}[language=ms_sql,caption={Eine
+          Serverrolle erstellen},label=sql19_02]
+USE [master]
+GO
+
+CREATE SERVER ROLE [UserHelpDesk]
+GO
+
+GRANT alter any login, alter any connection, impersonate any login
+TO [UserHelpDesk]
+GO
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{ee677627}
+          \item \cite{ee677610}
+        \end{literaturinternet}          
+        \subsubsection{Mitglieder einer Rolle verwalten}
+          Anmeldung und Serverrollen können Mitglieder in einer Serverrolle
+          werden. Die Verwaltung der Mitglieder einer Rolle kann entweder
+          mittels SSMS oder mittels T-SQL erfolgen.
+          \begin{enumerate}
+            \item Öffnen Sie im Objekt-Explorer das Kontextmenü der Serverrolle
+            und wählen Sie den Menüpunkt \enquote{Eigenschaften}.
+            \item Wechseln Sie links außen auf die Seite \enquote{Mitglieder}.
+            \item Klicken Sie auf \enquote{Hinzufügen} um der Rolle neue
+            Mitglieder hinzuzufügen oder wählen Sie ein Mitglied, das Sie
+            entfernen möchten und klicken Sie auf \enquote{Entfernen}
+            \bild{Der Dialog \enquote{Neue
+            Serverrolle}}{create_server_role_3}{1.2}
+            \item Wechseln Sie auf die Seite \enquote{Mitgliedschaften}. Hier
+            kann die Rolle selbst Mitglied einer anderen Rolle werden.
+            \bild{Der Dialog \enquote{Neue
+            Serverrolle}}{create_server_role_4}{1.3}
+            \item Klicken Sie auf \enquote{OK}.
+          \end{enumerate}
+          \begin{lstlisting}[language=ms_sql,caption={Hinzufügen und entfernen
+          von Mitgliedern zu/aus einer Serverrolle},label=sql19_03]
+ALTER SERVER ROLE [UserHelpDesk] ADD MEMBER [MS-C-IX-04\G-UserHelpdesk]
+GO
+
+ALTER SERVER ROLE [UserHelpDesk] DROP MEMBER [MS-C-IX-04\G-UserHelpdesk]
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{ms189775}
+          \end{literaturinternet}
+        \subsubsection{Selbsterstellte Serverrollen löschen}
+          Um eine selbsterstellte Serverrolle löschen zu können, müssen zuerst
+          alle Mitglieder der Rolle gelöscht werden.
+          \begin{enumerate}
+            \item Öffnen Sie im Objekt-Explorer das Kontextmenü der Serverrolle
+            und wählen Sie den Menüpunkt \enquote{Löschen}.
+            \item Klicken Sie auf \enquote{OK}.
+          \end{enumerate}
+          \begin{lstlisting}[language=ms_sql,caption={Entfernen einer
+          Serverrolle},label=sql19_04]
+DROP SERVER ROLE [UserHelpDesk]
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{ee677643}
+          \end{literaturinternet}
+      \subsection{Privilegienverwaltung auf Serverebene}
+        In SQL Server existieren auf Serverebene ca. 30 bis 40 verschiedene
+        Privilegien, welche alle einen rein administrativen Charakter haben. Das
+        bedeutet, dass diese Privilegien nur Administratoren und nicht den
+        \enquote{gewöhnlichen} Benutzer zugeordnet werden sollten.
+        \subsubsection{Securables auf Serverebene}
+          Auf Serverebene existieren in SQL Server 2014 insgesamt 5 verschiedene
+          Securables:
+          \begin{itemize}
+            \item Login
+            \item Endpoint
+            \item Server
+            \item Availabilitygroup
+            \item Server role
+          \end{itemize}
+        \subsubsection{Die wichtigsten Server-Privilegien im Überblick}
+          \begin{itemize}
+            \item \privileg{control server}: Ermöglicht genau wie die Rolle
+            \privileg{sysadmin} die vollständige Kontrolle über eine SQL
+            Server Instanz. Der einzige Unterschied ist, dass ein Mitglied der
+            Serverrolle \privileg{sysadmin} nicht durch ein \identifier{DENY}
+            aufgehalten werden kann.
+            \item \privileg{alter any database}: Ermöglicht das Anlegen und
+            Löschen beliebiger Datenbanken.
+            \item  \privileg{alter any login}: Erlaubt das Anlegen,
+            Ändern und Löschen von Logins. Logins, welche der Serverrolle
+            \privileg{sysadmin} angehören können nur dann verändert werden,
+            wenn man zusätzlich das Privileg \privileg{control server}
+            besitzt.
+            \item \privileg{alter settings}: Gibt dem Benutzer die Möglichkeit,
+            die Konfiguration des Servers mit \languagemssql{sp_configure} zu
+            verändern.
+            \item \privileg{connect sql}: Ermöglicht es eine Verbindung zum
+            Server aufzubauen. Dieses Privileg wird einem frisch erstellten
+            Login automatisch zugewiesen.
+            \item \privileg{view any database}: Erlaubt es die Metadaten aller
+            Datenbanken mit Hilfe von \identifier{sys.databases},
+            \identifier{sysdatabases} oder \identifier{sp\_helpdb} sehen zu
+            können.
+            \item \privileg{view server state}: Ermöglicht es Einsicht in die
+            Serverkonfiguration nehmen zu können.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{mssqltips1714}
+            \item \cite{practdbacocsp}
+          \end{literaturinternet}
+        \subsubsection{Die wichtigsten Login-Privilegien im Überblick}
+          \begin{itemize}
+            \item \privileg{control}: Ermöglicht die vollständige Kontrolle über
+            ein Login. Es beinhaltet die anderen drei Privilegien
+            \privileg{alter}, \privileg{impersonate} und \privileg{view
+            definition}.
+            \item \privileg{alter}: Ermöglicht es Veränderungen an einem Login
+            vorzunehmen.
+            \item \privileg{impersonate}: Der Besitzer dieses Privileges kann
+            die Identität des betroffenen Logins annehmen.
+            \item \privileg{view definition}: Ermöglicht es die Metadaten des
+            betroffenen Logins sehen zu können.
+          \end{itemize}
+        \subsubsection{Privilegien auf Serverebene erteilen}
+          \begin{merke}
+            Privilegien auf Serverebene können nur dann erteilt werden, wenn die
+            aktuelle Datenbank \identifier{master} ist. Ist dies nicht der Fall,
+            antwortet der SQL Server mit der Fehlermeldung 4621.
+          \end{merke}
+          \begin{lstlisting}[language=ms_sql, caption={Privilegien auf
+          ein Server- oder Login-Objekt erteilen}, label=admin19_05]
+USE [master]
+GO
+
+GRANT control server TO SQLLogin;
+
+GRANT view any definition TO SQLLogin;
+
+GRANT view any database TO SQLLogin
+WITH GRANT OPTION;
+
+GRANT impersonate ON LOGIN::SQLLOGIN TO Adventureworks2012\sqluser;
+
+GRANT view definition ON LOGIN::SQLLOGIN TO Adventureworks2012\sqluser;
+          \end{lstlisting}
+          Die Angabe \languagemssql{WITH GRANT OPTION} bei der Vergabe eines
+          Privileges bewirkt, dass der betroffene Benutzer dieses Privileg
+          weitergeben kann.
+          \begin{literaturinternet}
+            \item \cite{ms178640}
+            \item \cite{ms186717}
+          \end{literaturinternet}
+        \subsubsection{Privilegien auf Serverebene Entziehen/Verwehren}
+          Das Entziehen und Verwehren von Privilegien auf Serverebene
+          funktioniert mit den beiden Kommandos \languagemssql{REVOKE} und
+          \languagemssql{DENY}. Wahlweise kann hierzu aber auch das SSMS genutzt
+          werden.
+          \bild{Rechtevergabe auf Serverebene im
+          SSMS}{granted_privileges_server}{1.3}
+          \begin{lstlisting}[language=ms_sql, caption={Privilegien von einem Server- oder Login-Objekt entziehen}, label=admin19_06]
+USE [master]
+GO
+
+REVOKE control server FROM SQLLogin;
+
+REVOKE GRANT OPTION FOR view any database FROM SQLLogin;
+
+REVOKE view any database FROM SQLLogin CASCADE;
+
+REVOKE impersonate ON LOGIN::SQLLOGIN FROM Adventureworks2012\sqluser;
+          \end{lstlisting}
+          Das Kommando \languagemssql{REVOKE GRANT OPTION} entzieht nicht das
+          Privileg selbst, sondern nur die \languagemssql{GRANT OPTION}. Durch die
+          Angaben von \languagemssql{CASCADE} wird ein kaskadierender
+          Privilegienentzug des \privileg{view any database} Privileges
+          ausgeführt, was bedeutet, dass nicht nur der eigentliche Besitzer dieses
+          Privileges, sondern auch alle nachgeordneten Besitzer das
+          \languagemssql{view any database} Privileg verlieren.
+          
+          Die Syntax des \languagemssql{DENY}-Kommandos stimmt mit der des
+          \languagemssql{REVOKE}-Kommandos nahezu überein. Lediglich das
+          Schlüsselwort \languagemssql{FROM}
+          muss gegen \languagemssql{TO}
+          ausgetauscht werden.
+\clearpage
+          \begin{lstlisting}[language=ms_sql,caption={Privilegien von einem Server- oder Login-Objekt entziehen}, label=admin19_07]
+USE [master] GO
+
+DENY control server TO SQLLogin;
+
+DENY view any database TO SQLLogin CASCADE;
+
+DENY impersonate ON LOGIN::SQLLOGIN TO Adventureworks2012\sqluser;
+          \end{lstlisting}
+
+          \begin{literaturinternet}
+            \item \cite{ms186226}
+            \item \cite{ms186710}
+          \end{literaturinternet}
+      \subsection{Verwalten von Logins}
+        \subsubsection{Erstellen von Windows-Logins}
+          \begin{enumerate}
+            \item Öffnen Sie im Objekt-Explorer den Reiter \enquote{Sicherheit}!
+            \item Öffnen Sie das Kontextmenü des Reiters \enquote{Anmeldungen}
+            und klicken Sie auf \enquote{Neue Anmeldung}!
+            \bild{Ein neues Login anlegen}{create_login_1}{1.3}
+            \item Klicken Sie im Dialog \enquote{Anmeldung - Neu} rechts oben
+            auf die Schaltfläche \enquote{Suchen\ldots}!
+            \bild{Den gewünschten Windows-Benutzer suchen}{create_login_2}{1.1}
+            \item Wählen Sie den gewünschten Objekttyp und den Suchpfad aus!
+            \bild{Objekttyp und Suchpfad festlegen}{create_login_3}{1.3}
+            \item Geben Sie den vollständigen Namen des Windows-Benutzerkontos
+            ein!
+            \bild{Eingeben des Benutzernamens}{create_login_4}{1.3}
+            \item Klicken Sie auf \enquote{OK}!
+            \item Wählen Sie Standarddatenbank für den Login aus. Dies ist die
+            Datenbank mit der ein Benutzer nach der Anmeldung automatisch
+            verbunden wird!
+            \bild{Festlegen der Standard\-datenbank}{create_login_5}{1.3}
+            \item Klicken Sie auf \enquote{OK}!
+          \end{enumerate}
+          Soll das neue Login mit Hilfe von T-SQL angelegt werden, muss hierfür
+          das Kommando \languagemssql{CREATE LOGIN} mit dem Zusatz
+          \languagemssql{FROM WINDOWS} benutzt.
+          \begin{lstlisting}[language=ms_sql, caption={Anlegen eines
+          Windows-Logins mit T-SQL}, label=admin19_08]
+USE [master]
+GO
+
+CREATE LOGIN [MS-C-IX-04\SQL-IX-62-01] 
+FROM WINDOWS 
+WITH 
+  DEFAULT_DATABASE=[master]
+GO        
+        \end{lstlisting}
+        \subsubsection{Erstellen eines SQL Server-Logins}
+          \begin{enumerate}
+            \item Öffnen Sie im Objekt-Explorer den Reiter \enquote{Sicherheit}! 
+            \item Öffnen Sie das Kontextmenü des Reiters \enquote{Anmeldungen}
+            und klicken Sie auf \enquote{Neue Anmeldung}!
+            \item Wählen Sie im Dialog \enquote{Anmeldung - Neu} die Option
+            \enquote{SQL Server-Authentifizierung} aus und geben Sie einen Namen
+            für das Login an!
+            \bild{Erstellen eines SQL Server Logins}{create_sql_login_1}{1.8}
+            \item Geben Sie ein Passwort für das Login an!
+            \item Wählen Sie die gewünschten Passwortrichtlinien aus!
+            \item Wählen Sie Standarddatenbank für den Login aus. Dies ist die
+            Datenbank mit der ein Benutzer nach der Anmeldung automatisch
+            verbunden wird!
+            \item Klicken Sie auf \enquote{OK}!
+          \end{enumerate}
+          \begin{lstlisting}[language=ms_sql, caption={Anlegen eines SQL
+          Server-Logins mit T-SQL}, label=admin19_09]
+USE [master]
+GO
+
+CREATE LOGIN [SQL-IX-62-01] 
+WITH 
+  PASSWORD=N'P@ssw0rd' MUST_CHANGE, 
+  DEFAULT_DATABASE=[master], 
+  CHECK_EXPIRATION=ON, 
+  CHECK_POLICY=ON
+GO
+        \end{lstlisting}
+\clearpage
+        \subsubsection{Ändern von Logins}
+          Mit Hilfe des \languagemssql{ALTER LOGIN}-Kommandos bzw. mittels
+          des SSMS ist es möglich, alle Eigenschaften eines Logins zu verändern.
+          Hierbei müssen die folgenden Punkte beachtet werden:
+          \begin{itemize}
+            \item Die Bezeichner von Domänenanmeldungen/Windows-Anmeldungen
+            müssen in eckige Klammern gesetzt werden.
+            \item Das Deaktivieren eines Logins wirkt sich nicht auf aktuell
+            offene Sessions aus.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{ms189828}
+          \end{literaturinternet}
+        \subsubsection{Löschen von Logins}
+          Das Löschen eines Logins geschieht mit dem
+          SQL-Kommando \languagemssql{DROP LOGIN}. Dabei ist zu beachten, dass
+          ein Login, welches gerade benutzt wird, nicht gelöscht werden kann.
+          Zuerst müssen alle Sessions, die sich auf das zulöschende Login
+          beziehen beendet werden. Auch können Logins, welche Besitzer von
+          Objekten sind nicht gelöscht werden. Der Objektbesitz muss erst an
+          andere Logins übergeben werden.
+          \begin{literaturinternet}
+            \item \cite{ms188012}
+          \end{literaturinternet}
+      \subsection{Den Authentifizierungsmodus wählen}
+        Der Microsoft SQL Server unterscheidet zwei verschiedene Arten der
+        Authentifizierung:
+        \begin{itemize}
+            \item \textbf{Windows Authentifizierung}: Bei dieser Art von
+            Authentifizierung werden verschiedene Windows Konten bzw. Gruppen
+            mit dem SQL Server verknüpft. Durch diese Verknüpfung gelten Sie
+            dann als Vertrauenswürdig und es erfolgt keine weitere Abfrage von
+            Passwörtern oder anderen Sicherheitsmerkmalen. 
+            \item \textbf{Gemischter Modus}: Im gemischten Modus wird zusätzlich
+            zur Windows Authentifizierung noch eine SQL Server-Authentifizierung
+            unterstütz. Dabei speichert/verwaltet des SQL Server eigene
+            Benutzerkonten. Dieser Modus gilt jedoch als unsicher, da bei der
+            Benutzung der SQL Server-Authentifzierung der Benutzername und das
+            Passwort über das Netzwerk übertragen werden.
+        \end{itemize}
+        \begin{merke}
+          Die Windows Authentifizierung wird auch als \enquote{Integrated
+          Security} bezeichnet.
+        \end{merke}
+        Grundsätzlich empfiehlt Microsoft die Benutzung der Integrierten
+        Sicherheit. Die SQL Server-Authentifizierung ist nur in wenigen
+        Ausnahmefällen sinnvoll. Beispiele für solche Situationen sind:
+        \begin{itemize}
+          \item Es ist kein Domänencontroller im Netzwerkvorhanden (arbeiten
+          in einer Arbeitsgruppe),
+          \item Anmeldungen aus unterschiedlichen, nicht vertrauenlswürdigen
+          Domänen sind notwendig,
+          \item für Web-Anwendungen
+        \end{itemize}
+        \subsubsection{Integrated Security}
+          Wird dieser Authentifizierungsmodus gewählt, werden
+          Logins für Benutzerkonten und -gruppen des lokalen Windows-Servers
+          oder einer vertrauenswürdigen Domäne im SQL Server erstellt.
+          Hierbei gibt es zwei Punkte die zu beachten sind:
+          \begin{itemize}
+            \item Bei einem Windows-Gruppen-Login, haben alle Mitglieder dieser
+            Gruppe die gleichen Zugriffsrechte auf den SQL Server.
+            \item Existiert ein Windows-Benutzer-Login für einen Benutzer und
+            ist dieser Benutzer gleichermassen Mitglied in einer Windowsgruppe,
+            für die es ein Windows-Gruppen-Login gibt, so haben die
+            Einstellungen des Windows-Benutzer-Logins Vorrang.
+          \end{itemize}
+        \subsubsection{SQL Server Authentifizierung}
+          Bei diesem Verfahren muss der Administrator die Benutzerkonten im
+          SQL Server erstellen und verwalten. Gespeichert werden der Account
+          und ein Hash-Wert des Passwortes in der \identifier{master}-Datenbank.
+          Wird der SQL Server auf Windows Server 2003 oder höher betrieben,
+          können sogar die Kennwortrichtlinien des Active Directory auf die SQL
+          Server Benutzerkonten angewendet werden, um so die Sicherheit dieser Konten
+         zu erhöhen.
+         
+         Bei der Installation des SQL Servers wird standardmäßig des SQL Server
+         Benutzerkonto \identifier{sa} angelegt. Dieses Konto hat volle
+         administrative Rechte und sollte daher gut gesichert werden. Vergeben
+         Sie ein starkes Kennwort und lassen Sie den Account gesperrt.
+\clearpage
+      \subsection{Distributed Administrator Connection - DAC}
+        Die Distributed Administrator Connection wird vom SQL Server zur
+        Verfügung gestellt, damit der Administrator in speziellen Fällen, in
+        denen keine normale Verbindung zur Instanz mehr möglich ist eine
+        Problemdiagnose betreiben kann. Sie unterstützt Sicherheitsfeatures, wie
+        z. B. Datenbankverschlüsselung und viele andere.
+        \begin{merke}
+          Nur Mitglieder der festen Serverrolle \privileg{sysadmin} können
+          eine DAC aufbauen.
+        \end{merke}
+        \subsubsection{Verbindungsaufbau mit der DAC}
+          Der Aufbau einer Verbindung mit Hilfe der DAC geschieht nicht über den
+          Standardnetzwerkport 1433, sondern über Port 1434. Diese geschieht, um
+          im Falle dessen, dass es Probleme auf dem Port 1433 gibt, trotzdem
+          noch eine DAC aufgebaut werden kann. Standardmäßig kann eine DAC nur
+          lokal erstellt werden, d. h. der Client muss sich direkt auf dem
+          Datenbankserver befinden. 
+          \begin{merke}
+            Wenn Port 1434 nicht zur Verfügung steht, wird beim Starten der
+            Instanz ein DAC-Port dynamisch ausgewiesen und im Error Log notiert.
+          \end{merke}
+          Im Folgenden wird gezeigt, wie mit Hilfe von \oscommand{sqlcmd.exe}
+          eine DAC zur Instanz erstellt wird.
+          \begin{lstlisting}[language=terminal, caption={SQLCMD.exe mit DAC
+          benutzen}, label=admin19_10]
+sqlcmd.exe -S 127.0.0.1 -A
+
+sqlcmd.exe -S 127.0.0.1,1434
+
+sqlcmd.exe -S FEA11-119SRV12 -U admin -P xxx -A
+
+sqlcmd.exe -S FEA11-119SRV12 -U admin -P xxx -A -d Master
+        \end{lstlisting}
+        Der Schalter \oscommand{-S} gibt an, zu welcher Instanz die Verbindung
+        aufgebaut werden soll und der spezielle Schalter \oscommand{-A} sagt
+        aus, dass versucht werden soll, eine DAC zu benutzen.
+        \subsubsection{Remoteverbindungen mit der DAC}
+          Remote DAC Verbindungen können zugelassen werden, jedoch wird aus
+          Sicherheitsgründen davon abgeraten. Falls remote DAC erforderlich sein
+          sollte, wird dieses Feature durch die Einstellung
+          \languagemssql{remote admin connections} konfiguriert.          
+           \begin{lstlisting}[language=ms_sql, caption={Konfigurieren
+          von Remote DAC Verbindungen}, label=admin19_11]
+USE [master]
+GO
+
+sp_configure 'remote admin connections', 1;
+GO
+
+RECONFIGURE;
+GO
+        \end{lstlisting}
+        Unmittelbar nach dem für \languagemssql{remote admin connections} der
+        Wert 1 gesetzt wurde, wir der DAC Listener gestartet. Dies
+        geschieht ohne Instanz-Neustart.
+        
+        Um remote DAC wieder zu deaktiveren, muss für die Einstellung
+        \languagemssql{remote admin connections} der Wert 0 gesetzt werden.
+        \begin{literaturinternet}
+          \item \cite{ms190468}
+        \end{literaturinternet}
+        \subsubsection{Einschränkungen}
+          \begin{itemize}
+            \item Es ist nur eine DAC Verbindung pro Instanz erlaubt
+            \item Die DAC versucht eine Verbindung zur Standarddatenbank des
+            benutzten Logins herzustellen. Gelingt dies nicht, so wird die
+            Fehlermeldung 4060 ausgegeben.
+            \item SQL-Kommandos, die parallele Ausführung benutzen, wie z. B.
+            \languagemssql{BACKUP} oder \languagemssql{RESTORE} sind bei Nutzung
+            der DAC verboten.
+            \item Für eine DAC stehen nur minimale Resourcen zur Verfügung. Es
+            sollten deshalb keine Resourcenintensiven SQL-Kommandos ausführt
+            werden.
+          \end{itemize}      
+    \section{Sicherheit auf Datenbankebene}
+      \subsection{Securables und Prinzipale}
+        \subsubsection{Securables}
+          Auf Datenbankebene kennt der SQL Server 2014 insgesamt 16 veschiedene
+          Securables. Im Folgenden werden die Prinzipale Datenbankrolle,
+          Schema und Benutzer näher erläutert.
+          \begin{literaturinternet}
+            \item \cite{ms190401}
+          \end{literaturinternet}
+        \subsubsection{Prinzipale}
+          Innerhalb von Datenbanken existieren drei verschiedene Prinzipale:
+          \begin{itemize}
+            \item Datenbankbenutzer
+            \item Datenbankrollen
+            \item Anwendungsrollen
+          \end{itemize}
+        \subsection{Datenbankbenutzer}
+          Damit sich ein Login mit einer Datenbank verbinden kann, muss dem
+          Login ein Benutzer in der betreffenden Datenbank zugeordnet werden.
+          Der Datenbankbenutzer stellt dann die Identität des Logins innerhalb
+          der Datenbank dar. Beide, das Login und auch der Datenbankbenutzer
+          können den gleichen Namen tragen. Dies ist aber nicht zwingend
+          erforderlich.
+          
+          Logins können in mehreren Datenbanken unterschiedlichen
+          Datenbankbenutzern zugeordnet werden. Innerhalb einer Datenbank kann
+          aber nur eine einzige Zuordnung zwischen einem Login und einem
+          Benutzer erfolgen.        
+          \subsubsection{Der Gast-Benutzer}
+            Das Gast-Benutzerkonto bietet die Möglichkeit, die direkte Zuordnung
+            von Logins und Datenbankbenutzern auszuhebeln. Jedes Login muss
+            normalerweise zwingend einem Datenbankbenutzer zugeordnet worden
+            sein, um innerhalb einer Datenbank arbeiten zu können. Ist das
+            Gast-Benutzerkonto einer Datenbank aktiviert, kann jedes Login auch
+            ohne explizite Benutzerzuordnung eine Verbindung zu der betreffenden
+            Datenbank herstellen.
+            \begin{merke}
+              Das Gast-Benutzerkonto ist ein integriertes Benutzerkonto, welches
+              in jeder Datenbank existiert. Standardmäßig ist es deaktiviert und
+              seine Verwendung ohne zwingenden Grund sollte vermieden werden.
+              Der Gast-Account kann nicht gelöscht werden.
+            \end{merke}
+          \subsubsection{Der Benutzer \enquote{dbo}}
+            Das Benutzerkonto \privileg{dbo} ist ein in jede Datenbank fest
+            integriertes Konto, welches implizt alle Berechtigungen zum
+            Ausführen beliebiger Operationen auf der jeweiligen Datenbank
+            besitzt. Implizit bedeutet, dass für dieses Konto schlicht und
+            einfach keinerlei Berechtigungsprüfung durchgeführt wird. Dies hat
+            zur Folge, dass auch die explizite Verweigerung eines Privilegs
+            keine Auswirkung auf den Nutzer \privileg{dbo} hat.
+            
+            Von besonderer Bedeutung ist dieses Konto, wenn eine beschädigte
+            Datenbank wiederhergestellt werden muss. Da die Zuordnung, zwischen
+            Login und Datenbankbenutzer in der Datenbank \identifier{master}
+            einer jeden Instanz gespeichert wird, ist trotz Beschädigung der
+            Datenbank bekannt, wer dem Benutzer \privileg{dbo} zugeordnet ist.
+            Nur so kann eine Wiederherstellung der Datenbank erfolgen.
+            \begin{merke}
+              Alle Mitglieder der Festen Serverrolle \privileg{sysadmin} sind
+              automatisch dem Benutzerkonto \privileg{dbo} zugeordnet.
+            \end{merke}
+            \begin{literaturinternet}
+              \item \cite{bb669065}
+            \end{literaturinternet}
+          \subsubsection{Verschiedene Benutzertypen}
+            Microsoft SQL Server kennt eine Reihe verschiedener
+            Datenbankbenutzertypen für unterschiedliche Einsatzzwecke. Es wird
+            unterschieden in:
+            \begin{itemize}
+                \item \textbf{SQL-Benutzer mit Anmeldename}: Diese Art von
+                Benutzerkonto kommt häufig dann zum Einsatz, wenn ein Benutzer
+                außerhalb der Windows-Domäne Zugriff auf den SQL Server
+                benötigt. Ein klassischer Fall wäre z. B. ein
+                Außendienstmitarbeiter. Die Verwaltung der Benutzersicherheit
+                wird bei dieser Kontoart komplett vom SQL Server übernommen.
+                \item \textbf{SQL-Benutzer ohne Anmeldename}: Benutzerkonten
+                ohne Anmeldename kommen nur in Partialy Contained Databases zum
+                Einsatz. Ein Erläuterung deren Bedeutung/Benutzung erfolg an
+                entsprechender Stelle in diesem Manuskript.
+                \item \textbf{Benutzer mit Zuordnung zu einem Zertifikat}:
+                Benutzer die aus einem Zertifikat erstellt wurden können sich
+                nicht am SQL Server anmelden. Sie dienen zur Ausführung von
+                Prozessen (z. B. Datenbankspiegelung, Bulk Copy u. ä.) oder zur
+                Verbesserung der Sicherheit von Datenbankanwendungen.
+                \item \textbf{Benutzer mit Zuordnung zu einem asymmetrischen
+                Schlüssel}: Genau wie die Benutzer mit Zuordnung zu einem
+                Zertifikat können sich auch diese Benutzer nicht an der
+                Datenbank anmelden. Auch ihr Einsatzzweck ist mit dem der
+                Benutzer mit Zuordnung zu einem Zertifikat identisch.
+                \item \textbf{Windows-Benutzer}: Mit dieser Kontoart ist es
+                möglich, eine direkte Zuordnung zwischen einem Windows-Benutzer
+                bzw. einer Windows-Benutzergruppe und einem SQL Server
+                Benutzerkonto herzustellen. Die Verwaltung der
+                Benutzersicherheit wird dabei von Windows übernommen.
+            \end{itemize}
+            \begin{literaturinternet}
+              \item \cite{bb895327}
+              \item \cite{somarskoggranperm}
+            \end{literaturinternet}
+        \subsection{Datenbankbenutzer verwalten}
+          \label{administer_database_users}
+          \subsubsection{SQL-Benutzer mit Anmeldename erstellen}
+            \begin{enumerate}
+              \item Wählen Sie im Objekt-Explorer den Ordner
+              \enquote{Datenbanken}.
+              \item Klicken Sie auf die gewünschte Datenbank und navigieren
+              Sie dort zum Ordner \identifier{Sicherheit}.
+              \item Öffnen Sie das Kontextmenü der Option \identifier{Benutzer}
+              und klicken Sie auf \identifier{Neuer Benutzer}
+              \item Wählen Sie im Dropdownmenü \identifier{Benutzertyp} den Punkt
+              \identifier{SQL-Benutzer mit Anmeldename}
+              \item Geben Sie im Feld \identifier{Benutzername} einen gültigen
+              Benutzernamen an.
+              \item Geben Sie im Feld \identifier{Anmeldename} den Namen eines
+              existierenden Logins an oder klicken Sie auf die Schaltfläche
+              rechts neben dem Feld, um ein Login auszuwählen.
+              \item Klicken Sie auf OK.
+            \end{enumerate}
+            Das Anlegen eines SQL-Benutzers mit Anmeldename kann auch mittels
+            SQL-Statement geschehen.
+            \begin{lstlisting}[language=ms_sql, caption={Anlegen eines
+            SQL-Benutzers mit Anmeldename}, label=admin19_12]
+USE [master]
+GO
+
+-- Das Login muss im Vorfeld bereits erstellt worden sein.
+CREATE LOGIN [SQL-IX-62-01]
+WITH PASSWORD=N'password', 
+DEFAULT_DATABASE=[model], 
+CHECK_EXPIRATION=OFF, 
+CHECK_POLICY=OFF
+GO
+
+-- Anlegen des Datenbankbenutzers
+CREATE USER [SQL-IX-62-01]
+FOR LOGIN [SQL-IX-62-01];
+GO
+            \end{lstlisting}
+\clearpage
+            \begin{merke}
+              Wenn Sie bei der Auswahl des Logins ein Login mit
+              Windows-Authentifizierung auswählen wird SQL Server automatisch
+              einen Windows-Benutzer erstellen.
+            \end{merke}            
+            \bild{Anlegen eines SQL-Benutzers mit Anmeldename}{create_sql_user_with_login}{1.3}
+          \subsubsection{Anlengen von Windows-Benutzern}
+            \begin{enumerate}
+              \item Wählen Sie im Objekt-Explorer den Ordner
+              \enquote{Datenbanken}.
+              \item Klicken Sie auf die gewünschte Datenbank und navigieren
+              Sie dort zum Ordner \identifier{Sicherheit}.
+              \item Öffnen Sie das Kontextmenü der Option \identifier{Benutzer}
+              und klicken Sie auf \identifier{Neuer Benutzer}
+              \item Wählen Sie im Dropdownmenü \identifier{Benutzertyp} den Punkt
+              \enquote{Windows-Benutzer}
+              \item Geben Sie im Feld \identifier{Benutzername} den Namen eines
+              bereits existierenden Windows-Benutzeraccounts an. Achten Sier
+              hierbei auf die korrekte Schreibweise:
+              [Rechnername]\textbackslash [Benutzername] bzw.
+              [Domäne]\textbackslash [Benutzername]. Ein Beispiel wäre der
+              Benutzername \enquote{ORA-B-IX-62\textbackslash SQLUser}.
+              \item Geben Sie im Feld \identifier{Anmeldename} den Namen eines
+              existierenden Logins an oder klicken Sie auf die Schaltfläche
+              rechts neben dem Feld, um ein Login auszuwählen.
+              \item Klicken Sie auf OK.
+            \end{enumerate}
+            \begin{merke}
+              Achten Sie darauf, dass Sie bei der Auswahl des Logins ein Login
+              mit Windows-Authentifizierung auswählen, da sie anderenfalles eine
+              Fehlermeldung erhalten werden.
+            \end{merke}
+            \bild{Anlegen eines Windows-Benutzers}{create_windows_user}{1.3}
+            Das Anlegen eines SQL-Benutzers mit Anmeldename kann auch mittels
+            SQL-Statement geschehen.
+            \begin{lstlisting}[language=ms_sql, caption={Anlegen eines
+            Windows-Benutzers}, label=admin19_13]
+USE [master]
+GO
+
+-- Das Login muss im Vorfeld bereits erstellt worden sein.
+CREATE LOGIN [ORA-B-IX-62\sqluser]
+FROM WINDOWS 
+WITH DEFAULT_DATABASE=[model]
+GO
+
+-- Anlegen des Datenbankbenutzers
+CREATE USER [SQL-IX-62-01]
+FOR LOGIN [SQL-IX-62-01];
+GO
+            \end{lstlisting}
+            \begin{merke}
+              Wird \languagemssql{FOR LOGIN} weggelassen, wird der Benutzer einem
+              gleichnamigen Login zugewiesen.
+            \end{merke}
+            \begin{literaturinternet}
+              \item \cite{ms173463}
+            \end{literaturinternet}
+          \subsubsection{Benutzerzuordnungen}
+            Als Benutzerzuordnung wird die Verbindung eines Logins
+            zu einem Datenbankbenutzer in einer Datenbank bezeichnet. Diese
+            Zuordnung kann im Menü \identifier{Sicherheit} -
+            \identifier{Anmeldungen} in den Eigenschaften des jeweiligen Logins
+            auf der Seite \identifier{Benutzerzuordnung} eingesehen werden.
+            \bild{Ansicht der Benutzerzuordnungen}{user_mapping}{1.2}
+            \begin{merke}
+              Der Eigenschaftsdialog \identifier{Benutzerzuordnung} bietet einen
+              alternativen Weg zum Erstellen von Datenbankbenutzern. Nach der
+              Erstellung eines Logins muss lediglich bei der/den gewünschten
+              Datenbank(en) ein Häckchen gesetzt werden und SQL Server richtet
+              automatisch einen passenden Datenbankbenutzer ein.
+            \end{merke}
+          \subsubsection{Schemas im Besitz}
+            Der Eigenschaftsdialog \identifier{Schemas im Besitz} eines jeden
+            Datenbankbenutzers zeigt die Schemata, welcher in der Datenbank
+            existieren, zu der der Benutzer gehört. Hier kann der Benutzer den
+            Besitz eines Schemas übernehmen.
+            \begin{merke}
+              Der Nutzen und die Bedeutung von Datenbankschemata wird im
+              weiteren Verlauf dieses Kapitels noch erläutert.
+            \end{merke}
+            \bild{Schemas im Besitz des Benutzers}{schema_ownership}{1.1}
+          \subsubsection{Mitgliedschaft}
+            Im Eigenschaftsdialog \identifier{Mitgliedschaft} kann der Benutzer
+            einer Datenbankrolle als Mitglied hinzugefügt werden.
+            \bild{Rollen\-mit\-glied\-schaften eines
+            Benutzers}{role_membership}{1.2}
+          \subsubsection{Sicherungsfähige Elemente}
+            Mit Hilfe des Dialoges \identifier{Sicherungsfähige Elemente} können
+            einem Datenbankbenutzer direkt Privilegien für Securables zugewiesen
+            werden.
+            \begin{merke}
+              Die Vergabe von Privilegien sollte niemals direkt an Benutzer
+              erfolgen. Benutzen Sie hierfür ein Rollen- und Rechtekonzept. Ein
+              Beispiel für ein solches Konzept wird noch weiteren Verlauf dieses
+              Manuskriptes gegeben.
+            \end{merke}
+            \bild{Sicherungs\-fähige Elemente eines
+            Benutzers}{users_securables}{1.1}
+            \begin{literaturinternet}
+              \item \cite{aa337545}
+            \end{literaturinternet}
+          \subsubsection{Allgemeine Änderungen an einem Benutzerkonto vornehmen}
+            Grundsätzlich können alle Attribute eines Benutzers im Nachhinein
+            geändert werden. Beispielsweise können der
+            Benutzername und das zugeordnete Login verändert werden.
+            \begin{lstlisting}[language=ms_sql, caption={Umbenennen eines
+            Benutzers}, label=admin19_14]
+USE [model]
+GO
+
+ALTER USER [SQLUser]
+WITH NAME = [SQLLooser];
+GO
+            \end{lstlisting}
+            \begin{merke}
+              Das Umbenennen eines Benutzers funktioniert nicht im Management
+              Studio.
+              
+              Für das Umbenennen eines Windows-Benutzers muss der gültige Name
+              eines existenten Windows-Benutzeraccounts angegeben werden.
+            \end{merke}            
+            Soll dem Benutzer ein anderes Login zugewiesen werden, so muss
+            beachtet werden, dass das neue Login den gleichen Typ (SQL Server-
+            bzw. Windowsauthentifizierung) haben muss und das es bereits
+            existieren muss.
+            \begin{lstlisting}[language=ms_sql, caption={Umbenennen eines
+            Benutzers}, label=admin19_15]
+USE [model]
+GO
+
+ALTER USER [SQLLooser]
+WITH LOGIN = [SQLLooserLogin];
+GO
+            \end{lstlisting}
+            \begin{literaturinternet}
+              \item \cite{ms176060}
+            \end{literaturinternet}
+          \subsubsection{Datenbankbenutzer löschen}
+            Mit Hilfe des \languagemssql{DROP USER}-Anweisung können Benutzer
+            aus einer Datenbank gelöscht werden. Zu Beachten ist dabei, dass
+            Besitzer von Securables erst dann gelöscht werden können, wenn der
+            Besitz an andere Nutzer übergeben worden ist.
+            
+            Um einen Datenbankbenutzer im Management Studio zu löschen öffnen
+            Sie das Kontextmenü des Benutzers und klicken Sie auf
+            \identifier{Löschen}.
+            \begin{literaturinternet}
+              \item \cite{ms189438}
+            \end{literaturinternet}            
+        \subsection{Das Problem der verwaisten Benutzer}
+          Jeder Datenbankbenutzer muss einem Login zugeordnet sein, um für die
+          Anmeldung an der SQL Server Instanz genutzt werden zu können. Als
+          verwaist wird ein Benutzer dann bezeichnet, wenn es für ihn keine
+          Zuordnung zu einem Login gibt. Dies kann folgende Gründe haben:
+          \begin{itemize}
+            \item Das zugeordnete Login wurde gelöscht
+            \item Die Datenbank des Benutzers wurde in einer anderen Instanz
+            wiederhergestellt.
+            \item Die Datenbank des Benutzers wurde an eine andere Instanz
+            angefügt.
+          \end{itemize}
+          Um zu ermitteln, ob es in einer Datenbank verwaiste Benutzerkonten
+          gibt und welche Konten davon betroffen sind, stellt Microsoft den
+          Administratoren die System gespeicherte Prozedur
+          \identifier{sp\_change\_users\_login} zur Verfügung.
+          \begin{merke}
+            Diese Procedure kann nicht für Benutzerkonten genutzt werden, die
+            auf Windows-Logins basieren.
+            
+            Microsoft hat angekündigt, dass diese Procedure in neueren
+            Versionen des Microsoft SQL Server nicht mehr zur Verfügung stehen
+            wird.
+          \end{merke}
+          \begin{lstlisting}[language=ms_sql, caption={Ermitteln der
+            verwaisten Benutzerkonten}, label=admin19_16]
+USE [model]
+GO
+
+§sp_change_users_login§ @Action='Report';
+GO
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{c}{\textbf{UsernName}} &
+                \multicolumn{1}{c}{\textbf{UserSID}} \\
+                \cmidrule(r){1-1}\cmidrule(r){2-2}
+              }
+              \tablehead{}
+              \tabletail {
+              }
+              \tablelasttail {
+              }
+              \begin{mssql}
+                \begin{supertabular}{ll}
+                  SQLLooser & 0x3CE2559A2F2C674F824B27C672ABB3F1 \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+          Um dem Benutzerkonto \identifier{SQLLooser} ein neues Login
+          zuzuweisen sollte das \languagemssql{ALTER USER}-Statement genutzt
+          werden, so wie es in \beispiel{admin19_15} zu sehen ist.
+          \begin{literaturinternet}
+            \item \cite{ms175475}
+            \item \cite{ms174378}
+          \end{literaturinternet}            
+      \subsection{Privilegien auf Datenbankebene}
+        Auf Datenbankebene existieren in SQL Server 2014 insgesamt 16
+        Securables, wie z. B. Schemata, Benutzer und Datenbankrollen. Auf dieses
+        Securables kann eine Vielzahl von Privilegien angewandt werden. Im
+        Folgenden werden die Wichtigsten davon aufgezählt und kurz erläutert:
+        \begin{itemize}
+          \item \privileg{control}: Dies ist das umfangreichste Privileg,
+          das einem Benutzer für ein Securable verliehen werden kann. Es
+          schließt alle anderen Privilegen auf Datenbankebene ein.
+          \item \privileg{view definition}: Erlaubt dem Benutzer die Metadaten
+          der betroffenen Objekte einsehen zu können, ohne jedoch direkten
+          Zugriff auf das Securable zu haben.
+          \item \privileg{alter}: Dieses Privileg erlaubt es dem Benutzer ein
+          Objekt zu verändern. Welcher Art diese Veränderung ist hängt dabei
+          vom Objekt selbst ab. Einer Rolle können beispielsweise Mitglieder
+          hinzugefügt werden, während bei einem Schema der Besitzer geändert
+          werden kann.
+          \item \privileg{take ownership}: Erlaubt dem Benutzer den Besitz für
+          ein Objekt zu übernehmen.
+          \item \privileg{impersonate}: Dieses Privileg kann auf Logins
+          (Serverebene) und Benutzer (Datenbankebene) erteilt werden und
+          ermöglicht es, die Identität eines anderen Logins/Benutzers
+          anzunehmen.
+        \end{itemize}
+        \subsubsection{Zusammenhänge zwischen Securable- und Datenbankebene}
+          Die in SQL Server implementierte Berechtigungshierarchie lässt es zu,
+          dass einige Privilegien, die direkt auf eine Datenbank erteilt werden,
+          sich auch auf deren Securables auswirken. Beispiele hierfür sind die
+          Privilegien \privileg{alter any schema}, \privileg{alter any role} und
+          \privileg{alter any user}. Hat ein Benutzer das Privileg
+          \privileg{alter any role}, dann besitzt er implizit das
+          \privileg{alter}-Privileg für alle Rollen, die in der Datenbank
+          existieren bzw. zukünftig existieren werden.
+          
+          Die folgende Tabelle zeigt ausschnittsweise, welche datenbankseitigen
+          Privilegien sich implizit auf Securables auswirken.
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \label{tabdatabasepermimplicit}
+              \tablefirsthead{
+                \multicolumn{1}{c}{\textbf{Übergeordnetes Privileg}} &
+                \multicolumn{1}{c}{\textbf{Basisprivileg}} &
+                \multicolumn{1}{c}{\textbf{Securable}} \\
+                \hline
+                }
+              \tablehead{}
+              \tabletail{
+              }
+              \tablelasttail{
+              }
+              \begin{supertabular}{l|l|l}
+                \privileg{control} & \privileg{control} & Zertifikat \\
+                \privileg{control} & \privileg{control} & Asymmetrischer Schlüssel \\
+                \privileg{control} & \privileg{control} & Schema \\
+                \privileg{take ownership} & \privileg{control} & Asymmetrischer Schlüssel \\
+                \privileg{alter any certificate} & \privileg{alter} & Zertifikat \\
+                \privileg{alter any role} & \privileg{alter} & Datenbankrolle \\
+                \privileg{alter any schema} & \privileg{alter} & Schema \\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+          Die \tabelle{tabdatabasepermimplicit} ist ein Ausschnitt aus der
+          Tabelle \enquote{SQL Server and SQL Database Permissions} aus dem
+          Artikel \enquote{Permissions (Database Engine)}
+          (\parencite{ms191291}).
+        \subsubsection{Zusammenhänge zwischen Datenbank- und Serverebene}
+          Ähnliche Zusammenhänge, wie sie gerade beschrieben wurden, existieren
+          auch zwischen Server und Datenbankebene.
+           \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \label{tabserverpermimplicit}
+              \tablefirsthead{
+                \multicolumn{1}{c}{\textbf{Übergeordnetes Privileg}} &
+                \multicolumn{1}{c}{\textbf{Basisprivileg}} &
+                \multicolumn{1}{c}{\textbf{Securable}} \\
+                \hline
+                }
+              \tablehead{}
+              \tabletail{
+              }
+              \tablelasttail{
+              }
+              \begin{supertabular}{l|l|l}
+                \privileg{control server} & \privileg{alter any asymmetric key} & Datenbank \\
+                \privileg{control server} & \privileg{alter any role} & Datenbank \\
+                \privileg{control server} & \privileg{alter any schema} & Datenbank \\
+                \privileg{alter any database} & \privileg{alter} & Datenbank \\
+                \privileg{alter any certificate} & \privileg{alter} & Zertifikat \\
+                \privileg{view any definition} & \privileg{view definition} & Datenbank \\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+          Die \tabelle{tabserverpermimplicit} ist ein Ausschnitt aus der
+          Tabelle \enquote{SQL Server and SQL Database Permissions} aus dem
+          Artikel \enquote{Permissions (Database Engine)}
+          (\parencite{ms191291}).
+          \begin{literaturinternet}
+            \item \cite{ms190401}
+            \item \cite{ms175536}
+            \item \cite{ms191291}
+          \end{literaturinternet}
+        \subsubsection{Privilegien auf Datenbankebene erteilen/entziehen
+        und verweigern}
+          Das Erteilen, Entziehen und Verweigern von Privilegien auf
+          Datenbankebene entspricht dem Erteilen, Entziehen und Verweigern von
+          Privilegie auf Serverebene.
+          \bild{Privilegien auf Datenbank\-ebene
+          verwalten}{granted_privileges_database}{1.1}
+          
+          \begin{lstlisting}[language=ms_sql, caption={Privilegien auf
+          Datenbankebene erteilen, entziehen und verweigern},label=admin19_17]
+USE [Bank]
+GO
+
+GRANT create table 
+TO bob;
+
+GRANT alter any role 
+TO bob;
+
+GRANT create view 
+TO bob
+WITH GRANT OPTION;
+
+REVOKE create table 
+FROM bob;
+
+REVOKE GRANT OPTION FOR control ON USER::[Bank] 
+FROM [bob] CASCADE
+GO
+
+GRANT control ON USER::[Bank] 
+TO [bob]
+GO
+
+DENY impersonate ON USER::[Bank] 
+TO [bob]
+GO
+          \end{lstlisting}
+          Das Kommando \languagemssql{GRANT CREATE VIEW TO bob WITH GRANT
+          OPTION;} erteilt dem Benutzer \identifier{bob} das \privileg{create
+          view} und gleichzeitig die Möglichkeit dieses an andere Benutzer
+          weiterzugeben. Dies ist der gleiche Mechanismus wie auch auf
+          Serverebene.
+          
+          Um auf Datenbankebene nur die \languagemssql{GRANT OPTION} zu
+          entziehen, muss hier zusätzlich das Schlüsselwort
+          \languagemssql{CASCADE} angegeben werden. So werden automatisch alle
+          Privilegien entzogen, die der Benutzer aufgrund des Besitzes der
+          \languagemssql{GRANT OPTION} erteilt hat.
+          
+          Die Kombination der beiden letzten Kommandos zeigt wie ein Benutzer
+          das \privileg{control}-Privileg erhalten und trotzdem nicht die
+          Identität des betroffenen Benutzerkontos übernehmen kann. Dies
+          funktioniert, in dem ihm das \privileg{control}-Privileg erteilt und
+          im Gegemzug das \privileg{impersonate}-Privileg verweigert wird.
+          \begin{literaturinternet}
+            \item \cite{ms188396}
+            \item \cite{ms187728}
+          \end{literaturinternet}
+      \subsection{Rollen}
+        \subsubsection{Die Datenbankrolle \enquote{db\_owner}}
+          Die Datenbankrolle \privileg{db\_owner} gehört zu den Festen
+          Datenbankrollen, die in jeder Datenbank existieren. Sie räumt ihren
+          Mitgliedern alle Berechtigungen ein, die zur Administration einer
+          Datenbank notwendig sind. Diese Rolle sollte nicht mit dem
+          Datenbankbenutzer \privileg{dbo} verwechselt werden. Es existieren
+          zwei wesentliche Unterschiede zwischen der Rolle
+          \privileg{db\_owner} und dem Benutzer \privileg{dbo}:
+          \begin{itemize}
+            \item Mitgliedern der Rolle \privileg{db\_owner} können
+            Priviliegien explizit verweigert werden, dem Benutzer \privileg{dbo}
+            nicht, da für ihn keine Berechtigungsprüfung erfolgt.
+            \item Die Auflistung der Mitglieder der Rolle \privileg{db\_owner}
+            wird in jeder Datenbank separat gespeichert. Ist die Datenbank
+            beschädigt, kann nicht mehr festgestellt werden, wer ein Mitglied
+            dieser Rolle ist. Somit können Mitglieder der Rolle
+            \privileg{db\_owner} nur unbeschädigte Datenbanken
+            wiederherstellt. Der Benutzer \privileg{dbo} kann auch beschädigte
+            Datenbanken wiederherstellen.
+          \end{itemize} 
+          \begin{literaturinternet}
+            \item \cite{gc20110407msdvdo}
+          \end{literaturinternet}
+        \subsubsection{Die Datenbankrolle \enquote{public}}
+          Die Datenbankrolle \privileg{public} ist mit der
+          Windows-Benutzergruppe \privileg{Jeder} vergleich bar. Alle aktiven
+          Benutzer innerhalb einer Datenbank sind automatisch Mitglied dieser
+          Rolle.
+          \begin{merke}
+            Die Datenbankrolle \privileg{public} kann nicht gelöscht werden.
+            Da alle aktiven Benutzer automatisch Mitglied dieser Rolle
+            werden, sollte sie nur minimale Privilegien haben.
+          \end{merke}
+        \subsubsection{Weitere Feste Datenbankrollen}
+          Neben den beiden Rollen \privileg{db\_owner} und \privileg{public}
+          existieren in SQL Server 2014 noch acht weitere Feste Datenbankrollen.
+          Diese sind:
+          \begin{itemize}
+            \item \privileg{db\_accessadmin}: Erlaubt den Zugriff auf
+            eine Datenbank zu regeln. Mitglieder können Logins
+            den Benutzerkonten in der Datenbank zuordnen.
+            \item \privileg{db\_backupoperator}: Mitglieder können eine
+            Sicherung der Datenbank anfertigen.
+            \item \privileg{db\_datareader}: Erteilt das Recht, alle Tabellen in
+            der Datenbank zu lesen.
+            \item \privileg{db\_datawriter} Erteilt das Recht, in alle
+            Tabellen der Datenbank zu schreiben.
+            \item \privileg{db\_ddladmin}: Mitglieder können alle DDL-Befehle
+            innerhalb einer Datenbank ausführen.
+            \item \privileg{db\_denydatareader}: Verweigert das Recht Tabellen
+            in der Datenbank zu lesen. Mitglieder können keinerlei Daten
+            abfragen.
+            \item \privileg{db\_denydatawriter}: Verweigert das Recht
+            DML-Befehle auf die Tabellen einer Datenbank anzuwenden. Mitglieder
+            können keine Daten ändern.
+            \item \privileg{db\_securityadmin}: Ermöglicht das Ändern von
+            Rollenmitgliedschaften und die Verwaltung von Privilegien.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{ms189121}
+            \item \cite{ms189612}
+          \end{literaturinternet}
+        \subsubsection{Besondere Rollen der MSDB-Datenbank}
+          Die Datenbank \identifier{msdb} enhält einige spezielle Feste
+          Datenbankrollen die in der MSDB unter \parencite{ms189121} aufgeführt
+          sind.
+        \subsubsection{Eigene Datenbankrollen erstellen}
+          \begin{enumerate}
+              \item Erweitern Sie im Objekt-Explorer die Datenbank, innerhalb
+              derer die neue Rolle erstellt werden soll.
+              \item Wählen Sie das Register \enquote{Sicherheit},
+              \enquote{Rollen} und darin \enquote{Datenbankrollen}.
+              \bild{Erstellen einer Datenbankrolle}{create_db_role_1}{1.7}
+              \item Öffnen Sie das Kontextmenü des Registers
+              \enquote{Datenbankrollen} und klicken Sie auf \enquote{Neue
+              Datenbankrolle}. Es erscheint der Dialog \enquote{Datenbankrolle
+              - Neu}
+\clearpage
+              \item Tragen Sie im Feld \enquote{Rollenname} den Bezeichner der
+              Rolle ein.
+              \bild{Den Rollenbezeichner eingeben}{create_db_role_2}{1.3}
+              \item Wählen Sie die Seite \enquote{Sicherungsfähige Elemente}
+              aus.
+              \item Klicken Sie auf die Schaltfläche \enquote{Suchen} und wählen
+              Sie die Securables aus, für die Sie Privilegien festlegen
+              wollen.
+              \item Erteilen Sie in der unteren Fensterhälfte die benötigten
+              Privilegien.
+              \bild{Auswählen der Securables}{create_db_role_3}{1.3}
+              \item Klicken Sie auf \enquote{OK}.
+          \end{enumerate}
+           \begin{lstlisting}[language=ms_sql, caption={Erstellen einer
+           Datenbankrolle}, label=admin19_18]
+USE [Bank]
+GO
+
+CREATE ROLE userhelpdesk AUTHORIZATION dbo;
+GO
+        \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{ms187936}
+          \end{literaturinternet}
+        \subsubsection{Rollenmitglieder verwalten}
+          Das Hinzufügen von Mitgliedern zu einer Datenbankrolle kann mittels
+          des Managementstudios oder mit Hilfe von T-SQL geschehen. Wenn Sie das
+          Management Studio benutzen möchten, gehen Sie wie folgt vor:
+          \begin{enumerate}
+            \item Erweitern Sie im Objekt-Explorer die Datenbank, innerhalb
+            derer die neue Rolle erstellt werden soll.
+            \item Wählen Sie das Register \enquote{Sicherheit},
+            \enquote{Rollen} und darin \enquote{Datenbankrollen}.
+            \item Öffnen Sie das Kontextmenü der Datenbankrolle und klicken Sie
+            auf \enquote{Eigenschaften}. Es erscheint der Dialog
+            \enquote{Eigenschaften der Datenbankrolle}.
+            \item Im unteren Bereich dieses Dialogs können Benutzer oder andere
+            Rollen als Mitglieder hinzugefügt oder entfernt werden.
+            \bild{Mitglieder zu einer Rolle hinzufügen}{alter_db_role_1}{1.3}
+          \end{enumerate}
+          Die beiden folgenden T-SQL Statements zeigen, wie einer Rolle
+          Mitglieder hinzugefügt bzw. entfernt werden können.
+          \begin{lstlisting}[language=ms_sql, caption={Ändern einer
+           Datenbankrolle}, label=admin19_19]
+USE [Bank]
+GO
+
+ALTER ROLE userhelpdesk
+ADD MEMBER weidinger;
+GO
+
+ALTER ROLE userhelpdesk
+DROP MEMBER weidinger;
+GO
+        \end{lstlisting}
+        \subsubsection{Datenbankrollen umbenennen}
+          Soll eine Datenbankrolle umbenannt werden, muss das T-SQL Kommando
+          \languagemssql{ALTER ROLE} mit der Klausel \languagemssql{WITH NAME}
+          benutzt werden.
+          \begin{lstlisting}[language=ms_sql, caption={Umbenennen einer
+           Datenbankrolle}, label=admin19_20]
+USE [Bank]
+GO
+
+ALTER ROLE [db_UserHelpDesk] 
+WITH NAME = [db_HelpDesk]
+GO
+          \end{lstlisting}
+          Wahlweise kann eine Rolle auch im Objekt-Explorer umbenannt werden.
+          \begin{merke}
+            Feste Datenbankrollen können nicht umbenannt werden!
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms189775}
+          \end{literaturinternet}
+        \subsubsection{Selbsterstellte Datenbankrollen löschen}
+          Damit eine Datenbankrolle gelöscht werden kann, müssen zuerst alle
+          Mitglieder und alle Securables aus der Rolle entfernt werden.
+          \begin{enumerate}
+            \item Öffnen Sie im Objekt-Explorer das Kontextmenü der
+            Datenbankrolle und wählen Sie den Menüpunkt \enquote{Löschen}.
+            \item Klicken Sie auf \enquote{OK}.
+          \end{enumerate}
+          \begin{lstlisting}[language=ms_sql,caption={Entfernen einer
+          Datebankrolle},label=sql19_21]
+DROP ROLE [db_UserHelpDesk];
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{ms174988}
+          \end{literaturinternet}
+    \section{Datenbankschemata}
+      \subsection{Securables}
+        Innerhalb eines Schemas können sich die folgenden Securables befinden:
+        \begin{itemize}
+          \item Type 
+          \item XML-Schemaauflistung
+          \item Aggregat (Objekt)
+          \item Funktion
+          \item Verfahren
+          \item Queue 
+          \item Synonym
+          \item Tabelle
+          \item Sicht
+        \end{itemize}
+        \begin{literaturinternet}
+          \item \cite{ms190401}
+        \end{literaturinternet}
+        \subsubsection{Privilegien auf Schemaebene}
+          Auf Schemaebene existieren in SQL Server 2014 insgesamt 12
+          Objektprivilegien, wie z. B. \privileg{select}, \privileg{insert},
+          \privileg{update} und \privileg{delete}. Diese steuern den direkten
+          Zugriff auf die Datensätze innerhalb des Schemas bzw. der Datenbank.
+        
+          Zugewiesen, entzogen und verweigert werden Objektprivilegien mit den
+          SQL-Kommandos \languagemssql{grant}, \languagemssql{revoke} und
+          \languagemssql{deny}.
+          \begin{lstlisting}[language=ms_sql,caption={Erteilen
+          von Objektprivilegien},label=sql19_22]
+USE [Bank]
+GO
+
+GRANT select ON viw_eigenkunden_kontaktdaten
+TO    bob;
+GO
+
+GRANT select ON OBJECT::viw_eigenkunden_kontaktdaten
+TO    bob;
+GO
+
+GRANT select ON viw_eigenkunden_adressen
+TO    bob
+WITH GRANT OPTION;
+GO        
+
+GRANT insert, update, delete ON eigenkunden
+TO    bob;
+GO  
+          \end{lstlisting}
+          Der Entzug und das Verweigern von Objektprivilegien erfolgt parallel
+          zum Entzug und zur Verweigerung von Privilegien auf Datenbankebene.
+          \begin{literaturinternet}
+            \item \cite{ms188371}
+            \item \cite{ms187965}
+          \end{literaturinternet}
+        \subsubsection{Ownership chaining - Besitzverkettungen}
+          Wenn in einer SQL Server Datenbank mehrere Objekt ein und des selben
+          Besitzers/Schemas sequentiel von einander abhängig sind, spricht man
+          von einer Besitzverkettung bzw. engl. Ownership chain.
+          \beispiel{sql19_23} zeigt eine Besitzverkettung, zwei Views die
+          sequentiel auf den Tabellen \identifier{Kunde} und
+          \identifier{Eigenkunde} aufbauen.
+          \begin{lstlisting}[language=ms_sql,caption={Eine
+          Besitzverkettung},label=sql19_23]
+USE [Bank]
+GO
+
+CREATE VIEW dbo.viw_eigenkunden_adressen
+AS
+  SELECT vorname, nachname, strasse, hausnummer, plz, ort,
+         TelefonNr, EmailAdresse
+  FROM   eigenkunde ek INNER JOIN Kunde k 
+         ON (k.kunden_id = ek.kunden_id);
+GO
+
+CREATE VIEW dbo.viw_eigenkunden_kontaktdaten
+AS
+  SELECT TelefonNr, EmailAdresse
+  FROM   eigenkunde;
+GO
+          \end{lstlisting}
+          Die beiden Views aus dem vorangegangenen Beispiel werden beide im
+          Schema \identifier{dbo} (Besitzer ist der Datenbankbenutzer
+          \identifier{dbo}) erstellt, in dem auch die Tabelle
+          \identifier{eigenkunde} liegt. Dadurch haben alles drei Objekte den
+          gleichen Besitzer und eine Besitzverkettung ist entstanden.
+          \bild{Eine Besitzverkettung dreier
+          Objekte}{ownership_chain}{1.3}
+          Dem Datenbankbenutzer \identifier{bob} wird nun in \beispiel{sql19_24}
+          das \privileg{select}-Privileg auf die View
+          \identifier{viw\_eigenkunden\_kontaktdaten} eingeräumt.
+          \begin{lstlisting}[language=ms_sql,caption={Bob
+          erhält Leserechte},label=sql19_24]
+USE [Bank]
+GO
+
+GRANT select ON viw\_eigenkunden\_kontaktdaten
+TO    bob;
+GO
+          \end{lstlisting}
+          Sobald der Benutzer \identifier{bob} nun die View
+          \identifier{viw\_eigenkunden\_kontaktdaten} abfragt, wird er die
+          entsprechenden Datensätze aus der Tabelle \identifier{eigenkunde}
+          zurückgeliefert bekommen.
+          
+          SQL Server prüft im Falle einer Besitzverkettung die Zugriffsrechte
+          wie folgt:
+          \begin{enumerate}
+            \item Wer ist der Besitzer des Objekts
+            (\identifier{viw\_eigenkunden\_kontaktdaten}), auf das Zugriff
+            genommen wird? Antwort: \identifier{dbo}.
+            \item Ist \identifier{dbo} auch der Besitzer der weitern Objekte
+            (\identifier{viw\_eigenkunden\_adressen}, \identifier{eigenkunde})?
+            Antwort: ja.
+            \item Hat der Benutzer \identifier{bob} die notwendigen Privilegien,
+            um in gewünschter Art und Weise auf
+            \identifier{viw\_eigenkunden\_kontaktdaten} zuzugreifen? Antwort: ja.
+          \end{enumerate}
+          Da \identifier{bob} das \privileg{select}-Privileg auf die View
+          \identifier{viw\_eigenkunden\_kontaktdaten} hat, welche auf die View
+          \identifier{viw\_eigenkunden\_adressen} und die Tabelle
+          \identifier{eigenkunde} aufbaut bekommt er Zugriff auf die Datensätze
+          der Tabelle, ohne das weitere Zugriffsrechte geprüft werden würden.
+          \begin{merke}
+            Der Zugriff auf ein Objekt mittels einer Besitzverkettung ist
+            performanter, da nur für das Objekt, auf welches unmittelbar
+            Zugriff genommen wird die Zugriffsrechte geprüft werden.
+          \end{merke}
+        \subsubsection{Unterbrochene Besitzverkettungen}
+          \bild{Eine unterbrochene
+          Besitzverkettung}{interrupted_ownership_chain}{1.3}
+          \abbildung{interrupted_ownership_chain} zeigt ein Beispiel für eine
+          unterbrochene Besitzverkettung. Weil
+          die View \identifier{viw\_eigenkunden\_adressen} einen anderen
+          Besitzer (\identifier{alice}) hat, als die zweite View, 
+          \identifier{viw\_eigenkunden\_kontaktdaten}, wird der
+          Zugriffsmechanismus nicht mehr funktionieren. SQL Server prüft hier
+          wie folgt:
+          \begin{enumerate}
+            \item Wer ist der Besitzer des Objekts
+            (\identifier{viw\_eigenkunden\_kontaktdaten}), auf das Zugriff
+            genommen wird? Antwort: \identifier{dbo}.
+            \item Ist \identifier{dbo} auch der Besitzer der weitern Objekte
+            (\identifier{viw\_eigenkunden\_adressen}, \identifier{eigenkunde})?
+            Antwort: \textbf{nein}.
+            \item Hat der Benutzer \identifier{bob} die notwendigen Rechte, um
+            in gewünschter Weise auf die View
+            \identifier{viw\_eigenkunden\_kontaktdaten} zugreifen zu können?
+            Antwort: ja.
+            \item Hat der Benutzer \identifier{bob} die notwendigen Rechte, um
+            in gewünschter Weise auf die
+            View \identifier{viw\_eigenkunden\_adressen} zugreifen zu können?
+            Antwort:
+            \textbf{nein}.
+            \item Auswertung: Der gewünschte Zugriff kann nicht erfolgen.
+          \end{enumerate}
+          \begin{literaturinternet}
+            \item \cite{ms188676}
+            \item \cite{bb669084}
+          \end{literaturinternet}
+        \subsubsection{Seiteneffekte der Besitzverkettung}
+          Das größte Problem der Besitzverkettung ist, dass dieser Mechanismus
+          die Überprüfung der Zugriffsrechte innerhalb der Besitzkette komplett
+          umgeht.
+          \bild{Seiteneffekte einer
+          Besitzverkettung}{ownership_chaining_side_effects}{1}
+          \abbildung{ownership_chaining_side_effects} zeigt eine Situation in
+          der der Benutzer \identifier{bob} das \privileg{select}-Privileg auf
+          einer View besitzt, wobei im gleichzeitig das \privileg{select}-Privileg auf die
+          zugrundeliegende Tabelle explizit verweigert wurde.
+          \beispiel{sql19_25} zeigt den SQL-Code zu dieser Situation.
+          \begin{lstlisting}[language=ms_sql,caption={Seiteneffekte der Besitzverkettung},label=sql19_25]
+USE [Bank]
+GO
+
+GRANT select ON viw_eigenkunden_kontaktdaten
+TO    bob;
+
+DENY select ON Eigenkunde
+TO bob;
+GO
+          \end{lstlisting}
+          Das Problem in diesem Falle ist, dass \identifier{bob} trotz des
+          expliziten \languagemssql{DENY} die Datensätze der Tabelle
+          \identifier{Eigenkunde} wird abfragen können. SQL Server verfährt hier
+          wie folgt:
+          \begin{enumerate}
+            \item Wer ist der Besitzer des Objekts
+            (\identifier{viw\_eigenkunden\_kontaktdaten}), auf das Zugriff
+            genommen wird? Antwort: \identifier{dbo}.
+            \item Ist \identifier{dbo} auch der Besitzer der Tabelle
+            \identifier{eigenkunde}? Antwort: \textbf{ja}.
+            \item Hat der Benutzer \identifier{bob} die notwendigen Rechte, um
+            in gewünschter Weise auf die
+            View \identifier{viw\_eigenkunden\_kontaktdaten} zugreifen zu können?
+            Antwort: \textbf{ja}.
+            \item Auswertung: Der gewünschte Zugriff kann erfolgen.
+          \end{enumerate}
+          Weil \identifier{bob} nicht direkt auf die Tabelle
+          \identifier{eigenkunde} zugreift, sondern nur indirekt mit Hilfe der
+          View \identifier{viw\_eigenkunden\_kontaktdaten}, für die er die
+          notwendige \privileg{select}-Berechtigung hat, wird das
+          \privileg{deny} nicht weiter geprüft und auch nicht berücksichtig.
+          
+          Obwohl ein \privileg{deny} eine entsprechende Aktion definitiv
+          unmöglich machen soll, kann dies in diesem Fall nicht durchgesetzt
+          werden. Der Berechtigungsprüfungsmechanismus des SQL Server wird
+          einfach \enquote{ausgehebelt}.
+      \subsection{Erstellen eines Rollen- und Rechtekonzeptes}
+        Eine rollenbasierte Rechtezuteilung ist ein intelligentes und flexibles
+        Hilfsmittel für den Administrator, zur effizieten Verwaltung einer
+        großen Anzahl von Benutzern, mit dessen Hilfe diesen die benötigten
+        Berechtigungen erteilt werden können. Rollen- und Rechtekonzepte eignen
+        sich besonders als Autorisierungsverfahren für Systeme mit einer hohen
+        Volatilität\footnote{lat. volatilis = fliegend, flüchtig, hier die
+        Änderungshäufigkeit}. Nicht oder nur bedingt geeignet sind Rollen- und
+        Rechtebasierte Konzepte für Systeme mit wenigen Benutzern, da hier der
+        Nutzen schnell durch den zusätzlichen Ausfwand nicht mehr zu
+        rechtfertigen ist.
+        \subsubsection{Vorteile eines Rollen- und Rechtekonzeptes}
+          \begin{itemize}
+            \item Viele Einzelberechtigungen werden als \enquote{Tätigkeiten} in
+            Rollen zusammengefasst. Beispielsweise können Tätigkeiten wie ein
+            Login oder das Verwalten von Benutzern über solche Rollen geregelt
+            werden.
+            \item Die Komplexität des Autorisierungssystems sinkt, da wenig bis
+            garkeine Einzelberechtigungen erteilt und verwaltet werden müssen.
+            \item Neue Benutzer können sehr einfach in das System integriert
+            werden.
+          \end{itemize}
+        \subsubsection{Vorteile eines Rollen- und Rechtekonzeptes}
+          \begin{itemize}
+            \item Hoher Planungsaufwand, um ein konsistentes rollenbasiertes
+            Autorisierungssystem zu erstellen.
+            \item Erfordert gut ausgebildetes Administrationspersonal
+            \item Eventuell vorhandene Überschneidungen müssen geregelt werden
+            (eine Person benötig die Rechte aus Abteilung A und nur einen Teil
+            der Rechte für Abteilung B)
+          \end{itemize}
+        \subsubsection{Beispiel für ein Rollen- und Rechtekonzept in SQL Server}
+          \bild{Beilspiel eines
+          Rollenkonzeptes}{role_concept}{1.4}
+          \abbildung{role_concept} zeigt ein zweistufiges Rollen- und
+          Rechtekonzept. Auf der unteren Ebene sind dabei die sogenannten
+          \enquote{Personenrollen} zu sehen. Diese Rollen können wie
+          Benutzergruppen betrachtet werden. In einer Personenrolle werden alle
+          Benutzerkonten zusammengefasst, die ein gemeinsames Interesse bzw.
+          eine gemeinsame Aufgabe haben. In der Beispielabbildung sind das z. B.
+          Filialleiter, Nutzerbetreuer oder Kundenberater.
+          
+          Die obere Ebene zeigt die \enquote{Funktionsrollen}. Diese Rollen
+          dienen zur Gruppierung von Berechtigungen, welche dann eine bestimmte
+          Tätigkeit ermöglichen. Die Rolle \identifier{R\_Login} beispielsweise
+          beinhaltes das \privileg{connect\_sql}-Privileg, das benötigt wird, um
+          sich mit dem Datenbanserver zu verbinden. Die folgende Aufzählung gibt
+          einen detailierten Überblick über das hier vorgestellte Konzept. Die
+          darin benutzten Abkürzungen sind: \textbf{S}elect, \textbf{I}nsert,
+          \textbf{U}pdate und \textbf{D}elete. Sie stellen jeweils die
+          Privilegien dar, die für ein bestimmtes Objekt zugewiesen werden. Die
+          Präfixes an den Objektnamen haben folgende Bedeutung: \textbf{rol}:
+          Rolle, \textbf{viw}: View, \textbf{tab}: Tabelle, \textbf{udf}:
+          User Defined Function (Benutzerdefinierte Funktion) und \textbf{trg}:
+          Trigger.
+          
+          Funktionsrollen:
+          \begin{itemize}
+            \item \identifier{rol\_employee\_viewer}
+            \begin{itemize}
+              \item \privileg{S} \identifier{viw\_employees}
+            \end{itemize}
+            \item \identifier{rol\_customer\_viewer}
+            \begin{itemize}
+              \item \privileg{S} \identifier{viw\_customers}
+            \end{itemize}
+            \item \identifier{rol\_customer\_admin}
+            \begin{itemize}
+              \item \privileg{SIUD} \identifier{viw\_customers}
+              \item \privileg{SU} \identifier{viw\_accounts}
+            \end{itemize}
+            \item \identifier{rol\_account\_admin}
+            \begin{itemize}
+              \item \privileg{SIUD} \identifier{viw\_account\_management}
+            \end{itemize}
+            \item \identifier{rol\_branch\_admin}
+            \begin{itemize}
+              \item \privileg{S} \identifier{udf\_employees\_At\_Branch}
+              \item \privileg{S} \identifier{udf\_customers\_At\_Branch}
+            \end{itemize}
+            \item Serverrolle \identifier{rol\_login}
+            \begin{itemize}
+              \item \privileg{connect sql}
+            \end{itemize}
+          \end{itemize}
+          
+          Personenrollen:
+          \begin{itemize}
+            \item \identifier{rol\_Management}: Beinhaltet alle Manager der Bank
+            (Mitarbeiter\_IDs 1 bis 5)
+            \item \identifier{rol\_Keyaccount\_Management}: Alle Mitarbeiter die
+            als Kundenberater arbeiten
+            \item \identifier{rol\_Employees}: Alle Mitarbeiter die nicht in
+            einer beratenden Funktion tätig sind
+            \item \identifier{rol\_Branch\_Management}: Die Gruppe der
+            Filialleiter (Mitarbeiter\_IDs 8 bis 27)
+            \item \identifier{rol\_Administration}: Die Nutzerbetreuer der
+            Organisation (Mitarbeiter\_IDs 6 und 7)
+          \end{itemize}
+          Die Zusammenhänge zwischen den benutzten Views und Funktionen stellen
+          sich wie folgt dar:
+          \bild{Zusammenhang der Objekte}{object_chaining}{1.3}
+          Die drei Views \identifier{viw\_customers}, \identifier{viw\_accounts}
+          und \identifier{viw\_account\_management} werden durch Trigger überwacht.
+          Diese haben die Aufgabe DML-Operationen auf die Views zu ermöglichen,
+          da dies anderen Falls nicht möglich wäre.
+          
+          Mit Hilfe der beiden benutzerdefinierten Funktionen
+          \identifier{udf\_Employees\_At\_Branch} und
+          \identifier{udf\_Customers\_At\_Branch} ist es der Gruppe der
+          Filialleiter möglich, auf die Angestellten ihrer Filialen bzw. auf die
+          Kunden, welche in ihren Filialen betreut werden, zu zugreifen.
+          \begin{lstlisting}[language=ms_sql,caption={Selektieren
+          aus einer User Defined Table-function},label=sql19_25]
+USE [Bank]
+GO
+
+-- Select all employees from branch number 10
+SELECT *
+FROM   udf_Employees_At_Branch(10);
+
+-- Select all customers coached in branch number 10
+SELECT *
+FROM   udf_Customers_At_Branch(10);
+          \end{lstlisting}
+    \section{Datenbankverschlüsselung}
+      Die SQL Server-Verschlüsselung ist ein Mechanismus der es ermöglicht,
+      sensible Daten, mit Hilfe eines Schlüssels oder eines Kennwortes, durch
+      einen zusätzlichen Zugriffsschutz gegen Datenverlust zu sichern. Gesetzt
+      den Fall, dass die Zugriffsschutzbarrieren der Datenbank umgangen werden
+      und ein \enquote{Angreifer} Daten entwendet, kann die Verschlüsselung eine
+      probate Möglichkeit darstellen, die Beute für den Dieb unbrauchbar zu
+      machen.
+      \begin{merke}
+        Man muss sich bewußt sein, dass jede Verschlüsselung
+        ein \enquote{Hindernis auf Zeit} ist. 
+      \end{merke}
+      \subsection{Aufbau der Transparenten Datenbankverschlüsselung (TDE)}
+        Seit der Version 2005 stellt Microsoft SQL Server eine hierarchische
+        Infrastruktur zur Verschlüsselung von Daten und zur Verwaltung von
+        Schlüsseln bereit. Dabei kommen Passwörter, symmetrische und
+        asymmetrische Schlüssel, sowie Zertifikate zum Einsatz.
+
+        Die Basis für die SQL Server-Verschlüsselungshierarchie ist die
+        \enquote{Windows Operating System level Data Protection API}, kurz
+        \enquote{DPAPI}. Diese wird dazu benutzt den
+        \enquote{Diensthauptschlüssel} / \enquote{Service Master Key},
+        kurz \enquote{SMK} zu schützen.
+        \begin{merke}
+          SQL Server 2012 benutzt den AES-Algorithmus zur Verschlüsselung des
+          SMK.
+        \end{merke}
+        \bild{Architektur der trans\-parenten
+          Datenbank\-verschlüs\-selung (TDE)}{encryption_hierarchie}{1.7}
+        \begin{scriptsize}
+          \abbildung{encryption_hierarchie} - Architektur der transparenten
+          Datenbankverschlüsselung (TDE) - Quelle: \parencite{bb934049}
+        \end{scriptsize}
+        \subsubsection{Der Service Master Key} 
+          Beim SMK handelt es sich um einen symmetrische Schlüssel der beim
+          Setup des SQL Servers aus
+          \begin{itemize}
+            \item den Anmeldeinformationen des SQL Server-Dienstkontos und 
+            \item den Anmeldeinformationen des Computers, auf dem der SQL Server
+            installiert wird
+          \end{itemize}
+          erstellt wird. Verschlüsselt wird er mit dem Computerschlüssel des
+          Computers, auf dem SQL Server installiert wird. Es existiert immer nur
+          ein SMK pro SQL Server.
+          
+          Der SMK dient zur Verschlüsselung von folgenden Bestandteilen:
+          \begin{itemize}
+            \item {Datenbankhauptschlüssel}/\enquote{Database Master Key} (DMK),
+            \item Kennwörtern für Verbindungsserver,
+            \item Anmeldeinformationen 
+          \end{itemize}
+          Entschlüssel werden kann der SMK nur von dem Dienstkonto, unter dem
+          er erstellt wurde oder von einem Prinzipal, der auf die
+          Anmeldeinformationen des Computers zugreifen kann. Damit es bei
+          einem Wechsel des SQL Server-Dienstkontos nicht zu Problemen kommt,
+          sollte immer der SQL Konfigurations Manager genutzt werden. Dieser
+          entschüsselt und verschlüsselt den SMK automatisch.
+          
+          Muss der Computer, auf dem Microsoft SQL Server installiert ist, neu
+          erstellt werden, sollte der Domänenbenutzer, der zuvor als
+          Dienstkonto genutzt wurde auch weiterhin genutzt werden. Dieser kann
+          ohne Problem den SMK wiederherstellten. Soll ein anderer
+          Domänenbenutzer als Dienstkonto für den SQL Server verwendet werden,
+          muss der SMK mittels Backup and Recovery wiederhergestellt werden.
+          
+          Soll SQL Server auf einen anderen Computer verschoben werden, bleibt
+          nur die Möglichkeit, den SMK mittels Backup and Recovery
+          wiederherzustellen.
+          \begin{merke}
+            Der SMK ist der Stamm der Verschlüsselungshierarchie. Sollte er
+            verloren gehen, sind die weiteren Bestandteile der Hierarchie
+            unbrauchbar.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms189060}
+          \end{literaturinternet}
+        \subsubsection{Der Database Master key (DMK)}
+          Der Database Master Key bzw. der Datenbankhauptschlüssel ist ein
+          symmetrischer Schlüssel, der in der \identifier{master}-Datenbank
+          gespeichert wird. Für jede Datenbank innerhalb einer SQL
+          Server-Instanz wird ein eigener, eindeutiger DMK erzeugt, dessen
+          Aufgabe es ist, private Schlüssel von Zertifikaten oder asymmetrischen
+          Schlüsseln zu sichern. Dies geschieht, in dem mit Hilfe des DMK ein 
+          Serverzertifikat innerhalb der \identifier{master}-Datenbank erzeugt
+          wird. Dieses Zertifikat verschüsselt dann den
+          \enquote{Datenbankverschlüsselungs Schlüssel}, der in jeder Datenbank
+          angelegt werden kann.
+          \begin{literaturinternet}
+            \item \cite{bb964742}
+          \end{literaturinternet}
+        \subsubsection{Das Serverzertifikat}
+          Zertifikate sind digital signierte Securables, die einen öffentlichen
+          und optional auch einen privaten Schlüssel enthalten. In SQL Server
+          werden Zertifikate mit dem Standard IETF X.509v3 erstellt. Sie können
+          verwendet werden, um Objekte zu signieren oder zu verschlüsseln. Im
+          konkreten Fall des Serverzertifikates wird es dazu benutzt, um den
+          Database encryption key einer Datenbank zu generieren.
+          
+          Die privaten Schlüssel, welche mit SQL Server zu einem Zertifikat
+          generiert werden sind 1024 Bits lang. Werden private Schlüssel aus
+          einer externen Quelle importiert, haben diese eine Länge zwischen 384
+          und 4096 Bits. Damit ein Zertifikat in Zusammenhang mit TDE genutzt
+          werden kann, muss der private Schlüssel eine Länge von genau 3456 Bits
+          aufweisen.
+          \begin{merke}
+            Der private Schlüssel muss dem öffentlichen Schlüssel entsprechen,
+            der mit dem Zertifikat zusammenhängt.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{bb895327}
+          \end{literaturinternet}
+        \subsubsection{Der Database encryption key (DEK)}
+          Der Datenbankverschlüsselungs Schlüssel bzw. Database encryption key
+          ist ein symmetrischer Schlüssel, der für die Verschlüsselung der Daten
+          innerhalb einer Datenbank zuständig ist. Er wird direkt in der
+          Datenbank gespeichert, für die er erzeugt wurde.
+      \subsection{Einrichten der Transparenten Datenbankverschlüsselung}
+        \subsubsection{Erstellen eines Datenbankhauptschlüssels (DMK)}
+          \begin{lstlisting}[language=ms_sql,caption={Erstellen eines
+          Datenbankhauptschlüssels},label=sql19_26]
+USE [Bank]
+GO
+
+CREATE MASTER KEY 
+ENCRYPTION BY PASSWORD = '2S0d0V5sMehI0#DVe4x9i8z6';  
+GO 
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{aa337551}
+            \item \cite{ms174382}
+          \end{literaturinternet}
+        \subsubsection{Erstelle des benötigten Serverzertifikates}
+          \begin{lstlisting}[language=ms_sql,caption={Erstellen des
+          Serverzertifikates},label=sql19_27]
+USE [Bank]
+GO
+
+CREATE CERTIFICATE dek_server_certificate 
+WITH SUBJECT = 'DEK Server certificate';  
+          \end{lstlisting}
+          Alternativ kann das Serverzertifikat auch aus einer Zertifikatsdatei
+          importiert werden.
+          \begin{lstlisting}[language=ms_sql,caption={Erstellen des Serverzertifikates aus einer Datei},label=sql19_28]
+USE [Bank]
+GO
+
+CREATE CERTIFICATE dek_server_certificate  
+    FROM FILE = 'D:\certs\dek_server_certificate.cer' 
+    WITH PRIVATE KEY (FILE = 'D:\certs\dek_server_certificate_key.pk', 
+    DECRYPTION BY PASSWORD = '2S0d0V5sMehI0#DVe4x9i8z6');
+GO        \end{lstlisting}
+          \begin{merke}
+            Der private Schlüssel eines Zertifikates wird standardmässig mit dem
+            Datenbankhauptschlüssel verschlüsselt. Sollte kein DMK vorhanden
+            sein muss ein Passwort angegeben werden, da dies anderen Falls
+            zu einem Fehler führt.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms187798}
+          \end{literaturinternet}
+        \subsubsection{Erzeugen des Datenbankverschlüsselungs Schlüssels (DEK)}
+          \begin{lstlisting}[language=ms_sql,caption={Erstellen des
+          Datenbankverschlüsselungs Schlüssels},label=sql19_29]
+USE [Bank]
+GO
+
+CREATE DATABASE ENCRYPTION KEY
+WITH ALGORITHM = AES_256
+ENCRYPTION BY SERVER CERTIFICATE dek_server_certificate;
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{bb677241}
+          \end{literaturinternet}
+        \subsubsection{Aktivieren der Verschlüsselung einer Datenbank}
+          \begin{lstlisting}[language=ms_sql,caption={Aktivieren
+          der Verschlüsselung},label=sql19_30]
+USE [Bank]
+GO
+
+ALTER DATABASE Bank
+SET ENCRYPTION ON;
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{bb934049}
+          \end{literaturinternet}
+    \section{Verschlüsselung der Kommunikation - SSL}
+      Der Secure Socket Layer (SSL) stellt eine einfache Möglichkeit zur
+      Verschlüsselung des Datenverkehrs auf Protokollebene dar. Der SQL Server
+      bietet diese Art der Verschlüsselung seit der Version 2005 an. Ob SSL
+      genutzt werden kann oder nicht hängt aber im Wesentlichen von der
+      genutzten Clientsoftware ab. Beispielsweise können die \enquote{Microsoft
+      Data Access Components} (MDAC) SSL erst ab der Version 2.6 SSL benutzen.
+      
+      Ein zweites, durch den Secure Socket Layer mitgeliefertes Feature ist die
+      Identitätskontrolle für den Datenbankserver. Diese funktioniert jedoch
+      nur, wenn kein selbstsigniertes Zertifikat für SSL verwendet wird.
+      \begin{merke}
+        Die zur Verschlüsselung verwendete Schlüsselbreite, 40 oder 128 Bit,
+        hängt vom genutzten Betriebssystem ab.
+      \end{merke}
+      \subsection{Vorbereitende Maßnahmen}
+        \begin{merke}
+          Für die Nutzung von SSL sollte in jedem Falle ein eigenes Zertifikat
+          erstellt werden. Steht des SQL Server kein Zertifikat zur Verfügung,
+          nutzt er ein selbstsigniertes Zertifikat. Dies verringert die
+          Sicherheit von SSL massiv.
+        \end{merke}
+        \subsubsection{Erstellen eines Certificate Signing Request}
+          Der erste Schritt der bei der Erstellung eines Zertifikats getan
+          werden muss, ist die erstellung einer Zertifikatsanforderung, auch
+          \enquote{Certificate Signing Request} (CSR) genannt. Dieser wird
+          üblicherweise auf dem Rechner erstellt, auf dem auch das Zertifikat
+          genutzt werden soll. In einem verschlüsselten Textblock enthält er
+          Informationen, die später im Zertifikat vorkommen. Der CSR wird dann
+          von einer Zertifizierungstelle bzw. Certificate Authority signiert.
+          Aus dem signierten CSR entsteht dann das Zertifikat.
+          \begin{literaturinternet}
+            \item \cite{sslshopwiaccsr}
+          \end{literaturinternet}
+          \begin{enumerate}
+            \item Starten Sie die Microsoft Management Console (MMC).
+            \item Wählen Sie im Menü \enquote{Datei} den Eintrag
+            \enquote{snap-In hinzufügen/entfernen}.
+            \item Wählen Sie aus der Liste \enquote{Verfügbare Snap-Ins} das
+            Snap-In \enquote{Zertifikate} mit einem Doppelklick aus.
+            \bild{Das Zertifikats-Snap-In benutzen}{add_snap-in_to_mmc}{1.3}
+            \item Wählen Sie im neu erschienenen Dialogfenster die Option
+            \enquote{Computerkonto} und klicken Sie auf \enquote{Weiter}.
+            \bild{Das Zertifikats-Snap-In
+            benutzen}{use_certificate_snap-in_1}{1.3}
+            \item Wählen Sie im Dialog \enquote{Computer auswählen} die Option
+            \enquote{Lokalen Computer (Computer, auf dem diese Konsole
+            ausgeführt wird)} und klicken Sie auf Fertigstellen.
+            \bild{Das Zertifikats-Snap-In
+            benutzen}{use_certificate_snap-in_2}{1.3}
+            \item Klicken Sie links außen den Eintrag \enquote{Eigene
+            Zertifikate} an und öffnen Sie das Kontextmenü.
+            \item Wählen Sie \enquote{Alle Aufgaben} $\rightarrow$
+            \enquote{Erweiterte Vorgänge} $\rightarrow$
+            \enquote{Benutzerdefinierte Anforderung erstellen}.
+            \bild{Einen benutzer\-definierten Request erstellen}{certmgr_1}{1.3}
+            \item Klicken Sie im Vorbereitungs-Dialog auf \enquote{Weiter}.
+            \item Wählen Sie im nächsten Schritt den
+            Anforderungstyp: \enquote{Den Vorgang ohne Registrierungsrichtlinie
+            fortsetzen}
+            \bild{Zertifikats\-registrierungs\-richtline wählen}{certmgr_2}{1.2}
+            \item Klicken Sie auf \enquote{Weiter}.
+\clearpage
+            \item Wählen Sie als Vorlagetyp für die benutzerdefinierte
+            Anforderung: \enquote{(Keine Vorlage) Legacyschlüssel} und als
+            Anforderungsformat \enquote{PKCS\#10}. Klicken Sie auf
+            \enquote{Weiter}.
+            \bild{Anforder\-ungs\-vorlage und -format auswählen}{certmgr_3}{1.2}
+            \item Klicken Sie im Schritt \enquote{Zertifikatsinformationen}
+            auf \enquote{Details} und anschließend auf die
+            Schaltfläche \enquote{Eigenschaften}. Es öffnet sich der Dialog
+            \enquote{Zertifikateigenschaften}.
+            \bild{Anpassen der CSR-Eigenschaften}{certmgr_4}{1.3}
+            \item Geben Sie einen Anzeigenamen und eine kurze Beschreibung für
+            das Zertifikat ein, so wie in \abbildung{certmgr_5} zu sehen.
+            \bild{Allgemeine Angaben zum Zertifikat}{certmgr_5}{1.2}
+            \item Wechseln Sie auf die Registerkarte \enquote{Antragsteller}.
+            Erstellen Sie die für das Zertifikat notwendigen Einträge:
+              
+            Antragstellername:
+            \begin{itemize}
+              \item Allgemeiner Name: FEA11-119SRV12.MS-C-IX-04.FUS
+              \item Land/Region: DE
+              \item E-Mail: SQL-IX-62-12@MS-C-IX-04.FUS
+              \item Ort: Feldafing
+              \item Organisation: Bundeswehr
+              \item Organisiationseinheit: FueUstgSBw
+            \end{itemize}
+            \begin{merke}
+              Tauschen Sie die Platznummer 12 jeweils durch Ihre eigene
+              Platznummer aus!
+            \end{merke}
+            
+            Alternativer Name:
+            \begin{itemize}
+              \item DNS: FEA11-119SRV12 
+              \item DNS: FEA11-119SRV12.MS-C-IX-04.FUS
+            \end{itemize}
+            \bild{Angaben zum Antragsteller}{certmgr_6}{1.3}
+            \item Wechseln Sie auf die Registerkarte \enquote{Erweiterungen}.
+            \item Öffnen Sie das Menü \enquote{Erweiterte Schlüsselverwendung
+            (Anwendungsrichtlinien)}.
+\clearpage
+            \item Wählen Sie \enquote{Serverauthentifizierung} bei den
+            Verfügbaren Optionen.
+            \bild{Zertifikats\-optionen auswählen}{certmgr_7}{1.3}
+            \item Wechseln Sie auf die Registerkarte \enquote{Privater
+            Schlüssel}.
+            \item Öffnen Sie das Menü \enquote{Schlüsseloptionen}.
+            \item Wählen Sie 2048 Byte als Schlüsselgröße und aktivieren Sie die
+            Option \enquote{Privaten Schlüssel exportierbar machen}.
+            \bild{Eigenschaften des privaten Schlüssels ändern}{certmgr_8}{1.3}
+            \item Wählen Sie im Menü \enquote{Schlüsseltyp} die Option
+            \enquote{Austausch}.
+            \item Öffnen Sie das Menü \enquote{Schlüsselberechtigungen}.
+            \item Aktivieren Sie die Option \enquote{Benutzerdefinierte
+            Berechtigungen verwenden} und klicken Sie auf \enquote{OK}.
+            \item Klicken Sie auf \enquote{Weiter}.
+            \item Geben Sie als Dateinamen \oscommand{D:\textbackslash
+            FEA11-119SRV12.MS-C-IX-04.FUS.csr} ein und achten Sie darauf, dass
+            als Dateiformat \enquote{Base 64} gewählt ist.
+            \item Klicken Sie auf \enquote{Fertigstellen}
+          \end{enumerate}
+          Die erstellte Anforderung muss nun durch eine CA signiert werden.
+        \subsubsection{Importieren des Serverzertifikats}
+          Das Importieren des Serverzertifikats geschieht, genau wie das
+          Erstellen des Requests, mit Hilfe des Zertifikatplugins auf dem
+          Datenbankserver.
+          \begin{enumerate}
+            \item Starten Sie das Zertifikatsplugin.
+            \item Klicken Sie links außen den Eintrag \enquote{Eigene
+            Zertifikate} an und öffnen Sie das Kontextmenü.
+            \item Wählen Sie \enquote{Alle Aufgaben} $\rightarrow$
+            \enquote{Erweiterte Vorgänge} $\rightarrow$
+            \enquote{Importieren}.
+            \item Klicken Sie im Willkommensdialog auf \enquote{Weiter}.
+            \item Geben Sie als Dateinamen \oscommand{D:\textbackslash
+            fea11-119srv12.ms-c-ix-04.fus.pem} ein.
+            \bild{Importieren eines Zertifikats}{import_cert_1}{1.3}
+            \item Wählen Sie im nächsten Schritt die Option \enquote{Alle
+            Zertifikate in folgendem Speicher speichern} und wählen Sie als
+            Speicher \enquote{Eigene Zertifikate} aus. Klicken Sie auf
+            \enquote{Weiter}.
+            \bild{Auswählen des Zertifikats\-speichers}{import_cert_2}{1.3}
+            \item Klicken Sie auf \enquote{Fertigstellen}.
+          \end{enumerate}
+          \bild{Das importierte Server-Zertifikat}{imported_server_cert}{1.5}
+          \begin{merke}
+            Es ist wichtig, dass das Zertifikat in den Zertifikatsspeicher des
+            Computerkontos importiert wird. Nur so können verschiedene
+            Benutzerkonten berechtigt werden, auf das Zertifikat zuzugreifen.
+          \end{merke}
+        \subsubsection{Festlegen der Zugriffsrechte auf den privaten Schlüssel}
+          Nach dem Import des Zertifikats in den Speicher des Computerkontos
+          können bisher nur die drei folgenden Konten darauf zugreifen:
+          \begin{itemize}
+            \item Lokaler Dienst (\identifier{nt authority\textbackslash localservice})
+            \item Lokales System (\identifier{nt authority\textbackslash localsystem})
+            \item Netzwerkdienst (\identifier{nt authority\textbackslash networkservice})
+          \end{itemize}
+          Damit das gMSA-Dienstkonto des SQL Server
+          (\identifier{MS-C-IX-04\textbackslash MSSQLSERVER12\$}) das Zertifikat nutzen kann,
+          muss im der Zugriff auf den privaten Schlüssel des Zertifikats
+          eingeräumt werden.
+          \begin{enumerate}
+            \item Öffnen Sie den Zertifikatsmanager für das Computerkonto.
+            \item Klicken Sie mit der rechten Maustaste auf das Zertifikat und
+            wählen Sie aus dem Kontextmenü \enquote{Alle Aufgaben} $\rightarrow$
+            \enquote{Private Schlüssel verwalten}.
+            \bild{Verwalten der privaten Schlüssel}{manage_private_keys_1}{1.3}
+            \item Fügen Sie das Dienstkonto des SQL Servers hinzu und geben Sie
+            im Leserechte auf das Zertifikat.
+            \bild{Verwalten der privaten Schlüssel}{manage_private_keys_2}{1.3}
+          \end{enumerate}
+        \subsubsection{Importieren des CA-Zertifikats}
+          Um die Echtheit des Serverzertifikats überprüfen zu können, muss der
+          SQL Server auch das CA-Zertifikat importieren.
+          \bild{Fehlende Zertifikats\-informationen}{unknown_root_cert}{1.5}
+          Die Vorgehensweise ist die gleiche, wie beim Import des
+          Serverzertifikats. Es ist lediglich darauf zu achten, dass im zweiten
+          Schritt des Assistenten als Zertifikatsspeicher
+          \enquote{Vertrauenswürdige Stammzertifizierungsstellen} gewählt
+          werden muss. Die Anschließende Sicherheitswarung muss mit \enquote{Ja}
+          bestätigt werden.
+          \bild{Das importierte CA-Zertifikat}{imported_root_cert}{1.5}
+          Mit Hilfe des CA-Zertifikats kann nun die Echtheit des
+          Serverzertifikats nachgewiesen werden.
+          \bild{Vollständige Certificate chain}{known_root_cert}{1.3}
+      \subsection{Konfigurieren der serverseitigen Verschlüsselung}
+        Aufseiten des SQL Servers muss in der Netzwerkkonfiguration das
+        Serverzertifikat angegeben und die Verschlüsselung aktiviert werden.
+        Diese Schritte werden alle im SQL Server Configuration Manager
+        ausgeführt.
+        \begin{enumerate}
+          \item Starten Sie den SQL Server Configuration Manager.
+          \item Öffnen Sie die mit Hilfe des Kontextmenüs die Eigenschaften
+          der SQL Server Netzwerkprotokolle.
+          \bild{Die SQL
+          Server-Netzwerk\-protokolle}{sql_server_network_properties}{1.3}
+          \item Wechseln Sie im Eigenschaftendialog auf die Registerkarte
+          \enquote{Zertifikat} und wählen Sie in der Dropdownbox
+          \enquote{Zertifikat} das installierte Serverzertifikat aus.
+          \begin{merke}
+            Hier können nur solche Zertifikate ausgewählt werden, die vorher mit
+            dem Zertifikatsplugin der MMC installiert wurden und die den von
+            Microsoft formulierten Anforderungen für ein Serverzertifikat
+            entsprechen.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms189067}
+            \item \cite{ms191192}
+          \end{literaturinternet}
+\clearpage
+          \bild{Die Register\-karte
+          \enquote{Zertifikat}}{sql_server_network_properties_1}{1.3}
+          \item Wechseln Sie zurück auf die Registerkarte \enquote{Flags}.
+          Aktivieren Sie dort die Option \enquote{Verschlüsselung erzwingen}.
+          \bild{Die Register\-karte
+          \enquote{Flags}}{sql_server_network_properties_2}{1.3}
+          \item Klicken Sie auf \enquote{OK} und starten Sie den SQL
+          Server-Dienst neu.
+        \end{enumerate}
+        \begin{merke}
+          Eine unverschlüsselte Kommunikation mit dem SQL Server ist nun nicht
+          mehr möglich.
+        \end{merke}
+      \subsubsection{Probleme bei der Auswahl des Zertifikats}
+        Es kann vorkommen, dass der SQL Server nicht in der Lage ist, ein
+        korrekt erstelltes und in den Speicher des Computerkontos
+        importiertes Zertifikat zu erkennen. Dies äußert sich so, dass das
+        Zertifikat auf der Registerkarte \enquote{Zertifikat} der
+        Netzwerkprotokolleigenschaften des Servers nicht zur Auswahl steht.
+        \bild{Kein Zertifikat zur Auswahl}{sql_server_network_properties_3}{1.3}
+        In einem solchen Fall, kann zu einer Notlösung gegriffen werden. Der
+        Fingerprint des Zertifikats wird direkt in die Registry eingetragen.
+        Dieser Vorgang wird von im Problemfall von Microsoft als offizielle
+        Lösung empfohlen.
+        \begin{itemize}
+            \item Lesen Sie die Eigenschaft \enquote{Fingerabdruck} aus Ihrem
+            Zertifikat aus.
+            \bild{Der Fingerabdruck des
+            Zertifikats}{certificate_in_registry_fingerprint}{1.3}
+            \item Öffnen Sie den Registrierungseditor mit dem Kommando
+            \enquote{regedit.exe}
+            \item Navigieren Sie zu dem folgenden Schlüssel:
+            
+            \begin{small}
+            \texttt{\textbackslash\textbackslash
+            HKEY\_LOCAL\_MACHINE\textbackslash SOFTWARE\textbackslash
+            Microsoft\textbackslash Microsoft SQL Server\textbackslash
+            MSSQL12.MSSQLSERVER}
+            
+            \texttt{\textbackslash MSSQLSerer\textbackslash
+            SuperSocketNetLib}
+            \end{small}
+            \item Wählen Sie dort den Registryeintrag \enquote{Certificate} und
+            tragen Sie den Fingerprint Ihres Zertifikats ein.
+            \bild{Eintragen des Fingerabdrucks}{certificate_in_registry_1}{1.3}
+            \begin{merke}
+              Der Fingerabdruck muss ohne Leerzeichen eingetragen werden. Es
+              dürfen auch keine unsichtbaren Steuerzeichen in den
+              Registryeintrag hineinkopiert werden. Das Eintragen sollte deshalb
+              von Hand erfolgen.
+            \end{merke}
+            Der SQL Server-Dienst muss nun neugestartet werden. Sofern mit dem
+            Zertifikat alles in Ordnung ist, wird der Dienst wie erwartet
+            starten.
+        \end{itemize}
+      \subsection{Konfigurieren der clientseitigen Verschlüsselung}
+        Auf der Clientseite kann die Verschlüsselung auf zwei unterschiedliche
+        Arten konfiguriert werden:
+        \begin{itemize}
+          \item Die Verschlüsselung kann für jede Applikation einzeln
+          aktiviert/deaktiviert werden.
+          \item Die Verschlüsselung kann für alle Anwendungen auf einem Client
+          erzwungen werden.
+        \end{itemize}
+        Wichtig ist, dass der Clientrechner entweder das original
+        Serverzertifikat oder das Zertifizierungsstammstellenzertifikat zur
+        Verfügung haben muss, um eine sichere SSL-Verbindung mit dem
+        Datenbankserver herstellen zu können.
+        \subsubsection{Aktivieren/Deaktivieren der Verschlüsselung in einer Anwendung}
+          Um eine Verschlüsselte Verbindung zu einem SQL Server aufbauen zu
+          können, muss einen Client-Anwendung einen Datenbanktreiber benutzen,
+          der diese Möglichkeit bietet. Ein Beispiel für eine solche Anwendung
+          ist das Microsft SQL Server Management Studio. Es benutzt den
+          \enquote{SQL Native Client 11.0} von Microsoft. Um die Verschlüsselung
+          zu aktivieren, muss im Anmeldedialog die Option \enquote{Verbindung
+          verschlüsseln} auf der Registerkarte
+          \enquote{Verbindungseigenschaften}. Dies kann durch einen Klick auf
+          die Schaltfläche \enquote{Optionen} erreicht werden.
+          \bild{Verschlüsseln der
+          Verbin\-dung im
+          SSMS}{ssms_connection_settings_encrypt_connection}{1.3}
+        \subsubsection{Erzwingen der Verschlüsselung für alle Anwendungen}
+          Im SQL Server Configuration Manager können die SQL Native Client
+          Komponenten so konfiguriert werden, dass alle Anwendungen, welche
+          diesen Datenbanktreiber benutzen, ihre Verbindung verschlüsseln.
+          \bild{Erzwingen der
+          Verschlüs\-selung auf
+          dem Client}{enforce_encryption_on_client}{1.3}
+          Dieser Dialog wird über den Eintrag \enquote{Eigenschaften} des
+          Kontextmenüs des Eintrags \enquote{SQL Native Client
+          11.0-Konfiguration} erreicht. Die beiden dort sichtbaren Optionen
+          haben folgende Bedeutung:
+          \begin{itemize}
+            \item \textbf{Protokollverschlüsselung erzwingen}: Wird diese Option
+            auf den Wert \enquote{Ja} eingestellt, fordert der Client eine
+            SSL-Verbindung zum Server an. Der Verbindung wird dann in jedem Fall
+            verschlüsselt.
+            \item \textbf{Vertrauenswürdiges Serverzertifikat}: Solange diese
+            Option den Wert \enquote{Nein} hat, überprüft der Client die
+            Identität des Servers. So können u. U. Man-In-The-Middle-Attacken
+            verhindert werden.
+          \end{itemize}
+          \begin{merke}
+            Für die Überprüfung der Serveridentität muss dem Client entweder das
+            original Serverzertifikat oder das
+            Zertifizierungsstammstellenzertifikat zur Verfügung stehen. Der
+            Import dieses Zertifikats verläuft analog zum Import auf dem
+            Datenbankserver.
+          \end{merke}
+      \subsection{Ist die Verbindung auch wirklich verschlüsselt?}
+        Die Antwort auf diese Frage kann nur die Katalogsicht
+        \identifier{sys.dm\_exec\_connections} geben. Sie enthält eine Spalte
+        \identifier{encrypt\_option}, welche für verschlüsselte Verbindungen den
+        Wert TRUE anzeigt.
+        \begin{lstlisting}[language=ms_sql,caption={Verschlüsselungseigenschaften
+        der Verbindung abfragen},label=sql19_01]
+SELECT net_transport, client_net_address, encrypt_option
+FROM   sys.dm_exec_connections;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead{
+              \multicolumn{1}{l}{\textbf{NET\_TRANSPORT}} &
+              \multicolumn{1}{l}{\textbf{CLIENT\_NET\_ADDRESS}} &
+              \multicolumn{1}{l}{\textbf{ENCRYPT\_OPTION}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+            }
+            \tablehead{}
+            \tabletail{
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgew\"ahlt}} \\
+            }
+            \tablelasttail{
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgew\"ahlt}} \\
+            }
+            \begin{mssql}
+              \begin{supertabular}{lll}
+                Shared memory & <local machine> & TRUE \\
+                TCP & 192.168.111.43 & TRUE \\
+              \end{supertabular}
+            \end{mssql}
+          \end{small}
+        \end{center}
+        
+      \subsection{Nutzen der Option \enquote{Erweiterter Schutz}}
+        Der Erweiterte Schutz ist eine Funktion, die seit Windows Server 2008
+        R2/Windows 7 durch das Betriebssystem zur Verfügung gestellt wird. Sie
+        beinhaltet zwei Komponenten, die Dienstbindung und die Kanalbindung,
+        welche in Kombination als Abwehrmaßnahme gegen Relay-Attacken
+        funktionieren. Standardmäßig ist der Erweiterte Schutz nicht aktiviert,
+        dies muss manuell durch den Administrator geschehen.
+        \subsubsection{Wovor schützt der Erweiterte Schutz?}
+          Laut Microsoft kann dieser Mechanismus vor zwei Angriffsarten
+          schützen:
+          \begin{itemize}
+            \item \textbf{Lockangriff}: Der Client wird dazu verleitet
+            (angelockt) freiwillige eine Verbindung zu einem Angreifer
+            herzustellen.
+            \item \textbf{Spoofingangriff}: Bei einem solchen Angriff wird dem
+            Client eine manipulierte Route zum Ziel zur Verfügung gestellt, so
+            dass er unbemerkt beim Angreifer landet.
+          \end{itemize}
+        \subsubsection{Welche Schutzmaßnahmen bietet der Erweiterte Schutz?}
+          Durch das Aktivieren des Erweiterten Schutzes werden zwei Mechanismen
+          in Gang gesetzt:
+          \begin{itemize}
+            \item \textbf{Dienstbindung}: Bei der Dienstbindung signiert der
+            Client den Service Principal Name (SPN) des Servers und sendet
+            diesen verschlüsselt an den Server. Durch die Signatur des SPN kann
+            der Server erkennen von welchem Client der SPN stammt. Durch die
+            Verschlüsselung kann kein anderer Client den SPN für seine Zwecke
+            mißbrauchen.
+            \bild{Schematische Dar\-stellung der
+            Dienst\-bindung}{service_binding}{1.3}
+            \item \textbf{Kanalbindung}: Bei der Kanalbindung wird ein sicherer
+            Kanal zwischen dem Client und dem Server eingerichtet. Diese Methode
+            wird mit Hilfe des TLS (ehemals SSL) Protokolls umgesetzt.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{ff487261}
+          \end{literaturinternet}          
+        \subsubsection{Den Erweiterten Schutz in Windows aktivieren}
+          Die Funktion \enquote{Erweiterer Schutz} kann nur durch zwei
+          Registry-Einträge aktiviert werden. Der Administrator muss prüfen, ob
+          die Schlüssel
+          
+          \begin{small}
+            \texttt{HKEY\_LOCAL\_MACHINE\textbackslash
+            SYSTEM\textbackslash
+            CurrentControlSet\textbackslash
+            Control\textbackslash Lsa\textbackslash SuppressExtendedProtection}
+            
+            und
+            
+            \texttt{HKEY\_LOCAL\_MACHINE\textbackslash
+            SYSTEM\textbackslash
+            CurrentControlSet\textbackslash Control\textbackslash
+            Lsa\textbackslash LmCompatibilityLevel}
+          \end{small}
+          
+          bereits existiert. Falls dies nicht der Fall ist, müssen die Schlüssel
+          manuell angelegt werden (Schlüsseltyp = DWORD).
+          \begin{enumerate}
+            \item Starten Sie den Registrierungseditor mit
+            \oscommand{regedit.exe}
+            \item Navigieren Sie durch den Registrierungsbaum bis Sie den
+            folgenden Schlüssel
+            erreichen: \texttt{HKEY\_LOCAL\_MACHINE\textbackslash
+            SYSTEM\textbackslash CurrentControlSet\textbackslash Control\textbackslash Lsa}
+            \item Öffnen Sie das Kontextmenü mit der rechten Maustaste und
+            wählen Sie \enquote{Neu} $\rightarrow$ \enquote{DWORD-Wert (32-Bit)}
+            \bild{Anlegen eines DWORD-Schlüssels in der
+            Registry}{regedit_new_key_1}{1.3}
+            \item Geben Sie dem neuen Wert den Namen
+            \texttt{SuppressExtendedProtection}.
+            \bild{Der Schlüssel
+            Suppress\-Extended\-Protection}{regedit_new_key_2}{1.3}
+            \item Der Schlüssel muss den Wert 0 haben.
+            \item Öffnen Sie das Kontextmenü mit der rechten Maustaste und
+            wählen Sie \enquote{Neu} $\rightarrow$ \enquote{DWORD-Wert (32-Bit)}
+            \item Geben Sie dem neuen Wert den Namen
+            \texttt{LmCompatibilityLevel}.
+            \bild{Der Schlüssel
+            LmCompa\-tibility\-Level}{regedit_new_key_3}{1.3}
+            \item Doppelklicken Sie auf den Wert \texttt{LmCompatibilityLevel}. 
+            \item Geben Sie den Wert 3 ein und klicken Sie auf OK.
+            \bild{Der Schlüssel
+            LmCompa\-tibility\-Level}{regedit_new_key_4}{1.3}
+            \item Starten Sie den Windows Server neu.
+          \end{enumerate}
+        \subsubsection{Den Erweiterten Schutz für SQL Server aktivieren}
+          Der Erweiterte Schutz für den SQL Server wird mit Hilfe von drei
+          Einstellungen im SQL Server-Konfigurations-Manager verwaltet:
+          \begin{itemize}
+            \item \textbf{Erzwingen der Verschlüsselung}: Durch die
+            Konfiguration dieser Eigenschaft auf den Wert \texttt{Ein} wird die
+            Kanalbindung erzwungen, da der SQL Server die Verschlüsselung einer
+            jeden Verbindung erzwingt.
+            \item \textbf{Erweiterter Schutz}: Diese Eigenschaft besitzt drei
+            unterschiedliche Werte: \texttt{Aus}, \texttt{Zulässig} und
+            \texttt{Erforderlich}.
+            
+            Durch die Einstellung \texttt{Zulässig} wird die Dienstbindung bei
+            allen Clients benutzt die dies unterstützen. Sollte ein Client keine
+            Dienstbindung zur Verfügung stellen wird die Verbindung ohne
+            Dienstbindung aufgebaut.
+            
+            Durch die Einstellung \texttt{Erforderlich} wird die Dienstbindung
+            für alle Clients erzwungen. Sollte ein Client keine Dienstbindung
+            zur Verfügungstellen wird keine Verbindung aufgebaut.
+            \item \textbf{Akzeptierte NTLM-SPNs}: Diese Eigenschaft wird nur
+            dann benötigt, wenn ein Datenbankserver durch mehrere SPN
+            identifiziert wird. In diesem Fall kann hier eine durch Semikola
+            separierte Liste von Service Principal Names angegeben werden.
+          \end{itemize}
+          Zufinden sind diese Eigenschaften durch einen Rechtsklick auf den
+          Punkt \enquote{Protokolle für 'MSSQLSERVER'}
+          \bild{Aktivieren des
+          Erweiterten
+          Schutzes}{sql_server_extended_protection_properties_1}{1.3}
+          Die Einstellung \enquote{Verschlüsselung erzwingen} muss auf den Wert
+          \enquote{Ja} eingestellt werden, um die Kanalbindung zu ermöglichen.
+          \bild{Aktivieren des
+          Erweiterten
+          Schutzes}{sql_server_extended_protection_properties_2}{1.3}
+          Auf der Registerkarte \enquote{Erweitert} muss die Einstellung
+          \enquote{Erweiterter Schutz} auf den Wert \enquote{Erforderlich}
+          eingestellt werden, um Kanal- und Dienstbindung zu erzwingen.
+          \bild{Aktivieren des
+          Erweiterten
+          Schutzes}{sql_server_extended_protection_properties_3}{1.3}
+          \begin{literaturinternet}
+            \item \cite{ff487261}
+          \end{literaturinternet}
+    
+    

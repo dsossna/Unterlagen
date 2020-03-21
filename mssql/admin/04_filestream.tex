@@ -1,0 +1,526 @@
+  \chapter{Filestream}
+  \chaptertoc{}
+  \cleardoubleevenpage
+
+    \section{Filestream}
+      Mit dem Filestream-Feature ist es möglich, nicht strukturierte Daten
+      (PDFs, Videos, Audiodateien, Bilder), sogenannte BLOB-Daten, auf dem
+      Dateisystemabzulegen und diese gleichzeitig mit der Datenbank zu
+      verknüpfen. Der Zugriff auf die Daten kann dann mittels TSQL, aber auch
+      über das Dateisystem erfolgen.
+      \subsection{Wie funktioniert Filestream}
+        \subsubsection{Implementierung im Dateisystem}
+          Die Realisierung von Filestream geschieht mit Hilfe der in Microsoft
+          Windows integrierten \enquote{Win32-Dateisystemschnittstelle}
+          (API\footnote{API = Application Programming Interface}).
+          Diese API ermöglicht es dem SQL Server einen
+          Win32-Namespace\footnote{Namespaces sind UNC-Pfade, die den Zugriff
+          auf Betriebssystemresourcen (Netzwerkfreigaben, Geräte, WMI, u. ä
+          ermöglichen)} zu überwachen um so alle Änderungen, die dort
+          stattgefunden haben, zu registrieren.
+        
+        \subsubsection{Implementierung in SQL Server}
+          Für den Zugriff mittels TSQL muss in einer Datenbank eine
+          Filestream-Dateigruppe erstellt werden, in der dann, seit
+          der Version 2012 des SQL Servers, eine sogenannte \enquote{FileTable}
+          plaziert werden kann. FileTables sehen aus wie normale Tabellen,
+          greifen aber, unter Zuhilfenahme von SQL Server-eigenen Routinen, auf
+          das Dateisystem zu. So kann mit \SELECT{} der Verzeichnisinhalt
+          ausgelesen und mittels \INSERT, \UPDATE{} und \DELETE{} geändert werden.
+        
+          \bild{Filestream}{filestream}{1.3}
+        \subsubsection{Der Neue - VARBINARY(max)}
+          Um die Speicherung von BLOBs in der FileTable zu ermöglichen bringt
+          der SQL Server einen neuen Datentyp mit, den
+          \identifier{varbinary(max)}-Typ. Dieser kann unstrukturierte
+          Binärdaten in der Datenbank und im Dateisystem ablegen. Bei der Ablage
+          der Daten im Filestream gibt es keine Größenbeschränkung für diesen
+          Datentyp.
+          \begin{merke}
+            Wird eine \identifier{varbinary(max)}-Spalte nicht im Dateisystem,
+            sondern in der Datenbank abgelegt, besitzt sie eine
+            Größenbeschränkung von 2 GB.
+          \end{merke}
+      \subsection{Filestream konfigurieren}
+        Das Filestream-Feature ist nicht standardmäßig aktivert. Wird es
+        benötigt, muss der Administrator sowohl im SQL Server Configurations
+        Manager, als auch im Management Studio einige Klicks vornehmen.
+        \subsubsection{Filestream im SQL Server Configurations Manager}
+          In einem ersten Schritt muss das Filestream-Feature im SQL Server
+          Configurations Manager für den Windows-Dienst MSSQLSERVER aktiviert
+          werden.
+          \begin{enumerate}
+            \item Öffnen Sie den SQL Server Configurations Manager
+            \item Wählen Sie die Rubrik \enquote{SQL Server-Dienste}
+            \item Öffnen Sie die Eigenschaften des SQL Server-Dienstes
+            (MSSQLSERVER)
+            \item Klicken Sie die Registerkarte \enquote{FILESTREAM} an.
+            \item Aktivieren Sie die beiden Optionen \enquote{FILESTREAM für
+            Transact-SQL-Zugriff aktivieren} und \enquote{FILESTREAM für
+            E/A-Dateizugriff aktivieren}.
+            \bild{Die Registerkarte FILESTREAM}{filestream_register_card}{2}
+            \item Starten Sie den SQL Server-Dienst neu!
+          \end{enumerate}
+        \subsubsection{Filestream im Management Studio}
+          Der zweite Schritt ist das Aktivieren des Filestream-Features auf
+          Instanzebene. Obwohl beide Schritte identisch und somit redundand
+          erscheinen, ist die Trennung zwischen dem Windows-Dienst und der
+          Instan durchaus sinnvoll. Auf den Windows-Dienst sollten im
+          Normalfall nur Betriebssystemadministratoren Zugriff haben, nicht
+          jedoch die Datenbankadministratoren\footnote{Anmerkung des Autors: In
+          der Praxis herscht hier meist Personalunion bei diesen beiden
+          Zuständigkeiten!}. Umgekehr sollte ein Betriebssystemadministrator
+          keinen Zugriff auf die SQL Server-Instanz haben. 
+          \begin{enumerate}
+            \item Öffnen Sie die Eigenschaften Ihrer SQL Server-Instanz
+            \item Klicken Sie auf die Rubrik \enquote{Erweitert}
+            \bild{Filestream im Management Studio}{filestream_in_ssms}{1.5}
+            \item Geben Sie für die Datenbankoption
+            \enquote{FILESTREAM-Zugriffsebene} den Wert \enquote{Vollzugriff
+            aktiviert} an.
+          \end{enumerate}
+          \begin{literaturinternet}
+            \item \cite{llobelwp20101212ss2fp2o4}
+          \end{literaturinternet}
+      \subsection{Eine Filestream-Dateigruppe anlegen}
+        Filestream-Dateigruppen sind spezielle Dateigruppen. Sie stellen die
+        Schnittstelle zum Dateisystem her, die dann von den FileTables genutzt
+        werden kann.
+        \subsubsection{Anlegen der Dateigruppe}
+          Eine Filestream-Dateigruppe wird auf die gleiche Art und Weise
+          angelegt, wie eine normale Dateigruppe, lediglich das Schlüsselwort
+          \languagemssql{CONTAINS FILESTREAM} kommt hinzu.
+          \begin{lstlisting}[language=ms_sql, caption={Eine
+          Filestream-Dateigruppe anlegen}, label=admin04_01]
+USE [Bank_2014]
+GO
+
+ALTER DATABASE Bank_2014
+ADD FILEGROUP FSstorage CONTAINS FILESTREAM;
+GO
+          \end{lstlisting}
+          Mit dem Kommando aus \beispiel{admin04_01} wird der Datenbank
+          \identifier{bank\_2014} eine Filestream-Dateigruppe namens
+          \identifier{fsstorage} hinzugefügt. Genau wie bei normalen
+          Dateigruppen wird diese als Standarddateigruppe markiert, da sie die
+          erste ist. Sollten noch weitere Filestream-Dateigruppen existieren,
+          kann diese Markierung, unabhängig von den normalen  Dateigruppen,
+          verschoben werden.
+        \subsubsection{Hinzufügen eines Data Containers}
+          Die Dateigruppe \identifier{fsstorage} existiert zwar, aber noch
+          können dort keine Daten abgelegt werden, da noch kein
+          \enquote{Speicherort} definiert wurde. Mit Hilfe der
+          \languagemssql{ADD FILE}-Klausel des \languagemssql{ALTER
+          DATABASE}-Statements kann ein Verzeichnis angegeben werden, in dem die
+          Filestream-Daten abgelegt werden. Dieses Verzeichnis wird als
+          \enquote{Data Container} bezeichnet.
+          \begin{merke}
+            Damit die Definition des Data Containers erfolgreich sein kann, muss der
+            Pfad \oscommand{D:\textbackslash u01\textbackslash
+            bank\_2014\textbackslash filestream} schon vorher existieren. Das
+            Verzeichnis \oscommand{fsstorage} darf jedoch noch nicht existieren.
+          \end{merke}
+\clearpage
+          \begin{lstlisting}[language=ms_sql, caption={Einen Data-Container
+          hinzufügen}, label=admin04_02]
+USE [Bank_2014]
+GO
+
+ALTER DATABASE Bank_2014
+ADD FILE (
+  NAME     = 'fsstorage',
+  FILENAME = 'D:\u01\bank_2014\filestream\fsstorage'
+) TO FILEGROUP FSstorage;
+GO
+          \end{lstlisting}
+          Die Auswirkungen von \beispiel{admin04_02} sind, dass das Verzeichnis
+          \oscommand{fsstorage} angelegt wird. Darin befinden sich nun die Datei
+          \oscommand{filestream.hdr} und das Verzeichnis \oscommand{\$FSLOG}.
+          \bild{Ein Data Container}{filestream_hdr_and_fslog}{2.25}
+          \begin{merke}
+            Die Datei \oscommand{filestream.hdr} ist eine wichtige Headerdatei,
+            ohne die die Filestream-Dateigruppe nicht funktionieren kann.
+          \end{merke}
+    \section{FileTables}
+      In der soeben fertiggestellten Filestream-Dateigruppe können nun
+      FileTables angelegt werden. Jede FileTable erstellt einen eigenen
+      Verzeichnisbaum innerhalb der Dateigruppe. Das hat den Vorteil, dass
+      mehrere FileTables, für unterschiedliche Zwecke in der gleichen
+      Filestream-Dateigruppe, angelegt werden können und das trotzdem die Daten
+      sauber von einander getrennt gespeichert werden.
+      \subsection{Konfigurieren des Features FileTable}
+        Für den transaktionsbasierten Zugriff mit TSQL sind keine weiteren
+        vorbereitenden Schritte notwendig, da sich FileTables wie ganz normale
+        Tabellen verhalten. Lediglich der externe Zugriff über das
+        Dateisystemmuss noch konfiguriert werden.
+        \subsubsection{Konfigurationstätigkeiten auf Datenbankebene}
+          Nachdem das Filestream-Feature auf Instanz-Ebene bereits aktiviert und
+          konfiguriert wurde, müssen auf Datenbankebene noch zwei weitere
+          Eigenschaften eingestellt werden.
+          \begin{itemize}
+              \item \textbf{Nicht transaktionaler Zugriff}: Der externe Zugriff
+              auf die Filestream-Daten einer Datenbank kann in drei Stufen
+              geregelt werden:
+              \begin{itemize}
+                  \item \textbf{Off}: Kein externe Zugriff
+                  \item \textbf{ReadOnly}: Nur lesender Zugriff
+                  \item \textbf{Full}: Lese- und Schreibzugriff
+              \end{itemize}
+              \item \textbf{Database-level directory}: Für jede Datenbank
+              muss ein eigener Verzeichnisknotenpunkt angegeben werden. Dies
+              geschieht in den Eigenschaften der Datenbank.
+              \bild{Der Datenbankpfad in der
+              Filestream-Freigabe}{database_level_filestream_directory}{1.3}
+          \end{itemize}
+          \begin{merke}
+            Wird eine neue Datenbank angelegt, enthält diese kein Database-level
+            Directory. Dieses muss im Nachhinein durch eine \languagemssql{ALTER
+            DATABASE}-Anweisung oder mittels der grafischen Oberfläche angegeben
+            werden.
+          \end{merke}
+          \beispiel{admin04_03} zeigt, wie die Filestream-Einstellungen einer
+          Datenbank mit Hilfe von SQL geändert werden können.
+          \begin{lstlisting}[language=ms_sql,
+          caption={Filestream-Einstellungen einer Datenbank ändern},
+          label=admin04_03]
+USE [Bank_2014]
+GO
+
+ALTER DATABASE Bank_2014
+SET FILESTREAM ( NON_TRANSACTED_ACCESS = FULL,
+                 DIRECTORY_NAME = N'directory_name' );
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{gg509097}
+          \end{literaturinternet}
+\clearpage
+          Für die Einrichtung eines Database-Level Directory gelten die
+          folgenden Anforderungen:
+          \begin{itemize}
+              \item Das Verzeichnis kann solange geändert werden, wie die
+              Datenbank noch keine FileTable enthält.
+              \item Jede Datenbank muss ihr eigenes Verzeichnis haben.
+              \item Wird eine vorhandene Datenbank auf SQL Server 2014
+              aktualisiert, wird der Wert für \identifier{directoy\_name} auf
+              NULL zurückgesetzt
+              \item Beim Löschen der Datenbank werden alle Inhalte im
+              Database-Level Directory gelöscht.
+          \end{itemize}
+        \subsubsection{Der Aufbau des externen Zugriffspfades}  
+          Der externe E/A-Zugriff auf eine FileTable wird
+          mit Hilfe einer virtuellen Netzwerkfreigabe geregelt. Die gesamte
+          Verzeichnisstruktur der Freigabe wird innerhalb der Datenbank
+          gespeichert und über das Betriebssystem bereitgestellt. Der UNC-Pfad der
+          Freigabe baut sich wie folgt auf:
+        \begin{itemize}
+          \item \oscommand{\textbackslash\textbackslash servername}: Der
+          DNS-Name des Datenbankservers
+          \item \oscommand{Instanz-Level-Freigabename}: Der Name der
+          Freigabe auf Instanz-Ebene. Dieser wird im SQL Server
+          Configuration Manager angegeben. Standardmäßig lautet er
+          \oscommand{MSSQLSERVER}. Um diesen Wert ändern zu können, muss der
+          SQL Server-Dienst neugestartet werden.
+          \bild{Die Registerkarte FILESTREAM}{filestream_register_card}{1.5}
+          \item \oscommand{Database-Level directory}
+          \item \oscommand{FileTable directory}: Ein Verzeichnis, das beim
+          anlegen der FileTable angegeben werden muss.
+        \end{itemize}
+        Der vollständige UNC-Pfad (Namespace) lautet somit:
+          
+        \begin{small}
+        \oscommand{\textbackslash\textbackslash servername\textbackslash
+        Instanz-Level-Freigabename\textbackslash Database-level
+        directory\textbackslash FileTable-directory}
+        \end{small}
+        \begin{literaturinternet}
+          \item \cite{gg492087}
+        \end{literaturinternet}
+      \subsection{Anlegen und Ändern von FileTables}
+        \subsubsection{Anlegen einer FileTable}
+          Eine FileTable ist nicht nur wegen ihrer Funktionalität eine
+          besondere Tabelle, sondern auch aufgrund der Tatsache, dass sie ein
+          festes Spaltenschema besitzt. Das bedeutet, dass beim Anlegen einer
+          FileTable keine Spaltendefinition angegeben werden muss bzw. angegeben
+          werden kann. Lediglich drei Angaben sind erlaubt:
+          \begin{itemize}
+            \item \textbf{FILETABLE\_DIRECTORY}: Ein Verzeichnis, unter dem
+            die Dateien der FileTable abgelegt werden. Dieses Verzeichnis ist
+            Teil des externen Zugriffspfades für die FileTable.
+            \item \textbf{FILETABLE\_COLLATE\_FILENAME}: Eine Sortierung für
+            die Dateinamen. Die benutzte Sortierung darf nicht nach Groß- und
+            Kleinschreibung unterscheiden, damit die
+            Windows-Dateisystemsemantik nicht verletzt wird.
+            \item Die Bezeichner für die drei festgelegten Constraints einer
+            FileTable:
+            \begin{itemize}
+              \item \textbf{FILETABLE\_PRIMARY\_KEY\_CONSTRAINT\_NAME}
+              \item \textbf{FILETABLE\_STREAMID\_UNIQUE\_CONSTRAINT\_NAME}
+              \item \textbf{FILETABLE\_FULLPATH\_UNIQUE\_CONSTRAINT\_NAME}
+            \end{itemize} 
+          \end{itemize}
+        \subsubsection{Beschränkungen für Pfad- und Dateinamen}             
+          Beim Anlegen von Dateien und Verzeichnissen innerhalb einer FileTable
+          muss folgendes beachtet werden:
+          \begin{itemize}
+              \item Der Verzeichnisname kann maximal 255 Zeichen aufweisen. 
+              \item Er muss den Anforderungen an einen gültigen
+              Dateisystem-Verzeichnisnamen genügen.
+              \item Er muss für jede FileTable eindeutig sein.
+              \item Wird kein Verzeichnisname angegeben, wird der Name der
+              FileTable als Verzeichnisname genutzt.
+              \item Eine FileTable kann maximal 15 Verzeichnisebenen enthalten.
+              Wird diese Maximalzahl erreicht, kann die unterste Ebene keine
+              Dateien mehr enthalten, da diese als weitere Ebene gelten würden.
+              \item Der Windows Explorer und viele andere Anwendungsprogramme
+              geben eine maximale Dateinamenslänge von 260 Zeichen vor. Mit
+              Hilfe einer FileTable ist es möglich, Dateinamen zu erzeugen, die
+              wesentlich länger sind. Solche Dateien können weder durch den
+              Explorer noch durch andere Anwendungsprogramm angezeigt werden.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{gg492087}
+          \end{literaturinternet}
+          \beispiel{admin04_04} zeigt, wie mit Hilfe des \languagemssql{CREATE
+          TABLE AS FileTable}-Statements eine FileTable angelegt wird.
+          \begin{lstlisting}[language=ms_sql, caption={Anlegen einer Filetable},
+          label=admin04_04]
+USE [Bank_2014]
+GO
+
+CREATE TABLE ExternalResources AS FileTable 
+WITH (
+  FileTable_Directory = 'ExternalResources',
+  FileTable_Collate_Filename = Latin1_General_CI_AS
+);
+GO
+
+          \end{lstlisting}
+          Um eine Liste aller in der Datenbank vorhandenen FileTables zu
+          erhalten, kann die View \identifier{sys.filetables} abgefragt werden.
+          \begin{literaturinternet}
+            \item \cite{gg509088}
+          \end{literaturinternet}
+        \subsubsection{Das Schema einer FileTable}
+          Eine FileTable ist eine ganz gewöhnliche SQL Server-Tabelle mit der
+          Einschränkung, dass ihr Schema fest vorgegeben ist. Die vier
+          wichtigsten Spalten aus diesem Schema sind in
+          \tabelle{filetableschema} zu sehen.
+          \begin{center}
+          \label{filetableschema}
+
+            \begin{small}
+            \tablefirsthead {
+              \hline
+              \multicolumn{1}{|l}{\textbf{Bezeichner}} &
+              \multicolumn{1}{|l}{\textbf{Datentype}} &
+              \multicolumn{1}{|l|}{\textbf{Beschreibung}}\\
+              \hline
+            }
+            \tablehead{
+            }
+            \tabletail {
+              \hline
+            }
+            \tablelasttail {
+              \hline
+            }
+              \begin{supertabular}{|l|l|p{6.5cm}|}
+                stream\_id & uniqueidentifier ROWGUIDCOL & Eindeutiger
+                Schlüsselwert \\
+                \hline
+                file\_stream & VARBINARY(max) FILESTREAM & Der binäre Content
+                der FileTable (BLOB) \\
+                \hline
+                name & NVARCHAR(255) & Der Name der Datei \\
+                \hline
+                path\_locator & hierarchyid & Logische Position der Datei
+                innerhalb des SQL Server Namespaces \\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+          Die \identifier{path\_locator}-Spalte ist der Primärschlüssel einer
+          FileTable. Sie besitzt den spezielle Datentyp
+          \identifier{hierarchyid}, der mit dem SQL Server 2008 eingeführt
+          wurde. Mit der Hilfe dieser Spalte ist es möglich, die Position des
+          BLOBs im Dateisystem zu ermitteln, um dann auf die Datei zuzugreifen.
+          
+          Zusätzlich zu diesen vier Spalten existieren noch 13 weitere, deren
+          Werte automatisch berechnet werden.
+          \begin{literaturinternet}
+            \item \cite{gg492084}
+            \item \cite{tallan20120101iafsiad}
+          \end{literaturinternet}
+        \subsubsection{Ändern und Löschen einer FileTable}
+          Da FileTables ein festgelegtes Schema haben, kann der Administrator
+          auch keine Änderung daran vornehmen. Lediglich die Erstellung von
+          Indizes, Triggern und Constraints, sowie einige andere, weniger
+          erwähnenswerte Dinge sind möglich.
+          
+          Gelöscht wird eine FileTable mit Hilfe des \languagemssql{DROP
+          TABLE}-Statements. Zu beachten ist, dass der gesamten
+          Dateisysteminhalt der FileTable mitgelöscht wird.            
+      \subsection{Benutzen von FileTables}
+        \subsubsection{Befüllen mit Daten}
+          Eine FileTable kann auf unterschiedliche Art und Weise mit Daten
+          befüllt werden. Im einfachsten Falle werden Dateien einfach mit Hilfe
+          des externen Zugriffspfades in die FileTable hineinkopiert. Ein
+          solcher Zugriff ist jedoch nicht durch das Transaktionskonzept der
+          Datenbank abgesichert. Soll ein transaktionaler Zugriff erfolgen,
+          bieten sich Tools wie z. B. \oscommand{bcp} an. Sollte der
+          Zugriffspfad einer FileTable nicht bekannt sein, kann dieser mit der
+          Funktion \identifier{filetablerootpath} ermittelt werden.
+          \begin{lstlisting}[language=ms_sql, caption={Zugriffspfad zu einer
+          FileTable ermitteln}, label=admin04_05a]
+USE [Bank_2014]
+GO
+
+SELECT FileTableRootPath('ExternalResources') AS Rootpath
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead{
+                \multicolumn{1}{l}{\textbf{Rootpath}} \\
+                \cmidrule(l){1-1}
+              }
+              \tablehead{}
+              \tabletail{
+                \multicolumn{1}{l}{\textbf{1 Zeile}} \\
+              }
+              \tablelasttail{
+                \multicolumn{1}{l}{\textbf{1 Zeile}} \\
+              }
+              \begin{mssql}
+                \begin{supertabular}{l}
+                 \textbackslash\textbackslash
+                 FEA11-119SRV12\textbackslash
+                 MSSQLSERVER\textbackslash bank\_2014\textbackslash
+                 ExternalResources
+                 \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+          
+          Müssen Dateien aus einer normalen Tabelle (gespeicherte Pfade und
+          Dateinamen) in eine FileTable migriert werden, können SQL-Anweisungen
+          wie das \languagemssql{OPENROWSET} oder das \languagemssql{INSERT
+          INTO ... SELECT * FROM} genutzt weren.
+           \begin{lstlisting}[language=ms_sql, caption={Mit TSQL eine Datei in
+           eine FileTable einfügen}, label=admin04_05b]
+USE [Bank_2014]
+GO
+
+INSERT INTO ExternalResources (name, File_Stream)
+SELECT 'bank_sql_server.bak', *
+FROM   OPENROWSET(BULK N'H:\bank_sql_server.bak', SINGLE_BLOB) AS Content
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{sqlarticlesagwwf}
+          \end{literaturinternet}
+        \subsubsection{Den transaktionalen Zugriff aktivieren/deaktivieren}
+          Im Falle dessen, dass Wartungsarbeiten an einer Datenbank mit aktiven
+          FileTables durchgeführt werden müssen, kann es notwendig sein, den
+          nicht transaktionalen Zugriff auf die FileTables vorübergehend zu
+          deaktiven, da der Administrator anderenfalls keinen exklusiven Zugriff
+          auf die Datenbank erhalten kann.
+          
+          \beispiel{admin04_05} zeigt, wie der nicht transaktionale Zugriff auf
+          alle FileTables einer Datenbank deaktiviert bzw. reaktiviert wird.
+          \begin{lstlisting}[language=ms_sql, caption={Deaktivieren und
+          reaktivieren des Zugriffs auf FileTables}, label=admin04_05]
+USE [Bank_2014]
+GO
+
+-- Deactivate Access
+ALTER DATABASE bank_2014
+SET FILESTREAM ( NON_TRANSACTED_ACCESS = OFF );
+GO
+
+-- Reactivate Access
+ALTER DATABSE bank_2014
+SET FILESTREAM ( NON_TRANSACTED_ACCESS = FULL );
+GO
+          \end{lstlisting}
+          Das Kommando in \beispiel{admin04_05} hat den Nachteil, dass
+          es blockiert, falls noch offene Dateihandles in einer der FileTables
+          sind. Entweder müssen die Benutzer alle Dateien schließen
+          oder der Administrator muss den Zugriff der Benutzer auf die Dateien
+          unterbrechen.
+          \begin{merke}
+            Beim schließen von offenen Dateihandles durch den Administrator kann
+            es passieren, dass Benutzer nicht gespeicherte Informationen
+            verlieren.
+          \end{merke}
+          Wird das \languagemssql{ALTER DATABASE}-Komanndo um den Zusatz
+          \languagemssql{WITH ROLLBACK IMMEDIATE} ergänzt, werden automatisch
+          alle offenen Dateihandles geschlossen.
+          \begin{lstlisting}[language=ms_sql, caption={Deaktivieren und
+          des Zugriffs auf FileTables und gleichzeitiges Schließen aller
+          offenen Dateihandles}, label=admin04_06]
+USE [Bank_2014]
+GO
+
+-- Deactivate Access
+ALTER DATABASE bank_2014
+SET FILESTREAM ( NON_TRANSACTED_ACCESS = OFF )
+WITH ROLLBACK IMMEDIATE;
+GO
+          \end{lstlisting}
+        \subsubsection{Offene Dateihandles beenden}
+          Manchmal kann es notwendig werden, ein offenes Dateihandle zu
+          schließen, z. B. dann, wenn dies aufgrund eines Fehlers nicht
+          automatisch geschieht. Mit Hilfe der Dynamic Management View
+          \identifier{sys.dm\_filestream\_non\_transacted\_handles} können alle
+          offenen handles abgefragt werden, um sie dann unter Zuhilfenahme der
+          Stored Procedure \identifier{sp\_kill\_filestream\_non\_transacted\_handle} zu
+          schließen.
+          \begin{lstlisting}[language=ms_sql, caption={Abfragen der offenen
+          Filestream-Dateihandles}, label=admin04_07]
+USE [Bank_2014]
+GO
+
+SELECT database_id, object_id, handle_id
+FROM   sys.dm_filestream_non_transacted_handles;
+GO 
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead{
+                \multicolumn{1}{l}{\textbf{database\_id}} &
+                \multicolumn{1}{l}{\textbf{object\_id}} &
+                \multicolumn{1}{l}{\textbf{handle\_id}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail{
+                \multicolumn{2}{l}{\textbf{3 Zeilen ausgew\"ahlt}} \\
+              }
+              \tablelasttail{
+                \multicolumn{2}{l}{\textbf{3 Zeilen ausgew\"ahlt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{lll}
+                  0 & 0         & 235 \\
+                  8 & 581577110 & 525 \\
+                  8 & 581577110 & 491 \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Zum schließen des Handles wird der Wert der Spalte
+          \identifier{handle\_id} benötigt.
+          \begin{lstlisting}[language=ms_sql, caption={Schließen eines offenen
+          Filestream-Dateihandles}, label=admin04_08]
+USE [Bank_2014]
+GO
+
+EXEC §sp_kill_filestream_non_transacted_handles§ @handle_id = 525;
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{ff929106}
+            \item \cite{ff929168}
+          \end{literaturinternet}

@@ -1,0 +1,38 @@
+      \item Ändern Sie die Parameter der Archivierung wie folgt:
+        \begin{center}
+          \begin{small}
+            \tablefirsthead{
+              \multicolumn{1}{c}{\textbf{Optional}} &
+              \multicolumn{1}{c}{\textbf{/u02}} &
+              \multicolumn{1}{c}{\textbf{/u03}} &
+              \multicolumn{1}{c}{\textbf{/u04}} &
+              \multicolumn{1}{c}{\textbf{/u05}} \\
+              \hline
+            }
+            \tablefirsthead{
+              \multicolumn{1}{c}{\textbf{Optional}} &
+              \multicolumn{1}{c}{\textbf{/u02}} &
+              \multicolumn{1}{c}{\textbf{/u03}} &
+              \multicolumn{1}{c}{\textbf{/u04}} &
+              \multicolumn{1}{c}{\textbf{/u05}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \tablelasttail {
+              \hline
+            }
+            \begin{supertabular}{| >{\centering\arraybackslash}m{1cm}| >{\centering\arraybackslash}m{2cm}| >{\centering\arraybackslash}m{2cm}| >{\centering\arraybackslash}m{2cm}| >{\centering\arraybackslash}m{2cm}|}
+               Ja &  dest 1 &  - &  - & - \\
+              \hline
+               Nein &  - &  dest 2 &  - & - \\
+              \hline
+               Ja &  - &  - &  dest 3 & - \\
+            \end{supertabular}
+          \end{small}
+        \end{center}
+        \begin{itemize}
+          \item Die Archivierung muss an mindestens zwei Speicherorten erfolgreich sein.
+          \item Das Dateinamensformat der Archive Log Files muss wie folgt aufgebaut sein: \oscommand{archive\_\%d\_\%t\_\%s\_\%r.arc}
+        \end{itemize}

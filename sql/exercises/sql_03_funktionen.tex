@@ -1,0 +1,280 @@
+\clearpage
+    \section{Übungen - Funktionen}
+      \begin{enumerate}
+        \item Lassen Sie das aktuelle Datum auf dem Bildschirm ausgeben und
+        benennen Sie die Spalte mit \enquote{Datum}.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{Datum}} \\
+              \cmidrule(l){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{l}
+                12.05.13 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Lassen Sie das aktuelle Datum mit Uhrzeit auf dem Bildschirm
+        ausgeben und benennen Sie die Spalte mit \enquote{Datum/Uhrzeit}.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{Datum/Uhrzeit}} \\
+              \cmidrule(l){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{l}
+                12.05.13 10:58:45,439419 +02:00 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, welche die Mitarbeiternummer, den
+        Nachnamen, das Gehalt und ein um 3,5 \% erhöhtes Gehalt für jeden
+        Mitarbeiter anzeigt. Das erhöhte Gehalt soll als ganze Zahl und mit
+        dem Spaltenalias \enquote{Neues Gehalt} ausgegeben werden!
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{GEHALT}} &
+              \multicolumn{1}{r}{\textbf{Neues Gehalt}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rlrr}
+                1 & Winter & 88000 & 91080 \\
+                2 & Werner & 50000 & 51750 \\
+                3 & Seifert & 50000 & 51750 \\
+                4 & Schwarz & 30000 & 31050 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Verändern Sie die Abfrage, aus der vorangegangenen Aufgabe so,
+        dass eine zusätzliche Spalte hinzugefügt wird, die die Differenz
+        zwischen dem alten und dem erhöhten Gehalt anzeigt. Benennen Sie die
+        Spalte mit \enquote{Gehaltserhoehung}.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{GEHALT}} &
+              \multicolumn{1}{r}{\textbf{Neues Gehalt}} &
+              \multicolumn{1}{r}{\textbf{Gehaltserhöhung}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(r){5-5}
+            }
+            \tablehead{}
+            \tabletail {
+%               \multicolumn{5}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{5}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rlrrr}
+                1 & Winter & 88000 & 91080 & 3080 \\
+                2 & Werner & 50000 & 51750 & 1750 \\
+                3 & Seifert & 50000 & 51750 & 1750 \\
+                4 & Schwarz & 30000 & 31050 & 1050 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Zeigen Sie die Nachnamen und die Länge der Nachnamen aller
+        Mitarbeiter an, deren Nachname mit einem der Buchstaben \enquote{J},
+        \enquote{M} oder \enquote{S} beginnt. Die Spalten sollen, wie in der
+        Lösung zu sehen ist, beschriftet sein. Die Nachnamen müssen in
+        Großbuchstaben ausgegeben werden. Sortieren Sie die Abfrage in
+        absteigender Reihenfolge nach den Nachnamen! 
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{Nachname}} &
+              \multicolumn{1}{r}{\textbf{Laenge}} \\
+              \cmidrule(l){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{23 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{23 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lr}
+                SINDERMANN & 10 \\
+                SINDERMANN & 10 \\
+                SIMON & 5 \\
+                SIMON & 5 \\
+                SIMON & 5 \\
+                SEIFERT & 7 \\
+                SEIFERT & 7 \\
+                SCHWARZ & 7 \\
+                SCHWARZ & 7 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Zeigen Sie für jeden Mitarbeiter den Nachnamen an, sein Geburtsdatum und seit wie vielen Monaten dieser bereits 18 Jahre alt ist        (gerundet auf zwei Stellen, nach dem Komma). Benennen Sie die Spalte mit den Monaten: \enquote{Alter in Monaten}. Sortieren Sie die Abfrage in
+        aufsteigender Reihenfolge nach der Spalte \enquote{Alter in Monaten}.
+
+        \begin{merke}
+          Zur Lösung dieser Aufgabe mit Oracle soll die Funktion \languageorasql{MONTHS_BETWEEN} herangezogen werden, deren Syntax der Oracle Onlinedokumentation entnommen werden kann.
+        \end{merke}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{GEBURTSDATUM}} &
+              \multicolumn{1}{r}{\textbf{Alter in Monaten}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+%               \multicolumn{3}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llr}
+                Krüger & 31.05.93 & 23,4 \\
+                Walther & 07.01.93 & 28,18 \\
+                Lehmann & 07.11.92 & 30,18 \\
+                Keller & 04.11.92 & 30,27 \\
+                Schwarz & 27.06.92 & 34,53 \\
+                Weber & 10.06.92 & 35,08 \\
+                Peters & 13.05.92 & 35,98 \\
+                Köhler & 05.05.92 & 36,24 \\
+                Lorenz & 13.12.91 & 40,98 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Ermitteln Sie Vorname, Nachname und Geburtsdatum der Mitarbeiter,
+        die mindestens 1 Jahr und 4 Monate nach dem \enquote{07.05.1978} geboren
+        sind. Sortieren Sie die Abfrage in absteigender Reihenfolge nach dem
+        Geburtsdatum.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{GEBURTSDATUM}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{81 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{81 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lll}
+                Emma & Krüger & 31.05.93 \\
+                Lina & Walther & 07.01.93 \\
+                Johannes & Lehmann & 07.11.92 \\
+%                 Anna & Keller & 04.11.92 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Zeigen Sie für jeden Mitarbeiter, der zum Zeitpunkt der Ausführung dieser Abfrage mindestens 35 Jahre alt ist, dessen Mitarbeiter\_ID, das Geburtsdatum und den Wochentag seiner Geburt an. Beschriften Sie die Spalten, wie in der Lösung vorgegeben. Ordnen Sie die Abfrage in aufsteigender Reihenfolge nach dem Wochentag, beginnend beim ersten Tag der Woche!
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+              \multicolumn{1}{l}{\textbf{GEBURTSDATUM}} &
+              \multicolumn{1}{l}{\textbf{Wochentag}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{11 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{11 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rll}
+                42 & 31.01.77 & MONTAG     \\
+                90 & 14.12.76 & DIENSTAG   \\
+                36 & 14.02.78 & DIENSTAG   \\
+                2 & 03.11.77 & DONNERSTAG \\
+                51 & 19.02.76 & DONNERSTAG \\
+%                 67 & 08.10.76 & FREITAG    \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, die für alle Mitarbeiter deren
+        Nachnamen und die Bankfiliale\_ID anzeigt. Wenn ein Mitarbeiter in
+        keiner Bankfiliale tätig ist, soll \enquote{Keine Bankfiliale}
+        angezeigt werden.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{BANKFILIALE}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Möller & Keine Bankfiliale \\
+                Winter & Keine Bankfiliale \\
+                Meier & Keine Bankfiliale \\
+                Sindermann & Keine Bankfiliale \\
+                Schwarz & Keine Bankfiliale \\
+                Werner & Keine Bankfiliale \\
+                Krüger & 1 \\
+                Peters & 1 \\
+                Kipp & 1 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+      \end{enumerate}

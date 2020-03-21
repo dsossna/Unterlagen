@@ -1,0 +1,502 @@
+\chapter{Einführung in die Oracle Datenbankarchitektur}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Oracle und die Client-Server-Architektur}
+      Oracle-Datenbanken sind dazu geschaffen, um riesige Datenmengen zu verwalten und diese in einer Multi-User-Umgebung einer großen Nutzeranzahl zur Verfügung zu stellen. Eine solche Umgebung kann auf unterschiedliche Arten realisiert werden. Die einfachste davon ist eine  Client-Server-Architektur, bestehend aus:
+      \begin{itemize}
+        \item Client
+        \item Netzwerk
+        \item Datenbankserver
+      \end{itemize}
+
+      \bild{Oracle Datenbank\-architektur}{datenbankarchitektur1}{0.8}
+
+      \subsection{Der Client}
+        \subsubsection{Nutzerprozess}
+          Eine Client-Anwendung, die sich mit einer Oracle-Datenbank verbindet, wird als \enquote{Nutzerprozess} bezeichnet. Beispiele für solche Nutzerprozesse sind:
+          \begin{itemize}
+            \item SQL*Plus
+            \item SQL*Developer
+            \item J*Developer
+            \item Enterprise Manager Console
+          \end{itemize}
+        \subsubsection{Connection}
+          Eine Connection ist eine physikalische Verbindung zwischen einem Client und dem Datenbankserver. Sind Client und Datenbankserver eins, wird die Connection durch einen Interprozesskommunikationsmechanismus (IPC) erzeugt. Bei zwei unterschiedlichen Rechnern, wird die Connection über ein Netzwerkprotokoll, wie beispielsweise TCP/IP realisiert.
+
+          \begin{merke}
+            Eine Connection stellt die Grundlage für eine Verbindung mit einer Oracle-Datenbank dar.
+          \end{merke}
+        \subsubsection{Session}
+          Während die Connection eine physikalische Verbindung zwischen dem Client und dem Datenbankserver darstellt, ist eine Session eine Kommunikationsverbindung zwischen dem Nutzerprozess und der Datenbank. Der Aufbau einer Session erfolgt, sobald sich ein Benutzer bei der Datenbank authentifiziert hat.
+
+          \begin{merke}
+            Eine Session stellt einen Zugang zur Datenbank dar.
+          \end{merke}
+
+          Oracle ist in der Lage, mehrere Sessions über ein und die selbe physikalische Connection zu öffnen. Zum Beispiel kann sich ein Nutzer mit Name/Passwort \enquote{SCOTT/TIGER} beliebig oft von einem Rechner aus, an der Datenbank anmelden.
+
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur2}{0.8}
+
+      \subsection{Der Datenbankserver}
+        \subsubsection{Instanz und Datenbank}
+          Ein Oracle-Datenbankserver besteht aus zwei großen Teilen:
+          \begin{itemize}
+            \item \textbf{Instanz}: Die Instanz ist das Herzstück einer Oracle-Datenbank. Es handelt sich dabei um eine Menge von Arbeitsspeicherstrukturen und Prozessen, die ein schnelles und effizientes Arbeiten mit den Daten ermöglichen. Sie gliedern sich grob in drei Teile: System Global Area, Program Global Area und Hintergrundprozesse.
+% \clearpage
+            \item \textbf{Datenbank}: Dies ist die Menge aller Dateien, aus denen der Oracleserver besteht. Es sind sowohl die Installationsdateien der Oracle-Software, als auch die Datendateien gemeint, welche die Nutzdaten enthalten, sowie alle weiteren Dateien.
+          \end{itemize}
+
+          \begin{merke}
+            Die Begriffe Instanz und Datenbank, werden oft als Synonyme verwendet. Tatsächlich handelt es sich aber um zwei sehr unterschiedliche Dinge.
+          \end{merke}
+          Während eine Instanz immer nur auf genau eine Datenbank zugreifen kann, kann eine Datenbank gleichzeitig von mehreren Instanzen gemountet\footnote{engl. to mount = anschließen} werden.
+
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur3}{0.8}
+
+        \subsubsection{Serverprozess}
+          Ein Serverprozess stellt das serverseitige Pendant zu einem Nutzerprozess dar. Er ist die eigentliche \enquote{Arbeitsmaschine}, nimmt die Anforderungen eines Nutzerprozesses entgegen und verarbeitet diese innerhalb der Instanz.
+
+          \begin{merke}
+            Ein Nutzerprozess benötigt immer einen Serverprozess um arbeitsfähig zu sein. Dadurch wird gewährleistet, dass keine Clientanwendung direkt in der Datenbank arbeitet und das somit auch bestimmte Regeln gewahrt bleiben.
+          \end{merke}
+
+          Um besser erklären zu können, was ein Serverprozess ist, soll als bildliches Beispiel ein Ober in einem Restaurant dienen. Kein Gast geht in einem Lokal in die Küche und bereitet sich sein Essen selbst zu. Statt dessen wird er bei einem Ober (dem Serverprozess) eine Bestellung aufgeben, welcher diese dann an den Koch weiterreicht.
+
+          Bei ihm  angekommen, wird die Bestellung zubereitet bzw. im Sinne einer Datenbank werden die geforderten Datensätze zusammengestellt. Anschließend hat der Ober noch die Aufgabe, das Essen / das Ergebnis dem Gast zu servieren.
+
+          Der einzige Haken an diesem Beispiel ist, dass der Serverprozess Ober und Küchenpersonal in Personalunion ist. Er nimmt Anforderungen entgegen, verarbeitet diese innerhalb der Instanz und reicht das Ergebnis an den Nutzerprozess zurück.
+
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur4}{1}
+
+     \section{Die System Global Area (SGA)}
+        Die System Global Area (kurz SGA) ist eine Speicherstruktur mit variabler Größe innerhalb einer Instanz. Alle von den Serverprozessen ausgeführten Arbeitsschritte benötigen in irgendeiner Form die SGA. Sie enthält Nutz- und Metadaten, sowie andere Kontrollinformationen zu einer bestimmten Datenbank. Die Erstellung der SGA erfolgt automatisch beim Instanzstart. Durch das Herunterfahren einer Instanz wird die SGA zerstört.
+
+        \bild{Oracle Datenbank\-architektur}{datenbankarchitektur5}{1}
+
+        Die SGA teilt sich in verschiedene Regionen, mit unterschiedlichem Inhalt.
+
+      \subsection{Die Fixed SGA}
+        Ein sehr kleiner Teil der SGA wird als \enquote{Fixed SGA} bezeichnet. Hierbei handelt es sich um einen betriebssystemabhängigen, unveränderlichen Teil der SGA, der als eine Art \enquote{Einstiegspunkt} von allen Serverprozessen genutzt wird. Er enthält die Speicheradressen anderer Strukturen innerhalb der SGA. Der Datenbankadministrator hat keinerlei Kontrolle über diesen Teil der SGA.
+
+      \subsection{Der Database Buffer Cache}
+        Der Database Buffer Cache ist für die Zwischenspeicherung der zuletzt benutzten Oracleblöcke zuständig. Da eine theoretische Chance besteht, dass ein Block der bereits einmal benötigt wurde, auch noch weitere Male benötigt wird, kann so die Anzahl der Zugriffe auf den Datenträger reduziert und die Arbeitsgeschwindigkeit erhöht werden.
+
+        \bild{Oracle Datenbank\-architektur}{datenbankarchitektur6}{0.8}
+
+        Neue oder geänderte Daten werden nicht sofort auf den Datenträger geschrieben. Um die Anzahl der Festplattenzugriffe zu reduzieren und somit die Performance der Datenbank zu steigern, werden die Daten im Database Buffer Cache gesammelt. Abhängig von bestimmten Kriterien, wird der Inhalt des Caches dann auf den Datenträger geschrieben.
+      \subsection{Der Shared Pool}
+        Der Teil der SGA, der \enquote{Shared Pool} genannt wird, ist für die
+        Speicherung von Informationen bezüglich ausgeführter SQL-Statements
+        zuständig. Er gliedert sich seit Oracle 11g in drei Bereiche:
+        \begin{itemize}
+          \item Library Cache
+          \item Data Dictionary Cache
+          \item Result Cache
+        \end{itemize}
+        \bild{Oracle Datenbank\-architektur}{datenbankarchitektur7}{0.8}
+        \subsubsection{Der Library Cache}
+          Der Library Cache enthält Informationen über alle ausgeführten
+          SQL- und PL/SQL-Statements. Setzt ein Nutzer ein SQL-Statement ab,
+          werden Informationen darüber in Form eines Ausführungsplanes im
+          Library Cache abgelegt. Wird exakt das gleiche Statement von einem
+          anderen Nutzer ausgeführt, können die vorhanden Informationen im
+          Library Cache wiederverwendet werden, was die
+          Ausführungsgeschwindigkeit wesentlich erhöht.
+
+          Oracle nutzt für jedes SQL-Statement soviel Speicherplatz im Shared
+          Pool wie notwendig. Ist kein Platz mehr für weitere Informationen
+          vorhanden, wird nach einem modifizierten LRU-Algorithmus wieder
+          Speicher freigegeben.
+
+          \begin{merke}
+            Die Abkürzung LRU steht für \enquote{Least Recently Used}, was
+            soviel bedeutet wie: \enquote{Am wenigsten benötigt}. Ein
+            LRU-Algorithmus hat die Aufgabe die am wenigsten benötigten
+            Informationen aus einer Speicherstruktur zu entfernen, um so
+            Speicherplatz freizugeben.
+          \end{merke}
+        \subsubsection{Der Dictionary Cache}
+          Das Data Dictionary ist eine Sammlung von Datenbanktabellen und Views, die Metadaten über die gesamte Datenbank enthalten. Oracle muss ständig im laufenden Betrieb auf dieses Data Dictionary zugreifen. Um häufige Datenträgerzugriffe zu vermeiden, werden benötigte Informationen aus dem Data Dictionary im Data Dictionary Cache zwischengespeichert.
+        \subsubsection{Der Result Cache}
+          Beim Result Cache handelt es sich um ein neues Feature der Oracle Version 11g. Dieser Cache speichert keine Datenblöcke, sondern Ergebniszeilen. Der Vorteil dieser Vorgehensweise liegt auf der Hand.
+
+          Wird ein SQL-Statement häufig ausgeführt, ohne das sich die Datenbasis ändert, kann das Ergebnis direkt aus dem Result Cache übermittelt werden. Sinnvoll genutzt werden kann der Result Cache immer dann, wenn:
+          \begin{itemize}
+            \item SQL-Abfragen sehr rechenintensiv sind,
+            \item das Ergebnis einer SQL-Abfrage nahezu unveränderlich ist,
+            \item sehr viel Arbeitsspeicher vorhanden ist.
+          \end{itemize}
+      \subsection{Der Redo Log Buffer}
+        Für jede Änderung, die an einer Oracle-Datenbank durchgeführt wird, wird ein sogenannter Redo Record erzeugt. Ein Redo Record protokolliert jeweils eine Änderung und macht diese somit nachvollziehbar. Durch Redo Records wird Datensicherheit dahingehend gewährleistet, dass im Falle eines Crashes alle protokollierten Änderungen wieder in die Datenbank eingepflegt werden können.
+
+        \bild{Oracle Datenbank\-architektur}{datenbankarchitektur8}{1}
+
+        Im Redo Log Buffer werden die zuletzt erzeugten Redo Records zwischengespeichert. Er ist als Ringpuffer (beim Erreichen des letzten Eintrags wird der erste Eintrag wieder über\-schrie\-ben) organisiert. In bestimmten Zeitabständen oder wenn andere Bedinungen erfüllt sind, wird der Inhalt des Redo Log Buffers in die Redo Log Dateien geschrieben.
+
+    \section{Die Program Global Area (PGA)}
+      Während die SGA für alle Nutzer relevante Informationen beinhaltet, ist die PGA ein Speicherbereich, der sessionabhängige Informationen enthält. Das heißt jeder Nutzer hat seine eigene PGA. Eine PGA wird beim Starten eines Serverprozesses angelegt und gehört zu genau einem bestimmten Serverprozess.
+
+      \bild{Die Program Global Area}{pga}{0.8}
+
+      \abbildung{pga} zeigt den Aufbau einer PGA. Sie besteht im Wesentlichen aus einem Bereich namens \enquote{Stackspace}. Dieser beinhaltet Informationen über die Nutzersession, verschiedene Variablen der Nutzersession, private Informationen zur Abarbeitung von SQL-Statements und eine Workarea. Die Workarea ist ein Bereich, in dem Hash- und Sortieroperationen durchgeführt werden.
+
+      \begin{literaturinternet}
+        \item \cite{CNCPT1237}
+      \end{literaturinternet}
+      \section{Memory Management}
+        \label{memorymanagement}
+        Unter dem Begriff Memory Management werden alle Aufgaben und Einstellungen zusammengefasst, die sich um die Dimensionierung der Speicherkomponenten von SGA und PGA drehen. Bis zur Version Oracle 9i konnte das Memory Management nur manuell durch den Administrator durchgeführt werden. Diese Technik wurde als \enquote{Manual Shared Memory Management} bezeichnet. Der Administrator musste die Größen für alle SGA-Komponenten manuell eingeben und, falls notwendig, sie den aktuellen Gegebenheiten anpassen. Dies ermöglichte dem Admin zwar eine sehr genaue Kontrolle über die SGA und alle PGAs, jedoch konnten durch schlechte Einstellungen auch viele Fehler gemacht und die Performance der Instanz stark gesenkt werden.
+
+        Mit Oracle 10g wurde dann das \enquote{Automatic Shared Memory Management} eingeführt, wodurch ein automatisches Tuning der SGA-Komponenten und der PGAs erfolgte. Bei diesem neuen Verfahren musste der DBA lediglich noch zwei Speichergrößen angeben: Eine Speichermenge für alle SGA-Komponenten und einen Speicherpool für alle PGAs. Oracle 10g vergrößerte/verkleinerte dann die Speicherbereiche der SGA automatisch, so dass diese immer den aktuellen Erfordernissen entsprachen und die Instanz eine optimale Performance erreichen konnte.
+
+        Aus dem Speicherpool der PGAs wurden dann die einzelnen PGAs der Serverprozesse erstellt. Dadurch das auch hier nur noch ein einzelner Wert angegeben werden musste, konnte Oracle auch das automatische Anpassen der PGA-Größen übernehmen, so dass jeder Serverprozess die für ihn optimale Speichermenge zur Verfügung hatte.
+
+        Mit Oracle 11g kam nun das \enquote{Automatic Memory Management}, was die Verwaltung von SGA- und PGA-Speicher noch weiter vereinfacht und ein besseres Tuning der Speicherstrukturen erlaubt. Der DBA muss nur einen einzigen Wert angeben, nämlich die Gesamtmenge an Arbeitspeicher, die für SGA und PGAs verfügbar sein soll. Oracle 11g übernimmt die gesamte Verwaltung aller Speicherkomponenten der SGA und PGAs. Dadurch das nun nur noch ein Limit für beide existiert, teilen sich SGA und PGA den gleichen Speicher, was eine höhere Flexibilität bei der Größenanpassung von SGA und PGA bedeutet.
+
+        \tabelle{tabmemorymanagement} fasst noch einmal alle Arten des Memory Management und deren Features zusammen.
+
+        \begin{center}
+          \tablecaption{Oracle Shared Memory Management}
+          \label{tabmemorymanagement}
+          \begin{small}
+            \tablefirsthead{
+              \multicolumn{1}{c}{\textbf{Oracle}} &
+              \multicolumn{1}{c}{\textbf{Memory Management}} &
+              \multicolumn{1}{c}{\textbf{Auto. Tuning}} &
+              \multicolumn{1}{c}{\textbf{Einstellungen}}\\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \tablelasttail{
+              \hline
+            }
+            \begin{supertabular}{|p{2.1cm}|p{4.15cm}|p{4.5cm}|p{3.6cm}|}
+              bis Oracle 9i & \raggedright Manual Shared Memory Management & PGA-Größe & Alle Komponenten der SGA einzeln \\
+              \hline
+              ab Oracle 10g & \raggedright Automatic Shared Memory Management & Größe aller Komponenten der SGA und die Speichergrößen der PGAs & SGA-Zielgröße und ag\-gre\-gier\-ter Speicher aller PGAs\\
+              \hline
+              ab Oracle 11g & \raggedright Automatic Memory Management & Größe aller Komponenten der SGA und die Speichergrößen der PGAs & Speichermenge der gesamten Instanz (SGA + PGA)\\
+            \end{supertabular}
+          \end{small}
+        \end{center}
+
+      \section{Überblick über die Struktur einer Oracle Datenbank}
+        \subsection{Datendateien}
+          Jede Oracle Datenbank besteht aus einer oder mehreren Datendateien. Sie enthalten alle Nutz- und Metadaten, die dort in Form von logischen Datenstrukturen, wie z. B. Tabellen und Indizes gespeichert werden.
+
+          \begin{merke}
+            \begin{itemize}
+              \item Eine Datendatei kann nur zu einer Datenbank gehören.
+              \item Das verwendete Dateisystem begrenzt die Anzahl der Datendateien, die angelegt werden können.
+            \end{itemize}
+          \end{merke}
+        \subsection{Die Parameterdatei}
+          Beim Start einer Oracle Datenbank muss eine Vielzahl von Parametern gesetzt werden. Diese Parameter werden in so genannten Parameterdateien (PFile oder SPFile) zusammengefasst.
+
+          Es gibt zwei unterschiedliche Arten von Parameterdateien:
+
+          \begin{itemize}
+            \item Die Parameterdatei (PFile): Sie ist eine statische Sammlung von Parametern in einer Textdatei. Es können keine dynamischen Änderungen vorgenommen werden. Jede Änderung an den Initialisierungsparametern der Datenbank muss auch an der Parameterdatei vorgenommen werden.
+            \item Die Server-Parameterdatei (SPFile): Hierbei handelt es sich um eine dynamische Parameterdatei, in Form einer Binärdatei. Mit Hilfe einer Server-Parameterdatei ist es möglich, Änderungen an einem Initialisierungsparameter in einem einzigen Schritt vorzunehmen. Diese Änderungen können dann wahlweise nur an der Instanz, nur in der Server-Parameterdatei oder aber an Instanz und Server-Parameterdatei gleichzeitigt getätigt werden.
+          \end{itemize}
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur9}{0.8}
+
+          \begin{merke}
+            Eine Server-Parameterdatei darf niemals mit einem Texteditor verändert werden, da Oracle eine solche Datei sofort als korrupt erkennt und nicht mehr benutzen kann.
+          \end{merke}
+
+          Oracle empfiehlt die Nutzung von Server-Parameterdateien. Es gibt sie seit Oracle 9i. Während in Oracle 9i standardmässig noch Parameterdateien genutzt wurden, wird seit Oracle 10g automatisch jede Datenbank, die mit dem Database Configuration Assistant angelegt wird, mit einer Server-Parameterdatei erstellt.
+       \subsection{Kontrolldateien}
+        Die Kontrolldatei ist ein wesentlicher Bestandteil einer jeden Oracle-Datenbank. Sie enthält alle  Informationen über den Aufbau der jeweiligen Datenbank. Dies sind beispielsweise:
+          \begin{itemize}
+            \item Datenbankname
+            \item Namen und Speicherorte aller Datendateien
+            \item Zeitstempel der Datenbankerstellung
+            \item Informationen über Backups
+          \end{itemize}
+
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur10}{0.8}
+
+          Aus Gründen der Ausfallsicherheit wird die Kontrolldatei gespiegelt, d. h. sie wird mehrfach mit gleichem Inhalt gespeichert. Der Verlust aller Kontrolldateien ist ein besonders kritischer Fall, da die Datenbank nur mit großem Aufwand wieder geöffnet werden kann.
+
+          Gebraucht wird die Kontrolldatei an verschiedenen Stellen während des Datenbankbetriebs. Beispielsweise beim Start einer Oracleinstanz. Die Kontrolldatei stellt dann die Informationen über Namen und Speicherorte der Datendateien und anderer wichtiger Dateien bereit, die für den Startvorgang geöffnet werden müssen.
+
+          Wird das physische Layout der Datenbank geändert, z. B. dadurch, dass eine neue Datendatei hinzugefügt wird, wird diese Änderung sofort in der Kontrolldatei vermerkt, damit diese immer den aktuellen Stand der Datenbank wiedergibt.
+        \subsection{Redo Log Dateien}
+          \subsubsection{Aufbau und Funktion}
+            Für den Betrieb einer Oracle Datenbank wird ein Set aus \enquote{Redo Log Gruppen}, umgangssprachlich als \enquote{Redo Logs} bezeichnet, benötigt. Eine Redo Log Gruppe besteht aus einer oder mehreren Redo Log Dateien, die auch als Redo Log Member bezeichnet werden.
+
+            Die primäre Funktion der Redo Logs ist das Aufzeichnen aller Änderungen, die an den Daten vorgenommen wurden (Nutz- und Metadaten).
+
+            \bild{Redo Log Gruppen und Member}{redo_log_gruppen}{0.8}
+
+            Die Redo Log Member nehmen den Inhalt des Redo Log Buffers auf. Im Falle eines Recovery benutzt die Datenbank die Redo Logs, um alle Änderungen der Nutzer wieder in die Datenbank einzuarbeiten und sie so auf den letzten Stand vor dem Crash zu bringen.
+
+
+          \subsubsection{Spiegelung der Redo Logs}
+            Um die Redo Logs vor Ausfällen zu schützen, hat eine Oracle Datenbank die Mög\-lich\-keit sie zu spiegeln und die einzelnen Kopien auf mehrere verschiedene Datenträger zu verteilen.
+
+            In \abbildung{redo_log_verteilung} wird angenommen, dass es zwei Redo Log Gruppen (Gruppe 1 und Gruppe 2) mit je drei Membern (Member a, b und c) gibt. Die Member sind auf zwei Datenträgern (/u02 und /u03) verteilt gespeichert.
+
+            \bild{Verteilung und Spiegelung von Redo Log
+            Membern}{redo_log_verteilung}{0.8}
+
+          \subsubsection{Empfehlungen}
+            Grundsätzlich gelten die folgenden Empfehlungen für Redo Log Dateien/-Gruppen:
+            \begin{itemize}
+              \item Jede Redo Log Gruppe sollte mindestens zwei Member haben (besser drei).
+              \item Es sollten niemals alle Member einer Redo Log Gruppe auf dem gleichen Datenträger liegen.
+              \item Alle Redo Log Gruppen sollten immer die gleich Anzahl Member haben und damit symmetrisch sein.
+              \item Die Größe der Redo Log Member sollte so angepasst werden, dass kein Platz auf den Sicherungsmedien verschwendet wird.
+            \end{itemize}
+\clearpage
+            \begin{merke}
+              Zu beachten ist, dass die Redo Logs nur gegen System- oder Medienfehler schützen können (z.~B. im Falle eines Stromausfalls), nicht aber gegen Fehleingaben eines Nutzers.
+            \end{merke}
+        \subsection{Archivierte Log Dateien}
+          Um eine Oracle Datenbank, im Falle eines Fehlers, wiederherstellen zu können, werden die in den Redo Log Dateien gespeicherten Informationen benötigt. Da die Redo Logs jedoch zyklisch überschrieben werden, stehen diese Informationen nur für eine begrenzte Zeitspanne zur Verfügung. Um diese wichtigen Informationen für einen längeren (theoretisch unbegrenzten) Zeitraum verfügbar machen zu können, bietet Oracle die Möglichkeit, Kopien der Redo Logs anzulegen. Diese Kopien werden dann als \enquote{Archive Logs} oder \enquote{Archivierte Log Dateien} bezeichnet.
+        \subsection{Die Alert Log Datei und Trace-Dateien}
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur11}{1}
+          \subsubsection{Trace-Dateien}
+            Eine Oracle-Datenbank kennt zwei unterschiedliche Arten von Trace-Dateien. Einerseits sind dies Trace-Dateien, die auf Anforderung des Administrators erzeugt werden. Diese enthalten meist Performance- oder Diagnose-Informationen die zur Fehlerbehebung bzw. zum Tuning der Datenbank eingesetzt werden können.
+
+            Andererseits entstehen die meisten Trace-Dateien aufgrund von Fehlern bei den Hintergrundprozessen. Jeder Hintergrundprozess hat seine eigene Trace-Datei in die er Informationen schreibt.
+
+						Die Inhalte einer Trace-Datei sind teils für den Datenbankadministrator und teils für den Oracle-Support bestimmt.
+\clearpage
+            \begin{lstlisting}[caption={Eine Tracedatei des Log Writers},
+            label=orcl_lgwr_12331,emph={[9]ORACLE_HOME},emphstyle={[9]\color{black}},language=terminal]
+/u01/app/oracle/diag/rdbms/orcl/orcl/trace/orcl_lgwr_12331.trc 
+Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - Production
+With the Partitioning, OLAP and Data Mining options
+ORACLE_HOME = /u01/app/oracle/product/11.2.0
+System name:    Linux
+Node name:      FEA11-119WD01
+Release:        3.10.5.1-100.fc19
+Version:        #1 SMP Mon Jul 21 02:06:29 EDT 2011
+Machine:        i686
+Instance name: ORCL
+Redo thread mounted by this instance: 1
+Oracle process number: 6
+Unix process pid: 12331, image: oracle@FEA11-119WD01 (LGWR)
+            \end{lstlisting}
+					\subsubsection{Die Alert Log Datei}
+						Die \enquote{Alert Log Datei} nimmt eine Sonderstellung unter den Trace-Dateien ein. Sie ist ein chronologisch sortiertes Protokoll, in dem alle in der Datenbank auftretenden Ereignisse und Fehler protokolliert werden. Man könnte sie auch als das \enquote{Tagebuch} der Datenbank bezeichnen.
+
+						Seit Oracle 11g R1 existiert die Alert Log Datei in zwei Versionen, als Text-Datei und als XML-Datei. Beide gehören zum ebenfalls neu erschienenen \enquote{Automatic Diagnostic Repository}, kurz ADR. Das ADR ist im Wesentlichen ein Verzeichnis, dass von Oracle genutzt wird, um die verschiedensten Diagnose-Informationen geordnet abzulegen. Mit Hilfe dieser Dateien und des ADRCI (Automatic Diagnostic Repository Commandline Interface) können sogenannte Incident Packages geschnürt und an den Oracle Support verschickt werden.
+
+						Die beiden Alert Log Dateien befinden sich in Unterverzeichnissen des ADR:
+						\begin{itemize}
+							\item \textbf{Textdatei}: Sie heißt \textbf{alert\_\textless{}SID\textgreater{}.ora}. Die Abkürzung \enquote{SID} steht für \enquote{System Identifier}, den Namen der Datenbankinstanz. Bei einer Instanz mit Namen \enquote{ORCL} hieße die Alert Log Datei dann: \textbf{alert\_ORCL.ora}. Sie wird im Verzeichnis \texttt{\$ADR\_BASE/diag/product\_type/product\_id/instance\_id/trace} erzeugt.
+							\item \textbf{XML-Datei}: Der Name der XML-Datei lautet \textbf{log.xml}. Diese wird im Verzeichnis \texttt{\$ADR\_BASE/diag/product\_type/product\_id/instance\_id/alert} angelegt.
+						\end{itemize}
+
+						\begin{literaturinternet}
+						  \item \cite{CNCPT005}
+						\end{literaturinternet}
+\clearpage
+          \begin{lstlisting}[caption={Die Alert Log
+          Textdatei},label=alert_orcl.log,language=terminal]
+Fri Aug 14 13:33:43 2011 Process J000 died, see its trace file
+Fri Aug 14 13:33:43 2011
+kkjcre1p: unable to spawn jobq slave process
+Fri Aug 14 13:33:43 2011
+Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
+Fri Aug 14 13:35:33 2011
+Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_j000_18573.trc:
+ORA-00600: Interner Fehlercode, Argumente: [keltnfy-ldmInit], [46]
+Fri Aug 14 13:35:34 2011
+Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_j000_18573.trc:
+ORA-00600: Interner Fehlercode, Argumente: [keltnfy-ldmInit], [46]
+Fri Aug 14 13:35:35 2011
+Process J000 died, see its trace file
+Fri Aug 14 13:35:35 2011
+kkjcre1p: unable to spawn jobq slave process
+Fri Aug 14 13:35:35 2011
+Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
+          \end{lstlisting}
+      \section{Die Oracle Hintergrundprozesse}
+        \begin{merke}
+          Ein Prozess ist ein Thread oder ein ähnlicher Mechanismus eines Betriebssystems, der einen oder mehrere Arbeitsschritte durchführen kann (einige Betriebssysteme verwenden dafür die Bezeichnungen \enquote{Job} oder \enquote{Task}). Jeder Prozess hat seinen eigenen Speicherbereich im Arbeitsspeicher.
+        \end{merke}
+
+        Die Aufteilung der Arbeit in einzelne Prozesse geschieht, um die Datenbank Multi-user-fähig zu machen. Durch diese Aufteilung können sich (theoretisch) beliebig viele Nutzer mit einer Oracle-Datenbank verbinden, da jeder Nutzer seinen eigenen Serverprozess bekommt.
+
+        Eine Oracleinstanz kann viele verschiedene Hintergrundprozesse haben. Es sind jedoch nicht immer alle Hintergrundprozesse aktiv. Im Folgenden werden die wichtigsten Hintergrundprozesse beschrieben.
+        \subsection{Der Database Writer (DBWn)}
+
+          Der Database Writer ist für das Rückübertragen aller
+          modifizierten Blöcke aus dem Database Buffer Cache in die
+          Datendateien verantwortlich. Auch wenn meist ein einziger DBWn-Prozess
+          für eine Datenbank ausreichend ist, können mehrere gestartet
+          werden, um die Performance des Systems zu erhöhen.
+
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur12}{1}
+
+          Da durch Schreibzugriffe die Anzahl der freien Blöcke im Database Buffer Cache abnimmt, ist es die Aufgabe des Database Writers, diese Anzahl nie unter einen bestimmten Schwellenwert fallen zu lassen. Wird der Schwellenwert dennoch unterschritten, müssen die Nutzerprozesse auf den Database Writer warten, bis der Schwellenwert wieder überstiegen wird.
+
+          \begin{merke}
+            Der Database Writer schreibt, wenn eine der folgenden Bedingungen erfüllt ist:
+            \begin{itemize}
+              \item Wenn sich zu viele modifzierte Blöcke im Database Buffer Cache befinden (Schwellenwert: weniger als 3 \% freie Blöcke).
+              \item Wenn ein Serverprozess zu lange nach freien Blöcken suchen muss.
+              \item Beim Auslösen eines Checkpoints.
+              \item Wenn die Instanz heruntergefahren wird (außer bei einem shutdown abort).
+              \item Wenn ein Tablespace Offline oder Read Only gesetzt wird.
+              \item Wenn eine Speicherstruktur, wie z. B. eine Tabelle gelöscht wird.
+            \end{itemize}
+          \end{merke}
+          \subsubsection{Aufbau und Organisation des Database Buffer Caches}
+            Der Database Buffer Cache ist in zwei Listen aufgeteilt:
+            \begin{itemize}
+              \item \textbf{Least recently used list (LRU)}
+              \item \textbf{Buffer Checkpoint Queue}
+            \end{itemize}
+						Die Buffer Checkpoint Queue ist eine Liste der geänderten Blöcke (dirty Blocks) des Buffer Caches, die noch nicht auf den Datenträger zurückgesichert wurden. Diese werden in aufsteigender Reihenfolge, nach ihrer Low Redo Byte Adress (low RBA) gespeichert.
+\clearpage
+            Die LRU List enthält drei Blockarten:
+            \begin{itemize}
+              \item freie Blöcke (\textbf{clean blocks})
+
+              Ein Block gilt als clean, wenn er bisher noch nicht verwendet wurde oder aber, wenn sein Inhalt nach einer Modifikation auf die Festplatte zurückübertragen wurde (d. h. das Blockabbild im Buffer Cache und der Originalblock auf der Festplatte haben den gleichen Inhalt).
+              \item Blöcke die aktuell in Verwendung sind (\textbf{pinned blocks})
+              \item modifizierte Blöcke (\textbf{dirty blocks})
+
+              Wird ein Block im Buffer Cache verändert, dann ändert sich sein Status auf dirty (d. h. Das Blockabbild im Buffer Cache hat einen anderen Inhalt als der Originalblock auf der Festplatte). Blöcke mit diesem Status müssen erst noch auf die Festplatte übertragen werden.
+            \end{itemize}
+
+            \bild{Aufbau des Database Buffer Caches}{buffer_cache1}{1.24}
+
+            Jeder Block in der LRU hat einen \enquote{Touchcounter}, einen Zähler, der die Anzahl der Zugriffe auf den Datenblock zählt. Er wird für die Verwaltung der Blöcke in der LRU benötigt.
+          \subsubsection{Verwaltung des Database Buffer Caches}
+            Sucht ein Serverprozess einen bestimmten Block im Database Buffer Cache, beginnt er mit seiner Suche am MRU\footnote{MRU = Most Recently Used}-Ende der LRU\footnote{LRU = Least Recently Used}-Liste, da die Wahrscheinlichkeit, dass sich der gesuchte Block dort befindet höher ist, als die, dass er sich am LRU-Ende befindet. Der Serverprozess durchsucht die LRU-Liste sequenziell, Block für Block.
+
+            \bild{Suche nach freien Blöcken im Buffer Cache}{buffer_cache2}{1.4}
+
+            Wird der gesuchte Block gefunden (cache hit), kann er verarbeitet werden. Wird er nicht gefunden (cache miss), muss der Block in den Database Buffer Cache geladen werden.
+
+            Beim Laden eines Blockes in den Database Buffer Cache, wird er auf halber Höhe des Coldspot eingeschrieben. Um einen neuen Block in den Buffer Cache übertragen zu können, muss der Serverprozess vorher nach freien Blöcken suchen. Dabei beginnt er seine Suche am LRU-Ende der LRU-Liste. Trifft er dabei auf dirty blocks, notiert er die Blockadressen dieser Blöcke in der Checkpoint Queue, so dass der Database Writer diese in die Datendateien übertragen kann.
+
+            Wurden genügend freie Blöcke gefunden, können die neuen Blöcke in den Buffer Cache über\-tra\-gen werden. Werden keine freien Böcke gefunden, muss der Serverprozess den Database Writer damit beauftragen, die Checkpoint Queue abzuarbeiten, um Platz im Database Buffer Cache zu schaffen.
+
+            \bild{Einfügen neuer Blöcke im Buffer Cache}{buffer_cache3}{1.2}
+
+            Der Touchcounter zählt die Zugriffe auf einen Datenblock. Wird eine bestimmte Anzahl Zugriffe erreicht, wird der Block relativ von seiner aktuellen Position aus, um 50 \% nach oben verschoben. So kann der Block aus dem Coldspot an das obere Ende der LRU-Liste,   den Hotspot, wandern. Dabei verdrängt er andere Blöcke nach unten. Wird auf einen Block nur selten zugegriffen, erreicht er irgendwann den Coldspot und bekommt früher oder später den Status clean.
+
+            \begin{merke}
+              Die Serverprozesse sind dafür zuständig, angeforderte Blöcke in den Database Buffer Cache zu übertragen und diese dort zu lesen bzw. nach den Anforderungen der Nutzer entsprechend zu modifizieren. Der Database Writer ist als einziger dafür zuständig modifizierte Blöcke auf die Festplatte zurückzuübertragen.
+            \end{merke}
+        \subsection{Der Log Writer (LGWr)}
+          Der Log Writer Prozess, der oft auch als Redo Thread bezeichnet wird, ist zuständig für das Management der Redo Logs. Er schreibt die Redo Log Einträge (Redo Records) im Redo Log Buffer in die Redo Log Dateien. Der Redo Log Buffer ist zyklisch aufgebaut. Wenn der Log Writer alle Einträge aus dem Buffer in die Dateien geschrieben hat, können die alten Werte im Redo Log Buffer überschrieben werden.
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur13}{1}
+
+          \begin{merke}
+            Der Log Writer tritt in Aktion, wenn die folgenden Bedingungen erfüllt sind:
+            \begin{itemize}
+              \item Periodisch alle 3 Sekunden (Timeout)
+              \item Wenn sich der Redo Log Buffer bis zu einem Drittel gefüllt hat (Standardgröße 512 KB)
+              \item Wenn im Redo Log Buffer mehr als 1 MB Redo Informationen enthalten sind
+              \item Bevor der Database Writer schreibt
+              \item Wenn ein Nutzer eine Transaktion mit \languageorasql{COMMIT} beendet
+            \end{itemize}
+          \end{merke}
+          Der Log Writer Prozess schreibt synchron in alle Member der aktiven Log Gruppe. Ist einer defekt oder nicht verfügbar, setzt der Log Writer das Schreiben in den anderen Dateien fort und gibt eine Fehlermeldung in seiner Trace-Datei und der Alert Log Datei aus.
+\clearpage
+          \begin{merke}
+            Es sollten immer so viele Redo Log Gruppen vorhanden sein, dass der Log Writer zu jeder Zeit eine freie Gruppe finden kann, ohne warten zu müssen.
+          \end{merke}
+          Der Log Writer und der Database Writer sind zwei Prozesse, die von einander abhängig sind. Bevor der Database Writer einen dirty block in die Datendateien schreiben darf, müssen vorher alle mit diesem Block verbundenen Redo Log Einträge durch den Log Writer in die Redo Logs übertragen worden sein. Dies wird durch das \textit{write-ahead Protokoll} gewährleistet.
+          \subsubsection{Log Switch}
+            Wenn der Log Writer eine Gruppe zu 100 \% gefüllt hat wechselt er in die nächste freie Gruppe. Dieser Vorgang des Wechselns einer Redo Log Gruppe heißt Log Switch. Aus der Forderung, dass der Log Writer immer eine freie Gruppe benötigt, in die er wechseln kann, resultiert die Forderung, dass mindestens zwei Redo Log Gruppen vorhanden sein müssen. Findet der Log Writer keine freie Gruppe zum Wechseln, bleibt die Datenbank stehen.
+
+            Der Log Writer benutzt alle vorhandenen Gruppen der Reihe nach. Ist er bei der letzten Gruppe angekommen, versucht er die erste Gruppe erneut zu nutzen, d. h. die Redo Log Gruppen werden im Kreis immer wieder genutzt. Der Inhalt einer bereits befüllten Gruppe geht bei erneuter Nutzung verloren. Um einen solchen Verlust zu vermeiden, kann ein weiterer Hintergrundprozess, der Archiver eingeschaltet werden.
+
+            \begin{merke}
+              Als Faustregel gilt: Es sollte ca. alle 20 Minuten ein Log Switch stattfinden. Dies kann durch die Größe der Redo Log Dateien beeinflußt werden.
+            \end{merke}
+          \subsubsection{Die Log Sequence Number (LSN)}
+            Wenn der Log Writer beginnt, eine Redo Log Gruppe zu benutzten, ordnet er ihr eine Log Sequence Number zu. Die Log Sequence Number ist eine fortlaufende Nummer, anhand derer die Reihenfolge der Nutzung der Redo Log Gruppe erkannt werden kann. Wenn der Log Writer z. B. die Gruppe 1 zu erst benutzt, erhält diese Gruppe die LSN 1. Nach einem Log Switch auf Gruppe 2 erhält Gruppe 2 die LSN 2. Bei einem weiteren Log Switch hin zu Gruppe 1 erhält Gruppe 1 die LSN 3 usw.
+          \subsubsection{Status einer Redo Log Gruppe}
+            Jede Redo Log Gruppe hat einen bestimmten Status. Der Status gibt an, ob die Gruppe gerade benutzt wird, bzw. ob sie für die Nutzung frei ist. Der Status kann sein:
+            \begin{itemize}
+              \item \textbf{Current}: Die Redo Log Gruppe, die aktuell durch den
+              Log Writer benutzt wird hat den Status Current.
+              \item \textbf{Active}: Eine Redo Log Gruppe, die für ein
+              Instance-Recovery benötigt wird hat den Status Active. Eine Redo
+              Log Gruppe wird solange für ein Instance-Recovery benötigt,
+              bis der Database Writer alle betreffenden Oracle-Blöcke aus dem
+              Database Buffer Cache in die Datendateien geschrieben hat. Hat der
+              DBWn seine Arbeit vollendet, sind die Informationen dieser Redo
+              Log Gruppe nicht mehr für ein Instance-Recovery von Nöten und
+              der Status der Redo Log Gruppe wechselt zu \textit{Inactive}.
+              \item \textbf{Inactive}: Redo Log Gruppen, die nicht mehr für
+              ein Instance-Recovery benötigt werden haben diesen Status.
+            \end{itemize}
+
+          \bild{Status einer Redo Log Grup\-pe}{redolog_status}{0.75}
+        \subsection{Der Checkpoint Prozess (CKPT)}
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur14}{1}
+          Der Checkpoint Prozess, kurz CKPT, gehört seit Oracle 8 zum Kreise der Prozesse, die zwingend notwendig sind für den Betrieb einer Oracle-Datenbank. Sein Name leitet sich von einem Ereignis ab, das in regelmäßigen Intervallen auftritt, dem Checkpoint.
+          \subsubsection{Checkpoints}
+            Die offizielle Definition eines Checkpoints lautet:
+
+            \begin{merke}
+              Ein Checkpoint ist ein Ereignis, das durch andere Ereignisse ausgelöst wird (Log Switch, Manuell).
+            \end{merke}
+            Checkpoints haben die Aufgabe eine Datenbank konsistent zu halten. Dies geschieht, in dem bei jedem Auftreten eines Checkpoints die geänderten Daten aus dem Database Buffer Cache auf den Datenträger geschrieben werden, so wie dies bereits beschrieben wurde. Die hauptsächliche Last eines Checkpoints tragen somit der DB Writer und der Log Writer.
+
+            Nach dem Abschluss eines Checkpoints muss aber noch Verwaltungsarbeit durchgführt werden. Die Datenbank muss sich \enquote{notieren}, dass, bzw. wann der Checkpoint beendet wurde. Dies geschieht, in dem der Checkpoint Prozess (CKPT), am Ende eines Checkpoints die System Change Number, kurz SCN, in die Kontrolldateien und die Header aller Datendateien schreibt.
+          \subsubsection{Die System Change Number (SCN)}
+
+            \begin{merke}
+              Die System Change Number (SCN) ist eine fortlaufende Nummer, anhand derer das Alter einer Oracledatenbank bestimmt werden kann. Sie wird durch die verschiedensten Nutzeraktionen und durch die Arbeit der Hintergrundprozesse inkrementiert.
+            \end{merke}
+            Die aktuelle SCN kann mit der Prozedur \identifier{get\_system\_change\_number}, aus dem PL/SQL-Paket \identifier{dbms\_flashback} herausgefunden werden. Sie ist in der Kontrolldatei eingetragen und wird auch als \enquote{Referenz-SCN} bezeichnet. Die SCN des letzten Checkpoint ist im Feld \identifier{checkpoint\_change\#} in der V\$-View \identifier{v\$database} zu finden.
+
+            \begin{literaturinternet}
+              \item \cite{p665}
+            \end{literaturinternet}
+        \subsection{Der System Monitor (SMON)}
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur15}{0.8}
+
+          Der SMON kann als eine Art \enquote{Reinigungskraft der Datenbank auf Betriebssystemebene} verstanden werden. Zu seinen Aufgaben zählt:
+          \begin{itemize}
+            \item \textbf{Instance-Recovery}: Wird die Datenbank nach einem Crash hochgefahren, muss der SMON die inkonsistente Datenbank in einen konsistenten Zustand überführen.
+            \item \textbf{Aufräumarbeiten}: Der SMON muss immer wieder Aufräumarbeiten in verschiedenen Systemtabellen der Datenbank (z. B. \identifier{OBJ\$}) durchführen.
+            \item \textbf{Undo Segmente schrumpfen}: Der SMON schrumpft Undo Segmente automatisch auf ihre optimale Größe.
+            \item \textbf{Abschalten von Undo Segmenten}: Legt der DB-Admin fest, dass ein Undo Segment abgeschaltet werden soll, so führt der SMON diese Tätigkeit aus.
+          \end{itemize}
+        \subsection{Der Prozess Monitor (PMON)}
+          Der Prozess Monitor stellt die Ergänzung zum System Monitor dar. Er ist die \enquote{Reinigungskraft auf Datenbankebene}. Zu seinen Aufgaben zählt:
+
+          \begin{itemize}
+            \item \textbf{Serverprozesse aufräumen}: Wird eine Session abnormal getrennt bleibt der zugehörige Serverprozess als sogenannter \enquote{Zombieprozess} stehen. Die Aufgabe des Prozessmonitors ist es, solche Zombies zu beenden.
+            \item \textbf{Sperren lösen}
+            \item \textbf{Zurückrollen von Transaktionen}: Alle Transkationen die vor einem Instanz-Crash nicht beendet wurden, müssen durch den PMON zurückgerollt werden.
+            \item \textbf{Hintergrundprozesse überwachen}: PMON ist dafür zuständig die anderen Hintergrundprozesse zu überwachen und diese bei Bedarf neuzustarten.
+            \item \textbf{Dynamic Service Registration}
+          \end{itemize}
+
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur16}{0.9}
+
+        \subsection{Der Archiver (ARCn)}
+          Der Archiver Prozess ist dafür zuständig, befüllte Redo Log Dateien, nach einem \enquote{Log switch}, an einem definierten Speicherort zu sichern. Eine Redo Log Gruppe muss bei aktivierter Archivierung erst archiviert werden, bevor sie durch den Log Writer erneut genutzt werden kann. Ist die Archivierung nicht aktiviert, kann eine Redo Log Gruppe sofort wieder verwendet werden.
+
+          Sind alle Member einer Redo Log Gruppe beschädigt oder nicht mehr vorhanden, kann der Archiver diese Gruppe nicht mehr archivieren. Dies führt in dem Moment zum Stillstand der Datenbank, in dem der Log Writer versucht, diese Gruppe erneut zu nutzen.
+
+          \bild{Oracle Datenbank\-architektur}{datenbankarchitektur17}{0.9}
+
+          \begin{literaturinternet}
+            \item \cite{CNCPT020}
+          \end{literaturinternet}
+
+          \begin{merke}
+            Eine Redo Log Gruppe ist in zwei Fällen für die Nutzung frei:
+            \begin{itemize}
+              \item Direkt nach ihrer Erstellung
+              \item Wenn die Gruppe unbenutzt ist und wenn die Archivierung beendet wurde.
+            \end{itemize}
+          \end{merke}

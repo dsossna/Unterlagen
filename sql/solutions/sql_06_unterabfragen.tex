@@ -1,0 +1,340 @@
+\clearpage
+    \section{Lösungen - Unterabfragen}
+      \begin{enumerate}
+        \item Schreiben Sie eine Abfrage, die für alle Eigenkunden, die keinen
+        Berater haben (die nicht in der Tabelle
+        \identifier{EigenkundeMitarbeiter} enthalten sind), den Vor- und den
+        Nachnamen anzeigt.
+        \begin{itemize}
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{EXISTS}-Operators!
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{IN}-Operators!
+        \end{itemize}
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+WHERE  NOT EXISTS (SELECT 1
+                   FROM   EigenkundeMitarbeiter ekm
+                   WHERE  ekm.Kunden_ID = ek.Kunden_ID);
+
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+WHERE  ek.Kunden_ID NOT IN (SELECT Kunden_ID
+                            FROM   EigenkundeMitarbeiter);
+        \end{lstlisting}
+        \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt
+        (Vorname und Nachname), die keine Kundenberatung durchführen.
+        Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner
+        Bankfiliale arbeiten) und Filialleiter.
+        \begin{itemize}
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{EXISTS}-Operators!
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{IN}-Operators!
+        \end{itemize}
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT m.Vorname, m.Nachname
+FROM Mitarbeiter m
+INNER JOIN Mitarbeiter m1 ON (m.Vorgesetzter_ID = m1.Mitarbeiter_ID)
+INNER JOIN Bankfiliale b ON (m1.Bankfiliale_ID = b.Bankfiliale_ID)
+WHERE NOT EXISTS (SELECT 1
+                  FROM EigenkundeMitarbeiter ekm
+                  WHERE m.Mitarbeiter_ID = ekm.Mitarbeiter_ID)
+ORDER BY m.Vorname;
+
+
+SELECT m.Vorname, m.Nachname
+FROM Mitarbeiter m
+INNER JOIN Mitarbeiter m1 ON (m.Vorgesetzter_ID = m1.Mitarbeiter_ID)
+INNER JOIN Bankfiliale b ON (m1.Bankfiliale_ID = b.Bankfiliale_ID)
+WHERE m.Mitarbeiter_ID NOT IN (SELECT Mitarbeiter_ID
+                               FROM EigenkundeMitarbeiter ekm)
+ORDER BY m.Vorname;
+        \end{lstlisting}
+\clearpage
+        \item Schreiben Sie eine Abfrage, die den häufigsten Vornamen der
+        Bankmitarbeiter anzeigt und wie oft dieser in der Tabelle
+        \identifier{Mitarbeiter} vorkommt.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT Vorname, Anzahl
+FROM   (SELECT   Vorname, COUNT(Vorname) AS Anzahl
+        FROM     Mitarbeiter
+        GROUP BY Vorname
+        ORDER BY COUNT(Vorname) DESC
+       )
+WHERE  rownum = 1;
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT   TOP 1 Vorname, COUNT(Vorname) AS Anzahl
+FROM     Mitarbeiter
+GROUP BY Vorname
+ORDER BY COUNT(Vorname) DESC;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, welche die drei Eigenkunden mit den
+        niedrigsten Guthaben auf den Girokonten anzeigt.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT *
+FROM   (SELECT Vorname, Nachname, Guthaben
+        FROM   Kunde k INNER JOIN EigenkundeKonto ekk
+                 ON (k.Kunden_ID = ekk.Kunden_ID)
+               INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+        ORDER BY Guthaben)
+WHERE  rownum <= 3;
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT TOP 3 Vorname, Nachname, Guthaben
+FROM   Kunde k INNER JOIN EigenkundeKonto ekk
+         ON (k.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+ORDER BY Guthaben;
+        \end{lstlisting}
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass die drei Eigenkunden mit dem niedrigsten Guthaben (Girokonto +
+        Sparbuch) angezeigt werden. Es müssen auch diejenigen Kunden angezeigt
+        werden, die nur ein Girokonto oder nur ein Sparbuch haben!
+\clearpage
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT *
+FROM   (SELECT k.Vorname, k.Nachname, SUM(Guthaben)
+        FROM   (SELECT Kunden_ID, Guthaben
+                FROM   EigenkundeKonto ekk INNER JOIN Girokonto g
+                         ON (ekk.Konto_ID = g.Konto_ID)
+                UNION
+                SELECT Kunden_ID, Guthaben
+                FROM   EigenkundeKonto ekk INNER JOIN Sparbuch s
+                         ON (ekk.Konto_ID = s.Konto_ID)) gut 
+                       INNER JOIN Kunde k
+                ON (k.Kunden_ID = gut.Kunden_ID)
+        GROUP BY k.Kunden_ID, k.Vorname, k.Nachname
+        ORDER BY 3)
+WHERE rownum <= 3;
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT TOP 3 k.Vorname, k.Nachname, SUM(Guthaben)
+FROM   (SELECT Kunden_ID, Guthaben
+        FROM   EigenkundeKonto ekk INNER JOIN Girokonto g
+                 ON (ekk.Konto_ID = g.Konto_ID)
+        UNION
+        SELECT Kunden_ID, Guthaben
+        FROM   EigenkundeKonto ekk INNER JOIN Sparbuch s
+                 ON (ekk.Konto_ID = s.Konto_ID)) gut
+        INNER JOIN Kunde k ON (k.Kunden_ID = gut.Kunden_ID)
+GROUP BY k.Kunden_ID, k.Vorname, k.Nachname
+ORDER BY 3;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die alle Eigenkunden anzeigt, welche
+        im Jahr 1985 keine Buchungen verursacht haben.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT Vorname, Nachname
+FROM   Kunde k INNER JOIN EigenkundeKonto ekk
+         ON (k.Kunden_ID = ekk.Kunden_ID)
+WHERE  NOT EXISTS (SELECT 1
+                   FROM   Buchung b INNER JOIN EigenkundeKonto ekk1
+                            ON (b.Konto_ID = ekk1.Konto_ID)
+                   WHERE  ekk1.Kunden_ID = ekk.Kunden_ID
+                     AND  Buchungsdatum BETWEEN
+                          TO_DATE('01.01.1985') AND
+                          TO_DATE('31.12.1985'))
+GROUP BY k.Kunden_ID, Vorname, Nachname
+ORDER BY Nachname, Vorname;
+        \end{lstlisting}
+\clearpage
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT DISTINCT Vorname, Nachname
+FROM   Kunde k INNER JOIN EigenkundeKonto ekk
+         ON (k.Kunden_ID = ekk.Kunden_ID)
+WHERE  k.Kunden_ID NOT IN (SELECT ek.kunden_id
+                   FROM   Buchung b1 INNER JOIN EigenkundeKonto ek
+													ON (b1.Konto_ID = ek.Konto_ID)
+									 WHERE b1.Buchungsdatum BETWEEN
+                          CONVERT(DATETIME2, '01.01.1985', 104) AND
+                          CONVERT(DATETIME2, '31.12.1985', 104))
+ORDER BY Nachname, Vorname;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die für jede Bankfiliale den
+        Mitarbeiter mit dem höchsten Gehalt ausgibt.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT b.Strasse || ' ' || b.Hausnummer || ' ' || b.PLZ || ' ' ||
+       b.Ort AS Bankfiliale,
+       m.Vorname, m.Nachname, m.Gehalt
+FROM   Mitarbeiter m INNER JOIN Bankfiliale b
+         ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+WHERE  Gehalt = (SELECT MAX(Gehalt)
+                 FROM   Mitarbeiter m1
+                 WHERE  m.Bankfiliale_ID = m1.Bankfiliale_ID);
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT b.Strasse + ' ' + b.Hausnummer + ' ' + b.PLZ + ' ' +
+       b.Ort AS Bankfiliale,
+       m.Vorname, m.Nachname, m.Gehalt
+FROM   Mitarbeiter m INNER JOIN Bankfiliale b
+         ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+WHERE  Gehalt = (SELECT MAX(Gehalt)
+                 FROM   Mitarbeiter m1
+                 WHERE  m.Bankfiliale_ID = m1.Bankfiliale_ID);
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die für jeden Wohnort
+        (\identifier{Eigenkunde.Ort}) den Kunden anzeigt, der im Jahr 1987 das
+        höchste Einkommen hatte (Das Einkommen ist die Summe aller Beträge
+        eines Kunden, in der Tabelle \identifier{Buchung}). Sortieren Sie die
+        Abfrage nach den Wohnorten.
+\clearpage
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT b1.Ort, b1.Vorname, b1.Nachname, b1.betrag
+FROM   (SELECT ek.Kunden_ID, ek.Ort, k.Vorname, k.Nachname,
+               SUM(Betrag) AS betrag
+        FROM   EigenkundeKonto ekk INNER JOIN Buchung b
+                 ON (ekk.Konto_ID = b.Konto_ID)
+               INNER JOIN Eigenkunde ek
+                 ON (ekk.Kunden_ID = ek.Kunden_ID)
+               INNER JOIN Kunde k
+                 ON (k.Kunden_ID = ek.Kunden_ID)
+        WHERE  Buchungsdatum BETWEEN
+               TO_DATE('01.01.1987', 'DD.MM.YYYY') AND
+               TO_DATE('31.12.1987', 'DD.MM.YYYY')
+        GROUP BY ek.Kunden_ID, ek.Ort, k.Vorname, k.Nachname) b1
+WHERE   betrag = (SELECT MAX(betrag)
+                  FROM   (SELECT ek.Kunden_ID, ek.Ort, SUM(Betrag) AS betrag
+                            FROM   EigenkundeKonto ekk INNER JOIN Buchung b
+                                     ON (ekk.Konto_ID = b.Konto_ID)
+                                   INNER JOIN Eigenkunde ek
+                                     ON (ekk.Kunden_ID = ek.Kunden_ID)
+                            WHERE  Buchungsdatum BETWEEN
+                              TO_DATE('01.01.1987', 'DD.MM.YYYY') AND
+                              TO_DATE('31.12.1987', 'DD.MM.YYYY')
+                            GROUP BY ek.Kunden_ID, ek.Ort) b2
+                  WHERE   b1.Ort = b2.Ort)
+ORDER BY b1.Ort;
+        \end{lstlisting}
+\clearpage
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT b1.Ort, b1.Vorname, b1.Nachname, b1.betrag
+FROM   (SELECT ek.Kunden_ID, ek.Ort, k.Vorname, k.Nachname,
+               SUM(Betrag) AS betrag
+        FROM   EigenkundeKonto ekk INNER JOIN Buchung b
+                 ON (ekk.Konto_ID = b.Konto_ID)
+               INNER JOIN Eigenkunde ek
+                 ON (ekk.Kunden_ID = ek.Kunden_ID)
+               INNER JOIN Kunde k
+                 ON (k.Kunden_ID = ek.Kunden_ID)
+        WHERE  Buchungsdatum BETWEEN
+               CONVERT(DATETIME2, '01.01.1987', 104) AND
+               CONVERT(DATETIME2, '31.12.1987', 104)
+        GROUP BY ek.Kunden_ID, ek.Ort, k.Vorname, k.Nachname) b1
+WHERE   betrag = (SELECT MAX(betrag)
+                  FROM   (SELECT ek.Kunden_ID, ek.Ort, SUM(Betrag) AS betrag
+                            FROM   EigenkundeKonto ekk INNER JOIN Buchung b
+                                     ON (ekk.Konto_ID = b.Konto_ID)
+                                   INNER JOIN Eigenkunde ek
+                                     ON (ekk.Kunden_ID = ek.Kunden_ID)
+                            WHERE  Buchungsdatum BETWEEN
+                              CONVERT(DATETIME2, '01.01.1987', 104) AND
+                              CONVERT(DATETIME2, '31.12.1987', 104)
+                            GROUP BY ek.Kunden_ID, ek.Ort) b2
+                  WHERE   b1.Ort = b2.Ort)
+ORDER BY b1.Ort;
+        \end{lstlisting}
+        \item Erstellen Sie eine Abfrage, die die Umsätze der Bank
+        (SUM(Buchung.Betrag)) für die Jahre 1985 bis einschließlich 1989
+        als Pivottabelle anzeigt.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT *
+FROM   (SELECT TO_CHAR(Buchungsdatum, 'YYYY') AS Datum, Betrag
+        FROM   Buchung)
+PIVOT  (SUM(Betrag) FOR Datum IN ('1985', '1986', '1987', '1988', '1989'));
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT *
+FROM   (SELECT DATEPART(YEAR, Buchungsdatum) AS Datum, Betrag
+        FROM   Buchung) AS Sourcetable
+PIVOT  (SUM(Betrag)
+  FOR Datum IN ([1985], [1986], [1987], [1988], [1989])) AS Pivottable;
+        \end{lstlisting}
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass die Beträge innerhalb der einzelnen Jahre nach Quartalen
+        aufgeteilt werden.
+\clearpage
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT *
+FROM   (SELECT TO_CHAR(Buchungsdatum, 'Q') AS Quartal,
+               TO_CHAR(Buchungsdatum, 'YYYY') AS Datum, Betrag
+        FROM   Buchung)
+PIVOT  (SUM(Betrag) FOR Datum IN ('1985', '1986', '1987', '1988', '1989'));
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT *
+FROM   (SELECT DATENAME(QUARTER, Buchungsdatum) AS Quartal,
+               DATENAME(YEAR, Buchungsdatum) AS Datum, Betrag
+        FROM   Buchung) AS Sourcetable
+PIVOT  (SUM(Betrag)
+  FOR Datum IN ([1985], [1986], [1987], [1988], [1989])) AS Pivottable;
+        \end{lstlisting}
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass eine Summenzeile, unterhalb der Pivottabelle angezeigt wird.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT *
+FROM   (SELECT TO_CHAR(Buchungsdatum, 'Q') AS Quartal,
+               TO_CHAR(Buchungsdatum, 'YYYY') AS Datum, Betrag
+        FROM   Buchung)
+PIVOT  (SUM(Betrag) FOR Datum IN ('1985', '1986', '1987', '1988', '1989'))
+UNION ALL
+SELECT *
+FROM   (SELECT 'Summe' AS Quartal, TO_CHAR(Buchungsdatum, 'YYYY') AS Datum,
+               Betrag
+        FROM   Buchung)
+PIVOT  (SUM(Betrag) FOR Datum IN ('1985', '1986', '1987', '1988', '1989'));
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT *
+FROM   (SELECT DATENAME(QUARTER, Buchungsdatum) AS Quartal,
+               DATENAME(YEAR, Buchungsdatum) AS Datum, Betrag
+        FROM   Buchung) AS Sourcetable
+PIVOT  (SUM(Betrag) FOR Datum IN ([1985], [1986], [1987], [1988], [1989]))
+			 AS Pivottable
+UNION ALL
+SELECT *
+FROM   (SELECT 'Summe' AS Quartal, DATENAME(YEAR, Buchungsdatum) AS Datum,
+               Betrag
+        FROM   Buchung) AS Sourcetable
+PIVOT  (SUM(Betrag) FOR Datum IN ([1985], [1986], [1987], [1988], [1989]))
+			 AS Pivottable;
+        \end{lstlisting}
+      \end{enumerate}
+\clearpage

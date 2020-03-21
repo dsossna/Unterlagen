@@ -1,0 +1,86 @@
+      \subsection{Übungsaufgabe Bank}
+        \subsubsection{Vorgaben}
+          \begin{center}
+            \scalebox{.5}{
+              \begin{tikzpicture}[node distance=1.4cm, every edge/.style={link}]
+
+                \node[entity](bank)at (16,0){Bank};
+                  \node[attribute](bankid)[above = of bank]{\key{Bank\_ID}} edge (bank);
+                  \node[attribute](bic)[left = of bank]{BIC} edge (bank);
+                  \node[attribute](name)[below left = of bank]{Name} edge (bank);
+                \node[relationship](istkunde)[below = 3cm of bank]{ist Kunde} edge node[auto,swap] {(1,*)}(bank);
+                \node[entity](kunde)[left = 6cm of bank]{Kunde};
+                  \node[attribute](kundenid)[above = of kunde]{\key{Kunden\_ID}} edge (kunde);
+                  \node[attribute](vorname)[above right  = of kunde]{Vorname} edge (kunde);
+                  \node[attribute](nachname)[left = of kunde]{Nachname} edge (kunde);
+                \node[isa](isakunde)[below = of kunde]{isa} edge node[auto,swap]{(0,1)(1,1)} (kunde);
+                \node[entity](eigenkunde) at (1, -5){Eigenkunde};
+                  \node[attribute](geburtsdatum)[below left  = 0.5cm of eigenkunde]{Geburtsdatum} edge (eigenkunde);
+                  \node[attribute](rechnungsadresse)[above left = 0.5cm of eigenkunde]{Rechnungsadresse} edge (eigenkunde);
+                  \path[draw, -] (isakunde.west) -| (eigenkunde.north);
+                \node[relationship](hat)[right = 2cm of eigenkunde]{hat} edge node[auto,swap] {(1,*)}(eigenkunde);
+                \node[entity](konto) at (6,-9){Konto};
+                  \node[attribute](iban)[below right  = 0.2cm of konto]{\key{Konto\_ID}} edge (konto);
+                  \path[draw, -] (hat.south) -| (konto.148) node [auto,xshift=-17,yshift=8]{(0,1)};
+                \node[relationship](hat2)[right = 4cm of eigenkunde]{hat};
+                  \path[draw, -] (hat2.south) -| (konto.32) node[auto,xshift=17,yshift=8] {(0,1)};
+                \node[entity](fremdkunde) at (11, -5){Fremdkunde} edge node [auto,swap]{(1,*)} (hat2);
+                  \path[draw, -] (isakunde.east) -| (fremdkunde.north);
+                  \path[draw, -] (istkunde.west) -| (fremdkunde.east) node [auto,swap, xshift=17,yshift=-18]{(1,*)};
+                \node[relationship](hatvollmacht)[left = 2cm of konto]{hat Vollmacht} edge node[auto,swap] {(0,1)}(konto);
+                  \path[draw, -] (hatvollmacht.north) -| (eigenkunde.south) node [auto,swap, xshift=15,yshift=-25]{(0,*)};
+                \node[relationship](fuehrtdurch)[right = 4cm of konto]{führt durch} edge node[auto,swap] {(0,*)}(konto);
+                \node[entity](buchung)[below = of fuehrtdurch]{Buchung} edge node [auto,swap]{(1,1)} (fuehrtdurch);
+                  \node[attribute](buchungsid)[above left = 0.2cm of buchung]{\key{Bunchungs\_ID}} edge (buchung);
+                  \node[attribute](betrag)[above right  = 0.5cm of buchung]{Betrag} edge (buchung);
+                  \node[attribute](buchungsdatum)[below  = 0.5cm of buchung]{Buchungsdatum} edge (buchung);
+
+                \node[isa](isakonto)[below = 3cm of konto]{isa} edge node[auto]{(0,1)(1,1) disjunkt} (konto);
+                \node[entity](sparbuch) at (3, -15){Sparbuch};
+                  \path[draw, -] (isakonto.west) -| (sparbuch.north);
+                \node[entity](depot) at (6, -15){Depot};
+                  \path[draw, -] (isakonto.south) -| (depot.north);
+                  \node[attribute](eroeffnungsgebuehr)[below = of depot]{Eröffnungsgebühr} edge (depot);
+                \node[entity](girokonto) at (9, -15){Girokonto};
+                  \path[draw, -] (isakonto.east) -| (girokonto.north);
+                  \node[attribute](gebuehr)[below right = of girokonto]{Gebühr} edge (girokonto);
+                \node[relationship](betreut)[left = 6cm of eigenkunde]{betreut} edge node[auto,swap] {(0,*)}(eigenkunde);
+                \node[entity](mitarbeiter)[below = 4cm of betreut]{Mitarbeiter} edge node [auto,swap]{(0,*)} (betreut);
+                  \node[attribute](mitarbeiterid)[above left = of mitarbeiter]{\key{Mitarbeiter\_ID}} edge (mitarbeiter);
+                  \node[attribute](vorname)[below left = of mitarbeiter]{Vorname} edge (mitarbeiter);
+                  \node[attribute](nachname)[left  = of mitarbeiter]{Nachname} edge (mitarbeiter);
+                \node[relationship](fuehrt)[right = 3.5cm of mitarbeiter]{führt};
+                  \path[draw, -] (fuehrt.north) -- ($(fuehrt.north) + (0, 0.5)$) -| ($(mitarbeiter.10) + (0.5, 0)$) |- (mitarbeiter.10) node[auto,swap, xshift=64,yshift=20]{(0,1) wird geführt};
+                  \path[draw, -] (fuehrt.south) -- ($(fuehrt.south) - (0, 0.5)$) -| ($(mitarbeiter.350) + (0.5, 0)$) |- (mitarbeiter.350) node[auto,swap, xshift=45,yshift=-20]{(0,*) führt};
+                \node[relationship](arbeitetin)[below = 2cm of mitarbeiter]{arbeitet in} edge node[auto,swap] {(0,1)}(mitarbeiter);
+                \node[entity](bankfiliale)[below = 2cm of arbeitetin]{Bankfiliale} edge node [auto,swap]{(1,10)} (arbeitetin);
+                  \node[attribute](bankfilialid)[above left = of bankfiliale]{\key{Bankfilial\_ID}} edge (bankfiliale);
+                  \node[attribute](adresse)[above right  = of bankfiliale]{Adresse} edge (bankfiliale);
+              \end{tikzpicture}
+              }
+          \end{center}
+          Aus Platzgründen sind nicht alle Attribute im Modell aufgezeigt.
+          \subsubsection{Transformation Variante 1}
+						\begin{tabular}{>{\textbf\bgroup}p{5cm}<{\egroup}>{\small}p{10.1cm}}
+              Bank & (\pk{Bank\_ID}, BIC, Name) \\
+						  Bankfiliale & (\pk{Bankfiliale\_ID}, Strasse, HsNr, PLZ, Ort) \\
+              BankFremdkunde & (\fk{\pk{Bank\_ID + Kunden\_ID}}) \\
+              Buchung & (\pk{Buchung\_ID}, Betrag, Buchungsdatum, \nn{\fk{Konto\_ID}}) \\
+              Depot & (\fk{\pk{Konto\_ID}}, Eroeffnungsgebuehr) \\
+              Eigenkunde & (\fk{\pk{Kunden\_ID}}, Geburtsdatum, Rechnungsadresse) \\
+              EigenkundeKonto & (\fk{\pk{Kunden\_ID + Konto\_ID}}) \\
+              Fremdkunde & (\fk{\pk{Kunden\_ID}}) \\
+              FremdkundeKonto & (\fk{\pk{Kunden\_ID + Konto\_ID}}) \\
+              Girokonto & (\fk{\pk{Konto\_ID}}, Guthaben, Sollzins, Kontofuehrungsgebuehr) \\
+              Konto & (\pk{Konto\_ID}, IBAN, \fk{Bevollmaechtigter\_ID}) \\
+              Kunde & (\pk{Kunden\_ID}, Vorname, Nachname) \\
+						  Mitarbeiter &\mbox{(\pk{Mitarbeiter\_ID}, Vorname, Nachname,
+						  \fk{Bankfiliale\_ID},} \mbox{\fk{Vorgesetzter\_ID})} \\
+						  MitarbeiterEigenkunde & (\fk{\pk{Mitarbeiter\_ID + Kunde\_ID}}) \\
+							Sparbuch & (\fk{\pk{Konto\_ID}}, Guthaben, Habenzins) \\
+						\end{tabular}
+					\subsubsection{Transformation Variante 2}
+            Anstatt zwei Hilfstabellen für die Beziehungen zwischen Konto und den beiden Kundenarten zu erstellen, können auch die Primärschlüssel von Eigenkunde und Fremdkunde als jeweils eigene Fremdschlüssel entsprechend der Transformationsregel T07 in die Relation Konto eingetragen werden. Dadurch fallen die Relationen EigenkundeKonto und FremdkundeKonto weg und es bleibt nur noch die Relation Konto mit zwei neuen Attributen:
+
+            \textbf{Konto} (\begin{small}\pk{Konto\_ID}, IBAN, \fk{Bevollmaechtigter\_ID}, \fk{Eigenkunde\_ID}, \fk{Fremdkunde\_ID}\end{small})
+\clearpage

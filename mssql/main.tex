@@ -1,0 +1,26 @@
+\input{../main}
+
+% KOMAScript guide, p. 66 (3.7 Dokumenttitel)
+% Define all neccessary attributes of the title page
+    \subtitle{Microsoft SQL Server 2017}
+    \date{1. Ausgabe: 05.03.2020\linebreak Letzte Änderung: \today{}}
+\begin{document}
+    \frontmatter
+    % Typeset the title page with single line spacing
+    \begin{singlespace}
+        \maketitle
+        \pagenumbering{Roman}
+        \tableofcontents
+        \pagenumbering{bychapter}
+    \end{singlespace}
+    \mainmatter
+
+    \input{../erm/erm}
+    \input{../sql/sql}
+    \input{admin/dbadmin}
+    \backmatter
+	\appendix
+	\part{Appendix}
+\printbibliography[heading=tsqlreference,keyword=TSQLReference]
+\printbibliography[heading=sqlserveradmin,keyword=SQLServerAdmin]
+\end{document}

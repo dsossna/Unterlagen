@@ -1,0 +1,179 @@
+\section{Lösungen - Lokale Benutzerverwaltung}
+  \begin{enumerate}
+    \input{exercises/dbadmin_06/item_a}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE USER        alice
+  2  IDENTIFIED BY      Tqbfjotld1
+  3  DEFAULT TABLESPACE example;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_b}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT username, temporary_tablespace
+  2  FROM   dba_users
+  3  WHERE  username LIKE 'ALICE';
+
+USERNAME                       TEMPORARY_TABLESPACE
+------------------------------ ------------------------------
+ALICE                          TEMP
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_c}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE USER   bob
+  2  IDENTIFIED BY "Pass1/gH,3word";
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_d}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT username, default_tablespace
+  2  FROM   dba_users
+  3  WHERE  username LIKE 'BOB'
+
+USERNAME                       DEFAULT_TABLESPACE
+------------------------------ ------------------------------
+BOB                            USERS
+
+      \end{lstlisting}
+     \input{exercises/dbadmin_06/item_e}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER USER         alice
+  2  DEFAULT TABLESPACE users;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_f}
+\clearpage
+		\begin{lstlisting}[language=oracle_sql]
+SQL> ALTER USER           bob
+  2  DEFAULT TABLESPACE   example
+  3  TEMPORARY TABLESPACE temp
+  4  QUOTA                25 M ON users;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_g}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER USER alice
+  2  ACCOUNT LOCK;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_h}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE USER   chloe
+  2  IDENTIFIED BY password;
+
+SQL> GRANT sysdba TO chloe;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_i}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT *
+  2  FROM   v$pwfile_users;
+
+USERNAME                       SYSDB SYSOP SYSAS
+------------------------------ ----- ----- -----
+SYS                            TRUE  TRUE  FALSE
+CHLOE                          TRUE  FALSE FALSE
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_j}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE PROFILE p_clerk
+  2  LIMIT
+  3    FAILED_LOGIN_ATTEMPTS    3
+  4    PASSWORD_LIFE_TIME      15
+  5    PASSWORD_REUSE_MAX       3
+  6    PASSWORD_LOCK_TIME      10 / 1440;
+      \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_06/item_k}
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> ALTER USER alice
+  2  PROFILE    p_clerk;
+
+SQL> ALTER USER bob
+  2  PROFILE    p_clerk;
+
+SQL> ALTER USER chloe
+  2  PROFILE    p_clerk
+
+SQL> connect bob/wrong_password
+ERROR:
+&\textbf{\textcolor{red}{ORA-01017: invalid username/password; logon denied}}&
+
+
+SQL> connect bob/wrong_password
+ERROR:
+&\textbf{\textcolor{red}{ORA-01017: invalid username/password; logon denied}}&
+
+
+SQL> connect bob/wrong_password
+ERROR:
+&\textbf{\textcolor{red}{ORA-01017: invalid username/password; logon denied}}&
+
+
+SQL> connect bob/wrong_password
+ERROR:
+&\textbf{\textcolor{red}{ORA-28000: the account is locked}}&
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_l}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER PROFILE p_clerk
+  2  LIMIT
+  3    PASSWORD_GRACE_TIME 5;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_m}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER PROFILE p_clerk
+  2  LIMIT
+  3    PASSWORD_LOCK_TIME unlimited;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_n}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> DROP PROFILE p_clerk CASCADE;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_o}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER USER alice
+  2  QUOTA      10 M ON example;
+
+SQL> GRANT create table, create session
+  2  TO alice;
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_p}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE ROLE r_manager;
+SQL> CREATE ROLE r_clerk;
+SQL> CREATE ROLE r_departments;
+SQL> CREATE ROLE r_connect;
+SQL> CREATE ROLE r_employees;
+SQL> GRANT select ON hr.departments
+  2  TO    r_departments;
+SQL> GRANT create session
+  2  TO    r_connect;
+SQL> GRANT select, update, insert ON hr.employees
+  2  TO    r_employees
+SQL> GRANT r_departments
+  2  TO    r_manager;
+SQL> GRANT r_connect
+  2  TO    r_manager, r_clerk;
+SQL> GRANT r_employees
+  2  TO    r_clerk;
+SQL> GRANT r_manager
+  2  TO    alice;
+SQL> GRANT r_clerk
+  2  TO    bob, chloe
+      \end{lstlisting}
+    \input{exercises/dbadmin_06/item_q}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> GRANT create view
+  2  TO    alice;
+
+SQL> GRANT select ON hr.departments
+  2  TO    alice;
+
+SQL> GRANT select ON hr.locations
+  2  TO    alice;
+    \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_06/item_r}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT *
+  2  FROM   session_privs;
+
+PRIVILEGE
+----------------------------------------
+CREATE SESSION
+      \end{lstlisting}
+  \end{enumerate}

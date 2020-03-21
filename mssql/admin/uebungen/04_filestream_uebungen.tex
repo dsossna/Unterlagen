@@ -1,0 +1,31 @@
+\clearpage
+    \section{Projekt - Benutzen von Filestream und FileTables}
+      \begin{enumerate}
+        %Führen Sie das Skript \identifier{add_foto_column.sql} aus. Dieses
+        % Skript fügt der Tabelle \identifier{mitarbeiter} in der Datenbank
+        %\identifier{bank\_2014} eine Spalte namens \identifier{foto} hinzu.
+        \input{admin/uebungen/admin_chapter_04/item_a}
+
+        %Führen Sie das Skript \identifier{add\_foto\_column.sql} aus. Dieses
+        %Skript fügt der Tabelle \identifier{mitarbeiter} in der Datenbank
+        %\identifier{bank\_2014} eine Spalte namens \identifier{foto} hinzu.
+        \input{admin/uebungen/admin_chapter_04/item_b}
+        
+        %Legen Sie die Filestream-Dateigruppe \identifier{externalresources} an. Das Filestream-Verzeichnis
+        % soll in \oscommand{D:\textbackslash u01\textbackslash bank\_2014\textbackslash
+        %filestream\textbackslash fsstorage} liegen. Der logische Name für das
+        %Filestream-Verzeichnis soll \identifier{bank\_2014\_externalresources}
+        % sein.
+        \input{admin/uebungen/admin_chapter_04/item_c}
+        
+        %Erstellen Sie die FileTable \identifier{fotos}. Benutzen Sie
+        %\identifier{mitarbeiter\_fotos} als FileTable-Verzeichnis.
+        \input{admin/uebungen/admin_chapter_04/item_d}
+        
+        %Benutzen Sie die die \enquote{OpenRowset}-Funktionalität des SQL
+        % Servers, um die Fotos der Mitarbeiter in die FileTable \identifier{fotos} zu importieren.
+        %Verknüpfen Sie die Inhalt der Tabelle \identifier{mitarbeiter} mit den
+        %Fotos in der Tabelle \identifier{fotos}. Welches Attribut der FileTable
+        % eignet sich dafür?
+        \input{admin/uebungen/admin_chapter_04/item_e}
+      \end{enumerate}

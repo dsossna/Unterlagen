@@ -1,0 +1,26 @@
+\item Verschieben Sie Ihre Datenbank \identifier{tempdb} gemäß den
+folgenden Angaben:
+\begin{center}
+  \begin{small}
+    \changefont{pcr}{m}{n}
+    \tablefirsthead {
+      \multicolumn{1}{c}{\textbf{Name}} &
+      \multicolumn{1}{c}{\textbf{Größe}} &
+      \multicolumn{1}{c}{\textbf{Wachstum}} &
+      \multicolumn{1}{c}{\textbf{G Max.}} &
+      \multicolumn{1}{c}{\textbf{Pfad}} \\
+    }
+    \tablehead{
+    }
+    \tabletail {
+    }
+    \tablelasttail {
+    }
+    \begin{supertabular}{lrrrl}
+      tempdev &   1 G & + 200 M & 2 G &
+      G:\textbackslash u04\textbackslash tempdb\textbackslash data \\
+      templog & 200 M & + 50 M & 500 M & F:\textbackslash
+      u03\textbackslash tempdb\textbackslash log \\
+    \end{supertabular}
+  \end{small}
+\end{center}

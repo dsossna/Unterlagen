@@ -1,0 +1,1303 @@
+  \chapter{Einführung in die SQL Server Datenbankarchitektur}
+  \chaptertoc{}
+  \cleardoubleevenpage
+    \section{SQL Server und die Client-Server-Architektur}
+      SQL Server Datenbanken sind dazu geschaffen, um große Datenmengen zu
+      verwalten und diese in einer Multi-User Umgebung einer großen Anzahl von
+      Benutzern zur Verfügung zu stellen.
+      \bild{Der SQL Server in einer Client-Server
+      Umgebung}{datenbankarchitektur1}{0.9}
+      \subsection{Der Client}
+        Auf der Client-Seite kann eine beliebige Software zur Anwendung
+        kommen, die in der Lage ist, sich mit dem SQL Server zu verbinden. Ein Bespiel
+        hierfür ist das \enquote{SQL Sever Management Studio}, kurz SSMS.
+        \subsubsection{Connection}
+          Eine Connection ist eine physikalische Verbindung zwischen einem
+          Client und dem Datenbankserver, die mittels eines Netzwerk- oder
+          IPC-Protokolls aufgebaut wird. Der SQL Server kennt vier verschiedene
+          Protokolle, welche die Herstellung einer Connection ermöglichen:
+          \begin{itemize}
+              \item \textbf{Shared Memory}: Das Shared Memory Protokoll
+              ermöglicht die Verbindung zwischen Clientsoftware und
+              Datenbankserver, sofern sich beide auf dem gleichen Rechner
+              befinden. Es ist das einzige Protokoll, dass nur lokale
+              Verbindungen zulässt.
+              \item \textbf{TCP/IP}: Dies ist das mit Sicherheit weltweit meist
+              genutzte Netzwerkprotokoll, das auch im SQL Server Umfeld am
+              Gängigsten ist.
+              \item \textbf{Named Pipes}: Named Pipes sind ein Konstrukt,
+              welches aus der Unix-Welt stammt. Microsoft hat eine eigene,
+              abgewandelte Implementierung, mit deren Hilfe eine Peer-to-Peer
+              Kommunikation zwischen einem Client und einem Server hergestellt
+              werden kann. 
+              
+              Mittels Named Pipes kann auf sehr einfachem Wege eine
+              Verbindung hergestellt werden, jedoch sind die Möglichkeiten eine
+              solche Verbindung auch sicher zu gestalten nur sehr gering,
+              weshalb fast immer TCP/IP den Vorzug bekommt.
+              \item \textbf{VIA}: Das \enquote{Virtual Interface Adapter}
+              Netzwerkprotokoll ist ein mit TCP/IP vergleichbares Protokoll. Der
+              Unterschied liegt darin, das VIA für
+              Hochgeschwindigkeitsverbindungen zwischen zwei Partnern ausgelegt
+              ist. Die hohe Performance dieses Protokolls kann nur durch
+              spezielle Hardware erreicht werden, was den Einsatz von VIA sehr
+              kostspielig macht.
+          \end{itemize}
+          \begin{merke}
+            Das VIA-Protokoll gilt als deprecated und wird zukünftig aus dem SQL
+            Server entfernt werden. Die aktuellen SQL Server Versionen 2008,
+            2008 R2, 2012 und 2014 unterstützen VIA aber noch.
+          \end{merke}
+        \subsubsection{Session}
+          Sobald eine Connection zwischen dem Client und dem Datenbankserver
+          besteht, kann sich der Benutzer am Server authentifizieren, um eine
+          Session aufzubauen. Während eine Connection eine physikalische
+          Verbindung darstellt, ist eine Session eine Kommunikationsverbindung,
+          die einem authentifizierten Nutzer gewährt wird.
+          \begin{merke}
+            Eine Session stellt einen Zugang zur Datenbank dar.
+          \end{merke}
+      \subsection{Der Datenbankserver}
+        \subsubsection{Server}
+          Als Datenbankserver wird der Hostrechner bezeichnet, auf dem
+          die SQL Server Software installiert wird. Die Verwaltung dieses Teils der
+          Architektur geschieht nicht durch den SQL Server, sondern durch das
+          Betriebbsystem. Der SQL Server nutzt lediglich die zur Verfügung
+          gestellten Ressourcen.
+        \subsubsection{Instanz}
+          Bei einer Instanz handelt es sich um eine Sammlung aus
+          Arbeitsspeicherstrukturen und Prozessen, die unter dem SQL-Server
+          Windowsdienst zusammengefasst sind. Sie sollen ein schnelles und
+          effizientes Arbeiten mit den Daten ermöglichen. 
+          
+          Auf einem Datenbankserver können mehrere Instanzen betrieben
+          werden. Jede Instanz hat Ihre eigene Softwareinstallation, da
+          bestimmte Teile der SQL Server Software instanzabhängig sind. Es
+          werden zwei Instanzarten unterschieden:
+          \begin{itemize}
+              \item \textbf{Default Instance}: Die Standardinstanz ist immer die
+              erste Instanz auf einem SQL Server. Sie wird durch den
+              Rechnernamen und die Zeichenfolge \identifier{MSSQLSERVER}
+              identifiziert, z. B.
+              \identifier{FEA11WV0010A\textbackslash MSSQLSERVER}.
+              \item \textbf{Named Instance}: Wenn mehr als eine Instanz auf
+              einem Server betrieben werden muss, dann handelt es sich immer um
+              sogenannte \enquote{benannte Instanzen}. Eine benannte Instanz
+              wird durch den Rechnernamen, plus einen bei der Installation
+              zuwählenden Namen identifiziert. Beispiele könnten sein:
+              \identifier{FEA11WV0010A\textbackslash CRM} oder
+              \identifier{FEA11WV0010A\textbackslash ERP}
+          \end{itemize}
+          \begin{merke}
+            Benutzt ein Client zur Verbindung mit dem Server nur den
+            Rechnernamen, wird er automatisch mit der Standardinstanz verbunden!
+          \end{merke}
+        \subsubsection{Datenbank}
+          Datenbanken stellen die dritte Ebene in der Architektur des SQL       
+          Servers dar. Sie bestehen aus einer oder mehreren Datendateien und
+          dienen als Datenspeicher. Sie enthalten sowohl Meta- als auch
+          Nutzdaten. Jede Datenbank kann eine Größe von ca. 524 TB
+          erreichen und wird von genau einer Instanz verwaltet. Zusätzlich zu
+          den Datendateien besitzt eine Datenbank noch ein sogenanntes
+          \enquote{Transaktionsprotokoll}.
+          \begin{merke}
+            Zwischen Datenbanken und Instanzen besteht bei SQL Server eine 1:n
+            Beziehung, d. h. es können mehrere Datenbanken zu einer Instanz
+            gehören.
+          \end{merke}
+          \bild{Server - Instanzen -
+          Datenbanken}{sql_server_server_instance_database}{0.8}
+\clearpage
+    \section{Speicherstrukuren der SQL Server Instanz}
+      \bild{Die SQL Server Database Engine}{database_engine_7}{1.4}
+      Die \enquote{Database Engine} ist das Herzstück der SQL Server
+      Architektur. Sie besteht aus einer Reihe von Caches und Prozessen, mit
+      deren Hilfe die komplette Verarbeitung von Clientanfragen geschieht. Ihre
+      vier Hauptkomponenten sind:
+      \begin{itemize}
+        \item Die Zugriffsprotokolle (in der Grafik nicht dargestellt),
+        \item die \enquote{Storage Engine},
+        \item der \enquote{Query Processor}, der auch als \enquote{Relational
+        Engine} bezeichnet wird,
+        \item und das SQL Server Operating System, kurz
+        \enquote{SQLOS} oder auch \enquote{SOS}.
+      \end{itemize}
+      Jede Anfrage eines Clients wird während ihrer Abarbeitung durch alle
+      Ebenen gereicht. Da die Database Engine grundlegender Bestandteil des
+      SQL Servers ist, ist es wichtig, deren Funktionsweise zu kennen und zu
+      verstehen. Dieses Wissen ist Hilfreich, um die Auswirkungen von
+      Arbeitsspeicher und Datenträgern auf die Datenbankperformance
+      einschätzen zu können. Des Weiteren helfen diese Kenntnisse bei der
+      Erstellung von Backup und Recovery Strategien.
+      
+      Das SQL Server Operating System, kurz SQLOS, bildet die Schnittstelle
+      zwischen dem SQL Server und dem Betriebssystem. Diese Schicht wurde mit
+      dem SQL Server 2005 eingeführt, um die immer komplexeren Anforderungen
+      des SQL Servers an das Betriebssystem erfüllen zu können. Die
+      wichtigsten Aufgaben des SQLOS sind:
+\clearpage
+      \begin{itemize}
+        \item Memory management: Anforderung von Arbeitsspeicher für die
+        Komponenten der Database Engine.
+        \item Scheduling: Verwaltung von Threads\footnote{Thread (Informatik):
+        Ein Thread ist ein Teil eines Prozesses} und Fibres\footnote{Fibre
+        (Informatik): Teil eines Prozesses, der speziell auf kooperatives
+        Multitasking ausgerichtet ist}
+        \item Deadlock Detection: Auflösen von Situationen, in denen sich zwei
+        Prozesse gegenseitig blockieren.
+        \item Asynchroner I/O: Schreiben von Daten, ohne auf eine Bestätigung
+        zu warten.
+      \end{itemize}
+       \subsection{Zugriffsprotokolle}
+        Die Protokollebene ist die äußerste Schicht der SQL Server Database
+        Engine. Ihre Hauptaufgabe ist es, den Clients zu ermöglichen,
+        Connections zum Datenbankserver aufzubauen. In ihr sind die
+        vier bereits im Vorfeld erwähnten Zugriffsprotokolle gekapselt:
+        \begin{itemize}
+            \item Shared Memory
+            \item Named Pipes
+            \item TCP/IP
+            \item VIA
+        \end{itemize}  
+        Ein weiterer Arbeitsschritt der auf dieser Ebene verrichtet
+        wird, ist das Entgegennehmen von Clientrequests. Diese werden in ein
+        Microsoft spezifisches Datenformat, mit Namen \enquote{Tabular data
+        stream} (TDS) umgewandelt. Dabei handelt es sich um ein Application
+        Layer Protcol, welches zum Datentransfer zwischen einem Datenbankserver
+        und einer Clientanwendung dient. Es hat verschiedene Fähigkeiten, wie z.
+        B. die Authentifizierung von Clients, das Ausführen von SQL Batches und
+        Stored Procedures oder das Ausliefern von Result Sets.
+        \begin{literaturinternet}
+          \item \cite{dd304523}
+        \end{literaturinternet}
+      \subsection{Der Buffer Pool und seine Bestandteile}
+        Der Buffer Pool ist die größte, im Arbeitsspeicher befindliche,
+        Kompontene des SQL Servers. Er dient als Reservoir für die
+        verschiedenen Caches des SQL Servers, wie z. B. den Data Cache oder den Plan Cache.
+        \subsubsection{Der Data Cache}
+          Der Data Cache dient als Raum für die Verarbeitung von Daten.
+          Direkt nach dem Hochfahren einer SQL Server Instanz ist er mit
+          einem frisch formatierten Dateisystem vergleichbar. Er besteht aus
+          vielen 8 KB grossen Speicherseiten, den Buffers, die dazu bestimmt sind,
+          Information aus den Datendateien aufzunehmen. 
+          \begin{merke}
+            Als \enquote{Buffer} wird eine im Buffer Pool befindliche
+            Speicherseite (Page) bezeichnet.
+          \end{merke}
+          Mit zunehmender Arbeitslast füllt sich der Data Cache mit Buffers, die
+          von den Clients angefordert wurden. Es werden zwei Buffer-Arten
+          unterschieden:
+          \begin{itemize}
+              \item \textbf{clean buffers}: Ein Buffer wird als \enquote{clean}
+              bezeichnet, wenn er entweder leer oder sein Inhalt synchron
+              mit einer Speicherseite auf dem Datenträger ist.
+              \item \textbf{dirty buffer}: Ein Buffer gilt als \enquote{dirty},
+              wenn sein Inhalt nicht synchron mit einem Buffer auf dem
+              Datenträger ist, d. h. wenn er geänderten Inhalt aufweist.
+          \end{itemize}
+          Alle als clean markierten Buffer werden in einer Liste, der
+          \enquote{Free Buffer List} verwaltet. Diese Liste dient zum Auffinden
+          freier Blöcke, so dass Informationen möglichst einfach und schnell im
+          Data Cache abgelegt werden können.
+          
+          Modifikationen an Tabellen oder Indizes finden grundsätzlich immer
+          im Data Cache und nie auf dem Datenträger statt. Sollen die Daten
+          einer Tabelle erstmalig modifiziert oder gelesen werden, müssen
+          diese zuerst in den Data Cache geschrieben werden. Existiert
+          wiederholter Bedarf für die gleichen Tabellenzeilen, entfällt der
+          Zugriff auf den Datenträger, da sich die benötigten Inhalte
+          bereits im Data Cache befinden. Auf diese Weise können
+          Datenträgerzugriffe gespart und die I/O Performance verbessert
+          werden.
+
+          Der Data Cache wird mittels eines LRU-K\footnote{LRU = Least Recently
+          Used} Algorithmus verwaltet, der dafür sorgt, dass häufig gefragte
+          Speicherseiten im Data Cache verbleiben und nur selten benötigte
+          Seiten aus dem Data Cache entfernt werden, um Platz für Neue zu
+          schaffen. Eine nähere Beschreibung dieses Algorithmus übersteigt
+          jedoch den Horizont dieser Unterrichtsunterlage.
+\clearpage
+        \subsubsection{Der Plan Cache}
+          Der Plan Cache enth\"alt Informationen \"uber alle ausgef\"uhrten
+          SQL-Statements und Stored Procedures. Setzt ein Nutzer ein
+          SQL-Statement ab, werden Informationen dar\"uber in Form eines
+          Ausf\"uhrungsplanes im Plan Cache abgelegt. Wird exakt das gleiche
+          Statement von einem anderen Nutzer erneut ausgef\"uhrt, k\"onnen die
+          vorhanden Informationen im Plan Cache wiederverwendet werden, was
+          die Ausf\"uhrungsgeschwindigkeit wesentlich erh\"oht.
+
+          Auch hier kommt ein LRU Algorithmus zur Verwaltung der Pläne zum
+          Einsatz.
+        \subsubsection{Der Log Cache}
+          Der Log Cache nimmt Protokolleinträge zu allen in der Datenbank
+          durchgeführten Änderungen auf, bevor diese auf den Datenträger
+          geschrieben werden. Seine Struktur ist anders, als die des Data Caches
+          oder die des Plan Caches. Er besteht aus einer Liste, die auf einem
+          32-Bit System bis zu 32 Einträge und auf einem 64-Bit System bis zu
+          128 Einträge umfassen kann. Jeder Eintrag verweist auf einem
+          sogenannten \enquote{Log Block}. In den Log Blöcken werden dann die
+          Änderungen protokolliert.
+          
+          Ein Log Block kann eine Größe von 512 B bis 60 KB aufweisen. Größe und
+          Anzahl der Log Blöcke sind abhängig von der Arbeitslast, die die SQL
+          Server Instanz bewältigen muss. Sobald der Inhalt eines Log Blocks vom
+          Log Manager auf den Datenträger geschrieben wurde, kann der Block
+          wiederverwendet werden. Sollte die aktuelle Anzahl an Log Blöcken
+          nicht ausreichen, kann der SQL Server neue Blöcke allokieren.
+      \subsection{Die Prozessarchitektur des SQL Servers}
+        Die Storage Engine und das SQLOS stellen eine Reihe von
+        Hintergrundprozessen zur Verfügung, die die gesamte Arbeit im DBMS
+        verrichten. Die meisten von Ihnen greifen auf verschiedene Buffers und
+        Caches zu, die wiederum vom SQL Server Operating System verwaltet
+        werden.
+        \subsubsection{Data Access Methods}
+          Die Data Access Methods sind mit dem Abarbeiten der Requests betraut.
+          Sie koordinieren Buffer- und Transaction Manager. Wenn Zeilen aus der
+          Datenbank gelesen werden müssen, initiieren die sie den Lese-
+          oder Schreibvorgang und alle dafür notwendigen Schritte. Sie führen
+          diese Schritte aber nicht selbst aus. An Ihrer statt muss der Buffer Manger, die
+          Informationen auf dem Datenträger lesen und im Buffer Pool
+          bereitstellen.
+        \subsubsection{Buffer Manager}
+          Der Buffer Manager hat die Aufgabe, Speicherseiten (Buffers) zu
+          verwalten. Dies sind 8 KB große Einheiten, die in allen
+          Speicherstrukturen (Buffers / Caches) des SQL Server genutzt
+          werden. Immer dann, wenn die Access Methods einen Buffer
+          benötigen, muss der Buffer Manager diesen im Buffer Pool zur
+          Verfügung stellen. Dazu prüft er, ob die Seite bereits im Buffer
+          Pool vorhanden ist oder nicht. 
+        \subsubsection{Transaction Manager} 
+          Transaktionen sind ein wichtiges Konzept innerhalb einer relationalen
+          Datenbank. Sie ermöglichen es, Operationen die einen logischen
+          Zusammenhang haben, zu gruppieren. Der Sinn der dahinter steckt ist,
+          dass entweder alle Operationen einer Gruppe/Transaktion erfolgreich
+          ausgeführt werden oder gar keine. Damit soll Dateninkonsistenz
+          verhindet werden. Dieser Transaktionsmechanismus funktioniert
+          innerhalb einer SQL Server Instanz, datenbankübergreifend.
+          
+          Zur Umsetzung eines Transaktionskonzeptes besitzt der Transaction
+          Manager zwei wichtige Komponenten: Den \enquote{Lock Manager} und den
+          \enquote{Log Manager}.
+        \subsubsection{Lock Manager}
+          Das Setzen von Sperren ist in einer Mutli-User-Umgebung eine
+          unerlässliche Tätigkeit. Mit Hilfe von Sperren wird
+          gewährleistet, dass trotz konkurrierender Zugriffe die Daten
+          konsistent bleiben. Die Aufgabe des Lock Managers ist es, in
+          Zusammenarbeit mit dem Transaction Manager, Sperren im System zu
+          setzen und zu verwalten. Die folgende Abbildung verdeutlicht, wie
+          wichtig die Arbeit des Lock Managers ist
+          \bild{Eine exklusive Schreib\-sperre}{lock_manager_X_lock}{1}
+          Die Benutzerin Alice soll eine Änderung an einer Tabellenzeile
+          durchführen. Um dies ungestört tun zu können, muss die betreffende
+          Zeile exklusiv für Alice gesperrt werden. Dadurch wird verhindert,
+          dass Bob gleichzeitig mit Alice an der selben Zeile arbeitet. Nur so
+          kann die Konsistenz der Tabellenzeile gewährleistet werden.
+        \subsubsection{Log Manager}
+          Eine grundlegende Anforderung an moderne Datenbank Management Systeme
+          ist der effektive Schutz vor Datenverlust. Der einfachste Fall, bei
+          dem es zu Datenverlust kommen kann, ist der Absturz des
+          Datenbankservers. Da durch ein solches Ereignis der gesamte Inhalt des
+          Arbeitsspeichers verloren geht, verschwinden auch die im Buffer Pool
+          gespeicherten Buffer mit neuem/geändertem Inhalt. Deshalb wird
+          ein Mechanismus benötigt, der vor einem solchen Verlust schützt.
+          Dieser Mechanismus wird in SQL Server als \enquote{Transaction
+          Logging} bezeichnet.
+        
+          Alle Änderungen die im Data Cache durchgeführt werden, müssen
+          zuvor durch den Buffer Manager in dem eigens dafür eingerichteten
+          \enquote{Log Cache} protokolliert werden. Dadurch wird gewährleistet,
+          dass jede Änderung auf jeden Fall protokolliert wird, wodurch das
+          Risiko für Datenverlust deutlich sinkt.
+          
+          Um den Inhalt des Log Buffers auf den Datenträger zu schreiben, hat
+          man dem SQL Server einen eigenen Hintergrundprozess spendiert, den
+          \enquote{Log Manager}. Seine Aufgabe ist es, den Inhalt des Log Caches
+          im Write-Ahead-Logging Verfahren auf den Datenträger zu sichern.
+          Dabei muss er  immer zuerst die Protokolleinträge schreiben, bevor
+          die Access Methods Änderungen auf den Datenträger übertragen.
+          Sollten nun geänderte Buffer verloren gehen, können die Änderungen aus
+          dem Transaktionsprotokoll rekonstruiert werden.
+          \begin{merke}
+            Jede Änderung, die ein Nutzer an einer Tabellenzeile vornimmt, wird
+            zuerst im Log Cache, niedergeschrieben, bevor sie vollzogen wird. Da
+            dieses Protokoll sehr wichtig ist, wird es nahezu ohne Unterbrechung
+            vom Log Manager auf dem Datenträger gesichert.
+          \end{merke}             
+        \subsubsection{Der Lazy Writer}
+          Der Lazy Writer hat die Aufgabe
+          \begin{itemize}
+              \item im Bufferpool nach Dirty-Buffers zu suchen,
+              \item deren Inhalt in die Datendateien zurückzuschreiben,
+              \item den Block zu leeren und
+              \item ihn erneut auf die Free Buffer List zu setzen.
+          \end{itemize}
+          Er tut dies, um zu gewährleisten, dass immer eine ausreichende Menge
+          freier Buffer im Data Cache zur Verfügung steht. Da der Data Cache
+          mittels eines LRU Algorithmus verwaltet wird schreibt der Lazy Writer
+          immer alte, wenig benutzte Buffer auf den Datenträger.
+          
+          Ist die Anzahl der Clean Buffers im Data Cache sehr hoch, hat der Lazy
+          Writer auch nur wenig zu tun. Sollte es jedoch so sein, dass der Lazy
+          Writer nahezu permanent schreiben muss, so ist dies ein Anzeichen für
+          eine zu geringe Speichermenge im Data Cache.
+          
+          Im ganz extremen Situationen kann es sogar soweit kommen, dass der Lazy
+          Writer Hilfe von Worker Threads (später in diesem Kapitel erläutert)
+          benötigt. Diese führen dann eine interne Routine namens
+          \enquote{HelpLazyWriter} aus um ihn bei seiner Arbeit zu
+          unterstützen.
+        \subsubsection{Checkpoints und der Checkpointer}
+          \begin{merke}
+            Per Definition ist ein Checkpoint: \enquote{Ein Ereignis, das durch
+            andere Ereignisse ausgelöst wird!}.
+          \end{merke}
+          Auslöser für Checkpoints sind:
+          \begin{itemize}
+            \item Das SQL-Kommando \languagemssql{CHECKPOINT}
+            \item Ein zu 70 \% gefülltes Transaktions Log (nur im Simple
+            Recovery Model)
+            \item Die geschätzte Zeit für ein Recovery ist größer als
+            die angegebene Recovery Zeit\-spanne.
+            \item Es wird ein Backup oder ein Snapshot der Datenbank angefertigt
+            \item Der SQL Server wird heruntergefahren
+          \end{itemize}
+          Bei jedem Checkpoint werden geänderte Speicherseiten, aus dem
+          Data Cache auf den Datenträger geschrieben. Dadurch
+          gewährleistet die Datenbank zum einen Datenkonsistenz und
+          zum andern hält sie die Zeitspanne gering, die nach einem Absturz
+          des Servers für ein Recovery benötigt würde, da möglichst
+          viele Speicherseiten mit bestätigten Änderungen, in
+          regelmäßigen Intervallen auf den Datenträger geschrieben
+          werden.
+          
+          Ausgeführt werden Checkpoints durch einen Hintergrundprozesse
+          namens \enquote{Checkpointer}. Das ist der Prozess, der
+          beim Auslösen eines Checkpoints den Data Cache nach geänderten Seiten
+          durchsucht und die gefundenen Seiten auf den Datenträger überträgt.
+          Der Unterschied zum Lazy Writer ist, dass er nur den Inhalt von Dirty
+          Buffer auf den Datenträger überträgt, ohne dabei die Free Buffer List
+          anzupassen.
+          \begin{merke}
+            Der Checkpointer kümmert sich nur darum, dass die Zeitspanne für ein
+            Instance Recovery möglichst gering gehalt wird und nicht um freien
+            Speicher im Data Cache.
+          \end{merke}
+        \subsubsection{Der Scheduler}
+          Die Zuteilung von Prozessorressourcen an Threads ist ein unabdingbarer
+          Bestandteil des Mutlitaskings. Jedes multitaskingfähige Betriebssystem
+          besitzt deshalb einen Scheduler, der im Zeitscheibenverfahren
+          Prozessorzeit an die Threads verteilt. Das Ziel des Schedulers ist es,
+          die verfügbare Prozessorkapazität möglichst gleichmäßig auf
+          alle Threads zu verteilen. Dabei wird zwischen zwei verschiedenen
+          Scheduling-Verfahren unterschieden:
+          \begin{itemize}
+            \item Präemptiv\footnote{Präemtpiv (Duden): einer sich bereits
+            abzeichnenden Entwicklung zuvorkommend, vorsorglich, vorbeugend}: Der
+            Scheduler behält die Kontrolle über alle Ressourcen. Er teil sie
+            zu und entzieht sie auch wieder. Ein einzelner Thread kann nicht das
+            gesamte System blockieren oder zum Absturz bringen.
+            \item Kooperativ: Der Scheduler teilt Ressourcen zu und wartet darauf,
+            dass der Thread sie wieder zurück gibt. Die Threads bestimmen
+            selbst, wann sie ihre Ressourcen abgeben.
+          \end{itemize}
+          Der Windowsscheduler arbeitet nach dem präemptiven Modell weshalb er
+          nicht in der Lage ist, dem SQL Server optimale Performance zu
+          gewährleisten, da er nicht speziell auf die Anforderung des SQL
+          Servers zugeschnitten ist. Mit der Einführung des SQL Server Operating
+          System Schedulers, kurz SOS, wurde dem SQL Server die Möglichkeit
+          eröffnet, auch große Datenbanken performant zu verwalten. Dies ist
+          möglich, da der SOS eine Mischung aus präemptivem und kooperativem
+          Modell benutzt, was eine bessere Zusammenarbeit der SQL Server
+          Workerthreads ermöglicht. Konkret bedeutet dies:
+  
+          Wie beim präemptiven Multitasking üblich, wird eine Obergrenze für
+          die nutzbare  Prozessorzeit vom SOS festgelegt (4 Millisekunden).
+          Threads die mehr als die ihnen zur Verfügungstehenden Ressourcen
+          benötigen, werden nicht gestoppt. Diese haben die Möglichkeit sich
+          in eine Warteliste einzutragen und neue Prozessorzeit zu erhalten,
+          sobald dies möglich ist. Threads die ihre Ressourcen nicht mehr
+          benötigen, geben diese unmittelbar zurück.
+  
+          \begin{merke}
+            Worker werden nur angehalten, wenn sie ihre Zeitscheibe von
+            4 Millisekunden überschreiten und sich nicht in einer
+            Operation befinden, die keinesfalls unterbrochen werden darf.
+          \end{merke}
+\clearpage
+        \subsubsection{SQL Server Workerthreads}
+          Workerthreads sind die \enquote{ausführenden Organe} des SQL Servers.
+          Sie werden bei Bedarf vom Scheduler erstellt und verbrauchen im Minimum
+          0,5 M (32-Bit System) bzw. 2 M (64-Bit System) Arbeitsspeicher. Jeder
+          Worker ist an die CPU gebunden, von der er erstellt wurde. Ein
+          Wechsel zu einer anderen CPU ist nicht möglich. Es kann jedoch sein,
+          dass es so erscheint, als würde es zu einem Wechsel kommen, wenn ein
+          Worker zerstört und neu erstellt wird.
+          
+          Die Verteilung der Arbeit auf die Workerthreads geschieht ebenfalls
+          durch den Scheduler. Ein Arbeitspacket für einen Worker wird als
+          \enquote{Task} bezeichnet. 
+          \begin{merke}
+            Jeder Worker arbeitet einen Task immer vollständig ab, bevor er neue
+            Arbeit annimmt.
+          \end{merke}
+          Worker werden durch den Scheduler eliminiert, wenn:
+          \begin{itemize}
+            \item sie mindestens 15 Minuten im Leerlauf (idle) waren oder
+            \item wenn der SQL Server zu wenig Arbeitsspeicher zur Verfügung hat.
+          \end{itemize}
+          Die Workerthreads greifen auf die SQL Server Access Methods zu, um Daten
+          zu verarbeiten und sie dann den Clients zur Verfügung zu stellen. Sie
+          sind somit das Bindeglied zwischen dem Client und der Database Engine.
+        \subsubsection{Tasks}
+          Ein Task ist ein Arbeitspaket, dass einem Worker von seinem Scheduler
+          zugewiesen wird. Sie entstehen dadurch, dass Clients
+          Anforderungen (sogenannte \enquote{Requests}) an den SQL
+          Server senden. Unter einem Request versteht der SQL Server
+          einen einzelnen Batch\footnote{Batch = Eine Reihe von
+          SQL-Anweisungen, die mit dem GO-Befehl abgeschlossen werden}.        
+    \section{Query Processor (Relational Engine)}
+      \label{relengine}
+      Der SQL Server Query Processor, der auch als Relational Engine bezeichnet
+      wird, beinhaltet Werkzeuge, die dafür Zuständig sind zu entscheiden, 
+      was beim Ausführen einer Abfrage getan werden muss und wie dies am 
+      performantesten geschehen kann. Sie steht in enger Verbindung mit der 
+      Storage Engine, da sie diese benötigt, um Zugriff auf Datenträger und 
+      Arbeitsspeicher zu erhalten.
+      \subsection{Command Parser}
+        Die Hauptaufgabe des Command Parsers ist es, T-SQL-Statements auf eine
+        korrekte Syntax hin zu überprüfen und sie in ihre Bestandteile zu 
+        zerlegen. Diese Tätigkeit wird \enquote{parsen} genannt.
+        
+        Nach dem Parsen wird ein zweiter Arbeitsschritt vollzogen, das
+        \enquote{Binding}. Beim Binding werden alle Objektbezeichner
+        (Tabellennamen, Viewnamen, usw.) durch deren Unique
+        Identifier ersetzt.
+        
+        Parsen und Binding geschehen, um das Statement in eine neue Form zu
+        bringen, die für die Verarbeitung durch die nächste Komponente,
+        den Query Optimizer, besser geeignet ist. Diese neue Form wird als 
+        \enquote{Query Tree} bezeichnet.
+      \subsection{Query Optimizer}
+        Dies ist der wohl komplexeste Bestandteil der Database Engine. Er nimmt 
+        den Query Tree vom Command Parser entgegen und bereitet ihn für die 
+        Ausführung vor. Sein Hauptaugenmerk liegt dabei auf den DML-Kommandos 
+        \languagemssql{SELECT}, \languagemssql{INSERT}, \languagemssql{UPDATE}
+        und \languagemssql{DELETE}, da diese auf unterschiedliche Art und Weise 
+        abgearbeitet werden können. Andere Statements, wie beispielsweise
+        DDL-Kommandos können nicht optimiert werden und werden daher auch
+        nicht durch den Optimizer betrachtet.
+
+        Das Arbeitsergebnis des Query Optimizers ist der
+        \enquote{Ausführungsplan}. Er kann als eine Art Arbeitsplan oder
+        Kochrezept verstanden werden. In ihm sind alle Einzelschritte enthalten,
+        die für die Ausführung des SQL-Statements notwendig sind. Der Weg zu
+        einem performanten Ausführungsplan ist aufwendig. Der Query Tree muss 
+        in kleine Stücke zerlegt werden (normalisieren), Statistiken und
+        Indizes müssen geprüft werden.
+
+        Zusätzlich zu all diesen Aufgaben muss der Optimizer auch darauf
+        achten, dass die Erstellung eines optimalen Ausführungsplanes nicht
+        deutlich länger dauert, als dessen Ausführung. Unter Umständen
+        kann es sinvoll sein, einen weniger optimalen Plan heranzuziehen, um so
+        Zeit bei der Planerstellung zusparen und letztendlich das gewünschte 
+        Ergebnis in einer kürzeren Zeit zu erzielen, als dies nach der
+        Erstellung des optimalsten Planes möglich wäre.
+        \bild{Berechnung von Ausführungsplänen}{plan_calculation}{0.5}
+      \subsection{Query Executor}
+        Der Query Executor ist der Dritte im Bunde und hat die Aufgabe einen
+        Ausführungsplan zu verarbeiten, also das SQL-Statement auszuführen.
+        \begin{literaturinternet}
+          \item \cite{dn205319}
+        \end{literaturinternet}                
+    \section{Datendateien - Aufbau und Verwaltung}
+      Jede SQL Server Datenbank besteht aus wenigstens einer Datendatei, die
+      mindestens 5 MB groß sein muss und maximal 16 TB groß sein darf.
+      Es können bis zu 32.767 Datendateien pro Datenbank genutzt werden. Der
+      Dateiname der ersten Datendatei einer jeden Datenbank trägt immer die
+      Dateiendung *.mdf, jede weitere Datendatei benutzt statt dessen *.ndf.
+      \begin{merke}
+        Die Dateiendung *.mdf wird in der Literatur unterschiedlich
+        interpretiert. Teilweise als \enquote{Master Data File} aber manchmal
+        auch als \enquote{Meta Data File}!
+      \end{merke}
+      Datendateien werden in sogenannten \enquote{Dateigruppen} gegliedert.   
+      Dies sind logische Verwaltungseinheiten, die aus einer oder mehreren
+      Datendateien bestehen. Sie dienen im Wesentlichen zur Vereinfachung
+      administrativer Tätigkeiten, wie z. B. Backup und Recovery
+      verschiedener Teile der Datenbank. Statt die Namen von mehreren
+      Datendateien angeben zu müssen, genügt es, nur den Namen der
+      Dateigruppe zu benutzen.
+      \begin{merke}
+        Der Name der ersten Dateigruppe einer SQL Server Datenbank lautet
+        \enquote{Primary}. Diese Dateigruppe muss immer existieren und kann
+        nicht umbenannt werden. Es können bis zu 32.767 Dateigruppen pro
+        Datenbank angelegt werden.
+      \end{merke}
+      \subsection{Aufbau einer Datendatei}
+        Datendateien bestehen aus \enquote{Speicherseiten}, engl.
+        \enquote{Pages}, welche die kleinsten Speichereinheiten sind, die
+        von SQL Server verwaltet werden. Es handelt sich um 8 KB große
+        Portionen, die zu unterschiedlichen Zwecken genutzt werden. Insgesamt gibt es neun
+        verschiedene Arten von Speicherseiten:
+\clearpage
+        \begin{itemize}
+          \item Data Pages
+          \item Index Pages
+          \item LOB Pages
+          \item Global Allocation Map Pages
+          \item Shared Global Allocation Map Pages
+          \item Page Free Space Pages
+          \item Index Allocation Map Pages
+          \item Bulk Changed Map Pages
+          \item Differential Changed Map Pages
+        \end{itemize}
+        \bild{Aufbau einer Data Page}{data_page}{0.15}
+        \subsubsection{Data Pages}
+          Data Pages sind der häufigste Typ Speicherseite in einer Datenbank.
+          Sie nehmen alle  Nutzdaten, in Form von seriell gespeicherten Zeilen
+          auf und teilen sich in drei Bereiche: 
+          \begin{itemize}
+            \item Page Header (96 Bytes)
+            \item Row Space (ca. 8.060 Bytes)
+            \item Row Offset Table (36 Bytes +)
+          \end{itemize}
+          Der Page Header enthält Verwaltungsinformationen zur Speicherseite
+          (Seitennummer, Seitentyp, freier Speicher, Extent ID, usw.). Er
+          umfasst eine Länge von 96 Bytes. Am unteren Ende der Data Page
+          befindet sich die Row Offset Table. Sie hat eine Mindestgröße
+          von 36 Bytes und enthält für jede Zeile das Offset. Es gibt
+          an, wie viele Bytes die Tabellenzeile vom Page Header entfernt liegt.
+          Beispiel:
+\clearpage
+          \begin{itemize}
+            \item Zeile Nummer 1 hat eine Länge von 100 Bytes und beginnt 1
+            Byte hinter dem Page Header: Das Offset ist 1.
+            \item Zeile Nummer 2 hat eine Länge von 120 Bytes und beginnt 1
+            Byte hinter Zeile Nummer 1. Das Offset ist (Offset Zeile 1 +
+            Länge Zeile 1) + 1 = (1 Byte + 100 Byte) + 1 Byte = 102.
+            \item Zeile Nummer 3 beginnt 1 Byte nach Zeile Nummer 2. Das Offset
+            ist: (Offset Zeile 2 + Länge Zeile 2) + 1 = 102 Byte + 120 Byte +
+            1 Byte = 223.
+          \end{itemize}
+          \begin{merke}
+            Für jedes Offset wird 1 Byte benötigt, um es zu speichern. Reichen
+            die 36 Bytes der Row Offset Table nicht aus, kann sie wachsen.
+          \end{merke}
+        \subsubsection{Tabellenzeilen}
+          Für Tabellenzeilen werden innerhalb einer Speicherseite 8.060 Bytes
+          reserviert (8.192 - 96 Bytes - 36 Bytes = 8.060 Bytes). Diesen Platz
+          müssen sich die Zeilen mit der Row Offset Table teilen, da diese
+          wächst, falls mehr als 36 Zeilen in einer Seite zu speichern sind.
+
+          Tabellenzeilen können sich nicht über mehrere Speicherseiten
+          erstrecken. Seit SQL Server 2005 ist es jedoch möglich, dass
+          einzelne Spalten in einen \enquote{Row Overflow Data} Bereich
+          verschoben werden. Es gelten dabei folgende Regeln:
+          \begin{itemize}
+            \item Die maximale Länge einer Tabellenzeile ist 8.060 Bytes.
+            \item übersteigt die Länger einer Zeile 8.060 Bytes, können
+            Tabellenspalten mit variabler Länge (Datentyp: Varchar, NVarchar,
+            Varbinary und SQL\_Variant) in den Row Overflow Data Bereich
+            verschoben werden.
+            \item Wird eine Spalte verschoben, verbleibt ein 24 Byte großer
+            Zeiger in der Originalspeicherseite, der auf den Row Overflow Data
+            Bereich zeigt.
+            \item Es wird immer mit der breitesten Spalte variabler Länge
+            begonnen.
+            \item Verringert sich die Länge einer Zeile unter die 8.060 Byte
+            Grenze, werden die Spalten aus dem Row Overflow Data Bereich,
+            zurück in die Data Page verschoben.
+          \end{itemize}
+\clearpage         
+        \subsubsection{Extents}
+          \label{extentssection}
+          Extents sind logische Verwaltungseinheiten, die zur effizienten
+          Verwaltung von Speicherseiten dienen. Jedes Extent besteht aus acht
+          zusammenhängenden Speicherseiten, hat also eine Größe von 64 KB.
+          Wenn die Datenbank neuen Speicherplatz allokieren (anfordern) muss, wird
+          immer gleich ein ganzes Extent angefordert. Damit wird vermieden, dass
+          die Datenbank Speicherseite für Speicherseite anfordern muss, was
+          einen ungleich höheren Aufwand bedeuten würde.
+  
+          Es gibt zwei unterschiedliche Arten von Extents:
+          \begin{itemize}
+            \item Mixed Extents
+            \item Uniform Extents
+          \end{itemize}
+          Der Unterschied zwischen beiden Variante besteht in deren Nutzung. In
+          einem Uniform Extent gehören alle Pages zu ein und dem selben Objekt.
+          In einem Mixed Extent ist dies nicht der Fall.
+        \subsubsection{Mixed Extents}
+          Der Name \enquote{Mixed Extents} rührt daher, dass sich mehrere
+          Objekte die Speicherseiten eines solchen Extents teilen. Diese Art von
+          Extent ist für kleine Objekte gedacht. Wenn ein Objekt neu erstellt
+          wird, besteht es zuerst aus nur einer einzigen Page. Diese Page wird in einem Mixed
+          Extent angefordert. Wächst das Objekt, werden weitere Speicherseiten
+          aus Mixed Extents angefordert, bis das Objekt eine Größe von
+          acht Data Pages erreicht hat.
+
+          Ab einer Größe von acht Pages, werden nur noch Uniform Extents
+          für das betreffende Objekt angefordert. Das bedeutet, dass die
+          ersten acht Pages eines Objekts sich in Mixed Extents befinden,
+          während die neunte Speicherseite und alle Folgenden in Uniform
+          Extents allokiert werden. Durch die Nutzung von Mixed Extents für
+          kleine Objekte wird eine effiziente Außnutzung des vorhandenen
+          Speicherplatzes erreicht.
+        \subsubsection{Uniform Extents}
+          In einem Uniform Extent gehören alle Speicherseiten zu ein und dem
+          selben Objekt. Da alle Pages in einem solchen Extent unmittelbar
+          aufeinander folgen, wird erreicht, dass die Fragmentierung großer
+          Objekt geringer wird. Außerdem werden immer gleich acht Seiten
+          für das Objekt angefordert, was die Anzahl der
+          Speicheranforderungsforgänge deutlich reduziert.
+          \bild{Mixed und Uniform Extents}{extents}{0.5}
+      \subsection{Speicherverwaltung in den Datendateien}
+        Damit das Auffinden freier Speicherseiten performant gelingen kann, muss
+        SQL Server verschiedene Informationen besitzen. Dies sind:
+        \begin{itemize}
+          \item Welchen Status hat ein Extent (Mixed oder Uniform)?
+          \item In welchem Extent gibt es noch freie Seiten?
+        \end{itemize}
+        Diese Verwaltungsinformationen werden in drei verschiedenen Seitentypen
+        abgelegt:
+        \begin{itemize}
+          \item GAM Pages: Global Allocation Maps
+          \item SGAM  Pages: Shared Global Allocation Maps
+          \item PFS Pages: Page Free Space Pages
+        \end{itemize}
+        \subsubsection{Die Global Allocation Map (GAM)}
+          In einer GAM Page wird die Information gespeichert, welche Extents
+          noch freie Seiten haben und welche bereits vollständig belegt sind.
+          Jede GAM hat eine Größe von 64 KB und ist in der Lage, den
+          Zustand von 64.000 Extents zu verwalten. Dies entspricht einer
+          Datenmenge von ca. 4 GB.
+
+          Die Informationen in einer GAM liegt in Form ein Bitmap vor. Für
+          jedes zuverwaltende Extent wird genau ein Bit benutzt. Hat das Bit den
+          Wert 0, gilt das Extent als Belegt. Hat es den Wert 1, ist das
+          verwaltete Extent frei.
+
+          Eine GAM verwaltet immer die 64.000 direkt auf sie selbst folgenden
+          Extents. Das erste Bit in der GAM steht für das erste Extent
+          hinter der GAM, das zweite Bit für das zweite Extent hinter der GAM
+          und das Dritte für das dritte Extent, usw.
+
+          Ist eine Datenbank so groß geworden, dass sie mehr als 64.000
+          Extents umfasst, so wird einfach eine weitere GAM in einer Datendatei
+          angelegt. Diese verwaltet dann die nächsten 64.000 Extents (Extent
+          64.001 bis Extent 128.000).
+        \subsubsection{Die Shared Global Allocation Map (SGAM)}
+          Der Aufbau einer SGAM ist mit dem einer GAM identisch. Auch die SGAM
+          hat eine Größe von 64 KB, enthält eine Bitmap und verwaltet
+          64.000 Extents, jedoch haben die Bits einer SGAM eine andere
+          Beudeutung, als die der GAM.
+
+          Die SGAM speichert Information über die Nutzung eines Extents, als
+          Mixed Extent oder als Uniform Extent. Die Bits der SGAM haben folgende
+          Bedeutung:
+          \begin{itemize}
+            \item 0: Das Extent ist entweder ein belegtes Mixed Extent oder es
+            handelt sich nicht um ein Mixed Extent.
+            \item 1: Das Extent ist ein Mixed Extent mit freien Speicherseiten.
+          \end{itemize}
+          Für die SGAM gilt, genau wie für die GAM, dass in einer Datenbank
+          mit mehr als 64.000 Extents eine weitere SGAM angelegt wird.
+        \subsubsection{Zusammenhang zwischen GAM und SGAM}
+          Damit die Informationen der Global Allocation Map und der Shared
+          Global Allocation Map einen Sinn ergeben, müssen beide Strukturen
+          immer im Zusammenhang gesehen werden. Die folgende Tabelle
+          verdeutlich, was die unterschiedlichen Bit-Kombinationen der GAM und
+          der SGAM aussagen.
+          \begin{center}
+            \tablecaption{Bedeutung von GAM und SGAM}
+            \label{gamandsgam}
+            \begin{small}
+              \tablefirsthead{
+                \multicolumn{1}{c}{\textbf{Bedeutung}} &
+                \multicolumn{1}{c}{\textbf{GAM}} &
+                \multicolumn{1}{c}{\textbf{SGAM}} \\
+                \hline
+              }
+              \tabletail{
+                \hline
+              }
+              \tablelasttail{
+                \hline
+              }
+              \begin{supertabular}{|l|c|c|}
+                Freies, unbenutztes Extent & 1 & 0 \\
+                \hline
+                Uniform oder Full Mixed Extent & 0 & 0 \\
+                \hline
+                Mixed Extent mit freien Seiten & 0 & 1 \\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+      \subsubsection{Extentallokation}
+        Uniform Extents werden allokiert, indem die GAM nach einem freien Extent
+        durchsucht wird (GAM-Bit = 1). Diese Bit wird anschließend auf 0
+        gekippt.
+
+        Um ein Mixed Extent mit freien Seiten zufinden, muss die SGAM nach einem
+        Bit mit dem Wert 1 gescanned werden. Dieses Bit bleibt unverändet,
+        solang sich noch freie Seiten in dem Extent befinden.
+
+        Soll ein neues Mixed Extent allokiert werden, muss zuerst die GAM nach
+        einem freien Extent (GAM-Bit = 1) abgesucht werden. Diese Bit wird
+        anschließend auf den Wert 0 gekippt. Zuletzt muss noch das
+        korrespondierende Bit der SGAM auf den Wert 1 gesetzt werden.
+      \subsubsection{Aufbau der PFS}
+        Sobald aber ein Extent mit freien Pages gefunden wurde, stellt sich die
+        Frage: \enquote{Wie viel Speicherplatz ist in den einzelnen
+        Speicherseiten noch frei?}.
+        Hier sind es die \enquote{Page Free Space Pages} (kurz PFS) die Abhilfe
+        schaffen.
+        
+        Sie speichern Informationen über den ungefähren Füllstand der Data Pages.
+        Jede PFS kann dabei bis zu 8.000 einzelne Data Pages verwalten. Umfasst
+        eine Datenbank mehr als 8.000 Data Pages, werden in regelmäßigen Abständen
+        weitere PFS-Pages angelegt.
+        \begin{merke}
+          Eine einzelne PFS verwaltet ein Datenvolumen von bis zu 64 Gigabyte!
+        \end{merke}
+        
+        Im Gegensatz zur Global Allocation Map oder zur Shared Global
+        Allocation Map, arbeitet eine Page Free Space Page nicht mit einer
+        Bitmap, sondern mit einer Bytemap. Für jede einzelne Speicherseite
+        werden hier 7 Bit zur Darstellung des Füllgrades und zur Speicherung
+        diverser anderer Informationen genutzt.
+        \begin{itemize}
+          \item Bit 0 bis 2: Der Füllgrad, unterteilt in fünf Gruppen.
+            \begin{itemize}
+              \item 0x00: Frei
+              \item 0x01: Belegung zwischen 1 \% und 50 \%
+              \item 0x02: Belegung zwischen 51 \% und 80 \%
+              \item 0x03: Belegung zwischen 81 \% und 95 \%
+              \item 0x04: Belegung zwischen 96 \% und 100 \%
+            \end{itemize}
+          \item Bit 3 = 0x08: Es befinden sich
+          Ghost-Records\footnote{Ghost-Record = Ein als gelöscht markierter
+          Datensatz innerhalb einer Index-Leaf-Page} auf der Seite.
+          \item Bit 4 = 0x10: Bei der Seite handelt es sich um eine Index
+          Allocation Map.
+          \item Bit 5 = 0x20: Die Seite liegt in einem Mixed Extent
+          \item Bit 6 = 0x40: Die Seite ist belegt
+        \end{itemize}
+\clearpage
+        Eine zu 30 \% belegte Data Page, die sich in einem Mixed Extent
+        befindet, hätte den Wert 0x61 (0x40 + 0x20 + 0x01). Eine zu 90 \%
+        belegte Page in einem Uniform Extent würde hingegen  mit dem Wert 0x43
+        (0x40 + 0x03) geführt werden. So kann durch Kombination der einzelnen
+        Bits jeder beliebige Füllstand abgebildet werden.
+
+        Nachdem nun mit Hilfe der PFS eine Data Page mit ausreichend
+        Speicherplatz identifiziert wurde, kann durch einen Blick in den Page
+        Header der exakte Füllstand herausgefunden werden. Durch die Nutzung
+        der PFS wird vermieden, dass SQL Server, Page für Page nach dem
+        exakten Füllstand absuchen muss, bis eine Seite mit genügend freiem
+        Speicher gefunden wurde.
+      \subsubsection{Aufbau einer Datendatei}
+        GAM, SGAM und PFS-Pages werden immer nach dem gleichen Muster in einer
+        Datendatei abgelegt:
+        \begin{itemize}
+          \item Seite Nummer 1: Der Datendateiheader
+          \item Seite Nummer 2: GAM
+          \item Seite Nummer 3: SGAM
+          \item Seite Nummer 4: PFS
+          \item Ab Seite Nummer 5: Data Pages und andere Seiten
+        \end{itemize}
+    \section{Das Transaktionsprotokoll}
+      Eine der Anforderungen, die an ein relationales Datenbank Management
+      System gestellt werden ist, dass Änderungen an einer Datenbank niemals
+      verloren gehen dürfen. In nahe zu allen DBMS wird diese Forderung mit
+      Hilfe eines Änderungsprotokolls umgesetzt.
+      
+      Das Transaktionsprotokoll ist in Form einer eigenen Datei mit der
+      Endung *.ldf implementiert. Es ist möglich, dass Transaktionsprotokoll
+      auf zwei oder mehr Dateien auszudehnen, was jedoch nur geschehen
+      sollte, wenn dies die Situation unbedingt erfordert. Die Einträge des
+      Protokoll folgen nicht dem Format der Speicherseiten, sondern besitzen
+      ein eigenständiges Aussehen.
+      \begin{merke}
+        Jede Datenbank hat ihr eigenes Transaktionsprotokoll. Es wird direkt
+        bei der Datenbankerstellung mit seiner Datenbank untrennbar
+        verknüpft!
+      \end{merke}
+      \subsection{Features des Transaktionsprotokolls}
+        Mit Hilfe des Transaktionsprokotolls kann eine MS SQL Server Datenbank
+        die folgenden Features zur Verfügung stellen:
+        \begin{itemize}
+          \item \textbf{Zurückrollen einzelner Transaktionen}: Unter zur
+          Hilfenahme der im Protokoll gespeicherten Informationen können die
+          Änderungen einer Transaktion vollständig rückgängig gemacht
+          werden.
+          \item \textbf{Recovery offener Transaktionen nach einem
+          Instanzabsturz}: Beim Starten einer SQL Server Instanz müssen alle
+          offenen Transaktionen (Transaktionen die nicht durch ein
+          \languagemssql{COMMIT} bestätigt wurden) rückgängig gemacht
+          werden, um die Konsistenz des Datenbestandes zu gewährleisten.
+          \item \textbf{Point-In-Time Recovery}: Unter bestimmten Umständen
+          kann es erforderlich sein, eine Datenbank auf einen genau
+          definierten Zeitpunkt zurückzusetzen. Die Inhalt des Protokolls
+          sind ein wesentlicher Bestandteil eines solchen Prozesses.
+          \item \textbf{Transaktionsreplikation}: Die Transaktionen einer
+          Datenbank können in eine andere Datenbank übertragen und
+          ausgeführt werden.
+          \item \textbf{Stand-By Server}: Mittels des Transaktionsprotokolls
+          kann eine Art \enquote{Aktiv-Passiv-Cluster} eingerichtet werden.
+          Während der eine Datenbankserver arbeitet, wird ein zweiter
+          ständig mit den Änderungen des ersten versorgt. Falls der erste
+          Datenbankserver aus, kann der zweite nach einer sehr kurzen
+          Recovery-Phase die Arbeit übernehmen.
+        \end{itemize}
+      \subsection{Aufbau des Transaktions Logs}
+        \subsubsection{Der Log file header}
+          Jede Transaktionsprotokolldatei hat einen 8 KB großen Headerblock, der
+          ganz am Anfang der Datei liegt. Dort werden verschiedene Metadaten
+          abgelegt, wie z. B. die aktuelle Logfile size oder auch die Angaben
+          zum automatischen Wachstum.
+        \subsubsection{Standardgröße des Logfiles}
+          Sofern beim Anlegen einer Datenbank keine Angabe zum
+          Transaktionsprotokoll gemacht wird, benutzt der SQL Server zwei Werte,
+          um die Größe der Log Datei zu ermitteln:
+          \begin{itemize}
+              \item 0,5 MB
+              \item 25 \% der Gesamtgröße aller Datendateien der Datenbank
+          \end{itemize}
+          Je nachdem, welcher der beiden Werte größer ist, wird dieser Benutzt.
+          Beispiel: Eine fiktive Datenbank hat eine Gesamtgröße von 1 GB. 25 \%
+          von 1 GB sind 256 MB. 256 MB sind größer als 0,5 MB. Das Logfile würde
+          mit 256 MB angelegt werden.
+          \begin{literaturinternet}
+            \item \cite{PSRSsIVsnadlfs}
+          \end{literaturinternet}
+        \subsubsection{Die Log Sequence Number (LSN)}
+          Aus logischer Sicht ist das Transaktionsprotokoll wie eine
+          fortlaufende Liste aufgebaut. Die Einträge werden immer am Ende des
+          Log Files angehängt und jeder wird durch einen eindeutigen
+          Schlüssel, die \enquote{Log Sequence Number}, identifiziert.
+  
+          Die Log Sequence Number, kurz LSN, ist eine Zahl des Typs
+          \languagemssql{NUMERIC(25,0)}, die in fortlaufender und aufsteigener
+          Reihenfolge an die Einträge des Transaktionsprotokolls vergeben wird.
+          Jede LSN markiert einen Log-Eintrag eindeutig.
+          
+          Die Darstellung der LSN erfolgt manchmal dezimal und manchmal auch
+          hexadezimal. Wird die LSN als Hexadezimalzahl dargestellt, kann man
+          erkennen, dass sie aus drei Bestandteilen zusammengesetzt ist:
+          
+          Beispiel LSN: 00000015:000001a3:02ef
+          \begin{itemize}
+              \item 00000015: Virtual Log File Sequence Number
+              \item 000001a3: Log Block Offset
+              \item 02ef: Log Block Slot Number
+          \end{itemize}
+          Die gleiche LSN sieht dezimal dargestellt so aus: 21000000041900751. Die
+          Dezimaldarstellung wird durch eine einfache Umrechnung der drei
+          hexadezimalen Bestandteilte in Dezimalzahlen erreichet:
+          $00000015_{(16)}=210000000_{(10)}$, $000001a3_{(16)}=41900_{(10)}$
+          und $02ef_{(16)}=751_{(10)}$.
+        \subsubsection{Transaktionsprotokolleinträge - Log Records}
+          Im Transaktionsprotokoll sind Einträge zu allen an der Datenbank
+          durchgeführten Änderungen enthalten. Außerdem werden Beginn und Ende einer
+          jeden Transaktion festgehalten. Die in einem Eintrag enthaltenen Daten
+          sind:
+\clearpage
+          \begin{itemize}
+              \item Eine Beschreibung der Änderung
+              \item IDs der geänderten Speicherseiten
+              \item Hinzugefügte, geänderte oder gelöschte Datenwerte
+              \item ID, Beginn und Ende der Transaktion
+              \item Die Log Sequence Number
+          \end{itemize}
+          Jeder Eintrag (Log Record) im Transaktionsprotokoll trägt eine
+          eindeutige LSN, die seine genaue Position im Protokoll definiert. Alle
+          Log Records, welche zu einer Transaktion gehören, werden als Sequenz
+          gespeichert und tragen alle die gleiche TransaktionsID. Somit sind die
+          Log Records einer Transaktion geordnet (durch die aufsteigende LSN)
+          und gruppiert (durch die TransaktionsID).
+          
+          Hier ein fiktiver Ausschnitt aus einem Transaktions Log.
+          \begin{center}
+            \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablecaption{Ausschnitt aus einem Transaktionsprotokoll}
+            \label{transprot}
+              \tablefirsthead{
+                \multicolumn{1}{c}{\textbf{Operation}} &
+                \multicolumn{1}{c}{\textbf{page id}} &
+                \multicolumn{1}{c}{\textbf{transaction id}} &
+                \multicolumn{1}{c}{\textbf{current lsn}} \\
+                \cmidrule(r){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
+                }
+              \tabletail{
+              }
+              \tablelasttail{
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{llll}
+                  \color{red}{LOP\_BEGIN\_XACT} & 0001:00000018 & 0000:00003f60
+                  & 00000017:00001560:0001 \\
+                  LOP\_INSERT\_ROWS & 0001:00000018 & 0000:00003f60 &
+                  00000017:00001b40:0001 \\
+                  LOP\_INSERT\_ROWS & 0001:00000067 & 0000:00003f60 &
+                  00000017:00001b40:0002 \\
+                  LOP\_INSERT\_ROWS & 0001:00000062 & 0000:00003f60 &
+                  00000017:000022f1:0001 \\
+                  \color{red}{LOP\_COMMIT\_XACT} & 0001:00000062 & 0000:00003f60
+                  & 00000017:000022f1:0003 \\
+                  \color{blue}{LOP\_BEGIN\_XACT} & 0001:00000112 & 0000:00003f61
+                  & 00000014:000000f3:0001 \\
+                  LOP\_MODIFY\_ROW & 0001:00000112 & 0000:00003f61 &
+                  00000014:000000f3:0002 \\
+                  LOP\_DELETE\_ROWS & 0001:00000112 & 0000:00003f61 &
+                  00000014:000001a2:0001 \\
+                  LOP\_MODIFY\_ROW & 0001:00000113 & 0000:00003f61 &
+                  00000014:000001a2:0004 \\
+                  \color{blue}{LOP\_COMMIT\_XACT} & 0001:00000113 &
+                  0000:00003f61 & 00000014:000001cc:0001 \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end {small}
+          \end{center}
+          Das Transaktions Log zeigt Einträge aus zwei Transaktionen, deren
+          Beginn und Ende rot bzw. blau gekennzeichnet sind. In der Spalte
+          \enquote{transaction id} ist die ID der jeweiligen Transaktion zu
+          sehen. Diese ist bei allen Log Records, welche zu einer Transaktion
+          gehören, gleich. Somit sind die Einträge gruppiert.
+          
+          Betrachtet man die Spalte \enquote{current lsn} fällt auf, das sich
+          die LSN innerhalb einer Transaktion aufsteigend verhält. Dadurch sind
+          die Einträge in einer festen Reihenfolge geordnet.
+          \begin{merke}
+            Jede Transaktion besteht aus mindestens drei Log Records. Einem
+            \texttt{LOP\_BEGIN\_XACT}-Eintrag, der den Beginn der Transaktion
+            markiert, einem oderen mehreren Einträgen, welche die Aktionen
+            innerhalb der Transaktion darstellen (INSERT, UPDATE, DELETE, etc.)
+            und einem \texttt{LOP\_COMMIT\_XACT}- oder einem
+            \texttt{LOP\_ABORT\_XACT}-Eintrag der die Transaktion beendet.
+          \end{merke}
+          Die Idee dabei ist folgende: Sollten Änderungen, z. B. wegen eines
+          Serverabsturzes, verloren gehen, können diese unter Zuhilfenahme des
+          Transaktionsprotokolls nachvollzogen und der Verlust damit kompensiert werden.
+          \begin{literaturinternet}
+            \item \cite{ms180892}
+          \end{literaturinternet}
+        \subsubsection{Virtual Log Files (VLFs)}
+          Obwohl das Transaktionsprotokoll in der Regel aus nur einer Datei
+          besteht, ist es intern in mehrere Bereiche, die sogenannten
+          \enquote{Virtual Log Files} (VLFs) gegliedert. 
+          \bild{Eine Log-Datei, unterteil in acht
+          virtuelle}{virtual_log_files}{1.5} In \abbildung{virtual_log_files}
+          ist eine Log Datei mit acht virtual log files zu sehen. 
+      \subsection{Virtual Log Files im Detail}
+        \subsubsection{Der VLF header}
+          Genau wie eine Log Datei hat auch jedes VLF einen eigenen Headerblock
+          mit Metadaten.
+        \subsubsection{Größe und Anzahl der VLFs}
+        \label{sizeandnumberofvlfs}
+          Die Database Engine ist aus Performancegründen darum bemüht, die Anzahl
+          der VLFs immer möglichst gering zu halten. Anzahl und Größe der VLFs
+          lassen sich nach einem einfachen Schema bestimmen:
+          \begin{center}
+            \tablecaption{Größe und Anzahl von Virtual Log Files}
+            \tablefirsthead{
+              \hline
+              \multicolumn{1}{|c}{\textbf{Transaktionsprotokollgröße}} &
+              \multicolumn{1}{|c}{\textbf{Anzahl der VLFs}} &
+              \multicolumn{1}{|c|}{\textbf{Größe der VLFs}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \tablelasttail{
+              \hline
+            }
+            \begin{supertabular}{|l|l|l|}
+              $<=$ 1 MB & Log size / 256 KB & 256 KB \\
+              \hline
+              $>$ 1MB  und $<=$ 64 MB & 4 & Growth Junksize / 4 \\
+              \hline
+              $>$ 64 MB und $<=$ 1 GB & 8 & Growth Junksize / 8 \\
+              \hline
+              $>$ 1 GB & 16 & Log size / 16 \\
+            \end{supertabular}
+          \end{center}
+          Die Angaben zu diesem Berechnungsschema stammen aus
+          \parencite{isbn9780735658561}. 
+          
+          Würde einer neuangelegen Datenbank eine Log Datei mit einer Größe von
+          4 GB und einer \enquote{Growth Junksize} von 1 GB hinzugefügt
+          entstünden folgende VLFs:
+          
+          Initial: 16 VLFs \'a 256 MB, da 4 GB Growth Junksize
+          
+          Pro Wachstumsvorgang: 8 VLFs \'a 64 MB, da 1 GB Growth Junksize
+          
+          Würde diese Log Datei auf 100 GB anwachsen, bestünde sie aus $16 +
+          (192 * 8) = 1552$ (192 Wachstumsvorgänge) VLFs. Diese
+          Zahl steht im krassen Missverhältnis zu der Aussage, dass sich der SQL
+          Server immer darum bemüht möglichst wenige VLFs zu produzieren. Aus
+          diesem Grund hat Micrsoft mit dem SQL Server 2014 eine Neuerung bei
+          der Berechnung der Anzahl der VLFs eingeführt:
+          
+          Es wird folgende Bedingung geprüft: Ist die Growth Junksize kleiner
+          als 1/8 der aktuellen Log Filesize?
+          \begin{itemize}
+              \item \textbf{Ja}: Füge nur ein neues VLF in der Growth Junksize
+              hinzu.
+              \item \textbf{Nein}: Benutze das herkömmliche
+              Berechnungsverfahren.
+          \end{itemize}
+          Das bedeutet, dass sich das obige Beispiel mit der Log Datei von 4 GB
+          und der Growth Junksize von 1 GB wie folgt verändert:
+          
+          Initial: 16 VLFs \'a 256 MB, da 4 GB Growth Junksize
+          
+          \begin{center}
+            \begin{small}
+              \tablecaption{Wachstumsvorgäng des Logfiles}
+              \label{logfilegrowth}
+              \tablefirsthead{
+                \hline
+                \multicolumn{1}{|c}{\textbf{Transaktionsprotokollgröße}} &
+                \multicolumn{1}{|c}{\textbf{1/8 der Logfile size}} &
+                \multicolumn{1}{|c|}{\textbf{Growth Junksize}} &
+                \multicolumn{1}{|c|}{\textbf{Anzahl VLFs}} \\
+                \hline
+              }
+              \tabletail{
+                \hline
+              }
+              \tablelasttail{
+                \hline
+              }
+              \begin{supertabular}{|r|r|r|c|}
+                4096 MB & 512 MB & 1024 MB & 8 \\
+                \hline
+                5120 MB & 640 MB & 1024 MB & 8 \\
+                \hline
+                6144 MB & 768 MB & 1024 MB & 8 \\
+                \hline
+                7168 MB & 896 MB & 1024 MB & 8 \\
+                \hline
+                8192 MB & 1024 MB & 1024 MB & 8 \\
+                \hline
+                \color{red}{9216 MB} & \color{red}{1152 MB} & \color{red}{1024 MB}
+                & \color{red}{1} \\
+              \end{supertabular}
+            \end{small}
+          \end{center}          
+          Wie aus \tabelle{logfilegrowth} entnommen werden kann, wächst das
+          Logfile bei den ersten fünf Vorgängen um je 8 VLFs an, da die
+          Growth Junksize größer ist, als 1/8 der Logfile size. Ab den
+          sechsten Vorgäng ändert sich dies, da 1/8 von 9216 MB = 1152 MB und
+          somit größer ist, als 1024 MB.          
+          \begin{merke}
+            Wächst eine Log Datei, so geschieht dies immer durch Anfügen ganzer
+            VLFs. Auch beim Schrumpfen einer Log Datei geht dies immer nur bis zur
+            Grenze eines belegten VLF.
+          \end{merke}
+\clearpage
+          \begin{literaturinternet}
+            \item \cite{ms179355}
+            \item \cite{KLTTLIctVcaiSS}
+          \end{literaturinternet}
+        \subsubsection{Geschicktes Anlegen einer Logdatei}
+          Anzahl und Größe des VLFs haben einen sehr hohen Einfluss auf die
+          Performance der gesamten Datenbank.
+          \begin{itemize}
+              \item Hat eine Logdatei zu viele VLFs, kann dies zu einer
+              Fragmentierung der Logdatei führen, wodurch Lese- und
+              Schreibperformance reduziert werden.
+              \item Sind es zu wenige VLFs, kann es im Extremfall passieren,
+              dass kein neues, leeres VLFs für einen Wechsel bereisteht und
+              das die Logdatei wachsen muss.
+              \item Sind die VLFs einer Datenbank zu klein, kommt es zu häufigen
+              Wechseln und damit zu einem erhöhten Verwaltungsaufwand.
+              \item Sind die VLFs zu groß, kann es zu Problemen bei den
+              Transaktionslog-Backups kommen, da die Wechsel von VLF zu VLF zu
+              selten geschehen.
+          \end{itemize} 
+          Aus diesen Gründen sollte das Transaktionsprotokoll eine ausgewogene
+          Anzahl VLFs mit einer sinnvollen Größe haben. Um dieses Ziel zu
+          erreichen, muss der Administrator vor dem Anlegen der Datenbank
+          berechnen, ob er die Logdatei komplett am Stück oder in mehreren
+          Abschnitten erstellt. Hierzu nun einige Beispiele.
+          
+          Es soll eine Datenbank, mit einer 2 GB großen Logdatei, erstellt
+          werden.
+          
+          Würde diese Logdatei am Stück erstellt werden, bestünde sie aus 16
+          VLFs, \'a 128 MB. Größe und Menge der VLFs sind bei einer so kleinen
+          Logdatei absolut in Ordnung.
+          
+          Nun soll eine sehr viel größere Datenbank, mit einer Logdatei von 40
+          GB, erstellt werden.
+          
+          Die Erstellung der Logdatei an einem Stück würde 16 VLFs, mit einer
+          Größe von je 2,5 GB, nach sich ziehen. Während eine Anzahl von 16
+          durch aus in Ordnung geht, ist eine Größe von 2,5 GB pro VLF etwas hoch.
+          Hier könnte es angebracht sein, die Logdatei in fünf Schritten zu je 8
+          GB aufzubauen. Damit steigt zwar die Anzahl der VLFs sprunghaft an (
+          $5 * 16 = 80$), dafür sinkt die Größe pro VLF auf 512 MB.
+          
+          Eine andere mögliche Vorgehensweise könnte auch sein, die Logdatei in
+          zwei Schritten, zu je 20 GB zu erstellen. Die Folge währen 32 VLFs,
+          \'a 1,25 GB. Welche der beiden Vorgehensweisen nun die bessere ist, bleibt
+          immer eine Einzelfallentscheidung.
+        \subsubsection{Log Blocks}
+          Jedes VLF besteht aus einer Anzahl von sogenannten \enquote{Log
+          Blocks}. Diese haben, genau wie die darin enthaltenen Log Records,
+          eine variable Größe. Ein Log Block ist im Minimum 512 B und im Maximum 60
+          KB groß. Wie große ein Log Block wird, hängt vom Transaktionsverhalten
+          der Datenbank ab: Je größer die Transaktionen in einer Datenbank sind
+          (hier ist die Anzahl der Log Records und deren Größe gemeint), desto
+          größer werden auch die Log Blocks.
+          
+          \bild{VLF mit zwei Log Blocks}{log_blocks}{1.7}
+          \abbildung{log_blocks} zeigt einen Ausschnitt aus dem
+          Transaktionsprotokoll. Darin ist zusehen, dass das Virtual Log File
+          nummer 3 zwei unterschiedlich große Log Blocks enthält.
+          
+          Sobald ein Log Block seine Maximalgröße von 60 KB erreicht hat,
+          wird der Log Manager diesen aus dem Log Buffer auf den Datenträger
+          schreiben. Der Log Block im Buffer kann anschließend wiederverwendet
+          werden.
+          \begin{merke}
+            Der SQL Server Log Manager schreibt niemals einzelne Log Records,
+            sondern immer ganze Log Blocks auf den Datenträger.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{MirDimSSTLP1LSaWALA}
+          \end{literaturinternet}
+        \subsubsection{Aktive und inaktive VLFs}
+          \abbildung{virtual_log_files} zeigt eine Log Datei, welche aus acht
+          virtuellen Log Dateien besteht. Die blau gekennzeichneten VLFs 1, 2, 7
+          und 8 sind unbenutzt bzw. inaktiv. Die rot gekennzeichneten VLFs 3, 4,
+          5 und 6 sind aktiv.
+          
+          Ein VLF gilt als aktiv, wenn es mindestens einen Active Log Record
+          enthält. Ein Log Record hat den Status active, wenn eine der folgenden
+          Bediengungen auf ihn zutrifft:
+\clearpage
+          \begin{itemize}
+              \item Ein Log Record bezieht sich auf einen offene Transaktion
+              \item Eine von einer Änderung betroffene Data Page befindet sich
+              noch im Data Cache (wurde noch nicht auf den Datenträger
+              zurückübertragen).
+              \item Ein Log Record wird noch für ein Backup benötigt.
+              \item Ein Log Record wird von einer SQL Server Technologie, wie z.
+              B. der Replikation benötigt.
+          \end{itemize}
+        \subsubsection{Log Rotation}
+          Das Transaktionsprotokoll ist intern als sogenannter
+          \enquote{Ringpuffer} aufgebaut, d. h. sobald ein VLF zu 100 \% gefüllt
+          ist, wird automatisch auf das nächste verfügbare (inaktive) VLF
+          gewechselt. Dies gilt auch, falls das Ende des Transaktionsprotokolls
+          erreicht wurde. Der SQL Server beginnt dann einfach wieder am Anfang
+          des Transaktionsprotokolls nach einem inaktiven VLF zu suchen.
+          \bild{Rotation im Transaktionsprotokoll}{log_rotation}{1.2}
+          Sollte jedoch der Fall eintreten, dass kein VLF mit dem Status
+          inactive mehr zur Verfügung steht, muss das Transaktionsprotokoll
+          wachsen. Die Protokolldatei wird nach den bereits genannten Regeln
+          vergrößert, so dass weitere VLFs zur Verfügung stehen.
+          \bild{Die Protokolldatei wächst an}{log_growth}{1.2}
+        \subsubsection{Abschneiden des Log-Protokolls (Log Truncation)}
+          Damit ein Transaktionsprotokoll nicht ins Unendliche anwächst, muss
+          dort in gewissen Zeitabständen Speicherplatz freigegeben werden.
+          Dieser Mechanismus wird als \enquote{Log Truncation} bezeichnet. Es
+          werden dabei nur solche Einträge überschrieben, die keine
+          direkte Relevanz mehr haben, d. h. für die keine offenen Änderungen
+          mehr im Data Cache existieren. So wird Platz für neue Einträge
+          geschaffen.
+          
+          \abbildung{log_truncation_1} zeigt ein Transaktionsprotokoll, mit den
+          folgenden Angaben:
+          \begin{itemize}
+              \item \textbf{Start of Log}: An dieser Stelle beginnt das logische
+              Logfile. Die VLFs 3, 4, 5 und 6 sind aktiv.
+              \item \textbf{End of Log}: Dieser Punkt markiert das Ende des
+              logischen Logfiles.
+              \item \textbf{Min LSN}: An diesem Punkt innerhalb des logischen
+              Logfiles steht der älteste Log Record, der zu einer offenen
+              Transaktion gehört (der älteste aktive Eintrag). Das bedeutet,
+              dass alle Einträge links der Min LSN beim nächsten Checkpoint aus
+              dem Logfile entfernt werden können, während sich rechts der Min
+              LSN noch weitere aktive Log Einträge befinden können. Dieser Punkt
+              ist wichtig für das Recovery einer SQL Server Datenbank.
+          \end{itemize}
+          \bild{Ein Protokoll vor dem Abschneiden}{log_truncation_1}{1.2}
+          Beim Eintreten des nächsten Checkpoints werden nun alle Einträge
+          zwischen den Punkten \enquote{Start of Log} und \enquote{Min LSN} aus
+          dem logischen Logfiles abgeschnitten. Somit sind die beiden VLFs 3 und
+          4 wieder frei und werden als \enquote{inaktiv} markiert.
+          \bild{Ein Protokoll nach dem Abschneiden}{log_truncation_2}{1.2}
+          
+          Log Truncation kann auf zwei unterschiedliche Arten geschehen:
+          \begin{itemize}
+              \item Durch automatisches, periodisches Abschneiden des Protokolls
+              \item Durch ein sogenanntes \enquote{Transaktionsprotokoll-Backup}
+          \end{itemize}
+          Beim automatischen, periodischen Löschen werden nicht mehr relevante
+          Einträge einfach gelöscht. Diese sind im Anschluss daran nicht mehr
+          nachvollziehbar.
+          
+          Mit einen Transaktionsprotokoll-Backup werden alle Eintrage im Log
+          gesichert und anschließend aus dem Protokoll entfernt. Im Falle
+          dessen, dass der Administration ein Recovery der Datenbank durchführen
+          muss, sind alle Einträge aus den Backups wiederherstellbar.
+          \begin{merke}
+            Der Mechanismus der Log Truncation sorgt nicht dafür, dass die
+            Transaktionsprotokoll-Datei physikalisch kleiner wird. Es wird nur
+            Speicherplatz innerhalb der Datei zur erneuten Benutzung
+            freigegeben. Um die Protokoll-Datei zu schrumpfen, muss der
+            Administration manuell eingreifen.
+          \end{merke}
+          Es kann vorkommen, dass das Arbeitsvolumen einer Instanz so hoch ist,
+          dass noch keine Bereiche existieren, die wiederverwendet werden
+          könnten, weil alle Informationen noch gebraucht werden.
+          In einem solchen Fall versucht der SQL Server das Log File zu
+          vergrößeren. Falls dies aber nicht gelingt, wird der Systemfehler 9002
+          ausgegeben.
+          \begin{literaturinternet}
+            \item \cite{ms190925}
+          \end{literaturinternet}
+      \subsection{Write-Ahead-Logging}
+        Wie bereits erwähnt wurde, müssen alle Änderungen, die im Data Cache
+        durchgeführt werden, zuerst im Log Cache protkolliert werden.
+        Um dies zu gewährleisten, kommt ein Verfahren zum Einsatz, welches als
+        \enquote{Write-Ahead-Logging} bezeichnet wird. Dieser Mechanismus wird
+        intern umgesetzt, in dem der Buffer Manager im Header eines jeden
+        Buffers die LSN der letzten Änderung verzeichnet. Des Weiteren ist die
+        LSN des letzten Log-Eintrags im Log Buffer für alle Hintergrundprozesse
+        zugänglich. Somit kann gewährleistet werden, dass der Lazy Writer nur
+        solche Buffer auf den Datenträger schreibt, deren Änderungen bereits
+        gelogged wurden.
+        
+        Hier ein Beispiel dazu:
+        \bild{Write-Ahead-Logging und die LSN}{wal_and_lsn}{0.33}
+        
+        Der Buffer mit der PageID 1:12 wurde zuletzt geändert, als die LSN
+        2:128:2 gültig war. Da die aktuelle LSN im Log-Buffer die 2:223:5 ist,
+        kann dieser Block auf den Datenträger geschrieben werden (es gilt:
+        2:128:2 < 2:223:5).
+        
+        Der rechte Buffer (PageID 1:14) trägt die LSN 2:223:7. Da diese LSN
+        größer ist, als 2:223:5, bedeutet dies, dass seine Änderung noch nicht
+        protokolliert wurde. Dieser Buffer darf also noch nicht auf den
+        Datenträger geschrieben werden.
+        
+        Damit dieses System Schutz vor Datenverlust gewährleisten kann, muss
+        eine wichtige Regel eingehalten werden: Sobald der User ein
+        \languagemssql{COMMIT}-Statement absetzt und somit seine Tranaktion
+        beendet, muss ein synchroner Schreibvorgang des Log-Buffers auf den
+        Datenträger erfolgen. Synchron bedeutet in diesem Fall, dass der User
+        gezwungen wird zu warten, bis der Schreibvorgang beendet ist. Erst dann
+        darf er weiter arbeiten. So wird sichergestellt, dass alle Log-Einträge,
+        die zu einer Transaktion gehören, nach einem \languagemssql{COMMIT}, in
+        jedem Fall im Transaktionsprotokoll verfügbar sind. Sollten nun die
+        Änderungen im Data Cache verloren gehen, können diese aus den
+        Log-Einträgen im Transaktionsprotokoll rekonstruiert werden.
+          

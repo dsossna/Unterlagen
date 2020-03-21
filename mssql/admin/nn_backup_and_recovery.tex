@@ -1,0 +1,56 @@
+  \chapter{Backup & Recovery}
+    \setcounter{page}{1}\kapitelnummer{chapter}
+    \minitoc
+\newpage
+
+          
+    \section{Datenbank-Snaphots}
+  DB-Snapshots (S. 155)
+          \subsubsection{Verschieben von Systemdatenbanken nach einem Hardwarefehler}
+            Nach einem Hardwarefehler kann es sein, dass Datendateien von
+            Systemdatenbanken beschädigt wurde oder verloren gegangen sind. In
+            so einem Fall kann es erforderlich sein, den Speicherort einer
+            Systemdatenbank auf einen anderen Datenträger zu verschieben und die
+            Datenbank dann dort wiedherzustellen. Problematisch dabei ist, dass
+            die SQL Server-Instanz nicht gestartet werden kann, wenn nicht alle
+            Systemdatenbanken verfügbar und voll funktionsfähig sind. Hier hilft
+            dem Administrator das Traceflag 3608 weiter.
+            \begin{enumerate}
+                \item Starten des SQL Server-Dienstes mit minimaler
+                Konfiguration und mit dem Traceflag 3608.
+                \begin{lstlisting}[language=terminal,caption={Starten des SQL
+                Server unter Umgehung des automatischen Recoveries},
+                label=admin03_24]
+NET START MSSQLSERVER /f /T3608
+                \end{lstlisting}
+                \begin{merke}
+                  Das Traceflag 3608 sorgt dafür, dass der SQL Server beim Start
+                  kein Recovery an seinen Datenbanken durchführt. Einzige
+                  Ausnahme ist die \identifier{master}-Datenbank.
+                \end{merke}
+              \item Führen Sie ein \languagemssql{ALTER DATABASE ... MODIFY
+              FILE}-Kommando für alle Daten- und Log-Dateien der
+              \identifier{msdb}-Datenbank durch und geben Sie dabei den neuen
+              Pfad der Dateien an.
+              \item Stop Sie die SQL Server-Instanz
+              \item Verschieben Sie die Dateien an ihren neuen Speicherort
+              \item Starten Sie die SQL Server-Instanz erneut (ohne /f und /T)
+              \item Benutzen Sie Katalogsicht \identifier{sys.master\_files}, um
+              das Ergebnis des Verschiebevorganges zu verifizieren.
+                \begin{lstlisting}[language=ms_sql,caption={Abfragen
+                der View \identifier{sys.master\_files}},label=admin03_23]
+USE
+master GO
+
+SELECT name AS logical_name, physical_name AS new_location, 
+       state_desc as state
+FROM   sys.master_files
+WHERE  database_id = DB_ID('msdb')
+                \end{lstlisting}
+          \end{enumerate}
+            \begin{literaturinternet}
+            \item \cite{ms188396}
+          \end{literaturinternet}
+  
+  
+  https://technet.microsoft.com/en-us/library/jj853293.aspx

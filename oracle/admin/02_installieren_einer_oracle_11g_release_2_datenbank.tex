@@ -1,0 +1,212 @@
+\chapter{Installieren einer Oracle 11g Release 2 Datenbank}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+      \section{Aufgaben und Verantwortungsbereich eines DBA}
+      Der Verantwortungsbereich eines Datenbankadministrators kann die folgenden Aufgaben einschließen:
+      \begin{itemize}
+        \item Installation und Upgrade des Datenbankservers und der Nutzeranwendungen
+        \item Planen und Überwachen des Speicherbedarfs der Datenbank auf dem Datenträger
+        \item Erstellen von Storage Strukturen in der Datenbank (z. B. Tabellen und Indizes)
+        \item Nutzerkonten verwalten und überwachen der Sicherheit
+        \item Performance Monitoring und Tuning
+        \item Entwickeln von Backup- und Recoverystrategien
+        \item Verwalten von archivierten Daten
+        \item Durchführen von Backup und Recovery
+      \end{itemize}
+      \subsection{Planen und durchführen einer Oracle Installation}
+        \subsubsection{Lesen der Releasenotes}
+          Die Releasenotes sind mit Sicherheit der am wenigsten beachtete Teil einer Software Dokumentation. So wenig Beachtung sie jedoch finden, um so wichtiger sind sie tatsächlich. Sie enthalten wichtige Neuerungen zur Vorgängerversion und andere Hinweise, die bei einem Update auf eine neue Version, der Auswahl der notwendigen Hardware und anderen Preinstallation Tasks von großer Bedeutung sein können.
+
+          \begin{literaturinternet}
+            \item \cite{e23557}
+            \item \cite{e23558}
+          \end{literaturinternet}
+
+        \subsubsection{Evaluieren der vorhandenen Hardware}
+          Vor der Installation sollte der DBA prüfen, wie die vorhandene
+          Hardware bestmöglich durch die Oracle-Datenbank und die benötigten
+          Anwendungsprogramme genutzt werden kann. Diese Überprüfung sollte
+          die folgenden Überlegungen einschließen:
+          \begin{itemize}
+            \item Wie viele Datenträger sind für die Datenbank verfügbar?
+            \item Wie viel Arbeitsspeicher ist für die Oracle Instanz verfügbar?
+          \end{itemize}
+
+          \begin{literaturinternet}
+            \item \cite{BABFDGHJ}
+            \item \cite{i1011417}
+          \end{literaturinternet}
+
+        \subsubsection{Planen der Datenbank}
+          Zum Planen einer Datenbank gehören die folgenden Aufgaben:
+          \begin{itemize}
+            \item Planen der logischen Speicherstrukturen der Datenbank
+            \item Prüfen des Datenbankdesigns
+            \item Entwickeln von Backupstrategien
+          \end{itemize}
+          Die Planung der logischen Speicherstrukturen der Datenbank ist wichtig, um deren Einflüsse auf die Systemperformance erkennen zu können. Beispielsweise ist es entscheidend, ob in einer Datenbank große Objekte, wie z. B. Bilder oder ISO-Images gespeichert werden oder nur normale Text/Zahlen-Werte. Auch das Datenbankdesign ist entscheidend für die Performance der Datenbank. Meist hat der DBA zwar keinen direkten Einfluss\ auf das Design, er kann aber Hinweise und Verbesserungsvorschläge geben.
+      \subsection{Download und Installation von Patches}
+        Um die Datenbank sicherer zu machen und um Bugs zu beheben, muss der DBA von Zeit zu Zeit Patches oder Patchsets installieren. Ein Patch (auch \enquote{single interim patch} genannt) behebt ein einzelnes spezielles Problem und ist nicht bei jeder Installation notwendig. Ein Patchset ist eine Sammlung von Patches, die so erstellt wurde, das sie für jeden Kunden passt. Ein Patchset hat eine Releasenummer. Wurde beispielsweise die Oracle Version 11.2.0.0 installiert, dann hat das erste Patchset die Versionsnummer 11.2.0.1.
+    \section{OFA - Die Optimal Flexible Architecture}
+      \subsection{Überblick über die OFA}
+        Die Optimal Flexible Architecture ist eine Menge von Namenskonventionen und Konfigurationsrichtlinien die zuverlässige Oracle Installationen mit minimalem Wartungsaufwand sicherstellen sollen. Der OFA-Standard wurde entwickelt um:
+        \begin{itemize}
+          \item eine große Menge komplexer Anwendungen zusammen mit deren Nutzdaten auf einem Datenträger zu speichern und dabei Bottlenecks und schlechte Performance zu vermeiden,
+          \item administrative Routineaufgaben zu erleichtern, wie z. B. Backups,
+          \item das Wechseln zwischen verschiedenen Oracle Instanzen zu erleichtern,
+          \item es dem Administrator zu ermöglichen angemessen auf das Wachstum einer Datenbank reagieren zu können,
+          \item die Fragmentierung von Teilen der Datenbank möglichst gering zu halten.
+        \end{itemize}
+        Die OFA kann als eine Art \enquote{Sammlung von guten Manieren} bei der Erstellung von Verzeichnissen für Oracle angesehen werden. Der Oracle Universal Installer platziert automatisch alle Oracle Komponenten in Verzeichnissen, die gemäß OFA erstellt wurden. Auch wenn die Nutzung einer OFA kein Muss ist, wird dies in jedem Falle von Oracle empfohlen.
+
+        Der Oracle Universal Installer (OUI) trennt die Datenbanksoftware von den Nutzdaten. Er legt die Software im Oracle Homeverzeichnis \oscommand{\$ORACLE\_HOME} ab. Die Nutzdaten werden in \oscommand{\$ORACLE\_BASE/oradata} abgelegt. \oscommand{\$ORACLE\_BASE} und \oscommand{\$ORACLE\_HOME} sind Umgebungsvariablen die Verzeichispfade enthalten.
+
+        Der Vorteil an dieser Methode ist, wenn eine neue Version der Datenbanksoftware installiert wird, hat diese ein neues Oracle Homeverzeichnis. Sie kann auf Zuverlässigkeit getestet werden und die alte Version kann nach erfolgreichen Tests der neuen Version gelöscht werden, ohne dass dabei Probleme entstehen.
+      \subsection{Charakteristika einer OFA-Konformen Installation}
+        Eine OFA-Konforme Installation  besitzt die folgenden Charakterristika:
+        \begin{itemize}
+          \item Unabhängige Unterverzeichnisse
+
+            Dateien unterschiedlicher Arten werden in unterschiedliche Unterverzeichnisse gelegt. Somit ist eine Dateiart wenig bis gar nicht betroffen, wenn eine Andere verändert oder gelöscht wird.
+          \item Konsequente Namenskonventionen für die Dateien der Datenbank
+
+            Die Dateien der Oracle-Datenbank können einfach anhand der Verzeichnisstruktur von anderen Dateien unterschieden werden. Datenbankdateien unterschiedlicher Oracle Versionen können auf die gleiche Art und Weise sehr einfach von einander unterschieden werden.
+          \item Integrität der Oracle-Home-Verzeichnisse
+
+            Oracle-Home-Verzeichnisse können hinzugefügt, verschoben oder gelöscht werden, ohne das die betroffene Software dadurch beschädigt werden würde.
+\clearpage
+					\item Metadaten unterschiedlicher Datenbanken von einander trennen
+
+            Die strikte Trennung administrativer Daten von einer Datenbank gegenüber allen anderen erleichtert administrative Arbeiten deutlich und schafft eine übersichtliche und zuverlä{}ssige Struktur.
+          \item Strikte Trennung unterschiedlicher Arten von Nutzdaten
+
+            Nutzdaten unterschiedlicher Arten können von einander getrennt werden, um eine bessere Performance zu schaffen
+          \item Verteilung von I/O-Last auf alle verfügbaren Datenträger
+        \end{itemize}
+      \subsection{Die OFA-Konventionen}
+        Die OFA schreibt folgende Dateiendungen für Datenbankdateien vor:
+        \begin{itemize}
+          \item *.ctl Kontrolldatei
+          \item *.dbf Datendatei
+          \item *.log Redo Log Datei
+        \end{itemize}
+        \subsubsection{Das Oracle Base-Verzeichnis}
+          Die Umgebungsvariable \oscommand{\$ORACLE\_BASE} enthält den Pfad des Oracle Basisverzeichnisses. Es stellt die Wurzel des Oracleverzeichnisbaumes dar. Der OUI setzt für \oscommand{\$ORACLE\_BASE} automatisch den Wert
+
+          \oscommand{/u01/app/oracle}
+
+        \subsubsection{Das Oracle Homeverzeichnis}
+          Die Umgebungsvariable \oscommand{\$ORACLE\_HOME} enthält das Oracle Homeverzeichnis. Es ist der Speicherort für die Oracle Datenbanksoftware. \oscommand{\$ORACLE\_HOME} ist ein Unterverzeichnis von \oscommand{\$ORACLE\_BASE}. Zum Beispiel:
+
+          \oscommand{/u01/app/oracle/product/11.2.0/orcl}
+
+          \begin{literaturinternet}
+            \item \cite{BABHAIIJ}
+          \end{literaturinternet}
+
+    \section{Durchführen einer Oracle Installation auf Linux}
+      In dieser Sektion wird die Installation einer Oracle 11g R2 Datenbank auf einem Oracle Enterprise Linux 6 System beschrieben. Alle Voreinstellungen die am Betriebssystem gemacht werden müssen, sind bereits getätigt worden. An dieser Stelle wird nur noch die reine Softwareinstallation beschrieben.
+      \subsection{Der Installationsbeginn}
+        Das Starten der Installation erfolgt durch den Aufruf: \oscommand{/media/CDROM/runInstaller}. Die Pfadangabe \oscommand{/media/CDROM} kann von System zu System variieren. Hierbei handelt es sich um den Pfad, an dem das CD/DVD-Laufwerk oder die ISO-Datei gemountet wurde. \oscommand{runInstaller} ist das Kommando zum Starten des Oracle Universal Installer, kurz OUI.
+        \subsubsection{Schritt 1- Sicherheitsupdates}
+          Der OUI ist ein grafisches Werkzeug zur Installation der Oracle-Datenbank-Software. Der Setup-Vorgang umfasst insgesamt neun Schritte.
+
+          \bild{Schritt 1 - Sicherheitsupdates}{oui_step_1}{0.45}
+\clearpage
+          In Schritt 1  der Installation wird das Fenster für die Konfiguration von Sicherheitsupdates angezeigt. Hier kann der Administrator seine E-Mail-Adresse eingeben, um über Sicherheitsupdates informiert zu werden. Zusätzlich kann er auch sein \enquote{My Oracle Support} Kennwort angeben, so dass Sicherheitsupdates direkt bezogen werden können.
+
+          Sollte der Administrator in diesem Schritt \enquote{vergessen haben}, seine E-Mail-Adresse anzugeben, wird er prompt auf diesen \enquote{Fehler} hingewiesen.
+
+          Ein Klick auf den \enquote{Ja}-Button löst das Problem.
+
+          \bild{E-Mail-Adresse vergessen?}{oui_step_1_no_mail_address}{0.5}
+        \subsubsection{Schritt 2 - Installationsoptionen}
+          In diesem Installationsschritt wird abgefragt, ob:
+          \begin{itemize}
+            \item Die Software installiert und eine neue Datenbank angelegt werden soll,
+            \item nur die Software installiert werden soll oder
+            \item ob ein Upgrade einer bestehenden Datenbank durchgeführt werden soll.
+          \end{itemize}
+          \bild{Schritt 2 - Installationsoptionen}{oui_step_2}{0.35}
+        \subsubsection{Schritt 3 - Grid-Installation Optionen}
+          Dieser Schritt ist seit Oracle 11g neu. Die Version 11 der Oracle-Datenbank beinhaltet eine Software, die als \enquote{Grid Infrastructure} bezeichnet wird. Diese wird jedoch nur dann benötigt, wenn eine Real Application Cluster Installation durchgeführt werden soll.
+          \bild{Schritt 3 - Grid-Optionen}{oui_step_3}{0.38}
+        \subsubsection{Schritt 4 - Produktsprachen}
+          Oracle 11g R2 wird standardmäßig in den Sprachen Deutsch und Englisch installiert. Zusätzlich stehen weitere 45 Sprachen zur Verfügung.
+          \bild{Schritt 4 - Produktsprachen}{oui_step_4}{0.38}
+        \subsubsection{Schritt 5 - Datenbank Edition}
+          Die Oracle-Datenbank existiert in verschiedenen Editionen. Es gibt die:
+          \begin{itemize}
+            \item Enterprise Edition
+            \item Standard Edition
+            \item Standard Edition One
+            \item Personal Edition (nur unter Windows)
+          \end{itemize}
+          \bild{Schritt 5 - Datenbank Edition}{oui_step_5}{0.42}
+          Der Unterschied zwischen diesen Editionen liegt in deren Funktionsumfang und in den Lizenzkosten. Die Enterprise Edition ist das umfangreichste Paket. Sie enthält alle Features und sie bietet die Möglichkeit \enquote{Datenbank Optionen} hinzu zu installieren, um die Fähigkeiten der Datenbank noch mehr zu erweitern.
+
+          Die Standard Edition hat einen eingeschränkten Funktionsumfang. Sie ist nur noch für  mittlere Unternehmen geeignet, da Features fehlen, die im Umgang mit großen Datenmengen absolut unverzichtbar sind. Für diese Edition ist es auch nicht möglich, Datenbank Optionen hinzuzufügen.
+
+          Die Standard Edition One ist das kleinste Softwarepaket. Sie hat einen sehr stark eingeschränkten Funktionsumfang und ist somit nur noch für kleine Unternehmen oder Abteilungen gedacht.
+
+          Sollte die Enterprise Edition ausgewählt worden sein, so können über den Button \enquote{Optionen wählen} weitere Datenbankoptionen hinzugefügt werden.
+          \bild{Schritt 5 - Datenbank Optionen hinzufügen}{oui_step_5_database_options}{0.42}
+
+          \begin{merke}
+            Einige Datenbankoptionen müssen eigenständig lizensiert werden, wodurch zusätzliche Lizenzkosten entstehen!
+          \end{merke}
+        \subsubsection{Schritt 6 - Installationsspeicherort}
+          Um diesen Schritt erfolgreich zu beenden, müssen zwei Angaben gemacht werden:
+          \begin{itemize}
+            \item \textbf{Oracle Base}: Das Oracle Base-Verzeichnis ist die Wurzel des Installationspfades. Alle weiteren Angaben beziehen sich standardmäßig auf dieses Verzeichnis.
+            \item \textbf{Softwareverzeichnis}: Dies ist das \oscommand{\$ORACLE\_HOME}-Verzeichnis. Hierhinein wird die Oracle-Software installiert. Bei diesem Verzeichnis handelt es sich um ein Unterverzeichnis von \oscommand{\$ORACLE\_BASE}.
+          \end{itemize}
+          \bild{Schritt 6 - Installationsspeicherort}{oui_step_6}{0.39}
+        \subsubsection{Schritt 7 - Bestandsverzeichnis erstellen (nur Linux)}
+          Beim Oracle Bestandsverzeichnis handelt es sich um ein Verzeichnis, in dem alle installierten Oracle-Produkte Bestandsdateien anlegen. Es wird bei der ersten Installation eines beliebigen Oracle-Produktes angelegt. Alle Produkte erstellen dort Unterverzeichnisse für ihre eigenen Bestandsdaten.
+          \bild{Schritt 7 - Bestandsverzeichnis erstellen}{oui_step_7}{0.45}
+        \subsubsection{Schritt 8 - Berechtigte Betriebssystemgruppen}
+          Bei der Installation der Oracle-Datenbank werden zwei Betriebssystemgruppen angelegt, welche für die \enquote{Betriebssystemauthentifizierung} relevant sind: OSDBA und OSOPER. Mitglieder der Gruppe OSDBA haben innerhalb der Datenbank alle Berechtigungen. Wie der Name der Gruppe sagt, sollten nur DBAs Mitglied sein.
+
+          Alle Mitglieder der Betriebssystemgruppe OSOPER haben eingeschränkte administrative Rechte. Für die tägliche Arbeit eines Oracle-DBAs ist diese Gruppe faktisch irrelevant.
+\clearpage
+          \bild{Schritt 8 - Berechtigte Betriebssystemgruppen}{oui_step_8}{0.39}
+        \subsubsection{Schritt 9 - Voraussetzungen prüfen}
+          In diesem Schritt werden alle Bedingungen geprüft, die betriebssystemseitig vor der Installation erfüllt sein müssen.
+          \bild{Schritt 9 - Voraussetzungen prüfen}{oui_step_9}{0.39}
+        \subsubsection{Schritt 10 - Überblick}
+          Bevor der Nutzer mit einem Klick auf den Button \enquote{Fertig stellen} die Installation startet wird ein Überblick über alle gewählten Einstellungen gegeben. Erstmalig wird hier auch die Möglichkeit geboten eine Antwortdatei mit allen getätigten Einstellungen erstellen zu lassen. Diese kann an späterer Stelle für eine automatisierte Installation genutzt werden.
+          \bild{Schritt 10 - Überblick}{oui_step_10}{0.45}
+        \subsubsection{Schritt 11 - Produkt installieren}
+          Hier erfolgt nun die eigentliche Installation.
+
+          Unter Linux/Unix ist es notwendig zwei Aufgaben als Benutzer \enquote{root} durchzuführen, da diese lokale Administratorrechte erfordern. Beide Aufgaben liegen in Form von Shell-Skripten vor. Um diese Skripte ausführen zu können, muss ein neues Terminalfenster geöffnet und die Identität des Nutzers root angenommen werden.
+
+          Nach dem Ausführen beider Skripte kann das neue Terminalfenster wieder geschlossen und das Fenster \enquote{Konfigurationsskripte ausführen} mit einem Klick auf \enquote{OK} geschlossen werden.
+
+          \bild{Schritt 11 - Produkt installieren}{oui_step_11}{0.45}
+
+          \bild{Schritt 11 - Das Skript \enquote{orainstRoot.sh}}{oui_step_11_orainstRoot}{0.45}
+\clearpage
+          \bild{Schritt 11 - Das Skript \enquote{root.sh}}{oui_step_11_root}{0.42}
+        \subsubsection{Schritt 12 - Beenden}
+          Zu guter Letzt erhält man noch die Bestätigung, dass die Installation erfolgreich verlaufen ist. Mit einem Klick auf \enquote{Schließen} kann der Oracle Universal Installer nun geschlossen werden.
+          \bild{Schritt 12 - Beenden}{oui_step_12}{0.42}
+    \section{Software installieren/deinstallieren}
+      Während der Installation der Oracle-Software wird auch eine Kopie des Oracle Universal Installers installiert. Diese befindet sich im Oraclesoftwareverzeichnis, Unterordner \oscommand{oui/bin}. Mit Hilfe dieses OUI kann weitere Software nachinstalliert bzw. können Komponenten deinstalliert werden.
+
+      Unter Microsoft Windows kann der OUI aus dem Startmenü geöffnet werden. Für Linux-Systeme muss die Kommandozeile genutzt werden.
+
+      \oscommand{/u01/app/oracle/product/11.2.0/ORCL/oui/bin/runInstaller}
+
+      Nach dem Start erfolgt die übliche Begrüßung.
+      \bild{Willkommen im OUI}{local_oui_welcome}{0.45}
+
+      Hier erfolgt nun die Auswahl, was als nächstes geschehen soll. Mit einem Klick auf den Button \enquote{Installierte Produkte} kann das Oracle Bestandsverzeichnis abgefragt werden.
+
+      Durch anhaken/markieren einzelner Komponenten und anklicken der Schaltfläche \enquote{Entfernen} können Teile der Software deinstalliert werden.
+
+      Zurück im Willkommensfenster kann mit einem Klick auf die Schaltfläche \enquote{Weiter}, die Installation einer weiteren Oracle-Instanz begonnen werden. Die Installationsschritte bleiben dabei die gleichen, wie sie soeben beschrieben wurden.
+\clearpage
+      \bild{Auflistung aller installierten Produkte}{local_oui_orainventory}{0.45}

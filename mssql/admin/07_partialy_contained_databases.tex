@@ -1,0 +1,336 @@
+  \chapter{Partially contained databases}
+  \chaptertoc{}
+  \cleardoubleevenpage
+    \section{Partially contained databases - Teilweise eigenständige
+    Datenbanken} 
+      Die Architektur des Microsoft SQL Server sieht vor, dass Einstellungen,
+      die zum Betrieb einer Datenbank notwendig sind, an verschiedenen Orten
+      gespeichert werden. Beispielsweise werden Logins in der
+      \identifier{master}-Datenbank gespeichert, um instanzweit zur Verfügung zu
+      stehen, während Benutzerkonten direkt in der betreffenden Datenbank
+      abgelegt werden. Ein anderes Beispiel sind Jobs des SQL Server Agent.
+      Diese werden in der \identifier{msdb}-Datenbank abgelegt, können sich aber
+      auf Datenbanken auswirken.
+      
+      Die durch diese Umstände bewirkte Verflechtung von Instanz und Datenbanken
+      macht es schwierig eine Datenbank auf einen anderen Server / in eine
+      andere Instanz zu migrieren. Mit Hilfe des Konzeptes der
+      \enquote{Teilweise eigenständigen Datenbank} (engl. Partially contained
+      databases) versucht Microsoft diesem Problem entgegen zu treten.
+
+      In einer Partially contained database werden verschiedene Metadaten
+      in der Datenbank selbst und nicht in der \identifier{master}-Datenbank
+      gespeichert. Der Fachbegriff dafür, dass bestimmte Objekte ohne
+      Verbindung zur Instanz oder zu einer anderen Datenbank existieren können
+      lautet \enquote{Kapselung}
+      \begin{merke}
+        Von großer Bedeutung ist das Wort \enquote{Partially}, da nicht alle
+        Metadaten in der Datenbank selbst abgelegt werden. Diese Art von
+        Datenbank ist tatsächlich nur zu einem gewissen Teil unabhängig.
+      \end{merke}
+      \subsection{Was genau bedeutet Kapselung?}
+        Bei der Kapselung geht es darum, dass Objekte in einer Datenbank
+        keinerleie Bezüge/Verknüpfungen nach außen haben dürfen. Ein Beispiel
+        hierfür ist die Systemview \identifier{sys.tables}. Die Basisobjekte,
+        auf welche sich diese View bezieht, befinden sich alle in der
+        betroffenen Datenbank selbst. Ein Gegenbeispiel wäre ein Objekt, wie
+        z. B. ein SQL-Benutzer mit Anmeldename. Ein solches Benutzerkonto
+        bezieht sich auf ein Windows-Login und dieses Login liegt in der
+        \identifier{master}-Datenbank. Somit existiert ein Bezug nach außen.
+        
+        Man kann somit zwei Arten von Objekten unterscheiden:
+        \begin{itemize}
+          \item \textbf{Contained entities}: Ein Objekt wird dann als
+          \enquote{vollständig enthalten} bezeichnet, wenn es die
+          Datenbankbegrenzung nie überschreitet, sich also nur auf Funktionen
+          stützt, welche in der Datenbank enthalten sind.
+          \item \textbf{Uncontained entities}: Ein Objekt, welches die
+          Datenbankgrenze überschreitet wird als \enquote{nicht enthalten}
+          bezeichnet, da es Verknüpfungen zu Objekten außerhalb seiner eigenen
+          Datenbank hat.
+        \end{itemize}
+        \begin{merke}
+          Als \enquote{Datenbankbegrenzung} wird die Grenze zwischen einer
+          Datenbank und der Instanz bzw. die Grenze zwischen zwei Datenbanken
+          bezeichnet. Sie ist eine eindeutig definierbare Trennlinie zwischen
+          den Funktionen der Datenbank (dem Datenmodell) und den Funktionen
+          der Instanz (dem Verwaltungsmodell).
+        \end{merke}
+        \subsection{Welche Probleme werden gelöst?}
+          \begin{itemize}
+            \item Die Datenbank übernimmt die Authentifizierung von Benutzern
+            komplett. Es sind keine Logins mehr von Nöten.
+            \item Weitere Metadaten, z. B. eine Liste der Datenbanken, von denen
+            die Partially contained database abhängig ist und weitere
+            Systemeinstellungen, die zum Betrieb der Datenbank notwendig
+            sind, werden in der Datenbank selbst gespeichert.
+            \item Temporäre Tabellen werden direkt im Kontext der Partially
+            contained database gespeichert, so dass es keine Konflikte mehr bei
+            Sortierreihenfolgen zwischen der \identifier{tempdb} und der
+            Datenbank selbst gibt.
+          \end{itemize}
+        \subsection{Einschränkungen für Partially contained databases}
+          Das Konzept der teilweise eigenständigen Datenbanken bringt nicht nur
+          Vorteile mit sich, es existieren auch Einschränkungen. Beispielsweise
+          unterstützen diese Datenbank weder das Feature der Replikation noch
+          das Change-Data-Capture. Eine vollständige Liste mit allen
+          Einschränkungen ist in der MSDN enthalten.
+          \begin{literaturinternet}
+            \item \cite{ff929071}
+          \end{literaturinternet}
+      \section{Partially contained databases erzeugen}
+        \subsection{Konfigurieren der Instanz}
+          Bevor Partially contained databases erstellt werden können muss zuerst
+          die Authentifizierung für eigenständige Datenbanken eingeschaltet
+          werden. Dies wird durch eine einfache Instanzeinstellung vorgenommen.
+          \bild{Eigen\-stän\-dige Daten\-banken aktivieren}{pcd_activate}{1.2}
+          \begin{lstlisting}[language=ms_sql,caption={Eigen\-stän\-dige Daten\-banken
+          aktivieren},label=sql20_01]
+USE [master]
+GO
+
+EXEC §sp_configure§ 'contained database authentication', 1
+RECONFIGURE
+GO          
+          \end{lstlisting}
+        \subsection{Erstellen der Datenbank}
+          \subsubsection{Eine neue Partially contained database erstellen}
+            Eine teilweise eigenständige Datenbank wird mit Hilfe des
+            \languagemssql{CREATE DATABASE}-Statements und dem Zusatz
+            \languagemssql{CONTAINMENT = PARTIAL} erzeugt. Wahlweise kann dies
+            aber auch im SSMS geschehen.
+            \bild{Erzeugen einer teilweise eigen\-stän\-digen Daten\-bank}{create_pcd}{1.2}
+            \begin{lstlisting}[language=ms_sql,caption={Erstellen einer teilweise eigen\-stän\-digen Daten\-bank},label=sql20_02]
+USE [master]
+GO
+
+CREATE DATABASE [Bank_PCD]
+  CONTAINMENT = PARTIAL
+  ON  PRIMARY ( NAME = N'Bank_PCD',
+  FILENAME = N'D:\120\bank_pcd\data\Bank_pcd.mdf',
+  SIZE = 1GB, MAXSIZE = 2GB,
+  FILEGROWTH = 512MB)
+  LOG ON ( NAME = N'Bank_PCD_Log',
+  FILENAME = N'D:\120\bank_pcd\log\Bank_pcd.ldf',
+  SIZE = 100MB, MAXSIZE = 2GB,
+  FILEGROWTH = 10%)
+GO
+            \end{lstlisting}
+          \subsubsection{Den Containmenttype einer Datenbank ändern}
+            Soll eines bestehende Datenbank in eine Partially contained
+            database migriert werden, so geschieht dies mit dem
+            \languagemssql{ALTER DATABASE}-Statement.
+            \begin{lstlisting}[language=ms_sql,caption={Migration einer Datenbank in eine teilweise eigen\-stän\-dige Daten\-bank},label=sql20_03]
+USE [master]
+GO
+
+ALTER DATABASE [Bank_PCD] SET CONTAINMENT = PARTIAL;
+GO
+            \end{lstlisting}
+            \bild{Migration einer Datenbank in eine teilweise eigen\-stän\-dige
+            Daten\-bank}{migrate_to_pcd}{1.3}
+            \begin{literaturinternet}
+              \item \cite{hh534404}
+            \end{literaturinternet}
+          \subsubsection{Identifizieren der Datenbankkapselung}
+            Wurde eine Datenbank in eine Partially contained database migriert,
+            stellt sich trotz Migration die Frage, ob wirklich alle Objekte
+            innerhalb der datenbank die Datenbankbegrenzung einhalten. Um dies
+            herauszufinden, gibt es zwei Mechanismen:
+            \begin{itemize}
+              \item Die View \identifier{sys.dm\_db\_uncontained\_entities}
+              zeigt alle Objekte an, die möglicherweise die Datenbankbegrenzung
+              überschreiten.
+              \item Das Extended Event \identifier{database\_uncontained\_usage}
+              wird immer dann ausgelöst, wenn zur Laufzeit eines Programms eine
+              uncontained Entity gefunden wird.
+            \end{itemize}
+            \begin{merke}
+              Die View \identifier{sys.dm\_db\_uncontained\_entities} kann
+              Entitäten, welche dynamisches SQL enthalten nicht korrekt
+              auswerten und deshalb auch nicht feststellen, ob solche Objekte
+              die Datenbankbegrenzung verletzen oder nicht.
+            \end{merke}
+            \begin{literaturinternet}
+              \item \cite{ff929071}
+            \end{literaturinternet}
+        \subsection{Contained users verwalten}
+          Grundsätzlich sind die \enquote{enthaltenen Benutzerkonten} bzw.
+          Contained Users mit den normalen Benutzerkonten identisch, bis auf
+          eine Ausnahme: Es wird kein Login für einen Contained user erstellt.
+          Die Metadaten eines Contained users werden in der datenbank selbst und
+          nicht in der \identifier{master}-Datenbank abgelegt.
+          
+          Es gibt zwei Arten Contained users:
+          \begin{itemize}
+            \item \textbf{SQL Benutzer mit Kennwort}: Diese Art von
+            Benutzerkonto ist das pont dont zur Kombination \enquote{SQL
+            Benutzer mit Anmeldename und Login mit SQL
+            Server-Authentifizierung}. Der Unterschied besteht darin, dass kein
+            Login für ihn angelegt wird. Das Passwort für ein solches
+            Benutzerkonto wird in der Datenbank selbst verwaltet.
+            \item \textbf{Windows-Benutzer}: Der Windows Benutzer ist mit
+            der Kombination \enquote{SQL Benutzer mit Anmeldename und Login mit
+            Windows-Authentifizierung} vergleichbar.
+          \end{itemize}          
+          Zu beachten ist, dass das Authentifizierungsverfahren bei beiden
+          Benutzertypen unterschiedlich abläuft. Meldet sich ein Benutzer mit
+          einem Windows-Account an, wird zuerst nach einem Login mit
+          Windows-Authentifzierung gesucht und erst wenn kein passendes Login
+          gefunden wird, wird nach einem Windows-Benutzer gesucht. D. h. die
+          Authentifizierung wird zuerst auf Instanzebene und dann auf
+          Datenbankebene versucht.
+          
+          Bei einer Anmeldung mit einem SQL Server-Account, wird zuerst nach
+          einem SQL Benutzer mit Kennwort und dann nach einem Login mit SQL
+          Server-Authentifizierung gesucht. Hier wird also zuerst auf
+          Datenbankebene und dann auf Instanzebene authentifiziert.
+          \subsubsection{Contained users erstellen}
+            Contained Users können wie bereits in
+            \ref{administer_database_users} gezeigt, mit Hilfe des SSMS oder mit
+            SQL-Kommandos erstellt werden. Die beiden folgenden Statements
+            zeigen wie ein SQL Benutzer ohne Anmeldename und ein
+            Windows-Benutzer erstellt werden.
+            \begin{lstlisting}[language=ms_sql,caption={Erstellen
+            eines SQL Benutzers mit Kennwort},label=sql20_04]
+USE [Bank_PCD]
+GO
+
+CREATE USER [sql_user_without_login]
+WITH PASSWORD = 'P@ssw0rd'
+GO
+            \end{lstlisting}
+            
+            \begin{lstlisting}[language=ms_sql,caption={Erstellen
+            eines Windows-Benutzers},label=sql20_05]
+USE [Bank_PCD]
+GO
+
+CREATE USER [ORA-B-IX-62\sqluser]
+GO
+            \end{lstlisting}
+            Contained users können nur innerhalb einer eigenständigen Datenbank
+            erstellt werden. Versucht man einen contained user in einer nicht
+            eigenständigen Datenbank zu erstellen antwortet SQL Server mit den
+            folgenden Fehlermeldung.
+            \begin{lstlisting}[language=ms_sql,caption={Fehler beim Erstellen
+            eines SQL Benutzers mit Kennwort in einer nicht
+            eigenständigen Datenbank},label=sql20_06]
+USE [Bank]
+GO
+
+CREATE USER [sql_user_without_login]
+WITH PASSWORD = 'P@ssw0rd'
+GO
+
+Meldung 33233, Ebene 16, Status 1, Zeile 3
+Sie können nur einen Benutzer mit einem Kennwort in einer eigenständigen 
+Datenbank erstellen.
+            \end{lstlisting}
+          \subsubsection{Login an einer Partially contained database}
+            Für die Anmeldung an einer Partially contained database muss in den
+            Verbindungseigenschaften der Name der gewünschten Datenbank
+            angegeben werden.
+            \bild{Login an einer Partially contained database}{connection_properties_login_to_pcd}{1.3}
+            Alternativ zur Anmeldung mittels SSMS kann auch mit Hilfe des
+            SQLCMD-Tools eine Verbindung zu einer Contained database hergestellt
+            werden.
+            \begin{lstlisting}[language=terminal,caption={Login an einer
+            Partially contained database mit dem SQLCMD-Tool},label=sql20_07]
+sqlcmd -S FEA11-119SRV12\MSSQLSERVER -U sql_user_without_login -P P@ssw0rd
+-d Bank_PCD
+            \end{lstlisting}
+            \begin{literaturinternet}
+              \item \cite{bmmcspb202ss2pcdp1}
+              \item \cite{hh534404}
+            \end{literaturinternet}
+          \subsubsection{Sicherheitsrelevante Einstellungen}  
+            Bei der Benutzung von eigenständigen Benutzerkonten gibt es einige
+            kritische Punkte, die man in seine Überlegungen mit einbeziehen
+            sollte. Darunter fallen die Datenbankeigenschaft
+            \identifier{auto\_close} und das Systemprivileg \privileg{alter any
+            user}.
+            
+            Durch das Setzen der Datenbankeigenschaft \identifier{auto\_close}
+            wird eine Datenbank geschlossen, sobald sich der letzte Benutzer von
+            ihr abgemeldet hat. Da bei einer eigenständigen Datenbank die
+            Authentifizierung nicht durch die Instanz, sondern durch die
+            Datenbank selbst gemacht wird, bedeutet dies, dass nach dem
+            Schließen der Datenbank zusätzliche Resourcen aufgewandt werden
+            müssen, um sie wieder zu öffnen. Wenn sich nun ein einziger Benutzer
+            an der Datenbank wiederholt an- und abmeldet, kann dem Server daraus
+            eine große Belastung entstehen, was sich letzten endes wie eine
+            Denial of Service Attacke auswirkt.
+            
+            Das Systemprivileg \privileg{alter any user} stellt in einer nicht
+            eigenständigen Datenbank kein allzu großes Risiko dar, weil die
+            Authentifizierung auf Instanzebene abläuft. In einer eigenständigen
+            Datenbank jedoch, kann mit Hilfe dieses Privileges einem Benutzer
+            Zugang zu einer Datenbank verschafft bzw. ein neuer Benutzer
+            erstellt werden. Daher sollten dieses Privileg und die beiden Rollen
+            \identifier{db\_owner} und \identifier{db\_securityadmin}, welche in
+            Besitz dieses Privileges sind, mit größter Vorsicht gehandhabt werden.
+            \begin{merke}
+              Wenn in einer Datenbank das Gast-Konto aktiviert ist, besteht
+              zusätzlich die Gefahr, dass sich die \enquote{illegal erstellten}
+              Benutzerkonto Zugang zu dieser Datenbank verschaffen.
+            \end{merke}
+            Eine ähnliche Gefahrt droht von den beiden Systemprivilegien
+            \privileg{alter any database} (fixed server role
+            \privileg{dbcreateor}) und \privileg{control database} (fixed
+            server role \privileg{db\_owner}). Wenn ein Benutzer eines der
+            beiden Privilegien besitzt, kann er den status einer Datenbank auf
+            \enquote{teilweise eigenständig} setzen. Daraus resultiert wiederum
+            das soeben beschriebene Problem mit eigenständigen Benutzerkonten,
+            die sich illegal Zugang zu anderen Datenbanken verschaffen können.
+            \begin{literaturinternet}
+              \item \cite{ff929055}
+            \end{literaturinternet}
+          \subsubsection{Das Passwort eines eigenständigen Benutzerkontos ändern}
+            \begin{lstlisting}[language=ms_sql,caption={Ändern des
+            Passwortes eines eigenständigen Benutzers},label=sql20_08]
+USE [Bank_PCD]
+GO
+
+ALTER USER [sql_user_without_login] 
+WITH 
+  PASSWORD = 'Pa$$w0rd'
+  OLD_PASSWORD = 'P@ssw0rd';
+GO
+            \end{lstlisting}
+          \subsubsection{Benutzerkonten migrieren}
+            Um alle Benutzerkonten des Types \enquote{SQL Benutzer mit
+            Anmeldename}, die auf einem Login mit Passwort-Authentifizierung
+            basieren in einen \enquote{SQL Benutzer mit Passwort} zu
+            konvertieren, stellt Microsoft eigens die Stored Procedure
+            \languagemssql{sp_migrate_user_to_contained} zur Verfügung. Das
+            folgende Beispiel ist der MSDN (\parencite{ff929139}) entnommen und
+            zeigt, wie ein solcher Vorgang für eine Partially contained database
+            abläuft.
+\clearpage
+            \begin{lstlisting}[language=ms_sql,caption={Benutzerkonten
+            migrieren},label=sql20_09]
+DECLARE @username sysname;  
+DECLARE user_cursor CURSOR  
+    FOR   
+        SELECT dp.name   
+        FROM sys.database_principals AS dp  
+        JOIN sys.server_principals AS sp  
+        ON dp.sid = sp.sid  
+        WHERE dp.authentication_type = 1 AND sp.is_disabled = 0;  
+OPEN user_cursor  
+FETCH NEXT FROM user_cursor INTO @username  
+    WHILE @@FETCH_STATUS = 0  
+    BEGIN  
+        EXECUTE sp_migrate_user_to_contained   
+        @username = @username,  
+        @rename = N'keep_name',
+        @disablelogin = N'disable_login';  
+    FETCH NEXT FROM user_cursor INTO @username  
+    END  
+CLOSE user_cursor;  
+DEALLOCATE user_cursor;              
+            \end{lstlisting}
+            \begin{literaturinternet}
+              \item \cite{ff929139}
+            \end{literaturinternet}

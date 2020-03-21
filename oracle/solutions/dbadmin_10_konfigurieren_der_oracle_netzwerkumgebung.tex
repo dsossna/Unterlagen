@@ -1,0 +1,134 @@
+\section{Lösung - Konfigurieren der Oracle-Netzwerkumgebung}
+  \begin{enumerate}
+    \input{exercises/dbadmin_10/item_a}
+      \begin{lstlisting}[caption={tnsnames.ora},language=configfile]
+ORCLNEIGHBOUR =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119SRV.oracle.com)
+      (PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = orcl)
+    )
+  )
+      \end{lstlisting}
+    \input{exercises/dbadmin_10/item_b}
+      \begin{lstlisting}[language=terminal]
+[oracle@FEA11-119SRV ~]$ sqlplus sys/oracle@ORCLNEIGHBOUR as sysdba
+      \end{lstlisting}
+    \input{exercises/dbadmin_10/item_c}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT *
+  2  FROM   v$instance;
+      \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_10/item_d}
+      \begin{lstlisting}[caption={listener.ora},language=configfile]
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = orcl)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/ORCL)
+      (SID_NAME = ORCL)
+    )
+  )
+ LISTENER =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119SRV.oracle.com)(PORT = 1521))
+  )
+
+ADR_BASE_LISTENER = /u01/app/oracle
+      \end{lstlisting}
+    \input{exercises/dbadmin_10/item_e}
+      \begin{lstlisting}[language=terminal]
+[oracle@FEA11-119SRV ~]$ lsnrctl
+
+LSNRCTL> stop
+Connecting to ...
+The command completed successfully
+LSNRCTL> start
+Starting /u01/app/oracle/product/11.2.0/ORCL/bin/tnslsnr: please wait...
+
+TNSLSNR for Linux: Version 11.2.0.1.0 - Production
+System &parameter& file is $ORACLE_HOME/network/admin/listener.ora
+Log messages written to /u01/app/oracle/diag/tnslsnr/.../log.xml
+Listening &on&: ...
+Connecting to ...
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 11.2.0.1.0 - Production
+Start Date                10-OCT-2013 11:00:25
+Uptime                    0 days 0 hr. 0 min. 0 sec
+Trace Level               &off&
+Security                  &ON&: Local OS Authentication
+SNMP                      &OFF&
+Listener Parameter File   $ORACLE_HOME/network/admin/listener.ora
+Listener Log File         /u01/app/oracle/diag/tnslsnr/.../log.xml
+Listening Endpoints Summary...
+  ...
+Services Summary...
+Service "orcl" has 1 instance(s).
+  Instance "ORCL", status UNKNOWN, has 1 handler(s) for this service...
+The command completed successfully
+      \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_10/item_f}
+      \begin{lstlisting}[caption={listener.ora},language=configfile]
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = FEA11-119SRV.oracle.com)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/ORCL)
+      (SID_NAME = ORCL)
+    )
+  )
+
+LISTENER =
+ (DESCRIPTION =
+  (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119SRV.oracle.com)(PORT = 1521))
+ )
+
+ADR_BASE_LISTENER = /u01/app/oracle
+      \end{lstlisting}
+    \input{exercises/dbadmin_10/item_g}
+      \begin{lstlisting}[caption={ldap.ora},language=configfile]
+DEFAULT_ADMIN_CONTEXT = "cn=OracleContext"
+DIRECTORY_SERVERS = (192.168.20.100:38911:63611)
+DIRECTORY_SERVER_TYPE = OID
+      \end{lstlisting}
+    \input{exercises/dbadmin_10/item_h}
+\clearpage
+    \input{exercises/dbadmin_10/item_i}
+      \begin{lstlisting}[caption={tnsnames.ora},language=configfile]
+ADMIN_ORCL =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)
+                 (HOST = FEA11-119SRV.oracle.com)
+                 (PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = orcl)
+    )
+  )
+
+ORCL =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)
+                 (HOST = FEA11-FEA11-119SRV.oracle.com)
+                 (PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVER = POOLED)
+      (SERVICE_NAME = orcl)
+    )
+  )
+      \end{lstlisting}
+      \begin{lstlisting}[caption={Connection Pooling aktivieren in SQL*Plus},language=oracle_sql] 
+SQL> exec DBMS_CONNECTION_POOL.Start_Pool();
+      \end{lstlisting}
+  \end{enumerate}

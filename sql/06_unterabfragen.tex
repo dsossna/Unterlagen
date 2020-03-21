@@ -1,0 +1,919 @@
+  \chapter{Unterabfragen (Subqueries)}
+  \label{subqueries}
+  \chaptertoc{}
+  \cleardoubleevenpage
+
+  \section{Grundsätzliches zu Unterabfragen}
+      \subsection{Was sind Unterabfragen?}\label{whataresubqueries}
+        Unterabfragen sind Abfragen, die in eine andere Abfrage, die Hauptabfrage oder \enquote{Mainquery}, eingebettet werden. Dies kann an mehreren Stellen geschehen.
+        \begin{itemize}
+          \item \SELECT-Klausel
+          \item \FROM-Klausel (Inlineview)
+          \item \WHERE-Klausel
+          \item \HAVING-Klausel
+        \end{itemize}
+        \bild{Unterabfragen}{abfrage}{0.8}
+        Für Unterabfragen gibt es die unterschiedlichsten Bezeichnungen.
+        \begin{itemize}
+          \item Subquery
+          \item Inner query
+          \item Nested query
+        \end{itemize}
+      \subsection{Wann sind Unterabfragen notwendig?}
+        Mit Hilfe von SQL können zwei verschiedene Arten von Problemstellungen gelöst werden:
+        \begin{itemize}
+          \item Einschrittige Problemstellungen
+          \item Mehrschrittige Problemstellungen
+        \end{itemize}
+        Unter einer einschrittigen Problemstellung versteht man die Art von Fragestellung, die mit einer einzigen Abfrage (einem einzigen Arbeitsschritt) gelöst werden kann, so wie dies in den vorangegangenen Kapiteln der Fall war.
+
+        Mehrschrittige Problemstellungen erfordern, wie der Name es sagt, mehrere Abfragen, die aufeinander aufbauen (die eine Abfrage benötigt das Ergebnis der anderen), um zu einer Lösung zu kommen. Eine solche Problemstellung könnte z. B. so lauten: \enquote{Wie hoch ist das Gehalt des Vorgesetzten der Mitarbeiterin \textit{Lena Große}?}
+\clearpage
+        Diese Frage lässt sich in zwei Fragen teilen:
+        \begin{enumerate}
+          \item Wer ist der Vorgesetzte von Lena Große?
+          \item Wie hoch ist dessen Gehalt?
+        \end{enumerate}
+        Die Antworten zu beiden Fragen lassen sich sehr einfach als SQL-Statements formulieren.
+        \begin{lstlisting}[language=oracle_sql,caption={Wer ist der Vorgesetzte von Lena Grosse},label=sql06_01]
+SELECT Vorgesetzter_ID
+FROM   Mitarbeiter
+WHERE  Vorname LIKE 'Lena' AND  Nachname LIKE 'Grosse';
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{VORGESETZTER\_ID}} \\
+              \cmidrule(r){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{r}
+                6 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \begin{lstlisting}[language=oracle_sql,caption={Wie hoch ist dessen Gehalt},label=sql06_02]
+SELECT Gehalt
+FROM   Mitarbeiter
+WHERE  Mitarbeiter_ID = 6;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{GEHALT}} \\
+              \cmidrule(r){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{r}
+                30000 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        Mit Hilfe der beiden Abfragen wurde die Antwort ermittelt: \enquote{Der Vorgesetzte von Lena Große hat ein Gehalt von 30.000 EUR.}. Durch das Kombinieren beider Queries, lässt sich diese Aufgabe viel eleganter lösen. \beispiel{sql06_03} zeigt einen möglichen Lösungsansatz.
+        \begin{lstlisting}[language=oracle_sql,caption={Wie hoch ist das Gehalt des Vorgesetzten der Mitarbeiterin \textit{Lena Große}?},label=sql06_03]
+SELECT Gehalt
+FROM   Mitarbeiter
+WHERE  Mitarbeiter_ID = (SELECT Vorgesetzter_ID
+                         FROM   Mitarbeiter
+                         WHERE  Vorname LIKE 'Lena'
+                           AND  Nachname LIKE 'Grosse');
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{GEHALT}} \\
+              \cmidrule(r){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{r}
+                30000 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \begin{merke}
+          Das DBMS arbeitet bei einer solchen Auswahlabfrage immer zuerst die Unterabfrage(n) ab!
+        \end{merke}
+      \subsection{Regeln für Unterabfragen}
+        Für die Anwendung von Unterabfragen gelten die folgenden Grundsätze:
+        \begin{itemize}
+          \item Unterabfragen stehen immer in Klammern!
+          \item Es können alle ihnen bisher bekannten Operatoren eingesetzt werden!
+          \item Unterabfragen \textbf{sollten immer ohne \ORDERBY-Klausel} erstellt werden!
+        \end{itemize}
+        Die Aussage, dass Unterabfragen immer ohne \ORDERBY{} verwendet werden sollten, rührt daher, dass falls eine Sortierung in der Hauptabfrage stattfindet, zuerst in der Unterabfrage sortiert wird und anschließend nochmals in der Hauptabfrage. Dies führt zu unnötiger Sortierarbeit, die die Datenbank belastet.
+
+        \begin{merke}
+          In MS SQL Server darf eine Unterabfrage kein \ORDERBY{} enthalten. Das DBMS antwort sonst mit einer Fehlermeldung (Meldung 1033, Ebene 15).
+        \end{merke}
+      \subsection{Arten von Unterabfragen}
+        Grundsätzlich gibt es vier unterschiedliche Arten von Unterabfragen:
+        \begin{itemize}
+          \item Skalare Unterabfragen: Eine solche Abfrage liefert exakt einen Wert zurück.
+          \item Einspaltige Unterabfragen: Dieser Abfragetyp liefert mehrere Werte aus einer Spalte zurück.
+          \item Mehrspaltige Unterabfragen: Mit einer solchen Abfrage werden Werte mehrerer Spalten zurückgeliefert.
+          \item Korrelierte Unterabfragen: Ihre Ausführung ist von der Hauptabfrage abhängig.
+        \end{itemize}
+\clearpage
+    \section{Skalare Unterabfragen (Scalar Subqueries)}
+      \begin{merke}
+        \textbf{Skalar:}
+        \vspace{1em}
+
+        Größe aus der Mathematik, die durch die Angabe eines einzelnen Wertes genau definiert werden kann.
+        \vspace{1em}
+
+        Beispiele für Skalare sind: Gehalt, Provision, \dots
+      \end{merke}
+      Skalare Unterabfragen zeichnen sich dadurch aus, dass sie genau einen einzigen Wert zurückliefern.   Dies wird mit Hilfe einer entsprechenden \WHERE-Klausel innerhalb der Unterabfrage erreicht. Ergibt die Abfrage kein Ergebnis, wird NULL zurückgliefert. Ein erstes Beispiel für diese Art von Unterabfrage war in \beispiel{sql06_03} zu sehen. Es wird nur das \identifier{Gehalt} eines einzigen Angestellten angezeigt.
+      \subsection{Wo können skalare Unterabfragen stehen?}
+        Skalare Unterabfragen können in allen in \abschnitt{whataresubqueries} erwähnten Klauseln stehen.
+        \subsubsection{Skalare Unterabfragen in der SELECT-Klausel}
+          Skalare Unterabfragen sind die einzigen, die in der \SELECT-Klausel eines SQL-Statements stehen dürfen. Sie können beispielsweise dazu dienen, um einen Outer-Join zu vermeiden, meist ist jedoch die Join-Variante sehr viel performanter. Aus diesem Grund sollten skalare Unterabfragen in der \SELECT-Klausel absolut vermieden werden.
+
+          \begin{merke}
+            Skalare Unterabfragen in der \SELECT-Klausel sollten unter allen Umständen vermieden werden!
+          \end{merke}
+        \subsubsection{Skalare Unterabfragen in der WHERE-Klausel}
+          Die \WHERE-Klausel ist der Ort, an dem skalare Unterabfragen am häufigsten anzutreffen sind. Sie dienen zur Berechnung von Werten, mit deren Hilfe das Resultat der Hauptabfrage eingeschränkt wird (siehe \beispiel{sql06_03}).
+        \subsubsection{Skalare Unterabfragen in der Having-Klausel}
+        Hier gelten die gleichen Grundsätze, wie in der \WHERE-Klausel. Der einzige Unterschied ist, das hier ein Aggregat mit dem Resultat einer skalaren Unterabfrage verglichen werden kann.
+      \subsection{Fehlerquellen in skalaren Unterabfragen}
+        Die häufigste Fehlerquelle, im Umgang mit skalaren Unterabfragen, ist eine falsche \WHERE-Klausel. Schränkt sie das Ergebnis der Unterabfrage nicht genügend ein, wird mehr als ein Datensatz/Wert zurückgeliefert und die Datenbank antwortet mit einer Fehlermeldung.
+          \begin{lstlisting}[language=oracle_sql,caption={Mehr als eine Zeile: Fehlermeldung in Oracle},label=sql06_04]
+ORA-01427: Unterabfrage fuer eine Zeile liefert mehr als eine Zeile
+          \end{lstlisting}
+          \begin{lstlisting}[language=ms_sql,caption={Mehr als eine Zeile: Fehlermeldung in SQL Server},label=sql06_05]
+Meldung 512, Ebene 16, Status 1, Zeile 1
+Die Unterabfrage hat mehr als einen Wert zurueckgegeben. Das ist nicht
+zulaessig, wenn die Unterabfrage auf =, !=, <, <=, > oder >= folgt oder
+als Ausdruck verwendet wird.
+          \end{lstlisting}
+          Hier ein Beispiel zu diesen Fehlermeldungen: Es soll das Geburtsdatum des Vorgesetzten der Mitarbeiterin \enquote{Große} ermittelt werden.
+          \begin{lstlisting}[language=oracle_sql,caption={Eine Single Row Unterabfrage mit Problemen!},label=sql06_06]
+SELECT Geburtsdatum
+FROM   Mitarbeiter
+WHERE  Mitarbeiter_ID = (SELECT Vorgesetzter_ID
+                         FROM   Mitarbeiter
+                         WHERE  LOWER(Nachname) LIKE 'grosse');
+          \end{lstlisting}
+          Das Problem bei dieser Abfrage ist, dass die Tabelle \identifier{Mitarbeiter} zwei Angestellte mit dem Namen \enquote{Große} enthält. Das bedeutet, die Unterabfrage liefert mehr als einen Wert zurück, so dass der Vergleich mit einem Single Row Operator scheitert.
+
+          \begin{merke}
+            Als Single Row Operatoren werden relationale Operatoren bezeichnet, die einen Wert auf ihrer linken Seite mit genau einem Wert auf ihrer rechten Seite vergleichen können. Hierzu zählen: = >= <= < > != LIKE
+          \end{merke}
+    \section{Einspaltige Unterabfragen}
+      Diese Kategorie der Unterabfragen unterschiedet sich von den skalaren dahingehend, dass sie eine einspaltige Liste von mehreren Werten (Vektor) zurückliefern und das sie nicht in der \SELECT-Klausel eines SQL-Statements vorkommen dürfen.
+      \subsection{Einspaltige Unterabfragen in WHERE- und HAVING-Klausel}
+        \languageorasql{IN} (bekannt aus \abschnitt{relopersql}) ist der einzige Operator, der auf seiner rechten Seite nicht nur einen einzelnen Wert, sondern eine ganze Wertemenge verarbeiten kann. Dies kann eine konstante Menge sein, so wie dies bisher der Fall war, aber es kann auch eine, durch eine Query dynamisch generierte Menge sein. \beispiel{sql06_07} zeigt den Einsatz des \languageorasql{IN}-Operators. Es muss eine Liste aller Kunden ermittelt werden, die vor dem \enquote{01.01.1980} ein Konto bei der Bank eröffnet haben.
+        \begin{lstlisting}[language=oracle_sql,caption={\languageorasql{IN} mit Unterabfrage},label=sql06_07]
+SELECT Vorname, Nachname
+FROM   Kunde
+WHERE  Kunden_ID IN (SELECT Kunden_ID
+                     FROM   EigenkundeKonto
+                     WHERE  Eroeffnungsdatum < TO_DATE('01.01.1980'));
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{28 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{28 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+									Jan & Weiß \\
+									Petra & Berger \\
+									Karolin & Lange \\
+									Tom & Hartmann \\
+								\end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        Auf die gleiche Art und Weise, wie in \beispiel{sql06_07} gezeigt, können einspaltige Unterabfragen auch in einer \HAVING-Klausel eingesetzt werden, was jedoch nur sehr selten vorkommt.
+      \subsection{Existenzprüfungen}
+				\subsubsection{Der EXISTS-Operator}
+          Der Name \textit{Existenzprüfung} sagt ohne Umschweife aus, worum es geht. Mit Hilfe des Operators \languageorasql{EXISTS} kann die Existenz bestimmter Daten geprüft werden. \beispiel{sql06_08} zeigt auf worum es sich hierbei handelt. Es soll eine Liste der Bankfilialen ermittelt werden, in denen Mitarbeiter eingesetzt sind.
+          \begin{lstlisting}[language=oracle_sql,caption={Der \languageorasql{EXISTS}-Operator},label=sql06_08]
+SELECT Strasse, Hausnummer, PLZ, Ort
+FROM   Bankfiliale b
+WHERE  EXISTS (SELECT 1
+               FROM   Mitarbeiter m
+               WHERE  b.Bankfiliale_ID = m.Bankfiliale_ID);
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{STRASSE}} &
+                \multicolumn{1}{l}{\textbf{HAUSNUMMER}} &
+                \multicolumn{1}{l}{\textbf{PLZ}} &
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{20 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{llll}
+                  Poststraße & 1 & 06449 & Aschersleben \\
+                  Markt & 5 & 06449 & Aschersleben \\
+                  Goethestraße & 4 & 39240 & Calbe \\
+                  Lessingstraße & 1 & 06406 & Bernburg \\
+                  Schillerstraße & 7 & 39240 & Barby \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Das Ergebnis dieser Auswahlabfrage sind alle Bankfilialen, in denen Mitarbeiter arbeiten. Es verbleibt eine Filiale ohne Mitarbeiter.
+
+          Was geschieht in dieser Abfrage nun in welcher Reihenfolge?
+          \begin{enumerate}
+            \item Die \FROM-Klausel der Hauptabfrage wird ausgewehrtet und die erforderlichen Daten werden ermittelt.
+            \item Die \FROM-Klausel der Unterabfrage wird ausgewehrtet und die erforderlichen Daten werden ermittelt.
+            \item Die \WHERE-Klausel der Unterabfrage wird ausgeführt. Der Join zwischen \identifier{Bankfiliale} und \identifier{Mitarbeiter} wird gebildet.
+            \item Die \WHERE-Klausel der Hauptabfrage wird ausgeführt.
+            \item Die \SELECT-Klausel der Hauptabfrage liefert die benötigten Daten.
+          \end{enumerate}
+          Das Besondere an dieser Form der Abfrage ist die \WHERE-Klausel der Unterabfrage. Dort wird die Tabelle \identifier{Bankfiliale} (Hauptabfrage) mit der Tabelle \identifier{Mitarbeiter} (Unterabfrage) verknüpft. Die Unterabfrage kann somit auf die Datensätze der Hauptabfrage zugreifen.
+
+          \begin{merke}
+            Werden die Tabellen einer Unterabfrage mit einer Tabelle der Hauptabfrage verknüpft, spricht man von einer \enquote{korrelierten Unterabfrage}.
+          \end{merke}
+\clearpage
+          Für die Ausführung des gesamten Statements bedeutet dies, das die Unterabfrage nicht nur einmal, sondern mehrfach ausgeführt werden muss. Genauer gesagt wird die Unterabfrage für jede Zeile der Hauptabfrage einmal ausgeführt. Bezogen auf \beispiel{sql06_08} bedeutet dies, dass die Unterabfrage 21 mal ausgeführt wird, da die Tabelle Bankfiliale 21 Datensätze hat. Die Mehrfachausführung der Unterabfrage ist notwendig, da für jede Bankfiliale einzeln geprüft werden muss, ob es dort Mitarbeiter gibt oder nicht.
+
+          Eine weitere Besonderheit dieser Art von Abfrage ist die \SELECT-Klausel der Unterabfrage. Dort stehen keine Spaltenbezeichner und auch kein *. Statt dessen wird hier ein Literal, eine 1 (eins) verwendet. Der Hintergrund hierfür ist, das die \SELECT-Klausel der Unterabfrage für die Ausführung des gesamten Statements keine Bedeutung hat. Es wird nur geprüft, ob für jeden Datensatz der Hauptabfrage ein Datensatz in der Unterabfrage existiert. Das bedeutet, dass sobald die Unterabfrage eine Zeile zurückliefert die Bedingung erfüllt ist und der Datensatz der Hauptabfrage angezeigt wird.
+        \subsubsection{Der NOT EXISTS-Operator}
+          Der \languageorasql{NOT EXISTS}-Operator stellt das Pendant zum \languageorasql{EXISTS}-Operator dar. Müssen beispielsweise alle Filialen ermittelt werden, in denen keine Mitarbeiter arbeiten kommt \languageorasql{NOT EXISTS} zum Einsatz.
+          \begin{lstlisting}[language=oracle_sql,caption={Der \languageorasql{NOT EXISTS}-Operator},label=sql06_09]
+SELECT Strasse, Hausnummer, PLZ, Ort
+FROM   Bankfiliale b
+WHERE  NOT EXISTS (SELECT 1
+                   FROM   Mitarbeiter m
+                   WHERE  b.Bankfiliale_ID = m.Bankfiliale_ID);
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{STRASSE}} &
+                \multicolumn{1}{l}{\textbf{HAUSNUMMER}} &
+                \multicolumn{1}{l}{\textbf{PLZ}} &
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+
+              \begin{msoraclesql}
+                \begin{supertabular}{llll}
+                  Kurze Gasse & 47 & 06425 & Alsleben \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+    \section{Inlineviews / Derived Tables}
+      In \abschnitt{whataresubqueries} wurde bereits erwähnt, dass eine Unterabfrage auch in der \FROM-Klausel eines SQL-Statements stehen kann.
+
+      \begin{merke}
+        Eine Unterabfrage in der \FROM-Klausel wird in Oracle als \enquote{Inlineview} und in MS SQL Server als \enquote{Derived Table} bezeichnet.
+      \end{merke}
+      \beispiel{sql06_10} zeigt ein SQL-Statement, welches eine Inlineview nutzt.
+      \begin{lstlisting}[language=oracle_sql,caption={Eine Inlineview},label=sql06_10]
+SELECT Vorname, Nachname, MinGehalt
+FROM   (SELECT   Bankfiliale_ID, MIN(Gehalt) MinGehalt
+        FROM     Mitarbeiter
+        GROUP BY Bankfiliale_ID) m1
+        INNER JOIN Mitarbeiter m
+        ON (m1.Bankfiliale_ID = m.Bankfiliale_ID)
+WHERE   m.Gehalt = m1.MinGehalt;
+      \end{lstlisting}
+      \begin{center}
+        \begin{small}
+          \changefont{pcr}{m}{n}
+          \tablefirsthead {
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{MINGEHALT}} \\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}
+          }
+          \tablehead{}
+          \tabletail {
+          }
+          \tablelasttail {
+            \multicolumn{3}{l}{\textbf{29 Zeilen ausgewählt}} \\
+          }
+          \begin{msoraclesql}
+            \begin{supertabular}{llr}
+              Johannes & Lehmann & 2000 \\
+              Louis & Schmitz & 2000 \\
+              Marie & Kipp & 2000 \\
+              Martin & Schacke & 1000 \\
+              Oliver & Wolf & 1000 \\
+              Hans & Schumacher & 1000 \\
+              Lena & Herrmann & 1500 \\
+            \end{supertabular}
+          \end{msoraclesql}
+        \end{small}
+      \end{center}
+      In \beispiel{sql06_10} wird die Inlineview dazu benutzt, um das kleinste Gehalt je Abteilung zu berechnen. Mit Hilfe des Joins wird sie mit der Tabelle \identifier{Mitarbeiter} verknüpft, so dass die Attribute \identifier{Vorname} und \identifier{Nachname} angezeigt werden können, ohne in Konflikt mit der \GROUPBY-Klausel zu kommen.
+
+      \begin{merke}
+        Inlineviews bieten eine gute Möglichkeit, um gruppierte und ungruppierte Informationen in einer Abfrage gemeinsam anzeigen zu können.
+      \end{merke}
+    \section{Top N Analysen}
+      Die Top N Analyse ist ein Verfahren, bei dem Datensätze in ein Ranking eingeordnet werden. Hiermit werden Fragestellungen geklärt wie z. B.:
+      \begin{itemize}
+        \item Die 3 reichsten Kunden anzeigen
+        \item Die 5 Mitarbeiter mit den höchsten Gehältern auflisten
+        \item Die beiden größten Schuldner der Bank ermitteln
+      \end{itemize}
+      Beide Datenbankmanagementsysteme beherrschen diese Technik, gehen dabei aber unterschiedliche Wege.
+      \subsection{Die Top N Analyse in Oracle}
+        Die Top N Analyse funktioniert in Oracle mit Hilfe einer sortierten Inlineview und einer Pseudospalte Namens \identifier{Rownum}.
+        \subsubsection{Die Pseudospalte Rownum}
+          Mit der Bezeichnung \enquote{Pseudospalte} ist gemeint, dass die \identifier{Rownum} keine tatsächlich vorhandene Spalte ist, obwohl sie in jeder Abfrage verwendet werden kann. Sie bietet die Möglichkeit, die Ergebniszeilen einer Abfrage fortlaufend zu nummerieren (1, 2, 3, \dots, N). Zu beachten ist dabei, dass eine Zeile in einer Oracle-Datenbank keine feste Nummerierung hat. Diese wird erst im Ergebnis einer Abfrage zugeordnet.
+          \begin{lstlisting}[language=oracle_sql,caption={Ein einfaches Beispiel für die Rownum},label=sql06_11]
+SELECT   Rownum, Vorname, Nachname
+FROM     Mitarbeiter
+WHERE    Ort LIKE 'Aschersleben';
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{ROWNUM}} &
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+              }
+
+              \begin{oraclesql}
+                \begin{supertabular}{rll}
+                  1 & Max & Winter \\
+                  2 & Alexander & Weber \\
+                  3 & Leni & Dühning \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          \begin{merke}
+            Eine Tabellenzeile hat keine feste Nummerierung. Die Rownum wird während der Abarbeitung einer Abfrage zugewiesen.
+          \end{merke}
+          Eine weitere, entscheidende Tatsache ist, dass die \identifier{Rownum} erst nach der Abarbeitung der \WHERE-Klausel zugeordnet wird, aber noch bevor Gruppierungen oder Sortierungen ausgeführt werden. Aus diesem Grund, wird die Abfrage in \beispiel{sql06_12} ein falsches Ergebnis liefern, da die Sortierung hätte zuerst stattfinden müssen. Hier werden höchstwahrscheinlich nicht die beiden größten Guthaben, sondern zwei beliebige Guthaben angezeigt. Welche Zeilen gelistet werden hängt davon ab, welche die Abfrage zuerst ermittelt.
+          \begin{lstlisting}[language=oracle_sql,caption={Falsche Anwendung der Rownum-Pseudospalte},label=sql06_12]
+SELECT   Konto_ID, Guthaben
+FROM     Girokonto
+WHERE    Rownum < 3
+ORDER BY Guthaben DESC;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{KONTO\_ID}} &
+                \multicolumn{1}{r}{\textbf{GUTHABEN}} \\
+                \cmidrule(r){1-1}\cmidrule(r){2-2}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+              }
+
+              \begin{oraclesql}
+                \begin{supertabular}{rr}
+                  1 & 111316,9 \\
+                  2 & 96340,2 \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          \begin{merke}
+            Die Rownum wird erst nach Abarbeitung der \WHERE-Klausel, aber noch vor allen Gruppierungen und Sortierungen hinzugefügt.
+          \end{merke}
+          Ein dritter \enquote{Stolperstein}, in Zusammenhang mit der \identifier{Rownum} ist, dass die \identifier{Rownum} erst inkrementiert wird, wenn sie zugewiesen wurde. Das soll heißen, dass die \WHERE-Klausel in \beispiel{sql06_13} ebenfalls fehlschlägt, da nach allen Rownums größer eins gefragt wird, ohne das Rownum eins jemals zugewiesen worden wäre (ohne 1 keine 2).
+          \begin{lstlisting}[language=oracle_sql,caption={Erneut eine falsche Anwendung der Rownum},label=sql06_13]
+SELECT   Konto_ID, Guthaben
+FROM     Girokonto
+WHERE    Rownum > 3
+ORDER BY Guthaben DESC;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{KONTO\_ID}} &
+                \multicolumn{1}{r}{\textbf{GUTHABEN}} \\
+                \cmidrule(r){1-1}\cmidrule(r){2-2}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{2}{l}{\textbf{0 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{2}{l}{\textbf{0 Zeilen ausgewählt}} \\
+              }
+
+              \begin{oraclesql}
+                \begin{supertabular}{rr}
+
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          Die Lösung für diese Probleme besteht nun darin,
+          \begin{enumerate}
+            \item dass niemals einer der beiden Operatoren \textgreater{} oder \textgreater = in Zusammenhang mit der \identifier{Rownum} verwendet werden sollte und
+            \item dass die Abfrage aus \beispiel{sql06_12} in eine Inlineview geschachtelt wird.
+          \end{enumerate}
+        \subsubsection{Durchführung der Top N Analyse}
+          Die korrekte Form der Top N Analyse sieht in Oracle wie folgt aus:
+          \begin{lstlisting}[language=oracle_sql,caption={Eine korrekt funktionierende Top N Analyse in Oracle},label=sql06_14]
+SELECT *
+FROM   (SELECT   Konto_ID, Guthaben
+        FROM     Girokonto
+        ORDER BY Guthaben DESC)
+WHERE    Rownum < 3;
+        \end{lstlisting}
+\clearpage
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{KONTO\_ID}} &
+              \multicolumn{1}{r}{\textbf{GUTHABEN}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+            }
+            \begin{oraclesql}
+              \begin{supertabular}{rr}
+                362 & 147670,3 \\
+                198 & 147264 \\
+              \end{supertabular}
+            \end{oraclesql}
+          \end{small}
+        \end{center}
+        Im Gegensatz zu \beispiel{sql06_12} werden hier wirklich die beiden größten Gehälter angezeigt. Warum dies so ist, kann durch die Abarbeitungsreihenfolge der Abfrage aus \beispiel{sql06_14} erklärt werden.
+        \begin{enumerate}
+          \item \FROM-Klausel der Inlineview
+          \item \SELECT- und \ORDERBY-Klausel der Inlineview
+          \item \FROM-Klausel der Hauptabfrage
+          \item Zuweisung der \identifier{Rownum}
+          \item Ausführung der \WHERE-Klausel der Hauptabfrage
+          \item \SELECT-Klausel der Hauptabfrage
+        \end{enumerate}
+        In \beispiel{sql06_14} wird also zuerst nummeriert und dann selektiert.
+      \subsection{Die Top N Analyse in MS SQL Server}
+        In Microsoft SQL Server existiert eigens der Operator \languagemssql{TOP} zur Durchführung von Top N Analysen. Er wird in der \SELECT-Klausel eingesetzt und legt fest, wie viele Zeilen angezeigt werden.
+        \begin{lstlisting}[language=ms_sql,caption={Top N Analyse in MS SQL Server},label=sql06_15]
+SELECT   TOP (2) Konto_ID, Guthaben
+FROM     Girokonto
+ORDER BY Guthaben DESC;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{KONTO\_ID}} &
+              \multicolumn{1}{l}{\textbf{GUTHABEN}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{2 Zeilen ausgewählt}} \\
+            }
+            \begin{mssql}
+              \begin{supertabular}{ll}
+                362 & 147670,3 \\
+                198 & 147264 \\
+              \end{supertabular}
+            \end{mssql}
+          \end{small}
+        \end{center}
+        Durch die Angabe von \languagemssql{TOP (2)} werden nur die ersten zwei Zeilen der Ergebnismenge angezeigt.
+    \section{Pivot-Tabellen}
+      Mit MS SQL Server 2005 bzw. Oracle 11g R1 wurden der \languageorasql{PIVOT} und der \languageorasql{UNPIVOT}-Operator eingeführt. Diese ermöglichen die einfache Erstellung von Pivottabellen.
+
+      \begin{merke}
+        In einer Pivottabelle werden Daten, die im Zeilenformat vorliegen, im Spaltenformat angezeigt oder umgekehrt. Das \enquote{Drehen} der Daten wird als \enquote{Pivoting} bezeichnet, woraus sich der Name für diese Tabellen ableitet.
+      \end{merke}
+      \begin{itemize}
+        \item \textbf{PIVOT:} Dreht Daten die zeilenweise vorliegen so, dass eine spaltenweise Darstellung möglich ist.
+        \item \textbf{UNPIVOT:} Dreht Daten die spaltenweise vorliegen so, dass eine zeilenweise Darstellung möglich ist.
+      \end{itemize}
+      \subsection{Der PIVOT-Operator (Oracle)}
+        Die Möglichkeiten, die der \languageorasql{PIVOT}-Operator bietet, werden anhand des folgenden Beispiels verdeutlicht. Für die Filialen 1 bis 3 sollen die jeweils kleinsten Gehälter angezeigt werden.
+        \begin{lstlisting}[language=oracle_sql,caption={Die niedrigsten Gehälter in den Filialen 1 bis 3},label=sql06_16]
+SELECT   Bankfiliale_ID, MIN(Gehalt)
+FROM     Mitarbeiter
+WHERE    Bankfiliale_ID IN (1, 2, 3)
+GROUP BY Bankfiliale_ID;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}} &
+              \multicolumn{1}{r}{\textbf{MIN(GEHALT)}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \begin{oraclesql}
+              \begin{supertabular}{rr}
+                1 & 2000 \\
+                2 & 1000 \\
+                3 & 1000 \\
+              \end{supertabular}
+            \end{oraclesql}
+          \end{small}
+        \end{center}
+        In \beispiel{sql06_16} werden die gewünschten Zahlen ermittelt. Die Darstellung der Gehälter erfolgt zeilenweise. Sollen die gleichen Zahlen spaltenweise dargestellt werden, wird der \languageorasql{PIVOT}-Operator benötigt. \beispiel{sql06_17} zeigt dessen Einsatz.
+        \begin{lstlisting}[language=oracle_sql,caption={Das Ergebnis als Pivottabelle},label=sql06_17]
+SELECT *
+FROM   (SELECT Gehalt, Bankfiliale_ID
+        FROM   Mitarbeiter)
+PIVOT  (MIN(Gehalt) AS Gehalt FOR Bankfiliale_ID IN (1, 2, 3));
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{1\_GEHALT}} &
+              \multicolumn{1}{r}{\textbf{2\_GEHALT}} &
+              \multicolumn{1}{r}{\textbf{3\_GEHALT}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+
+            \begin{oraclesql}
+              \begin{supertabular}{rrr}
+                2000 & 1000 & 1000 \\
+              \end{supertabular}
+            \end{oraclesql}
+          \end{small}
+        \end{center}
+        \subsubsection{Die Syntax des PIVOT-Operators}
+          Da das SQL-Statement aus \beispiel{sql06_17} auf den ersten Blick sehr komplex wirkt, ist es notwendig, es an dieser Stelle im Detail zu betrachten.
+
+          Für die Ausführung des Pivotings wird in \beispiel{sql06_17} eine Inlineview verwendet.
+          \begin{lstlisting}[language=oracle_sql,caption={Die Inlineview},label=sql06_18]
+(SELECT Gehalt, Bankfiliale_ID
+ FROM   Mitarbeiter)
+          \end{lstlisting}
+          Diese Inlineview legt fest, welche Spalten im Endergebnis der Abfrage zu sehen sein werden. Sie kann beliebig komplex sein. Der \languageorasql{PIVOT}-Operator verarbeitet im zweiten Schritt die Spalten dieser View weiter.
+          \begin{lstlisting}[language=oracle_sql,caption={Der \languageorasql{PIVOT}-Operator},label=sql06_19]
+PIVOT  (MIN(Gehalt) AS Gehalt FOR Bankfiliale_ID IN (1, 2, 3));
+          \end{lstlisting}
+          Die Bedeutung dieses Operators ist:
+          \begin{itemize}
+            \item Gruppiere nach der Spalte \identifier{Bankfiliale\_ID}.
+            \item Zeige \languageorasql{MIN(Gehalt)} für \languageorasql{Bankfiliale_ID = 1}.
+            \item Zeige \languageorasql{MIN(Gehalt)} für \languageorasql{Bankfiliale_ID = 2}.
+            \item Zeige \languageorasql{MIN(Gehalt)} für \languageorasql{Bankfiliale_ID = 3}.
+            \item Benutzte den Alias \enquote{Gehalt} für den Ausdruck \languageorasql{MIN(Gehalt)}.
+          \end{itemize}
+        \subsubsection{Spaltenaliase in der FOR-Klausel}
+          Die Spaltenbezeichnungen im Ergebnis von \beispiel{sql06_17} werden
+          gebildet, in dem der Name der aggregierten Spalte (hier
+          \identifier{Gehalt}) mit den Werten der \languageorasql{FOR}-Klausel
+          kombiniert werden. Dadurch entstehen die Namen \identifier{1\_GEHALT},
+          \identifier{2\_GEHALT} und \identifier{3\_GEHALT}. Auch an dieser
+          Stelle sind Aliasnamen möglich.
+\clearpage
+          \begin{lstlisting}[language=oracle_sql,caption={Die \languageorasql{FOR}-Klausel mit Aliasnamen},label=sql06_20]
+SELECT *
+FROM   (SELECT Gehalt, Bankfiliale_ID
+        FROM   Mitarbeiter)
+PIVOT  (MIN(Gehalt) AS Gehalt FOR Bankfiliale_ID
+       IN (1 AS "Filiale 1", 2 AS "Filiale 2", 3 AS "Filiale 3"));
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{Filiale 1\_GEHALT}} &
+                \multicolumn{1}{r}{\textbf{Filiale 2\_GEHALT}} &
+                \multicolumn{1}{r}{\textbf{Filiale 3\_GEHALT}} \\
+                \cmidrule(r){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+              \begin{oraclesql}
+                \begin{supertabular}{rrr}
+                  2000 & 1000 & 1000 \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+        \subsubsection{Zusätzliche Spalten zum Pivoting}
+          In einer Pivot-Abfrage können noch weitere Spalten enthalten sein, die nicht aggregiert oder in der \languageorasql{FOR}-Klausel genutzt werden. Diese Spalten werden als zusätzliche Gruppierungsmerkmale genutzt.
+ 
+          \begin{merke}
+            Oracle führt eine implizite Gruppierung der Ergebnismenge durch. Diese basiert auf allen nicht gruppierten Spalten, inklusive der Spalten, die in der \languageorasql{FOR}-Klausel genutzt werden.
+          \end{merke}
+          In \beispiel{sql06_21} wird im ersten Schritt nach dem Geburtsjahr, von 1987 bis 1989 gruppiert. Da diese Spalte in der \languageorasql{FOR}-Klausel verwendet wird, wird diese Information in Spaltenform dargestellt.
+
+          Die Spalte Ort hingegen, wird in Zeilenform angezeigt, da sie nicht in der \languageorasql{FOR}-Klausel angegeben wurde.
+
+          \begin{merke}
+            Ob eine Information in Spalten- oder Zeilenform dargestellt wird, hängt davon ab, ob die betreffende Spalte in der \languageorasql{FOR}-Klausel gelistet wurde oder nicht.
+          \end{merke}
+          \begin{lstlisting}[language=oracle_sql,caption={Zusätzliche Gruppierungen in einer Pivot-Abfrage},label=sql06_21]
+SELECT *
+FROM   (SELECT Gehalt, TO_CHAR(Geburtsdatum, 'YYYY') AS Geburtsdatum, Ort
+        FROM   Mitarbeiter)
+PIVOT  (MIN(Gehalt) AS Gehalt FOR Geburtsdatum IN ('1987', '1988', '1989'));
+          \end{lstlisting}
+\clearpage
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{ORT}} &
+                \multicolumn{1}{r}{\textbf{'1987'\_GEHALT}} &
+                \multicolumn{1}{r}{\textbf{'1988'\_GEHALT}} &
+                \multicolumn{1}{r}{\textbf{'1989'\_GEHALT}} \\
+                \cmidrule(l){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
+              }
+              \begin{oraclesql}
+                \begin{supertabular}{lrrr}
+                  Calbe &  &  &  \\
+                  Plötzkau & 2500 &  &  \\
+                  Nienburg &  &  &  \\
+                  Bernburg &  &  &  \\
+                  Dresden &  &  &  \\
+                  Hecklingen &  &  & 3000 \\
+                  Borne &  &  & 30000 \\
+                  Schönebeck &  &  &  \\
+                  Giersleben &  &  &  \\
+                  Gera &  &  & 3500 \\
+                  München &  &  &  \\
+                  Egeln &  &  &  \\
+                  Güsten &  &  &  \\
+                  Seeland &  &  & 2500 \\
+                  Ilberstedt &  &  &  \\
+                  Bördeaue &  &  &  \\
+                  Hamburg & 12000 &  &  \\
+                  Alsleben &  &  &  \\
+                  Schwerin &  &  &  \\
+                  Dessau & 2500 &  &  \\
+                  Könnern &  &  &  \\
+                  Cottbus &  &  &  \\
+                  Potsdam & 3500 & 2000 & 2000 \\
+                  Aschersleben & 12000 & 88000 & 2000 \\
+                  Magdeburg &  &  & 3000 \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          Die vorangegangenen Beispiele stellen nur einen Einstieg in das Thema \enquote{Pivottabellen} dar. Tatsächlich ist der \languageorasql{PIVOT}-Operator noch weitaus mächtiger.
+      \subsection{Der PIVOT-Operator (MS SQL Server)}
+        Die Möglichkeiten, welche der \languageorasql{PIVOT}-Operator bietet, werden anhand des folgenden Beispiels verdeutlicht. Für die Bankfilialen 1 bis 3 sollen die jeweils kleinsten Gehälter angezeigt werden.
+        \begin{lstlisting}[language=ms_sql,caption={Die niedrigsten Gehälter in den Filialen 1 bis 3},label=sql06_22]
+SELECT   Bankfiliale_ID, MIN(Gehalt)
+FROM     Mitarbeiter
+WHERE    Bankfiliale_ID IN (1, 2, 3)
+GROUP BY Bankfiliale_ID;
+        \end{lstlisting}
+\clearpage
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{Bankfiliale\_ID}} &
+              \multicolumn{1}{l}{\textbf{(Kein Spaltenname)}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \begin{mssql}
+              \begin{supertabular}{ll}
+                1 & 2000 \\
+                2 & 1000 \\
+                3 & 1000 \\
+              \end{supertabular}
+            \end{mssql}
+          \end{small}
+        \end{center}
+        In \beispiel{sql06_22} werden die gewünschten Zahlen ermittelt. Die Darstellung der Gehälter erfolgt zeilenweise. Sollen die gleichen Zahlen spaltenweise dargestellt werden, wird der \languageorasql{PIVOT}-Operator benötigt. \beispiel{sql06_23} zeigt dessen Einsatz.
+        \begin{lstlisting}[language=ms_sql,caption={Das Ergebnis als Pivottabelle},label=sql06_23]
+SELECT *
+FROM   (SELECT Gehalt, Bankfiliale_ID
+        FROM   Mitarbeiter) AS Sourcetable
+PIVOT  (MIN(Gehalt)
+        FOR Bankfiliale_ID IN ([1], [2], [3])
+        ) AS Pivottable;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{1}} &
+              \multicolumn{1}{l}{\textbf{2}} &
+              \multicolumn{1}{l}{\textbf{3}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+
+            \begin{mssql}
+              \begin{supertabular}{lll}
+                2000 & 1000 & 1000 \\
+              \end{supertabular}
+            \end{mssql}
+          \end{small}
+        \end{center}
+        \subsubsection{Die Syntax des PIVOT-Operators}
+          Da das SQL-Statement aus \beispiel{sql06_23} auf den ersten Blick sehr komplex wirkt, ist es notwendig, es an dieser Stelle im Detail zu betrachten.
+
+          Für die Ausführung des Pivotings wird in \beispiel{sql06_23} eine Inlineview verwendet.
+          \begin{lstlisting}[language=ms_sql,caption={Die Inlineview},label=sql06_24]
+(SELECT Gehalt, Bankfiliale_ID
+ FROM   Mitarbeiter) AS Sourcetable
+          \end{lstlisting}
+          Diese Inlineview legt fest, welche Spalten im Endergebnis der Abfrage zu sehen sein werden. Sie kann beliebig komplex sein. Der \languageorasql{PIVOT}-Operator verarbeitet im zweiten Schritt die Spalten dieser View weiter.
+          \begin{lstlisting}[language=ms_sql,caption={Der \languageorasql{PIVOT}-Operator},label=sql06_25]
+PIVOT  (MIN(Gehalt) FOR Bankfiliale_ID IN ([1], [2], [3])) AS Pivottable;
+          \end{lstlisting}
+\clearpage
+          Die Bedeutung dieses Operators ist:
+          \begin{itemize}
+            \item Gruppiere nach der Spalte \identifier{Bankfiliale\_ID}.
+            \item Zeige \languagemssql{MIN(Gehalt)} für \languagemssql{Bankfiliale_ID = 1}.
+            \item Zeige \languagemssql{MIN(Gehalt)} für \languagemssql{Bankfiliale_ID = 2}.
+            \item Zeige \languagemssql{MIN(Gehalt)} für \languagemssql{Bankfiliale_ID = 3}.
+          \end{itemize}
+          Für eine Pivotabfrage gelten in MS SQL Server folgende Syntaxregeln:
+          \begin{itemize}
+            \item Für die Quell-View muss zwingend ein Aliasname vergeben werden. In \beispiel{sql06_23} ist dies \enquote{Sourcetable}
+            \item Für die Pivottabelle muss zwingend ein Aliasname vergeben
+werden. In \beispiel{sql06_23} ist dies \enquote{Pivottable}
+						\item Es dürfen in der Pivottabelle keine
+Aliasnamen vergeben werden.
+            \item Die Werte in der \languagemssql{FOR}-Klausel müssen in eckigen Klammern stehen.
+          \end{itemize}
+        \subsubsection{Zusätzliche Spalten zum Pivoting}
+          In einer Pivot-Abfrage können noch weitere Spalten enthalten sein, die nicht aggregiert oder in der \languagemssql{FOR}-Klausel genutzt werden. Diese Spalten werden als zusätzliche Gruppierungsmerkmale genutzt.
+
+          \begin{merke}
+            MS SQL Server führt eine implizite Gruppierung der Ergebnismenge durch. Diese basiert auf allen nicht gruppierten Spalten, inklusive der Spalten, die in der \languagemssql{FOR}-Klausel genutzt werden.
+          \end{merke}
+          In \beispiel{sql06_26} wird im ersten Schritt nach dem Geburtsjahr, von 1987 bis 1989 gruppiert. Da diese Spalte in der \languagemssql{FOR}-Klausel verwendet wird, wird diese Information in Spaltenform dargestellt.
+
+          Die Spalte Ort hingegen, wird in Zeilenform angezeigt, da sie nicht in der \languagemssql{FOR}-Klausel angegeben wurde.
+
+          \begin{merke}
+            Ob eine Information in Spalten- oder Zeilenform dargestellt wird, hängt davon ab, ob die betreffende Spalte in der \languagemssql{FOR}-Klausel gelistet wurde oder nicht.
+          \end{merke}
+\clearpage
+          \begin{lstlisting}[language=ms_sql,caption={Zusätzliche Gruppierungen in einer Pivot-Abfrage},label=sql06_26]
+SELECT *
+FROM   (SELECT Gehalt, DATEPART(YEAR, Geburtsdatum) AS Geburtsdatum, Ort
+        FROM   Mitarbeiter) AS Sourcetable
+PIVOT  (MIN(Gehalt)
+        FOR Geburtsdatum IN ([1987], [1988], [1989])) AS Pivottable;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{Ort}} &
+                \multicolumn{1}{l}{\textbf{1987}} &
+                \multicolumn{1}{l}{\textbf{1988}} &
+                \multicolumn{1}{l}{\textbf{1989}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
+              }
+              \begin{mssql}
+                \begin{supertabular}{llll}
+                  Calbe &  &  &  \\
+                  Plötzkau & 2500 &  &  \\
+                  Nienburg &  &  &  \\
+                  Bernburg &  &  &  \\
+                  Dresden &  &  &  \\
+                  Hecklingen &  &  & 3000 \\
+                  Borne &  &  & 30000 \\
+                  Schönebeck &  &  &  \\
+                  Giersleben &  &  &  \\
+                  Gera &  &  & 3500 \\
+                  München &  &  &  \\
+                  Egeln &  &  &  \\
+                  Güsten &  &  &  \\
+                  Seeland &  &  & 2500 \\
+                  Ilberstedt &  &  &  \\
+                  Bördeaue &  &  &  \\
+                  Hamburg & 12000 &  &  \\
+                  Alsleben &  &  &  \\
+                  Schwerin &  &  &  \\
+                  Dessau & 2500 &  &  \\
+                  Könnern &  &  &  \\
+                  Cottbus &  &  &  \\
+                  Potsdam & 3500 & 2000 & 2000 \\
+                  Aschersleben & 12000 & 88000 & 2000 \\
+                  Magdeburg &  &  & 3000 \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+          Die vorangegangenen Beispiele stellen nur einen Einstieg in das Thema \enquote{Pivottabellen} dar. Tatsächlich ist der \languageorasql{PIVOT}-Operator noch weitaus mächtiger.

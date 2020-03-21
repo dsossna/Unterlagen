@@ -1,0 +1,182 @@
+\clearpage
+    \section{Übungen - Erstellen von Views}
+      \begin{enumerate}
+        \item Erstellen Sie die View \identifier{v\_Arbeitsort}. Diese muss
+für jeden Mitarbeiter den Vorname, den Nachnamen, die Bankfiliale\_ID und den
+Ort anzeigen, an dem sich die Filiale befindet.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{93 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{93 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llrl}
+                Marie & Kipp & 1 & Aschersleben \\
+                Louis & Schmitz & 1 & Aschersleben \\
+                Johannes & Lehmann & 1 & Aschersleben \\
+                Dirk & Peters & 1 & Aschersleben \\
+                Amelie & Krüger & 1 & Aschersleben \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie die View \identifier{v\_Depotbesitzer}, die zu jedem Eigenkunden, der ein Depot besitzt, seinen Vor- und Nachnamen, die Strasse mit der Hausnummer, sowie PLZ und Ort anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{STRASSE}} &
+              \multicolumn{1}{l}{\textbf{PLZ}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}\cmidrule(l){5-5}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{5}{l}{\textbf{239 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lllll}
+                Sophie & Junge & Plutoweg 3 & 39435 & Bördeaue \\
+                Hanna & Beck & Beimsstraße 9 & 39439 & Güsten \\
+                Sebastian & Peters & Steinigstraße 3 & 39240 & Staßfurt \\
+                Tina & Berger & Bundschuhstraße 1 & 04177 & Leipzig \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie die View \identifier{v\_Finanzberater}, die für alle Eigenkunden deren Vor- und Nachnamen anzeigt, sowie den Vor- und den Nachnamen ihres persönlichen Finanzberaters (Tabelle \identifier{EigenkundeMitarbeiter}).
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{Vorname Kunde}} &
+              \multicolumn{1}{l}{\textbf{Nachname Kunde}} &
+              \multicolumn{1}{l}{\textbf{Vorname Berater}} &
+              \multicolumn{1}{l}{\textbf{Nachname Berater}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{400 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Mia & Keller & Lena & Herrmann \\
+                Emilia & Keller & Louis & Wagner \\
+                Finn & Junge & Leni & Friedrich \\
+                Marie & Vogel & Finn & Wolf \\
+                Rudi & Roggatz & Frank & Meierhöfer \\
+                Leni & Koch & Frank & Hartmann \\
+                Chris & Zimmermann & Clara & Walther \\
+                Justin & Zimmermann & Leni & Friedrich \\
+                Petra & Krause & Chris & Hartmann \\
+                Clara & Rollert & Franz & Berger \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Erstellen Sie die View \identifier{v\_Unterstellungsverhaeltnis}, die zu jedem Mitarbeiter (Vorname, Nachname) den Vor- und den Nachnamen seines Vorgesetzten anzeigt. Wichtig ist, dass alle Mitarbeiter, auch Herr Max Winter, der keinen Vorgestzten hat, angezeigt werden.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}1} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Finn & Seifert & Max & Winter \\
+                Sarah & Werner & Max & Winter \\
+                Tim & Sindermann & Sarah & Werner \\
+                Sebastian & Schwarz & Sarah & Werner \\
+                Emily & Meier & Finn & Seifert \\
+                Peter & Möller & Finn & Seifert \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie die View \identifier{v\_Innendienstmitarbeiter}, die ermittelt, ob es Mitarbeiter gibt (Vorname und Nachname), die keine Kundenberatung durchführen. Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner Bankfiliale arbeiten) und Filialleiter.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{40 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{40 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Amelie & Krüger \\
+                Anna & Schneider \\
+                Chris & Simon \\
+                Christian & Haas \\
+                Elias & Sindermann \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie die View \identifier{v\_Girokontoinhaber}, die alle Eigenkunden anzeigt, die nur ein Girokonto besitzen.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+%               \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Amelie & Becker \\
+                Amelie & Richter \\
+                Chris & Walther \\
+                Emilia & Keller \\
+                Georg & Keller \\
+                Johanna & Schäfer \\
+                Justin & Zimmermann \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+      \end{enumerate}

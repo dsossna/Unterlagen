@@ -1,0 +1,1054 @@
+  \chapter{Erweiterte Datenselektion}
+  \chaptertoc{}
+  \cleardoubleevenpage
+
+  Werden zwei Relationen R1 und R2 in einer Abfrage miteinander verknüpft, entsteht ein kartesisches Kreuzprodukt. Die Anzahl der Zeilen in diesem Produkt entspricht $R_1 * R_2$. Es bildet die Grundlage für eine Join-Operation, bei der aus einem Kreuzprodukt, mit Hilfe eines Selektionsausdruckes, gezielt die nicht benötigten Zeilen eliminiert werden.
+    \section{Der Inner Join}
+      Beim Inner Join werden, im Ergebnis der Abfrage, nur die Zeilen angezeigt, die der Join-Bedingung genügen.
+      \subsection{Die ON-Klausel}
+        Die \languageorasql{ON}-Klausel stellt die flexibelste und am Häufigsten genutzte Möglichkeit dar, um zwei Tabellen, in einer Join-Operation, miteinander zu verknüpfen. Dafür werden zwei Spaltenbezeichner und ein Operator benötigt. \beispiel{sql04_01} zeigt einen Inner Join zwischen den beiden Tabellen \identifier{Kunde} und \identifier{Eigenkunde}.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Join zwischen Kunde und Eigenkunde},label=sql04_01]
+SELECT Vorname, Nachname, PLZ, Ort
+FROM   Kunde INNER JOIN Eigenkunde
+         ON (Kunde.Kunden_ID = Eigenkunde.Kunden_ID);
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{PLZ}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{400 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{400 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Sophie & Junge & 39435 & Bördeaue \\
+                Hanna & Beck & 39439 & Güsten \\
+                Noah & Bunzel & 39435 & Egeln \\
+                Sebastian & Peters & 39240 & Staßfurt \\
+                Leni & Braun & 06425 & Alsleben \\
+                Jannis & Schreiber & 06406 & Bernburg \\
+                Noah & Rollert & 39435 & Wolmirsleben \\
+                Amelie & Becker & 06425 & Plötzkau \\
+                Christian & Keller & 06449 & Giersleben \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        Im Vergleich zu allen Beispielen, die in den vorangegangenen Kapiteln zu sehen waren, ändert sich in \beispiel{sql04_01} nur die \languageorasql{FROM}-Klausel. Hier werden zwei Tabellen, \identifier{Kunde} und \identifier{Eigenkunde}, getrennt durch die beiden Schlüsselworte \languageorasql{INNER JOIN} angegeben. Diese Syntax stammt aus dem SQL-99-Standard und ist selbsterklärend.
+\clearpage
+        In der \languageorasql{ON}-Klausel werden die beiden Spalten angegeben, mit deren Hilfe die Verknüpfung zwischen den Tabellen hergestellt wird. Wichtig für diese beiden Spalten ist, dass sie beide miteinander vergleichbare Werte enthalten. Eine Namensgleichheit beider Spalten ist jedoch nicht notwendig.
+
+        \begin{merke}
+          Da beide Spalten den Bezeichner \identifier{Kunden\_ID} haben, ist es notwendig die Spaltenbezeichner voll zu qualifizieren. Ein voll qualifizierter Spaltenbezeichner wird immer in der Form \identifier{Tabellenbezeichner}.\identifier{Spaltenbezeichner} angegeben.
+        \end{merke}
+        Es wird empfohlen Spaltenbezeichner immer zu qualifizieren, da dies der Datenbank das Auffinden der Spalten erleichtert und somit die Perfomance des SQL-Statements steigt. Ohne die Qualifizierung der Spaltenbezeichner in der \languageorasql{ON}-Klausel antworten sowohl Oracle, als auch der MS SQL Server mit einer Fehlermeldung.
+        \begin{lstlisting}[language=oracle_sql,caption={Eine fehlerhafte ON-Klausel in Oracle},label=sql04_02]
+SELECT Vorname, Nachname, PLZ, Ort
+FROM   Kunde INNER JOIN Eigenkunde
+         ON (Kunden_ID = Kunden_ID);
+
+Fehler bei Befehlszeile:3 Spalte:24
+Fehlerbericht:
+SQL-Fehler: ORA-00918: column ambiguously defined
+00918. 00000 -  "column ambiguously defined"
+*Cause:
+*Action:
+        \end{lstlisting}
+        \begin{lstlisting}[language=ms_sql,caption={Eine fehlerhafte ON-Klausel in MS SQL Server},label=sql04_03]
+SELECT Vorname, Nachname, PLZ, Ort
+FROM   Kunde INNER JOIN Eigenkunde
+         ON (Kunden_ID = Kunden_ID);
+
+Meldung 209, Ebene 16, Status 1, Zeile 3
+Mehrdeutiger Spaltenname 'Kunden_ID'.
+Meldung 209, Ebene 16, Status 1, Zeile 3
+Mehrdeutiger Spaltenname 'Kunden_ID'.
+        \end{lstlisting}
+      \subsection{Tabellenaliasnamen}
+        Genau wie bei Spaltenbezeichnern existiert auch für Tabellenbezeichner die Möglichkeit, Aliasnamen festzulegen. Der Vorteil solcher Tabellenaliasnamen liegt darin, dass die Länge eines SQL-Statements, durch die Vergabe von sehr kurzen Aliasnamen, stark reduziert werden kann. \beispiel{sql04_04} produziert das gleiche Ergebnis, wie \beispiel{sql04_01}, nutzt jedoch Aliasnamen für die beiden Tabellen.
+
+        \begin{lstlisting}[language=oracle_sql,caption={Die Benutzung von Tabellenaliasnamen},label=sql04_04]
+SELECT Vorname, Nachname, PLZ, Ort
+FROM   Kunde k INNER JOIN Eigenkunde ek
+         ON (k.Kunden_ID = ek.Kunden_ID);
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{PLZ}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{400 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{400 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Sophie & Junge & 39435 & Bördeaue \\
+                Hanna & Beck & 39439 & Güsten \\
+                Noah & Bunzel & 39435 & Egeln \\
+                Sebastian & Peters & 39240 & Staßfurt \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \begin{merke}
+          Tabellenaliasnamen gelten nur innerhalb eines Statements und beeinflussen die Struktur der Datenbank nicht. Wird ein Tabellenaliasname vergeben, so muss er im gesamten SQL-Statement genutzt werden!
+        \end{merke}
+        Die bereits bekannten Klauseln \languageorasql{WHERE} und \languageorasql{ORDER BY} können auch in einer Join-Abfrage genutzt werden. In \beispiel{sql04_05} wird das Ergebnis auf die Kunden mit Wohnort \enquote{Egeln} reduziert und eine aufsteigende Sortierung nach dem Feld \identifier{Nachname} eingerichtet.
+        \begin{lstlisting}[language=oracle_sql,caption={Join mit einschränkender WHERE-Klausel und Sortierung},label=sql04_05]
+SELECT   Vorname, Nachname, PLZ, Ort
+FROM     Kunde k INNER JOIN Eigenkunde ek
+           ON (k.Kunden_ID = ek.Kunden_ID)
+WHERE    Ort LIKE 'Egeln'
+ORDER BY Nachname;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{PLZ}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{18 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{18 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Alina & Braun & 39435 & Egeln \\
+                Noah & Bunzel & 39435 & Egeln \\
+                Hanna & Bunzel & 39435 & Egeln \\
+                Paul & Koch & 39435 & Egeln \\
+                \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+      \subsection{Die USING-Klausel (Nur Oracle)}
+        Die \languageorasql{USING}-Klausel stellt eine weitere Möglichkeit dar, eine Join-Operation durchzuführen. Sie ist eine Kurzschreibweise für \languageorasql{ON R1.Spalte = R2.Spalte}.
+\clearpage
+        \begin{lstlisting}[language=oracle_sql,caption={Die USING-Klausel},label=sql04_06]
+SELECT   Vorname, Nachname, PLZ, Ort
+FROM     Kunde k INNER JOIN Eigenkunde ek
+           USING(Kunden_ID)
+WHERE    Ort LIKE 'Egeln'
+ORDER BY Nachname;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{PLZ}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{18 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{18 Zeilen ausgewählt}} \\
+            }
+            \begin{oraclesql}
+              \begin{supertabular}{llll}
+                Alina & Braun & 39435 & Egeln \\
+                Noah & Bunzel & 39435 & Egeln \\
+                Hanna & Bunzel & 39435 & Egeln \\
+                Paul & Koch & 39435 & Egeln \\
+                Karolin & Lange & 39435 & Egeln \\
+                Marie & Lehmann & 39435 & Egeln \\
+              \end{supertabular}
+            \end{oraclesql}
+          \end{small}
+        \end{center}
+        Die Nutzung der \languageorasql{USING}-Klausel unterliegt auch einigen Einschränkungen.
+        \begin{itemize}
+          \item Die in der \languageorasql{USING}-Klausel genutzte Spalte darf nicht qualifiziert werden.
+          \item Die in der \languageorasql{USING}-Klausel genutzte Spalte muss in den beiden, an der Join-Operation teilnehmenden Tabellen den gleichen Namen tragen.
+        \end{itemize}
+        \begin{lstlisting}[language=oracle_sql,caption={Fehlerhafte Nutzung der USING-Klausel in Oracle},label=sql04_07]
+SELECT   Vorname, Nachname, PLZ, Ort
+FROM     Kunde k INNER JOIN Eigenkunde ek USING(Kunden_ID)
+WHERE    k.Kunden_ID = 200
+ORDER BY Nachname;
+
+Fehler bei Befehlszeile:4 Spalte:10
+Fehlerbericht:
+SQL-Fehler: ORA-00904: "D"."KUNDEN_ID": invalid identifier
+00904. 00000 -  "%s: invalid identifier"
+*Cause:
+*Action:
+        \end{lstlisting}
+        \subsection{Der Natural-Join (Nur Oracle)}
+          Die Natural-Join-Syntax stellt die dritte Variante zur Realisierung von Inner Joins dar.
+          \begin{lstlisting}[language=oracle_sql,caption={Die Natural-Join-Syntax},label=sql04_08]
+SELECT   Vorname, Nachname, PLZ, Ort
+FROM     Kunde k NATURAL JOIN Eigenkunde ek
+WHERE    Ort LIKE 'Egeln'
+ORDER BY Nachname;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} &
+                \multicolumn{1}{l}{\textbf{PLZ}} &
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{4}{l}{\textbf{18 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+              \multicolumn{4}{l}{\textbf{18 Zeilen ausgewählt}} \\
+              }
+              \begin{oraclesql}
+                \begin{supertabular}{llll}
+                  Alina & Braun & 39435 & Egeln \\
+                  Noah & Bunzel & 39435 & Egeln \\
+                  Hanna & Bunzel & 39435 & Egeln \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          \beispiel{sql04_08} zeigt, das bei dieser Syntax sowohl die \languageorasql{ON}-Klausel, als auch die \languageorasql{USING}-Klausel überflüssig sind. Dies rührt daher, dass Oracle automatisch die Spalten in den beiden Tabellen sucht, die den gleichen Namen und den gleichen Datentyp aufweisen. Es werden dabei so vielen Spalten einbezogen wie möglich.
+
+          \begin{merke}
+            Da Oracle immer alle Spalten mit gleichem Namen und gleichem Datentyp in den Natural-Join einbezieht, sollte diese Syntax mit bedacht genutzt werden!
+          \end{merke}
+      \subsection{Die Theta-Style Syntax}
+        \begin{merke}
+          Sowohl in Oracle, als auch in MS SQL Server kann die Theta-Style-Syntax nur noch zur Realisierung von Inner Joins genutzt werden. Bis auf wenige Ausnahmen ist daher die ANSI-Style-Syntax, mit dem Schlüsselwort \languageorasql{INNER JOIN}, vorzuziehen!
+        \end{merke}
+        Die Theta-Style-Syntax stellt die Urvariante der Join-Syntax dar, die auch schon vor dem SQL-99-Standard existierte. Bei dieser Form der Syntax wird in der \languageorasql{FROM}-Klausel nur eine kommaseparierte Liste von Tabellen angegeben, während die Verknüpfungsbedingung in der \languageorasql{WHERE}-Klausel formuliert wird.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Inner Join mit Theta-Style-Syntax},label=sql04_09]
+SELECT   Vorname, Nachname, PLZ, Ort
+FROM     Kunde k, Eigenkunde ek
+WHERE    k.Kunden_ID = ek.Kunden_ID
+  AND    Ort LIKE 'Egeln'
+ORDER BY Nachname;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{PLZ}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{18 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {}
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Alina & Braun & 39435 & Egeln \\
+                Noah & Bunzel & 39435 & Egeln \\
+                Hanna & Bunzel & 39435 & Egeln \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+      \subsection{Mehr als zwei Tabellen verknüpfen}
+        Bei komplexeren Abfragen ist es oft notwendig, auf die Daten von mehr als nur zwei Tabellen zuürckzugreifen. Dies kann mit allen bisher gezeigten Syntax-Varianten geschehen.
+
+        \begin{merke}
+          Da der MS SQL Server sowohl die \languageorasql{USING}-Klausel, als auch die \languageorasql{NATURAL JOIN}-Klausel nicht kennt, kann dieser nur die ANSI-Style-Syntax und den Theta-Style nutzen!
+        \end{merke}
+        \begin{lstlisting}[language=oracle_sql,caption={Vier Tabellen, verbunden durch Inner Joins},label=sql04_10]
+SELECT   Vorname, Nachname, IBAN
+FROM     Kunde k INNER JOIN Eigenkunde ek
+           ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk
+           ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Konto ko
+           ON (ekk.Konto_ID = ko.Konto_ID)
+WHERE    Ort LIKE 'Egeln'
+ORDER BY Nachname, IBAN;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{IBAN}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{46 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+            \multicolumn{3}{l}{\textbf{46 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lll}
+                Alina & Braun & DE2327682878309669110 \\
+                Alina & Braun & DE23582034208834002588 \\
+                Hanna & Bunzel & DE23343859500956216053 \\
+                Noah & Bunzel & DE23419162344850780394 \\
+                Noah & Bunzel & DE23506210719641227144 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \begin{merke}
+          Für die Ausführung des SQL-Statements ist die Reihenfolge, in der die Tabellen miteinander verbunden werden, nicht wichtig.
+        \end{merke}
+        Das gleiche Ergebnis lässt sich auch mit der Theta-Style-Syntax erzielen, wie \beispiel{sql04_11} zeigt.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein komplexer Join in der Theta-Style-Syntax},label=sql04_11]
+SELECT   Vorname, Nachname, IBAN
+FROM     Kunde k, Eigenkunde ek, EigenkundeKonto ekk, Konto ko
+WHERE    k.Kunden_ID = ek.Kunden_ID
+  AND    ek.Kunden_ID = ekk.Kunden_ID
+  AND    ekk.Konto_ID = ko.Konto_ID
+  AND    Ort LIKE 'Egeln'
+ORDER BY Nachname, IBAN;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{IBAN}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{46 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{46 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lll}
+                Alina & Braun & DE2327682878309669110 \\
+                Alina & Braun & DE23582034208834002588 \\
+                Hanna & Bunzel & DE23343859500956216053 \\
+                Noah & Bunzel & DE23419162344850780394 \\
+                Noah & Bunzel & DE23506210719641227144 \\
+                Hanna & Bunzel & DE23916870475976982996 \\
+                Paul & Koch & DE23337659559291799957 \\
+                Paul & Koch & DE23747825550493162192 \\
+                Karolin & Lange & DE2338135354878273969 \\
+                Karolin & Lange & DE23657965268917709598 \\
+                Marie & Lehmann & DE23311656553298147754 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+    \section{Outer Joins}
+      Während bei den Inner Joins nur solche Zeilen im Ergebnis angezeigt werden, die der Join-Bedingung genügen, ist dieses Verhalten bei den Outer-Joins anders, da auch Datensätze sichtbar werden, die der Join-Bedingung nicht entsprechen.
+
+      \begin{merke}
+        Wie bereits erwähnt, können Outer-Joins nicht mehr, mit Hilfe der Theta-Style-Syntax, dargestellt werden!
+      \end{merke}
+      \subsection{Left- und Right-Outer-Join}
+        Bei Left- bzw. Right-Outer-Joins wird eine der beiden teilnehmenden Tabellen vollständig angzeigt. Die Schlüsselworte \languageorasql{LEFT} und \languageorasql{RIGHT} geben dabei an, welche der beiden Seiten komplett angezeigt werden soll.
+        \subsubsection{Der Left-Outer-Join}
+          Beim Left-Outer-Join wird die Tabelle, die auf der linken Seite der Join-Klausel steht vollständig angezeigt. Von der Tabelle auf der rechten Seite werden nur solche Datensätze angezeigt, die der Join-Bedingung genügen.
+
+          \bild{Left-Outer-Join}{left_outer_join}{1}
+
+          \beispiel{sql04_12} zeigt einen Left-Outer-Join zwischen den beiden Tabellen \identifier{Mitarbeiter} und \identifier{Bankfiliale}. Die Auswirkungen des Left-Outer-Joins zeigen sich im Ergebnis nur in den letzten sieben Zeilen. Dort werden Mitarbeiter angezeigt, die in keiner Bankfiliale arbeiten und somit nicht der Join-Bedingung genügen.
+          \begin{lstlisting}[language=oracle_sql,caption={Ein Left-Outer-Join in Oracle},label=sql04_12]
+SELECT   Vorname, Nachname, b.PLZ, b.Ort
+FROM     Mitarbeiter m LEFT OUTER JOIN Bankfiliale b
+           ON (m.Bankfiliale_ID = b.Bankfiliale_ID);
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} &
+                \multicolumn{1}{l}{\textbf{B.PLZ}} &
+                \multicolumn{1}{l}{\textbf{B.ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+              }
+              \begin{oraclesql}
+                \begin{supertabular}{llll}
+                  Amelie & Krüger & 06449 & Aschersleben \\
+                  Marie & Kipp & 06449 & Aschersleben \\
+                  \dots & \dots & \dots & \dots \\
+                  Emily & Meier &  &  \\
+                  Peter & Müller &  &  \\
+                  Tim & Sindermann &  &  \\
+                  Sebastian & Schwarz &  &  \\
+                  Finn & Seifert &  &  \\
+                  Sarah & Werner &  &  \\
+                  Max & Winter &  &  \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          \begin{merke}
+          Da in \beispiel{sql04_12} keine Sortierung vorgegeben wurde zeigt Oracle die Zeilen mit den NULL-Werten, in den Spalten \identifier{plz} und \identifier{ort}, automatisch ganz zuletzt an! Dieses Verhalten kann mit dem \languageorasql{NULLS FIRST}-Schlüsselwort, in der \languageorasql{ORDER BY}-Klausel geändert werden.
+          \end{merke}
+          \begin{lstlisting}[language=oracle_sql,caption={NULL-Werte nach oben sortieren, NULLS FIRST},label=sql04_13]
+SELECT   Vorname, Nachname, b.PLZ, b.Ort
+FROM     Mitarbeiter m LEFT OUTER JOIN Bankfiliale b
+           ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+ORDER BY PLZ NULLS FIRST;
+          \end{lstlisting}
+\clearpage
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} &
+                \multicolumn{1}{l}{\textbf{B.PLZ}} &
+                \multicolumn{1}{l}{\textbf{B.ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+%                 \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+              }
+              \begin{oraclesql}
+                \begin{supertabular}{llll}
+                  Emily & Meier &  &  \\
+                  Peter & Möller &  &  \\
+                  Tim & Sindermann &  &  \\
+                  Sebastian & Schwarz &  &  \\
+                  Max & Winter &  &  \\
+                  Sarah & Werner &  &  \\
+                  Finn & Seifert &  &  \\
+                  Sophie & Schwarz & 06406 & Bernburg \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          Der MS SQL Server unterstützt die gleiche Syntax wie Oracle, kennt jedoch das \languageorasql{NULLS FIRST}-Schlüsselwort nicht, da er NULL-Werte bei Angabe einer \languageorasql{ORDER BY}-Klausel automatisch oben anzeigt.
+          \begin{lstlisting}[language=ms_sql,caption={Der Left-Outer-Join im MS SQL Server},label=sql04_14]
+SELECT   Vorname, Nachname, b.PLZ, b.Ort
+FROM     Mitarbeiter m LEFT OUTER JOIN Bankfiliale b
+           ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+ORDER BY PLZ;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} &
+                \multicolumn{1}{l}{\textbf{PLZ}} &
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+              }
+              \begin{mssql}
+                \begin{supertabular}{llll}
+                  Emily & Meier & NULL & NULL \\
+                  Peter & Möller & NULL  & NULL \\
+                  Tim & Sindermann & NULL & NULL \\
+                  Sebastian & Schwarz & NULL & NULL \\
+                  Max & Winter & NULL & NULL \\
+                  Sarah & Werner & NULL & NULL \\
+                  Finn & Seifert & NULL & NULL \\
+                  Sophie & Schwarz & 06406 & Bernburg \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+        \subsubsection{Der Right-Outer-Join}
+          Der Right-Outer-Join ist das Komplement zum Left-Outer-Join. Er zeigt alle Datensätze der Tabelle an, die sich auf der rechten Seite befindet. Aus der Tabelle auf der linken Join-Seite werden wiederum nur jene Zeilen angezeigt, die der Join-Bedingung genügen.
+          \bild{Der Right-Outer-Join}{right_outer_join}{1}
+          \begin{lstlisting}[language=oracle_sql,caption={Ein Right-Outer-Join in Oracle},label=sql04_15]
+SELECT   Vorname, Nachname, b.PLZ, b.Ort
+FROM     Mitarbeiter m RIGHT OUTER JOIN Bankfiliale b
+           ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+ORDER BY Nachname NULLS FIRST, PLZ;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} &
+                \multicolumn{1}{l}{\textbf{B.PLZ}} &
+                \multicolumn{1}{l}{\textbf{B.ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+%                 \multicolumn{4}{l}{\textbf{94 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{94 Zeilen ausgewählt}} \\
+              }
+              \begin{oraclesql}
+                \begin{supertabular}{llll}
+                &  & 06425 & Alsleben \\
+                Finn & Bauer & 06425 & Plötzkau \\
+                Leonie & Bauer & 39444 & Hecklingen \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          Der erste Datensatz aus \beispiel{sql04_15} zeigt, dass es eine Bankfiliale gibt, in der noch keine Mitarbeiter arbeiten. Das gleiche Beispiel lässt sich auch  in MS SQL Server abarbeiten.
+          \begin{lstlisting}[language=ms_sql,caption={Der gleiche Right-Outer-Join in MS SQL Server},label=sql04_16]
+SELECT   Vorname, Nachname, b.PLZ, b.Ort
+FROM     Mitarbeiter m RIGHT OUTER JOIN Bankfiliale b
+           ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+ORDER BY PLZ, Nachname;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} &
+                \multicolumn{1}{l}{\textbf{PLZ}} &
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+              }
+              \tablehead{}
+              \tabletail {
+%                 \multicolumn{4}{l}{\textbf{94 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{4}{l}{\textbf{94 Zeilen ausgewählt}} \\
+              }
+              \begin{mssql}
+                \begin{supertabular}{llll}
+									NULL & NULL & 06425 & Alsleben \\
+									Finn & Bauer & 06425 & Plötzkau \\
+									Leonie & Bauer & 39444 & Hecklingen \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+      \subsection{Der Full Outer Join}
+        Der Full-Outer-Join stellt die logische Ergänzung zu Left-Outer-Join und Right-Outer-Join dar. Er verküpft zwei Tabellen miteinander und zeigt auf beiden Seiten jeweils alle Tabellenzeilen an. Er ist in beiden DBMS, Oracle und MS SQL Server bekannt und syntaktisch gleich.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Full-Outer-Join in Oracle},label=sql04_17]
+SELECT   Vorname, Nachname, b.PLZ, b.Ort
+FROM     Mitarbeiter m FULL OUTER JOIN Bankfiliale b
+           ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+ORDER BY PLZ NULLS FIRST, Nachname NULLS FIRST;
+        \end{lstlisting}
+\clearpage
+				\begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{B.PLZ}} &
+              \multicolumn{1}{l}{\textbf{B.ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{101 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{101 Zeilen ausgewählt}} \\
+            }
+            \begin{oraclesql}
+              \begin{supertabular}{llll}
+                Emily & Meier &  &  \\
+                Peter & Möller &  &  \\
+                Sebastian & Schwarz &  &  \\
+                Finn & Seifert &  &  \\
+                \dots & \dots & \dots & \dots \\
+                Anne & Zimmermann & 06406 & Bernburg \\
+                Franz & Berger & 06408 & Ilberstedt \\
+                \dots & \dots & \dots & \dots \\
+                &  & 06425 & Alsleben \\
+                Finn & Bauer & 06425 & Plötzkau \\
+              \end{supertabular}
+            \end{oraclesql}
+          \end{small}
+        \end{center}
+    \section{Spezielle Joins}
+      \subsection{Der Self-Join}
+        Ein Self-Join ist eine besondere Form des Inner Join. Er kommt immer dann zum Einsatz wenn der Primary Key einer Tabelle auf einen Foreign Key in der gleichen Tabelle zeigt, also bei rekursiven Beziehungstypen. Ein solcher rekursiver Beziehungstyp existiert in der Tabelle \identifier{Mitarbeiter}. Er stellt das Vorgesetztenverhältnis zwischen den Mitarbeitern dar.
+
+        Wenn als Ergebnis einer Abfrage zu jedem Mitarbeiter sein Vorgesetzter angezeigt werden soll, so geht dies nur mittels Self-Join. Die folgende Tabelle zeigt das Ergebnis eines solchen Self-Joins.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{M\#}} &
+              \multicolumn{1}{l}{\textbf{MVORNAME}} &
+              \multicolumn{1}{l}{\textbf{MNACHNAME}} &
+              \multicolumn{1}{r}{\textbf{V\#}} &
+              \multicolumn{1}{l}{\textbf{VVORNAME}} &
+              \multicolumn{1}{l}{\textbf{VNACHNAME}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(r){4-4}\cmidrule(l){5-5}\cmidrule(l){6-6}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{6}{l}{\textbf{99 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {}
+            \begin{msoraclesql}
+              \begin{supertabular}{rllrll}
+                2 & Sarah & Werner & 1 & Max & Winter \\
+                3 & Finn & Seifert & 1 & Max & Winter \\
+                4 & Sebastian & Schwarz & 2 & Sarah & Werner \\
+                5 & Tim & Sindermann & 2 & Sarah & Werner \\
+                6 & Peter & Möller & 3 & Finn & Seifert \\
+                7 & Emily & Meier & 3 & Finn & Seifert \\
+                8 & Dirk & Peters & 4 & Sebastian & Schwarz \\
+                9 & Louis & Winter & 4 & Sebastian & Schwarz \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \subsubsection{Die Quelltabelle aufspalten}
+          Grundsätzlich ist die Aufgabe einer Join-Operation zwei Tabellen zu einer Ergebnisrelation zu verknüpfen. Im besonderen Falle eines rekursiven Beziehungstyps existiert jedoch nur eine Tabelle. Wie kann der Join stattfinden? Die Antwort auf diese Frage liegt in der Nutzung von Tabellenaliasnamen.
+
+          \begin{merke}
+            Durch die Vergabe von Tabellenaliasnamen kann mehrfach auf ein und die selbe Tabelle, innerhalb eines SQL-Statements, zugegriffen werden!
+          \end{merke}
+          \bild{Gespaltene Persönlichkeit - Eine Tabelle, zwei Aliase}{tabellenaliasnamen_im_selfjoin}{1}
+          \abbildung{tabellenaliasnamen_im_selfjoin} zeigt, das für die Tabelle \identifier{Mitarbeiter} zwei Tabellenaliasnamen vergeben werden, nämlich \enquote{A} für Angestellter und \enquote{V} für Vorgesetzter. In SQL ausgedrückt bedeutet dies:
+          \begin{lstlisting}[language=oracle_sql,caption={Eine Tabelle - zwei Aliasnamen},label=sql04_18]
+SELECT m.*
+FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+...
+          \end{lstlisting}
+        \subsubsection{Die richtige Join-Bedingung finden}
+          Die eigentliche Leistung, bei der Erstellung eines Self-Join, liegt darin, die korrekte Join-Bedingung zu finden. Fest steht, dass die beiden Spalten \identifier{Mitarbeiter\_ID} und \identifier{Vorgesetzter\_ID} am Join beteiligt sein werden, aber es gibt insgesamt vier verschiedene Möglichkeiten, diese beiden Spalten zu kombinieren:
+          \begin{itemize}
+            \item \languageorasql{ON (m.Mitabeiter_ID = v.Mitarbeiter_ID)}
+            \item \languageorasql{ON (m.Mitarbeiter_ID = v.Vorgesetzter_ID)}
+            \item \languageorasql{ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)}
+            \item \languageorasql{ON (m.Vorgesetzter_ID = v.Vorgesetzter_ID)}
+          \end{itemize}
+          Nun gilt es herauszufinden, welche die richtige Variante ist. Dies geht am Einfachsten, in dem man sich Beispieldaten schafft.
+\clearpage
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{MIT\_M\#}} &
+                \multicolumn{1}{l}{\textbf{MIT\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{MIT\_V\#}} &
+                \multicolumn{1}{r}{\textbf{VOR\_M\#}} &
+                \multicolumn{1}{l}{\textbf{VOR\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{VOR\_V\#}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(l){5-5}\cmidrule(r){6-6}
+              }
+              \tablehead{}
+              \tabletail {}
+              \tablelasttail {}
+              \begin{msoraclesql}
+                \begin{supertabular}{rlrrlr}
+                  3 & Seifert & 1 & 1 & Winter &  \\
+                  2 & Werner & 1 & 1 & Winter &  \\
+                  5 & Sindermann & 2 & 2 & Werner & 1 \\
+                  4 & Schwarz & 2 & 2 & Werner & 1 \\
+                  7 & Meier & 3 & 3 & Seifert & 1 \\
+                  6 & Möller & 3 & 3 & Seifert & 1 \\
+                  12 & Weber & 4 & 4 & Schwarz & 2 \\
+                  11 & Schwarz & 4 & 4 & Schwarz & 2 \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Betrachtet man nun diese vier Join-Bedingungen, im Zusammenhang mit den Beispieldaten, lassen sich zwei davon direkt ausschließen.
+          \begin{itemize}
+            \item \languageorasql{ON (m.Mitabeiter_ID = v.Mitarbeiter_ID)}
+            \item \languageorasql{ON (m.Vorgesetzter_ID = v.Vorgesetzter_ID)}
+          \end{itemize}
+          Die Bedingung \languageorasql{ON (m.Mitabeiter_ID = v.Mitarbeiter_ID)} verknüpft den Mitarbeiter aus der \enquote{Tabelle A} mit dem gleichen Mitarbeiter aus der \enquote{Tabelle V}. Das bedeutet, dass alle Mitarbeiter mit sich selbst verknüpft werden, aber nicht mit Ihrem Vorgesetzten.
+
+          Die zweite Bedingung \languageorasql{ON (m.Vorgesetzter_ID = v.Vorgesetzter_ID)} erzeugt \enquote{logisches Chaos}. Der Mitarbeiter Seifert liefert hierzu ein gutes Beispiel:
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{MIT\_M\#}} &
+                \multicolumn{1}{l}{\textbf{MIT\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{MIT\_V\#}} &
+                \multicolumn{1}{r}{\textbf{VOR\_M\#}} &
+                \multicolumn{1}{l}{\textbf{VOR\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{VOR\_V\#}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(l){5-5}\cmidrule(r){6-6}
+              }
+              \tablehead{}
+              \tabletail {}
+              \tablelasttail {}
+              \begin{msoraclesql}
+                \begin{supertabular}{rlrrlr}
+                  3 & Seifert & 1 & 1 & Werner & 1 \\
+                  3 & Seifert & 1 & 1 & Seifert & 1 \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Es zeigt sich, dass der Mitarbeiter Seifert mit sich selbst und mit seinem Kollegen Werner verknüpft wird. Beide haben eines gemeinsam: Sie haben den gleichen Vorgesetzten. Somit verbleiben nur noch zwei Bedingungen:
+          \begin{itemize}
+            \item \languageorasql{ON (m.Mitarbeiter_ID = v.Vorgesetzter_ID)}
+            \item \languageorasql{ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)}
+          \end{itemize}
+          Die verbliebenen Bedingungen liefern beide ein sinnvolles Ergebnis. Verwendet man die erste \languageorasql{ON (m.Mitarbeiter_ID = v.Vorgesetzter_ID)} zeigt sich folgendes Ergebnis:
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{MIT\_M\#}} &
+                \multicolumn{1}{l}{\textbf{MIT\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{MIT\_V\#}} &
+                \multicolumn{1}{r}{\textbf{VOR\_M\#}} &
+                \multicolumn{1}{l}{\textbf{VOR\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{VOR\_V\#}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(l){5-5}\cmidrule(r){6-6}
+              }
+              \tablehead{}
+              \tabletail {}
+              \tablelasttail {}
+              \begin{msoraclesql}
+                \begin{supertabular}{rlrrlr}
+                  3 & Seifert & 1 & 6 & Möller & 3 \\
+                  3 & Seifert & 1 & 7 & Meier & 3 \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Bei beiden Mitarbeitern, Möller und Meier, steht in der Spalte \identifier{Vorgesetzter\_ID} der Wert 3. Daraus folgt, beide haben den Mitarbeiter Nummer drei als Vorgesetzten. Mitarbeiter Nummer drei ist Seifert. Mit Hilfe dieser Join-Bedingung werden zu jedem Vorgesetzten die Untergebenen angezeigt. Gesucht ist aber etwas anderes:
+
+          Zu jedem Angestellten soll der Vorgesetzte angezeigt werden. Die aktuelle Join-Bedingung zeigt die Informationen also nur aus der falschen Sichtweise an.
+
+          Was bleibt, ist nur noch die Bedingung \languageorasql{ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)}. Diese zeigt das korrekte, gewünschte Ergebnis an.
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{MIT\_M\#}} &
+                \multicolumn{1}{l}{\textbf{MIT\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{MIT\_V\#}} &
+                \multicolumn{1}{r}{\textbf{VOR\_M\#}} &
+                \multicolumn{1}{l}{\textbf{VOR\_NACHNAME}} &
+                \multicolumn{1}{r}{\textbf{VOR\_V\#}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(l){5-5}\cmidrule(r){6-6}
+              }
+              \tablehead{}
+              \tabletail {}
+              \tablelasttail {}
+              \begin{msoraclesql}
+                \begin{supertabular}{rlrrlr}
+                  3 & Seifert & 1 & 1 & Winter &  \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Das komplette SQL-Statement zu dieser Problemstellung lautet:
+          \begin{lstlisting}[language=oracle_sql,caption={Ein Self-Join},label=sql04_19]
+SELECT m.Mitarbeiter_ID AS MIT_M#, m.Vorname AS MIT_Vorname,
+       m.Nachname AS MIT_Nachname, m.Vorgesetzter_ID AS MIT_V#,
+       v.Mitarbeiter_ID AS VOR_M#, v.Vorname AS VOR_Vorname,
+       v.Nachname AS VOR_Nachname, v.Vorgesetzter_ID AS VOR_V#
+FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+       ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID);
+          \end{lstlisting}
+      \subsection{Non-Equi-Joins}
+        Kurzgesagt ist ein Non-Equi-Join ein Join, der nicht den Gleichheitsoperator (=) verwendet, sondern einen beliebigen anderen. Meist ist dies dann der \languageorasql{BETWEEN}-Operator. Da diese Art von Join in der Praxis jedoch äußerst selten ist, soll an dieser Stelle nicht weiter darauf eingegangen werden.
+    \section{Mengenoperationen}
+      In den vorangegangenen Abschnitten wurde gezeigt, wie zwei Tabellen durch eine Join-Operation miteinander verknüpft werden können. Dies bedingt immer, dass in beiden Tabellen eine Spalte vorhanden ist, die als Join-Attribut genutzt werden kann. Zusätzlich dazu, gibt es noch eine weitere Methode Datensätze unterschiedlicher Tabellen miteinander zu verknüpfen, die \textit{SET-Operatoren}.
+\clearpage
+      SET-Operatoren ermöglichen es, die Operationen der Mengenlehre in einer Datenbank durchzuführen. \tabelle{setoperators} zeigt die Operationen und die dazu gehörenden  Operatoren:
+      \begin{center}
+        \tablecaption{Die SET-Operatoren}
+        \label{setoperators}
+        \begin{small}
+          \tablefirsthead{
+            \multicolumn{1}{c}{\textbf{Mengenoperation}} &
+            \multicolumn{1}{c}{\textbf{SET-Operator}} &
+            \multicolumn{1}{c}{\textbf{Erläuterung}} \\
+            \hline
+          }
+          \tabletail{
+            \hline
+          }
+          \tablelasttail {
+            \hline
+          }
+          \begin{supertabular}{|l|c|p{8cm}|}
+          Vereinigung & UNION & Zeigt die Vereinigungsmenge der beiden beteiligten Tabellen an. Duplikatzeilen werden vor der Anzeige eliminiert. \\
+          \hline
+          Vollständige Vereinigung & UNION ALL & Zeigt die Vereinigungsmenge der beiden beteiligten Tabellen an. Duplikatzeilen werden vor der Anzeige nicht eliminiert. \\
+          \hline
+          Differenz (Oracle) & MINUS  & Zeigt nur die Datensätze an, die in der linken der beiden Tabellen vorkommen und keine Entsprechung in der rechten Tabelle haben.\\
+          \hline
+          Differenz (MS SQL Server) & EXCEPT  & Zeigt nur die Datensätze an, die in der linken der beiden Tabellen vorkommen und keine Entsprechung in der rechten Tabelle haben.\\
+          \hline
+          Durchschnitt & INTERSECT & Zeigt nur die Schnittmenge beider Tabellen an.\\
+          \end{supertabular}
+        \end{small}
+      \end{center}
+      \subsection{Voraussetzungen zur Nutzung der SET-Operatoren}
+        Um Mengenoperationen, auf zwei Relationen \identifier{R} und \identifier{S}, anwenden zu können, müssen beide miteinander kompatibel sein. Diese Form der Kompatibilität wird \textit{Typenkompatibilität} oder auch \textit{Vereinigungsverträglichkeit} genannt. Damit zwei Tabellen zueinander Typenkompatibel sind, müssen folgende Bedingungen gegeben sein:
+        \begin{itemize}
+          \item \identifier{R} und \identifier{S} müssen die gleiche Anzahl Attribute aufweisen.
+          \item Der Wertebereich/Datentyp der Attribute von \identifier{R} und \identifier{S} muss identisch sein.
+        \end{itemize}
+        Das bedeutet zum einen, dass nur solche Abfragen mit Hilfe von SET-Operatoren kombiniert werden können, die die gleiche Anzahl Spalten in der \languageorasql{SELECT}-Klausel haben. Zum anderen müssen die verknüpften Spalten den gleichen Datentyp aufweisen.
+      \subsection{Die SET-Operatoren}
+        \subsubsection{UNION und UNION ALL}
+          Der \languageorasql{UNION ALL}-Operator verbindet die Ergebnisse zweier \languageorasql{SELECT}-Statements (Vereinigungsmenge). Sollte es Datensätze geben, die in beiden Abfragen ausgewählt werden (redundante Zeilen), werden diese angezeigt.
+
+          Der \languageorasql{UNION}-Operator verbindet, genau wie der \languageorasql{UNION ALL}-Operator, die Ergebnisse zweier SQL-Statements. Der Unterschied zwischen beiden liegt darin, dass der \languageorasql{UNION}-Operator redundante Zeilen ausschließt.
+
+          \bild{Vereinigungs\-menge mit UNION ALL}{union_all}{1}
+
+          In einem einfachen Beispiel zum \languageorasql{UNION ALL}-Operator sollen alle Orte angezeigt werden, in denen Kunden oder Mitarbeiter leben. Um diese Aufgabe zu lösen, müssen zwei Abfragen ausgeführt werden.
+          \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen Kunden leben},label=sql04_20]
+SELECT Ort
+FROM   Eigenkunde;
+          \end{lstlisting}
+          \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen Mitarbeiter leben},label=sql04_21]
+SELECT Ort
+FROM   Mitarbeiter;
+          \end{lstlisting}
+          Zur Lösung der Aufgabe, müssen die Ergebnisse beider Abfragen kombiniert werden. Dies wird im ersten Anlauf durch den \languageorasql{UNION ALL}-Operator erledigt.
+          \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen Kunden oder Mitarbeiter leben},label=sql04_22]
+SELECT Ort
+FROM   Mitarbeiter
+UNION ALL
+SELECT Ort
+FROM   Eigenkunde;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}
+              }
+              \tablehead{}
+              \tabletail {}
+              \tablelasttail {
+                \multicolumn{1}{l}{\textbf{500 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{l}
+                  Aschersleben \\
+                  Bördeaue \\
+                  Borne \\
+                  Schönebeck \\
+                  Alsleben \\
+                  Hamburg \\
+                  Borne \\
+                  Egeln \\
+                  Schönebeck \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          An einigen Orten, wie z. B. Aschersleben, Borne, Egeln und Schönebeck, ist zu erkennen, dass der \languageorasql{UNION ALL}-Operator keine redundanten Zeilen ausblendet. Soll das Ergebnis reduziet werden, so dass jeder Ort genau einmal angezeigt wird, kommt der \languageorasql{UNION}-Operator zum Einsatz.
+          \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen Kunden oder Mitarbeiter leben (reduziert)},label=sql04_23]
+SELECT Ort
+FROM   Mitarbeiter
+UNION
+SELECT Ort
+FROM   Eigenkunde;
+          \end{lstlisting}
+
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{1}{l}{\textbf{30 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{1}{l}{\textbf{30 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{l}
+                  Alsleben \\
+                  Aschersleben \\
+                  Barby \\
+                  Berlin \\
+                  Bernburg \\
+                  Borne \\
+                  Bördeaue \\
+                  Calbe \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Durch die Anwendung des \languageorasql{UNION}-Operators, statt des \languageorasql{UNION ALL}-Operators verkürzt sich das Ergebnis von 500 Zeilen auf 30.
+
+          \begin{merke}
+            Der \languageorasql{UNION ALL}-Operator sollte nur dann zum Einsatz kommen, wenn dies zwingend notwendig ist!
+          \end{merke}
+          In einem weiteren Beispiel soll gezeigt werden, wie Datensätze aus unterschiedlichen Tabellen im Ergebnis gekennzeichnet werden können. In einer Abfrage sollen alle Mitarbeiter und alle Kunden mit den Attributen \identifier{Vorname}, \identifier{Nachname}, \identifier{PLZ} und \identifier{Ort} angezeit werden. Für die Kunden muss in einer extra Spalte der Buchtabe \enquote{K} und für alle Mitarbeiter der Buchstabe \enquote{M} angezeigt werden.
+          \begin{lstlisting}[language=oracle_sql,caption={Spalten mit konstanten Werten und UNION},label=sql04_24]
+SELECT 'M' AS Personentyp, Vorname, Nachname, PLZ, Ort
+FROM   Mitarbeiter
+UNION
+SELECT 'K', Vorname, Nachname, PLZ, Ort
+FROM   Kunde k INNER JOIN Eigenkunde ek
+       ON (k.Kunden_ID = ek.Kunden_ID);
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{PERSONENTYP}} &
+                \multicolumn{1}{l}{\textbf{VORNAME}} &
+                \multicolumn{1}{l}{\textbf{NACHNAME}} &
+                \multicolumn{1}{l}{\textbf{PLZ}} &
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}\cmidrule(l){5-5}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{5}{l}{\textbf{500 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{5}{l}{\textbf{500 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{lllll}
+                  K & Alexander & Huber & 22043 & Hamburg \\
+                  K & Alexander & Lorenz & 06408 & Ilberstedt \\
+                  K & Alina & Baumann & 07545 & Gera \\
+                  K & Alina & Braun & 39435 & Egeln \\
+                  \dots & \dots & \dots & \dots & \dots \\
+                  M & Alexander & Weber & 06449 & Aschersleben \\
+                  M & Amelie & Krüger & 03042 & Cottbus \\
+                  M & Anna & Keller & 39104 & Magdeburg \\
+                  M & Anna & Schneider & 06449 & Giersleben \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          In der ersten Abfrage wird eine Spalte, mit Aliasnamen \identifier{Personentyp} eingefügt. Sie bezieht ihren Wert nicht aus einer Tabelle, sondern sie enthält einfach nur den Buchstaben \enquote{K} für Kunde. Die gleiche Spalte muss nun auch in der zweiten Abfrage eingeführt werden, da beide Abfragen, wie bereits erwähnt, die gleiche Anzahl Spalten, mit den gleichen Datentypen haben müssen. In der zweiten Abfrage kann jedoch der Aliasname entfallen, da dieser nur in der ersten Abfrage registriert/genutzt wird.
+        \subsubsection{INTERSECT}
+          Mit Hilfe des \languageorasql{INTERSECT}-Operators kann der Durchschnitt zweier Ergebnisse angezeigt werden. Das bedeutet, es werden nur die Zeilen angezeigt, die in beiden Relationen, R und S, gleichermaßen vorkommen.
+
+          Um die Wirkungsweise dieses Operators zu demonstrieren, wird \beispiel{sql04_23} abgewandelt. Der \languageorasql{UNION}-Operator wird durch den \languageorasql{INTERSECT}-Operator ausgetauscht.
+
+          \bild{Schnittmenge mit INTERSECT}{intersect}{1}
+
+          \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen sowohl Kunden als auch Mitarbeiter leben},label=sql04_25]
+SELECT Ort
+FROM   Mitarbeiter
+INTERSECT
+SELECT Ort
+FROM   Eigenkunde;
+          \end{lstlisting}
+\clearpage
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{1}{l}{\textbf{25 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{1}{l}{\textbf{25 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{l}
+                  Alsleben \\
+                  Aschersleben \\
+                  Bernburg \\
+                  Borne \\
+                  Bördeaue \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Das Ergebnis dieser Abfrage liefert nur noch die Orte, an denen sowohl Kunden als auch Mitarbeiter leben.
+        \subsubsection{MINUS / EXCEPT}
+          Dieser Operator zeigt den Inhalt der linken Relation, ohne den Inhalt der Rechten an. Korrekt ausgedrückt bedeutet dies: $ t1 MINUS t2 = t1 \setminus t2$. Für SQL Server muss anstatt \languageorasql{MINUS} der Operator \languagemssql{EXCEPT} genutz werden.
+
+          \bild{Der MINUS / EXCEPT Operator}{minus}{1}
+
+          Für das kommende Beispiel werden die beiden Tabellen \identifier{Mitarbeiter} und \identifier{Eigenkunde} vertauscht. Der \languageorasql{INTERSECT}-Operator wird gegen den \languageorasql{MINUS}-Operator ausgewechselt.
+          \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen nur Kunden, aber keine Mitarbeiter leben},label=sql04_26]
+SELECT Ort
+FROM   Eigenkunde
+MINUS
+SELECT Ort
+FROM   Mitarbeiter;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{ORT}} \\
+                \cmidrule(l){1-1}
+              }
+              \tablehead{}
+              \tabletail {}
+              \tablelasttail {
+                \multicolumn{1}{l}{\textbf{5 Zeilen ausgewählt}} \\
+              }
+              \begin{oraclesql}
+                \begin{supertabular}{l}
+                  Barby \\
+                  Berlin \\
+                  Leipzig \\
+                  Staßfurt \\
+                  Wolmirsleben \\
+                \end{supertabular}
+              \end{oraclesql}
+            \end{small}
+          \end{center}
+          Es gibt 30 verschiedene Orte, an denen Kunden leben und 25 verschiedene Orte, an denen Mitarbeiter leben. In 5 Orten leben nur Kunden, aber keine Mitarbeiter. Der \languageorasql{MINUS}-Operation bzw. der \languagemssql{EXCEPT}-Operator ist dabei behilflich, diese Orte herauszufiltern.

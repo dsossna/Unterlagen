@@ -1,0 +1,148 @@
+\clearpage
+    \section{Lösungen - Erstellen von Views}
+      \begin{enumerate}
+        \item Erstellen Sie die View \identifier{v\_Arbeitsort}. Diese muss für
+        jeden Mitarbeiter den Vorname, den Nachnamen, die Bankfiliale\_ID und
+        den Ort anzeigen, an dem sich die Filiale befindet.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+CREATE VIEW v_Arbeitsort
+AS
+  SELECT m.Vorname, m.Nachname, m.Bankfiliale_ID, b.Ort
+  FROM   Mitarbeiter m INNER JOIN Bankfiliale b
+           ON (b.Bankfiliale_ID = m.Bankfiliale_ID);
+        \end{lstlisting}
+        \item Erstellen Sie die View \identifier{v\_Depotbesitzer}, die zu jedem
+        Eigenkunden, der ein Depot besitzt, seinen Vor- und Nachnamen, die
+        Strasse mit der Hausnummer, sowie PLZ und Ort anzeigt.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+CREATE VIEW v_Depotbesitzer
+AS
+  SELECT k.Vorname, k.Nachname, ek.Strasse || ' ' || 
+         ek.Hausnummer AS Strasse,
+         ek.PLZ, ek.Ort
+  FROM   Kunde k INNER JOIN Eigenkunde ek
+           ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk
+           ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Depot d
+           ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+CREATE VIEW v_Depotbesitzer
+AS
+  SELECT k.Vorname, k.Nachname, ek.Strasse + ' ' + ek.Hausnummer AS Strasse,
+         ek.PLZ, ek.Ort
+  FROM   Kunde k INNER JOIN Eigenkunde ek
+           ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk
+           ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Depot d
+           ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+\clearpage
+        \item Erstellen Sie die View \identifier{v\_Finanzberater}, die für
+        alle Eigenkunden deren Vor- und Nachnamen anzeigt, sowie den Vor- und
+        den Nachnamen ihres persönlichen Finanzberaters (Tabelle
+        \identifier{EigenkundeMitarbeiter}).
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+CREATE VIEW v_Finanzberater
+("Vorname Kunde", "Nachname Kunde", "Vorname Berater", "Nachname Berater")
+AS
+  SELECT   k.Vorname, k.Nachname, m.Vorname, m.Nachname
+  FROM     Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+           LEFT OUTER JOIN EigenkundeMitarbeiter ekm
+             ON (ek.Kunden_ID = ekm.Kunden_ID)
+           LEFT OUTER JOIN Mitarbeiter m 
+             ON (ekm.Mitarbeiter_ID = m.Mitarbeiter_ID);
+        \end{lstlisting}
+        \item Erstellen Sie die View \identifier{v\_Unterstellungsverhaeltnis}, die zu jedem Mitarbeiter (Vorname, Nachname) den Vor- und den Nachnamen seines Vorgesetzten anzeigt. Wichtig ist, dass alle Mitarbeiter, auch Herr Max Winter, der keinen Vorgestzten hat, angezeigt werden.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+CREATE VIEW v_Unterstellungsverhaeltnis
+AS
+  SELECT   m.Vorname, m.Nachname, v.Vorname, v.Nachname
+  FROM     Mitarbeiter m LEFT OUTER JOIN Mitarbeiter v
+             ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)
+        \end{lstlisting}
+        \item Erstellen Sie die View \identifier{v\_Innendienstmitarbeiter}, die ermittelt, ob es Mitarbeiter gibt (Vorname und Nachname), die keine Kundenberatung durchführen. Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner Bankfiliale arbeiten) und Filialleiter.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+CREATE VIEW v_Innendienstmitarbeiter
+AS
+  SELECT m.Vorname, m.Nachname
+  FROM   Mitarbeiter m LEFT OUTER JOIN EigenkundeMitarbeiter ekm
+           ON (m.Mitarbeiter_ID = ekm.Mitarbeiter_ID)
+  WHERE  ekm.Mitarbeiter_ID IS NULL
+  MINUS
+  SELECT DISTINCT v.Vorname, v.Nachname
+  FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+           ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID);
+        \end{lstlisting}
+\clearpage
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+CREATE VIEW v_Innendienstmitarbeiter
+AS
+  SELECT m.Vorname, m.Nachname
+  FROM   Mitarbeiter m LEFT OUTER JOIN EigenkundeMitarbeiter ekm
+           ON (m.Mitarbeiter_ID = ekm.Mitarbeiter_ID)
+  WHERE  ekm.Mitarbeiter_ID IS NULL
+  EXCEPT
+  SELECT DISTINCT v.Vorname, v.Nachname
+  FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+           ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID);
+        \end{lstlisting}
+        \item Erstellen Sie die View \identifier{v\_Girokontoinhaber}, die alle Eigenkunden anzeigt, die nur ein Girokonto besitzen.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+CREATE VIEW v_Girokontoinhaber
+AS
+  SELECT k.Vorname, k.Nachname
+  FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+  MINUS
+  SELECT k.Vorname, k.Nachname
+  FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Sparbuch s ON (ekk.Konto_ID = s.Konto_ID)
+  MINUS
+  SELECT k.Vorname, k.Nachname
+  FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+CREATE VIEW v_Girokontoinhaber
+AS
+  SELECT k.Vorname, k.Nachname
+  FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+  EXCEPT
+  SELECT k.Vorname, k.Nachname
+  FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Sparbuch s ON (ekk.Konto_ID = s.Konto_ID)
+  EXCEPT
+  SELECT k.Vorname, k.Nachname
+  FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+         INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+      \end{enumerate}
+\clearpage

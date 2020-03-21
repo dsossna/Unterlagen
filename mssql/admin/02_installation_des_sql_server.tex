@@ -1,0 +1,1004 @@
+  \chapter{Installation des SQL Server 2014}
+  \label{installation_of_sql_server_2014}
+  \chaptertoc{}
+  \cleardoubleevenpage
+    Mit dem Betrieb eines Windows Dienstes ergeben sich in der Praxis verschiedene
+    administrative Probleme. Jeder Dienst benötigt ein Dienstkonto, welches in
+    manchen Fällen weitreichende Berechtigungen haben muss. Um den Server sicher
+    zu gestalten, muss sich der Administrator unter anderem darum kümmern, dass
+    das Konto ein sicheres Passwort besitzt, welches in regelmäßigen Zeitabständen
+    gewechselt werden sollte.
+    
+    In der Vergangenheit wurde dieses Problem häufig dadurch gelöst, dass für alle
+    Dienste eines Servers die lokalen Konten \identifier{Lokaler Dienst},
+    \identifier{Netzwerkdienst} oder \identifier{Lokales System} genutzt wurden. Ein
+    anderer Lösungsansatz bestand darin, normale Domänenkonten mit den passenden
+    Berechtigungen auszustatten, um so eine Verwaltbarkeit der Dienstkonten in der
+    Domäne zu erreichen.
+    
+    Mit Windows Server 2008 R2 / Windows 7 führte Microsoft zwei neue Kontoarten
+    ein, die zur Entlastung der Administratoren und zur Verbesserung der
+    Sicherheit dienen sollten. Es handelt sich hierbei um die \enquote{Managed
+    Service Accounts} (MSA) und die \enquote{Virtual Accounts}.
+    \section{Managed Service Accounts}
+      Managed Service Accounts sind genau das, was ihr Name verspricht:
+      Automatisch verwaltete Domänenaccounts, speziell für den Betrieb von
+      Windows Diensten.
+      \subsection{Fähigkeiten}
+        Um die gesetzten Ziele für Verwaltbarkeit und Sicherheit erreichen zu
+        können, sind dieser Kontoart eine ganze Reihe neuer Fähigkeiten
+        verliehen worden. Im Einzelnen sind dies:
+        \begin{itemize}
+            \item Automatische Passwortverwaltung
+            \item Vereinfachte Verwaltung von SPNs
+            \item Direkte Verknüpfung mit genau einem Computerkonto
+            \item Statische Bindung an genau einen Zielserver
+            \item Delegation der SPN-Verwaltung an andere Administratoren
+        \end{itemize}
+        Gerade die ersten beiden Punkte stellen eine wesentliche
+        Arbeitserleichterung für den Administrator dar. An seiner statt
+        übernimmt das Active Directory die Kennwortverwaltung für alle MSAs. Es
+        gelten dabei folgende Regeln:
+\clearpage
+        \begin{itemize}
+            \item Einem MSA wird ein stark verschlüsselts Passwort mit einer Länge
+            von 120 Zeichen zugewiesen. Diese Passwörter bestehen aus Buchstaben,
+            Ziffern und Sonderzeichen.
+            \item Das Kennwort wird automatisch alle 30 Tage geändert. Dieses
+            Intervall kann durch den Administrator beeinflusst werden.
+        \end{itemize}
+        Der Administrator könnte zwar eine manuelle Passwortänderung
+        veranlassen, jedoch ist ein Eingreifen seiner seits, im Normalfall,
+        nicht erforderlich. Durch die Verknüpfung eines MSA mit einem
+        Computerkonto wird erreicht, dass das MSA als Zwidder aus Benutzer- und
+        Computerkonto erscheint. Dadurch vereinte es die Vorteile beider
+        Kontoarten.
+      \subsection{Nachteile}
+        Nach einem kurzen Blick hinter die Kulissen fallen aber sofort zwei ganz
+        bedeutende Nachteile auf:
+        \begin{itemize}
+          \item Statische Bindung an genau einen Zielserver, was eine Nutzung auf
+          einem geclusterten System unmöglich macht und
+          \item Dienste wie Exchange und SQL Server werden nicht unterstützt.
+        \end{itemize}
+        \begin{merke}
+          Ein Nachteil, der sich aus der statischen Bindung zwischen MSA und
+          Zielserver ergibt ist der, dass MSAs auf geclusterten Systemen nicht
+          eingesetzt werden können, da dort ein Dienst wechselweise auf mehreren
+          Clusterknoten betrieben werden kann.
+        \end{merke}
+        \bild{MSA - Computer\-konto - Client}{msa_computeraccount_client}{0.15}
+        Mit Windows Server 2012 kommt jedoch die Erlösung für alle Admins. Die
+        erweiterte Fassung der Managed Service Accounts, die \enquote{Group
+        Managed Service Accounts}, kurz \enquote{gMSA}. Diese bieten nun alle
+        Vorteile der MSAs, inklusive der Tatsache, dass die gerade genannten
+        Nachteile überwunden sind.
+        \begin{merke}
+          Um im Folgenden MSAs und gMSAs besser unterscheiden zu können, werden
+          MSAs als \enquote{standalone Managed Service Accounts}, kurz sMSA,
+          bezeichnet!
+        \end{merke}
+    \section{Group Managed Service Accounts}
+      \subsection{Grundvoraussetzungen}
+        Um gMSAs nutzen zu können, müssen Clients mit Windows XP oder höher
+        betrieben werden, und es muss sich mindestens ein Domänencontroller mit
+        Windows Server 2012 in der Domänengesamtstruktur befinden. Außerdem
+        wird ein Windows Server 2012 oder Windows 8 Rechner mit dem
+        \enquote{Active Directory-Modul für Windows Powershell} benötigt.
+        \begin{merke}
+          Wird Windows 7 als Clientbetriebssystem eingesetzt, sollte das
+          Hotfix KB2494158 \enquote{Managed service account authentication fails
+          after its password is changend} installiert werden!
+        \end{merke}
+        Sollte die Domäne noch auf dem Windows Server 2003 / 2008 Level betrieben
+        werden, muss der Administrator einige zusätzliche Konfigurationsschritte
+        ausführen.
+        \begin{enumerate}
+            \item Ausführen von \texttt{adprep /forestprep} auf Forest-Ebene.
+            \item Ausführen von \texttt{adprep /domainprep} in jeder Domäne,
+            welche mit MSAs umgehen können muss.
+            \item Ausrollen eines Domaincontrollers mit Windows Server 2012.
+        \end{enumerate}
+        \begin{merke}
+          In dieser Unterrichtsunterlage wird davon ausgegangen, dass als
+          Betriebssystem \enquote{Windows Server 2012 R2} zum Einsatz kommt!
+        \end{merke}
+        Um die Verwaltung von gMSAs zu ermöglichen, müssen drei Voraussetzungen
+        auf dem betreffenden Admin-PC bzw. in der Domäne getroffen werden:
+        \begin{itemize}
+            \item Installation des .NET Framework 3.5.1
+            \item Installation des \enquote{Active Directory-Modul für Windows
+            Powershell}
+            \item Erstellung eines \enquote{KDS\footnote{KDS = Key Distribution
+            Service (neu in Windows Server 2012)} Root Key} in der Domäne
+        \end{itemize}
+        \subsubsection{Installation des .NET Framework 3.5.1}
+          Installieren Sie das .NET Framework 3.5.1 und das Active
+          Directory-Modul für Windows Powershell wie folgt:
+          \begin{enumerate}
+              \item Legen Sie die Windows Server 2012 - DVD ins Laufwerk ein!
+              \item Starten Sie den Server Manager!
+              \item Klicken Sie im Menü \enquote{Verwalten} auf
+              \enquote{Rollen und Features hinzufügen}! Es öffnet sich der
+              \enquote{Assistent zum Hinzufügen von Rollen und Features}.
+              \item Wählen Sie im Fenster \enquote{Installationstyp auswählen} die
+              Option \enquote{Rollenbasierte oder featurebasierte Installation}!
+              \item Im Dialogfenster \enquote{Zielserver auswählen} wählen Sie den
+              betreffenden Server aus!
+              \item Überspringen Sie den Dialog \enquote{Serverrollen auswählen}!
+              \item Öffnen Sie im Dialogfenster \enquote{Features auswählen} die
+              Option \enquote{.NET Framework 3.5-Funktionen} und wählen Sie das \enquote{.NET
+              Framework 3.5} aus!
+              \bild{Assistent zum Hinzufügen von Rollen und Features -
+              1}{sql_server_install_dotnetfx35_1}{0.42}
+              \item Öffnen Sie die Option \enquote{Remoteserver-Verwaltungstools},
+              \enquote{Rollenverwaltungstools}, \enquote{AD DS- und AD LDS-Tools}
+              und wählen Sie \enquote{Active Directory-Modul für Windows
+              Powershell}. Klicken Sie auf \enquote{Weiter}!
+              \bild{Assistent zum Hinzufügen von Rollen und Features -
+              2}{sql_server_AD_Module_for_windows_powershell_1}{0.42}
+              \item Sie werden nun aufgefordert, einen alternativen Quellspfad für
+              das .NET Framework anzugeben, da sich das .NET-Installationspaket noch
+              nicht auf Ihrem Rechner befindet. Klicken Sie unten links auf den
+              Link \enquote{Alternativen Quellpfad angeben}.
+              \bild{Assistent zum Hinzufügen von Rollen und Features -
+              3}{sql_server_install_dotnetfx35_2}{0.42}
+\clearpage
+              \item Geben Sie folgenden Pfad im soeben erscheinenden Dialogfenster
+              an:
+              \\
+              \texttt{<DVD-Laufwerk>\textbackslash sources\textbackslash sxs}
+              \bild{Assistent zum Hinzufügen von Rollen und Features -
+              4}{sql_server_install_dotnetfx35_3}{0.41}
+              \item Klicken Sie auf \enquote{OK}!
+              \item Klicken Sie auf \enquote{Installieren} um den
+              Installationsvorgang zu starten
+              \bild{Assistent zum Hinzufügen von Rollen und Features -
+              5}{sql_server_install_dotnetfx35_4}{0.41}
+          \end{enumerate}
+        \subsubsection{Bereitstellung des KDS Root Key}
+          Die Bereitstellung des KDS Root Key erfolgt nun mittels der Powershell.
+          Vorausetzung für die folgende Prozedur ist die Mitgliedschaft in der
+          Gruppe der Domänen-Admins bzw. Enterprise-Admins.
+          \begin{enumerate}
+              \item Starten Sie die Powershell ISE, indem Sie auf den Windows-Button
+              klicken und als Suchbegriff \enquote{ISE} eingeben! Es erscheint am
+              rechten Bildschirmrand eine Auflistung der Suchergebnisse.
+              \bild{Starten der Powershell ISE}{start_ise}{0.21}
+              \item Erstellen Sie den KDS Root Key.
+              \begin{lstlisting}[language=powershell, caption={Erstellen eines KDS
+              Root Keys}, label=create_kds_root_key]
+Add-KDSRootKey |-EffectiveImmediately|
+              \end{lstlisting}
+            \end{enumerate}
+          \begin{merke}
+            Wurde der KDS Root key auf diese Art und Weise erzeugt, muss erst eine
+            Sicherheitsfrist von 10 Stunden verstreichen, bevor ein gMSA genutzt
+            werden kann.
+          \end{merke}
+          Diese Frist existiert, damit in einer Umgebung mit mehreren
+          Domänen-Controllern sichergestellt wird, dass wirklich alle DCs den KDS
+          Root Key repliziert bekommen, bevor ein erster gMSA genutzt wird.
+          Andernfalls könnte es passieren, dass ein Domänen-Controller die
+          Passwortanfrage eines gMSA nicht beantworten und somit ein Dienst nicht
+          starten kann.
+  
+          Um diese Frist in einer Domäne mit nur einem DC zu umgehen, muss das
+          \languagepowershell{Add-KDSRootKey}-Commandlet mit einer zusätzlichen
+          Angabe ausgeführt werden:
+            \begin{lstlisting}[language=powershell, caption={Erstellen eines KDS
+              Root Keys}, label=create_kds_root_key_2]
+  Add-KDSRootKey |-EffectiveTime| ((get-date)§.addhours§(-10))
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{jj128430}
+          \end{literaturinternet}
+      \subsection{Kurzer Ausflug: AGDLP}
+        \enquote{AGDLP} - Account, Global Group, Domain local Group, Permission - 
+        bezeichnet ein Verfahren für die rollenbasierte Zuteilung von
+        Berechtigungen (RBAC\footnote{RBAC = Role-Based Access Controls}).
+        Seine Aufgabe ist es, für ein strukturiertes Rollen-Rechte-Konzept in
+        einer Active Directory Domäne oder sogar in einem Forest zu sorgen.
+  
+        Hinter der Abkürzung AGDLP steckt im Wesentlichen die Idee, dass
+        Berechtigungen nicht einem einzelnen Objekt, z. B. einem Nutzer
+        zugeteilt werden, sondern einer Gruppe, deren Mitglieder dann die
+        Berechtigungen erben. In einer Active Directory Domäne existieren für
+        diesen Zweck zwei unterschiedliche Gruppenarten:
+          \begin{itemize}
+              \item \textbf{Globale Gruppen}: Mit Hilfe dieser Gruppen werden
+              Rollen oder Tätigkeiten abgebildet (z. B. DB-Admin, AccountManager
+              usw.). In diesen Gruppen dürfen Nutzer und andere globale Gruppen
+              der gleichen Domäne Mitglied sein und sie können von Resourcen
+              anderer Domänen genutzt werden.
+              \item \textbf{Domänen-lokale Gruppen}: Diese Gruppenart ist es, die die
+              Berechtigungen zugewiesen bekommt. Es können universelle, globale
+              und lokale Gruppen Mitglied sein. Auch Nutzerkonten sind als
+              Mitglieder erlaubt. Domänen-lokale Gruppen können nur innerhalb der
+              eigenen Domäne genutzt werden.
+          \end{itemize}
+          Gemäß der Empfehlung von Microsoft sollte AGDLP wie folgt umgesetzt
+          werden:
+          \begin{itemize}
+              \item Zuerst wird eine globale Gruppe erstellt.
+              \item Alle betreffenden Accounts werden Mitglieder der globalen
+              Gruppe.
+              \item Es wird eine domänen-lokale Gruppe erstellt. Diese erhält alle
+              vorgesehenen Berechtigungen.
+              \item Die globale Gruppe wird Mitglied der domänen-lokalen Gruppe.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{AGDLP}
+          \end{literaturinternet}
+          \bild{AGDLP}{agdlp}{0.15}
+      \subsection{Einen Managed Service Account erstellen}
+        \begin{merke}
+          Um einen MSA erstellen zu können muss der Benutzer
+          \begin{itemize}
+              \item der Domänen-Administrator sein oder
+              \item ein Mitglied der Gruppe der Domänen-Admins sein oder
+              \item ein Mitglied der Gruppe der Konten-Operatoren sein oder
+              \item er muss die \enquote{Create/DeletemsDS-ManagedServiceAccount}
+              Berechtigung haben.
+          \end{itemize}
+        \end{merke}
+        \begin{enumerate}
+            \item Starten Sie die Powershell ISE
+            \item Nachdem die ISE gestartet hat, importieren Sie zuerst das
+            Active Directory-Modul mit dem Kommando:
+            \begin{lstlisting}[language=powershell, caption={Importieren des
+            Active Directory-Moduls für Windows Powershell}, label=create_msa_1]
+Import-Module ActiveDirectory
+            \end{lstlisting}
+            \item Erstellen Sie eine neue Sicherheitsgruppe im Active Directory
+            mit Hifle des Commandlets \languagepowershell{New-ADGroup}. Dieser
+            Schritt kann auch mittels der MMC durchgeführt werden.
+            \begin{lstlisting}[language=powershell, caption={Eine globale
+            Sicherheitsgruppe erstellen}, label=create_msa_2]
+New-ADGroup |-Name| SQLServerSVC |-GroupScope| Global `
+|-GroupCategory| Security |-SamAccountName| SQLServerSVC$ `
+|-Path| "OU=Groups, OU=MS-C-IX-04-20, DC=MS-C-IX-04, DC=FUS"
+            \end{lstlisting}
+            \bild{Die Gruppe \enquote{SQLServerSVC}}{sqlserversvc}{0.4}
+            \item Fügen Sie Ihr Computerkonto der Gruppe \identifier{SQLServerSVC}
+            als Mitglied hinzu. Dieser Schritt kann mittels Powershell oder mit
+            Hilfe der Microsoft Management Konsole geschehen.
+            \begin{lstlisting}[language=powershell, caption={Einer Gruppe ein
+            Mitglied hinzufügen}, label=create_msa_3]
+Add-ADGroupMember `
+|-Identity| `
+"CN=SQLServerSVC,OU=Groups,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS"
+|-Members| `
+"CN=FEA11-119SRV20,OU=Computers,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS"
+            \end{lstlisting}
+            \bild{Gruppen\-mitglieder von
+            SQLServerSVC}{sqlserversvc_group_members}{0.4}
+            \item Benutzen Sie das Commandlet \languagepowershell{New-ADServiceAccount} um
+            einen neuen MSA zu erstellen.
+            \begin{lstlisting}[language=powershell, caption={Erstellen des MSA},
+            label=create_msa_4]
+New-ADServiceAccount |-Name| MSSQLServer20 |-SamAccountName| MSSQLServer20$ `
+|-DNSHostname| FEA11-119SRVAD.MS-C-IX-04.FUS `
+|-Path| "OU=MSA,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS" `
+|-PrincipalsAllowedToRetrieveManagedPassword| `
+"CN=SQLServerSVC,OU=Groups,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS" `
+|-Enabled| ~$true~
+            \end{lstlisting}
+        \end{enumerate}
+        Das Commandlet \languagepowershell{New-ADServiceAccount} nimmt aktuell
+        ca. 20 verschiedene Parameter entgegen. In \beispiel{create_msa_4} wurden
+        nur die wichtigsten benutzt. Welche Bedeutung sie haben wird nachfolgend
+        erläutert:
+        \begin{itemize}
+            \item \languagepowershell{|-Name|}: Setzt das \identifier{Name}-Attribute
+            des Accounts im Active Directory
+            \item \languagepowershell{|-SamAccountName|}: Gibt den Security
+            Account Managed Name des gMSA an. Dieser darf nicht länger als 20
+            Zeichen sein, um die Kompatibilität zu älteren Systemen zu wahren.
+            Wird am Ende des SamAccountName kein \$ angegeben, hängt Windows
+            automatisch eines an.
+            \item \languagepowershell{|-DNSHostname|}: Gibt den Namen eines
+            DNS-Servers an. Dieser Parameter wird benötigt, um den
+            Domänen-Controller auffinden zu können.
+            \item \languagepowershell{|-Path|}: Nimmt einen X.500 konformen Pfad
+            entgegen, mit dessen Hilfe angegeben wird, wo im AD der gMSA erstellt
+            werden soll.
+            \item
+            \languagepowershell{|-PrincipalsAllowedToRetrieveManagedPassword|}:
+            Setzt das \enquote{msDS-GroupMSAMembership}-Attribute und gibt damit
+            an, welche Computer den gMSA nutzen können.
+            \item \languagepowershell{|-Enabled|}: Gibt an, ob der gMSA aktiviert
+            oder deaktivert ist. Es sind nur die beiden Werte
+            \languagepowershell{\$true} und \languagepowershell{\$false}
+            zulässig.
+        \end{itemize}
+        In\beispiel{create_msa_2} wird für den Parameter
+        \languagepowershell{|-PrincipalsAllowedToRetrieveManagedPassword|} die
+        Gruppe \identifier{SQLServerSVC} benutzt. Alle Computerkonten, die dieser
+        Gruppe als Mitglieder zugewiesen werden haben dadurch zugriff auf den gMSA
+        \identifier{MSSQLServer20}.
+        Sollte aus irgend einem Grund nicht mehr bekannt sein, welche
+        Benutzer/Gruppen berechtigt sind, dass gMSA zu nutzen
+        (\languagepowershell{|-PrincipalsAllowedToRetrieveManagedPassword|}), kann
+        dies mittels des Commandlets \languagepowershell{Get-ADServiceAccount}
+        nachgeschlagen werden.
+        \begin{lstlisting}[language=powershell, caption={Einer Gruppe ein
+        Mitglied hinzufügen}, label=create_msa_5]
+Get-ADServiceAccount `
+|-Identity| "CN=MSSQLServer20,OU=MSA,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS" `
+|-properties| principalsallowedtoretrievemanagedpassword
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{hh852236}
+          \item \cite{ee617258}
+          \item \cite{askpfeplat20121217}
+        \end{literaturinternet}
+      \subsection{(De-)Installation eines gMSA auf einem Zielserver}
+        \subsubsection{Installation eines gMSA auf dem Zielserver}
+          Die Installation eines gMSA auf dem Zielrechner ist kein zwingend
+          notwendiger Schritt. Warum sollte sie dennoch erfolgen? Durch die
+          Installation wird der betroffene Server ermächtigt, die periodische
+          Passwortänderung für den gMSA durchzuführen. Ohne Installation müsste
+          dieser entscheidende Punkt manuell durchgeführt werden.
+          \begin{merke}
+            Für die Installation des MSA auf einem Clientcomputer muss der
+            Benutzer ein Mitglied der Gruppe der lokalen Administratoren sein.
+          \end{merke}
+          Installiert wird der gMSA mit dem Commandlet
+          \languagepowershell{Install-ADServiceAccount}.
+          \begin{enumerate}
+              \item Booten Sie Ihren Windows Server neu! 
+              \item Starten Sie die Powershell ISE im Administratormodus (Als
+              Administrator ausführen)!
+              \item Führen Sie das genannte Commandlet aus!
+                \begin{lstlisting}[language=powershell, caption={Einen MSA auf dem
+                Zielserver installieren}, label=install_msa_1]
+Install-ADServiceAccount `
+|-Identity| "CN=MSSQLServer20,OU=MSA,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS"
+                \end{lstlisting}
+              \item Testen Sie, ob die Installation erfolgreich war!
+                \begin{lstlisting}[language=powershell, caption={Prüfen des
+                Installationserfolges}, label=install_msa_2]
+Test-ADServiceAccount `
+|-Identity| "CN=MSSQLServer20,OU=MSA,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS"
+                \end{lstlisting}
+          \end{enumerate}
+          Sollte die Installation erfolgreich gewesen sein, liefert das Commandlet
+          \languagepowershell{Test-AdServiceAccount} den Wert
+          \languagepowershell{\$true} zurück. Anderenfalls wird eine detailierte
+          Fehlermeldung ausgegeben.
+          \begin{merke}
+            Damit dieser Vorgang erfolgreich sein kann, muss die ISE zwingend im
+            Administratormodus ausgeführt werden!
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ee617223}
+          \end{literaturinternet}
+  \clearpage        
+        \subsubsection{Deinstallation eines gMSA vom Zielserver}
+          Deinstalliert wird ein gMSA mit dem
+          \languagepowershell{Uninstall-ADServiceAccount} Commandlet.
+          \begin{merke}
+            Auch hier muss die ISE zwingend im Administratormodus (Als
+            Administrator ausführen) gestartet werden!
+          \end{merke}
+          \begin{enumerate}
+              \item Starten Sie die Powershell ISE im Administratormodus (Als
+              Administrator ausführen)!
+              \item Führen Sie das genannte Commandlet aus!
+                \begin{lstlisting}[language=powershell, caption={Einen MSA vom
+                Zielserver deinstallieren}, label=uninstall_msa_1]
+  Uninstall-ADServiceAccount `
+  |-Identity| "CN=MSSQLServer20,OU=MSA,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS"
+          \end{lstlisting}
+              \item Testen Sie, ob die Deinstallation erfolgreich war!
+                \begin{lstlisting}[language=powershell, caption={Prüfen des
+                Deinstallationserfolges}, label=uninstall_msa_2]
+  Test-ADServiceAccount `
+  |-Identity| "CN=MSSQLServer20,OU=MSA,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS"
+                \end{lstlisting}
+          \end{enumerate}
+          \begin{literaturinternet}
+            \item \cite{ee617202}
+          \end{literaturinternet}
+        \subsubsection{Zurücksetzen des Passworts}
+          Das Passwort eines gMSA kann mit Hilfe des Commandlets
+          \languagepowershell{Reset-ADServiceAccountPassword} geschehen.
+          \begin{lstlisting}[language=powershell, caption={Das Passwort eines
+          MSA mauell zurücksetzen}, label=reset_msa_password]
+  Reset-ADServiceAccountPassword `
+  "CN=MSSQLServer20,OU=MSA,OU=MS-C-IX-04-20,DC=MS-C-IX-04,DC=FUS"
+          \end{lstlisting}    
+        \begin{literaturinternet}
+          \item \cite{dd391923}
+          \item \cite{jj128431}
+          \item \cite{sqlosteam20140219}
+          \item \cite{ee617202}
+        \end{literaturinternet}
+    \section{Virtual Accounts}
+      Virtual Accounts sind das lokale Gegenstück zu den MSAs. Sie existieren nur
+      auf dem lokalen Rechner und erfordern wenig/keinen administrativen Aufwand.
+      Für diese Kontoart gelten die folgenden Punkte:
+      \begin{itemize}
+          \item Der Name eines virtuellen Kontos beginnt immer mit \enquote{NT
+          Service\textbackslash}
+          \item Es existiert, ohne das es vorher angelegt werden muss. 
+          \item Die Kennwortverwaltung läuft automatisch ab, wie bei den MSAs
+          \item Es erscheint nicht in der MMC \enquote{Lokale Benutzer und
+          Gruppen}
+          \item Es kann in jeder ACL mit aufgeführt werden
+          \item Benötigt es Zugriff auf externe Ressourcen im Netzwerk, geschieht
+          dies mit den Berechtigungen des Computerkonto des eigenen Servers.
+      \end{itemize}
+      Virtual Accounts sind somit ideal für einfache Dienste, die hauptsächlich
+      Zugriff auf lokale Ressourcen benötigen. Erstellen kann man Sie, indem man
+      in den Eigenschaften eines Dienstes einfach einen neuen Benutzernamen, z. B.
+      \identifier{NT Service\textbackslash SQLServer} einträgt. Der Benutzer muss
+      nicht vorher angelegt werden.
+      \bild{Ein virtueller Account für Google Update}{virtual_account}{0.42}
+      \begin{literaturinternet}
+        \item \cite{vafduw78as2008r2}
+        \item \cite{msavvaiws2008r2}
+      \end{literaturinternet}
+    \section{Installation des SQL Server 2014}
+      \subsection{Systemvoraussetzungen}
+        Eine vollständige Liste aller Hardware- und Softwareanforderungen für
+        SQL Server 2014 kann dem Microsoft Artikel \parencite{ms143506}
+        entnommen werden. An dieser Stelle erfolgt lediglich eine kurze Auflistung
+        der notwendigsten Informationen.
+        \subsubsection{Softwareanforderungen}
+          Die in der folgenden Auflistung gezeigten Softwareprodukte müssen
+          zwingend vor der Installation des SQL Server 2014 auf dem System
+          vorhanden sein, andernfalls kann der Installationsvorgang nicht begonnen
+          werden:
+          \begin{itemize}
+              \item \textbf{.NET Framework 3.5.1}: Wird der SQL Server auf einem
+              Computer mit Windows Vista SP2 oder Windows Server 2008 SP2
+              installiert, muss das .NET Framework 3.5.1 aus dem Internet
+              heruntergeladen und installiert werden. Bei Windows Server 2008 R2
+              SP1 ist das .NET Framework bereits vorhanden und muss nur noch aktiviert
+              werden.
+              \item \textbf{.NET Framework 4.0}: Die Version 4.0 des .NET
+              Frameworks wird automatisch während des SQL Server-Setup Vorganges
+              installiert. Ein Eingreifen des Administrators ist nicht notwendig.
+              \item \textbf{Windows Powershell}: Die Windows Powershell 2.0 wird
+              von der Database Engine und verschieden anderen Komponenten
+              benötigt, weshalb auch sie im Vorfeld aktiviert werden muss.
+          \end{itemize}
+        \subsubsection{Hardwareanforderungen}
+          Die folgende Liste zeigt die Hardwareanforderungen, die der Server, auf
+          dem Microsoft SQL Server 2014 installiert wird, erfüllen sollte. Es
+          werden immer die Mindestanforderungen sowie die optimalen Bedingungen
+          angegeben.
+          \begin{itemize}
+              \item \textbf{CPU}: Die Mindesttaktrate des Prozessors beträgt 1.4
+              GHz. Microsoft empfiehlt aber eine Taktrate von 2.0 GHz oder höher,
+              da die performante Ausführung von SQL-Anweisungen sehr viel Leistung
+              beansprucht.
+              \item \textbf{Prozessortyp}: Idealerweise hat der SQL Server
+              einen oder mehrere Prozessoren der Typen AMD Opteron, AMD Athlon 64,
+              Intel Xeon mit Intel EM64T Unterstützung oder Intel Pentium IV mit
+              EM64T Unterstützung zur Verfügung.
+              \item \textbf{Speicher}: Es sollte ein Minimum von 1 GB vorhanden
+              sein, empfohlen werden jedoch 4 GB oder mehr
+          \end{itemize}
+          \begin{merke}
+            Zu Beachten ist, dass sich alle hier angegebenen Hardwareanforderungen
+            auf 64-Bit Systeme beziehen. Bei der Installation auf einem 32-Bit
+            System können die Hardwareanforderungen stark abweichen!
+          \end{merke}
+        \subsubsection{Anforderungen an den Datenträger}
+          Während der Installation legt der SQL Server 2014 ca. 6 GB an temporären
+          Daten an. Des Weiteren benötigen die einzelnen SQL Server Komponenten
+          Speicherplatz, der in der folgenden Liste aufgeführt ist:
+          \begin{itemize}
+              \item Database Engine, Replikation, Volltextsuche und Data Quality
+              Services: \textbf{811 MB}
+              \item Analysis Services: \textbf{345 MB}
+              \item Reporting Services und Berichts- Manager: \textbf{304 MB}
+              \item Integration Services: \textbf{591 MB}
+              \item Master Data Services: \textbf{243 MB}
+              \item Clientkomponenten ohne SQL Server Onlinedokumentation:
+              \textbf{1823 MB}
+              \item SQL Server Onlinedokumentationstool: \textbf{375 KB}
+          \end{itemize}
+          \begin{merke}
+            Microsoft empfiehlt, dass die Installation des SQL Server niemals auf
+            einem Domänen-Controller erfolgen sollte, da dies eine ganze Reihe von
+            Einschränkungen mit sich bringt!
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{ms143506}
+          \end{literaturinternet}
+      \subsection{SQL Server-Instanzen}
+        Unter einer SQL Server-Instanz wird einen Windows Dienst verstanden, der
+        die Fähigkeiten des SQL Server zur Verfügung stellt. Es gibt zwei
+        unterschiedliche Arten von SQL Server-Instanzen.
+        \subsubsection{Standardinstanz}
+          In den meisten Situationen wird nur eine Instanz des SQL Servers auf
+          einem Computer benötigt. Diese Instanz wird als Standardinstanz
+          bezeichnet und ist an ihrem festgelegten Namen \identifier{MSSQLSERVER}
+          zu erkennen.
+        \subsubsection{Benannte Instanz}
+          Sobald mehrere Instanzen des SQL Servers auf einem Rechner gefordert
+          sind, müssen diese alle einen eigenen Instanznamen aufweisen. Deshalb
+          werden diese Zusätzlichen Instanzen als benannten Instanzen bezeichnet.
+          Für die Namensvergabe bei einer benannten Instanz ist folgendes zu beachten:
+          \begin{itemize}
+              \item Der Instanzname ist nicht case-sensitiv
+              (Groß-/Kleinschreibung wird nicht berücksichtigt)
+              \item Es dürfen keine reservierten Worte in einem Instanznamen
+              vorkommen, wie zum Beispiel \identifier{Default} oder
+              \identifier{MSSQLServer}.
+              Dies würde zu einem Fehler führen.
+              \item Die maximale Namenslänge beträgt 16 Zeichen.
+              \item Instanznamen müssen mit einem Buchstaben (a - z oder A - Z)
+              bzw. einem Unterstrich beginnen.
+              \item Ab dem zweiten Zeichen dürfen auch die Ziffern 0 - 9, das
+              Dollarzeichen (\$) und der Unterstrich verwendet werden.
+              \item Grundsätzlich unzulässige Zeichen sind :
+              Leerzeichen, Backslash \textbackslash, Komma , , Semikolon ; ,
+              Doppelpunkt : , Hochkomma ' , kaufmännisches Und-Zeichen \&, Hashtag
+              \# und das At-Zeichen @.
+          \end{itemize}
+      \subsection{Die Verzeichnisse des SQL Servers}
+        Bei der Installation eines Microsoft SQL Server 2014 werden eine ganze
+        Reihe verschiedener Verzeichnisse angelegt. Im Wesentlichen hängt dies
+        damit zusammen, dass jede SQL Server-Instanz eigene Komponenten mitbringt,
+        die von den Komponenten anderer Instanzen getrennt gespeichert werden
+        müssen.
+        \subsubsection{Instanzspezifische Komponenten}
+          Um die instanzspezifischen Komponenten in unterschiedliche Verzeichnisse
+          zu trennen, werden unterschiedliche Instanz-IDs für alle Komponenten
+          erzeugt. Zum Beispiel hat die Database Engine einer
+          Standardinstanz eines SQL Server 2014 standardmässig die Instanz-ID
+          \texttt{MSSQL12.MSSQLSERVER}. Dieser Wert setzt sich wie folgt zusammen:
+          \begin{itemize}
+              \item \textbf{MSSQL}: Fixe Zeichenfolge
+              \item \textbf{12}: Die Versionsnummer des SQL Server 2014. Diese
+              wird ggf. von einem Unterstrich und einer Nebenversionsnummer
+              gefolgt.
+              \item \textbf{MSSQLSERVER}: Der Instanzname, der getrennt durch
+              einen Punkt, an die anderen Angaben angehängt wird.
+          \end{itemize}
+          Andere Beispiele für Instanz-IDs sind \texttt{MSAS12.MSSQLSERVER} für
+          eine Analysis Services Instanz oder \texttt{MSSQL12.CRM} für eine
+          benannte Instanz mit dem Namen CRM.
+\clearpage
+          Die Instanz-ID wird dann im Installationspfad verwendet, um die
+          einzelnen Komponenten zu trennen, z. B. wird die Database Engine einer
+          SQL Server 2014 Instanz in das Verzeichis \texttt{C:\textbackslash Program Files\textbackslash Microsoft SQL
+          Server\textbackslash MSSQL12.MSSQLSERVER} installiert.
+          \begin{merke}
+            \begin{itemize}
+                \item Das Stammverzeichnis \texttt{C:\textbackslash Program Files\textbackslash Microsoft SQL
+                Server} darf nicht auf einem Wechseldatenträger, einem
+                komprimierten Dateisystem oder einem Verzeichnis mit Systemdateien
+                liegen. Des Weiteren ist die Ablage in einem freigegebenen
+                Verzeichnis eines Failoverclusters ebenfalls nicht erlaubt.
+                \item Seit SQL Server 2012 darf das Stammverzeichnis auf einer
+                Windows Freigabe liegen.
+                \item Während einer Installation kann eine benutzerdefinierte
+                Instanz-ID angegeben werden. Diese sollte jedoch keine
+                Sonderzeichen oder reservierte Wörter enthalten.
+            \end{itemize}
+          \end{merke}
+          Eine vollständige Liste alle Verzeichnisse, die während der Installation
+          eines Microsoft SQL Server angelegt werden, kann im den folgenden
+          Technet Artikel abgerufen werden.
+          \begin{literaturinternet}
+            \item \cite{ms143547}
+          \end{literaturinternet}
+        \subsubsection{Gemeinsam genutzte SQL Server Komponenten}
+        Unter gemeinsam genutzten Komponenten versteht man Teile der SQL Server
+        Software, die von allen auf einem Server installierten Instanzen genutzt
+        werden können und dabei nur einmal vorhanden sein müssen.
+        Dazu zählen beispielsweise die Verwaltungstools, die Master Data
+        Services oder die SQL Server Integration Services. Installiert werden
+        diese Komponenten in das Verzeichnis \texttt{C:\textbackslash Program Files\textbackslash Microsoft SQL
+        Server\textbackslash 120}.
+  
+        Der Laufwerksbuchstabe kann in diesem Pfad kann variieren.
+        \begin{literaturinternet}
+          \item \cite{ms143547}
+        \end{literaturinternet}
+      \subsection{SQL Server installieren}
+        \begin{enumerate}
+          \item Nach dem einlegen der DVD erscheint das Aktionsfenster. Wählen Sie
+          hier die Aktion \enquote{Setup.exe ausführen}.
+          \item Der Setupvorgang wird nun gestartet.
+          \item Es öffnet sich der \enquote{SQL Server-Installationscenter}.
+          Wählen Sie links außen die Option \enquote{Installation} und dann im
+          rechten Fenster \enquote{Neue eigenständige SQL Server-Installation
+          oder Hinzufügen von Funktionen zu einer vorhandenen Installation}
+          \bild{Das SQL-Server-Installations\-center}{sql_server_setup_2}{0.3}
+          \item Der erste Schritt bei der Installation des SQL Server 2014
+          ist die Abfrage eines Product Keys, um die Echtheit der Softwarelizenz
+          zu verifizieren.
+          \bild{Eingabe des Product Keys}{sql_server_setup_3}{0.3}
+          \item Nach dem ein gülter Product Key eingegeben wurde, muss der
+          Benutzer die Zurkenntnisnahme und die Einhalt der Lizenzbedingungen
+          bestätigen, bevor das Setup vorgesetzt werden kann. Einer Übertragung
+          der Funktionsverwendungsdaten muss nicht zugestimmt werden.
+          \bild{Die Lizenz\-bedingungen}{sql_server_setup_4}{0.3}
+          \item Im dritten Schritt des SQL Server 2014-Setup wird eine
+          Überprüfung der Globalen Regeln durchgeführt. Hierbei handelt es sich
+          um Voraussetzungen, die gegeben sein müssen, damit die Installation
+          des SQL Server 2014 erfolgreich sein kann.
+          \bild{Überprüfung der Globalen Regeln}{sql_server_setup_5}{0.33}
+          \item Eine Überprüfung von Produktupdates ist fest in den
+          Installationsablauf integriert. Dieser Vorgang kann bei bedarf
+          übersprungen werden, z. B. wenn keine direkte Internetverbindung
+          besteht.
+          \bild{Überprüfung der Produkt\-updates}{sql_server_setup_6}{0.33}
+\clearpage
+          \item Jetzt werden die heruntergeladenen Produktupdates angezeigt.
+          Sollte keine Internetverbindung zur Verfügung stehen, wird das Setup
+          die Fehlermeldung \enquote{0x8024402C} anzeigen.
+          \bild{Installation der Produktupdates}{sql_server_setup_7}{0.33}
+          \item SQL Server 2014-Setup installiert nun die SQL Server
+          Setupdateien. Im Zuge dieses Installationsschrittes werden auch
+          heruntergeladene Updates mitinstalliert.
+          \bild{Installation der Setupdateien}{sql_server_setup_8}{0.31}
+\clearpage
+          \item In diesem Schritt werden weitere Setupregeln geprüft, um die
+          Installierbarkeit des SQL Servers sicher zustellen.
+          \bild{Überprüfung der Setupregeln}{sql_server_setup_9}{0.31}
+          
+          \item Bei der Auswahl der SQL Server Setuprolle gibt es drei Optionen:
+          \begin{itemize}
+              \item \textbf{SQL Server-Funktionsinstallation}
+              
+              Mit dieser Option wird eine Standalone-Installation des SQL Server
+              mit vollem Funktionsumfang gestartet, unabhängig von Microsoft
+              SharePoint.
+              \item \textbf{SQL Server PowerPivot für SharePoint}
+              
+              Installiert PowerPivot für Microsoft SharePoint.
+              \item \textbf{Alle Funktionen mit Standardwerten}
+              
+              Führt eine SQL Server-Funktionsinstallation mit Standardwerten
+              durch.
+          \end{itemize}
+          \bild{Auswahl der Setuprolle}{sql_server_setup_10}{0.33}
+          \item Bei der SQL Server-Funktionsauswahl können die zu installierenden
+          Komponenten des SQL Server, sowie die Installationsverzeichnisse
+          gewählt werden.
+          \bild{Die SQL Server-Funktion\-sauswahl}{sql_server_setup_11}{0.28}
+          \item Die Prüfung der Installationsregeln ist vergleichbar mit der
+          Überprüfung der Setupunterstützungsregeln. Es werden Probleme
+          aufgespürt, die zu einer Blockade des Installationsvorganges führen
+          würden.
+          \bild{Prüfung der Funktionsregeln}{sql_server_setup_12}{0.33}
+          \item Bei der Instanzkonfiguration werden verschiedene Dinge erledigt.
+          Zum einen wird der zu installierende Instanztyp, standard oder benannt,
+          ausgewählt und zum anderen wird die Instanz-ID festgelegt. Die
+          Instanz-ID gibt, zusammen mit dem Instanzstammverzeichnis, das
+          Verzeichnis an, in welches die Softwareinstallation erfolgen soll. Bei
+          einer Standardinstanz sind Instanzname und Instanz-ID meist gleich,
+          nämlich \identifier{MSSQLSERVER}. Bei einer benannten Instanz weichen beide
+          häufig von einander ab.
+\clearpage
+          \bild{Instanz-konfiguration}{sql_server_setup_13}{0.33}
+          \item Während der \enquote{Serverkonfiguration} müssen zwei Schritte
+          ausgeführt werden. Zuerst sollten die Dienstkonten für die verschiedenen
+          SQL-Server-Dienste ausgewählt werden. Hierzu sollten schon im Vorfeld
+          gMSAs erstellt werden. Der einzige Dienst, der standardmässig
+          deaktiviert ist und für den auch an dieser Stelle kein Dienstkonto
+          ausgewählt werden kann, ist der \enquote{SQL Server-Browser}.
+          \bild{Auswahl der Dienst\-konten}{sql_server_setup_14}{0.3}
+          \item Auf der Registerkarte \enquote{Sortierung} kann eine
+          Sortierreihenfolge, engl. \enquote{collation order} ausgewählt werden.
+          Diese legt verschiedene Dinge fest, wie z. B.:
+          \begin{itemize}
+              \item Welcher Zeichensatz wird genutzt (hier Latin1)?
+              \item In welcher Reihenfolge stehen die Buchstaben im Alphabet?
+              \item Wo werden die Umlaute ä, ö und ü bzw. das sz ß einsortiert?
+              \item Wo werden Ziffern in die Sortierreihenfolge eingereiht?
+              \item Was geschieht mit diakritischen Zeichen (\'{a}, \`{o}
+              \^{u})?
+              \item Ist Groß-/Kleinschreibung für die Sortierung relevant?
+          \end{itemize}
+          Der Name der Standardsortierreihenfolge
+          \enquote{Latin1\_General\_CI\_AS} enthält die
+          beiden Buchstabenkombinationen \enquote{CI} und \enquote{AS}. CI steht
+          für case-insensitive, was bedeutet, dass Groß-/Kleinschreibung irrelevant ist. AS heißt        
+          akzent-sensitiv und meint, dass diakritische Zeichen und Umlaute von
+          normalen Buchstaben unterschieden werden (ü ist nicht gleich u und \`{o}
+          ist ungleich o).
+          \bild{Auswahl der Sortier-reihenfolge}{sql_server_setup_14a}{0.3}
+          Mit einem Klick auf die Schaltfläche \enquote{Anpassen} kann eine eigene
+          Sortierreihenfolge zusammengestellt werden.
+          \bild{Erstellen einer eigenen
+          Sortierreihenfolge}{sql_server_setup_14b}{0.3}
+          \item Auf der Registerkarte \enquote{Serverkonfiguration} stehen zwei
+          mögliche Authentifizierungsmodi zur Verfügung: Die
+          Windows-Authentifizierung und der Gemische Modus. Gemäß Empfehlung von
+          Microsoft sollte nur noch die Windows-Authentifizierung genutzt werden,
+          da die gesamte Nutzerwaltung so in das Active Directory übertragen wird,
+          ohne das der SQL Server noch darin eingebunden wäre. Über die
+          Schaltflächen \enquote{Aktuellen Benutzer hinzufügen} bzw.
+          \enquote{Hinzufügen} können Windows-Benutzer hinzugefügt werden, die
+          dann als SQL Server-Administratoren berechtigt werden.
+\clearpage
+          \begin{merke}
+            Es muss mindestens ein Windows-Account ausgewählt werden! Dieser muss
+            nicht zwingend lokaler Administrator oder Domänen-Admin sein.
+          \end{merke}
+          \bild{Datenbank\-modul\-konfiguration -
+          Serverkonfiguration}{sql_server_setup_15}{0.27}
+          \item Auf der Registerkarte \enquote{Datenverzeichnisse} können die
+          Standardverzeichnisse für die verschiedenen Dateiarten des SQL Servers
+          gewählt werden.
+          \bild{Datenbank\-modul\-konfiguration
+          -Daten\-verzeich\-nisse}{sql_server_setup_15a}{0.27}
+\clearpage
+          \item Die Registerkarte \enquote{FILESTREAM} bietet die Möglichkeit, das
+          Feature Filestream des SQL Server 2014 zu aktivieren.
+          \bild{Datenbank\-modul\-konfiguration -
+          Filestream}{sql_server_setup_15b}{0.33}
+          \item Da bei der Funktionsauswahl die SQL Server Reporting Services
+          mit ausgewählt wurden, muss nun hier entschieden werden, ob diese nur
+          installiert oder auch konfiguriert werden sollen.
+          \bild{Installation / Konfiguration der
+          Reporting-services}{sql_server_setup_16}{0.33}
+          \item Die Prüfung der Funktionskonfigurationsregeln für die
+          Installation ist vergleichbar mit der Überprüfung der Setupsregeln. Es werden Probleme
+          aufgespürt, die zu einer Blockade des Installationsvorganges führen
+          würden.
+          \bild{Prüfung der Funktions\-konfigurations\-regeln für
+          die Installation}{sql_server_setup_17}{0.33}
+          \item In diesem vorletzten Schritt zeigt der Setup-Assistent eine
+          Zusammenfassung aller Installationsoptionen. Mit einem Klick auf
+          \enquote{Installieren} startet die Installation der SQL Server-Software.
+          \bild{Zusammen\-fassung der
+          Installations\-optionen}{sql_server_setup_18}{0.33}
+\clearpage
+          \item Die Installation der SQL Server-Software läuft.
+          \bild{Installation der SQL
+          Server\-Software}{sql_server_setup_19}{0.33}
+          \item Am Ende der Installation zeigt das Setup noch eine
+          Zusammenfassung der ausgeführten Tätigkeiten an.
+          \bild{Installations-zusammen-fassung}{sql_server_setup_20}{0.33}
+        \end{enumerate}
+    \section{Installationsnachbereitung}
+      Nach erfolgreicher Installation des SQL Servers sollte bzw. muss der
+      Administrator noch einige Einstellungen am Server vornehmen.
+      \subsection{Der SQL Server Configuration Manager}
+        Der SQL Server Configuration Manager erlaubt es dem Administrator
+        Änderungen an den SQL Server-Diensten und den SQL
+        Server-Netzwerkeinstellungen vorzunehmen.
+        \begin{merke}
+          Microsoft empfiehlt, alle Einstellungen an den SQL Server-Diensten nur
+          mittels des SQL Server Configuration Manager vorzunehmen!
+        \end{merke}
+        \subsubsection{Den Configuration Manager starten}
+          Gestartet wird der Configuration Manager aus dem Windows Startmenü.
+          \bild{Starten des Configuration
+          Manager}{start_sql_server_configuration_manager}{0.6}
+        \subsubsection{Netzwerkkonfiguration - TCP/IP}
+          Der SQL Server kennt drei Netzwerkprotokolle. Dies sind:
+          \enquote{Shared Memory}, \enquote{Named Pipes} und \enquote{TCP/IP}. Für
+          jedes dieser Protokolle können die Einstellungen im SQL Server
+          Configuration Manager vorgenommen werden. An dieser Stelle wird aber nur
+          auf die Konfigurationsmöglichkeiten für das Protokoll TCP/IP
+          eingegangen, da die anderen beiden eine eher untergeordnete Rolle
+          spielen. \bild{Die
+          TCP/IP-Eigen\-schaften
+          1}{sql_server_configuration_manager_tcp_ip_properties_1}{0.55}
+          Nach einem Klick auf \enquote{Eigenschaften} zeigt sich der Dialog aus
+          \abbildung{sql_server_configuration_manager_tcp_ip_properties_2}, mit
+          seinen beiden Registerkarten \enquote{Protokoll} und
+          \enquote{IP-Adressen}.
+          Auf der Registerkarte \enquote{Protokoll} können die folgenden Optionen
+          geändert werden:
+          \begin{itemize}
+              \item \textbf{Aktiviert}: [ Ja | Nein ] Wird hier der Wert
+              \enquote{Nein} eingetragen, steht das TCP/IP-Protokoll für den SQL Server nicht
+              mehr zur Verfügung. Mögliche Werte sind Ja und Nein
+              \item \textbf{Alle überwachen}: [ Ja | Nein ] Diese Option steht
+              standardmässig auf Ja, was bedeutet, dass der SQL Server auf allen im zur
+              Verfügungstehenden IP-Adressen lauscht. Wird der Wert auf Nein
+              geändert, müssen im Folgenden alle IP-Adressen einzeln konfiguriert
+              werden.
+              \item \textbf{Erhalten}: [ number ] Gibt das
+              Verbindungserhaltungsinterval in Milisekunden wieder. Ein Wert von 30.000 bedeutet, dass ein
+              Verbindung für mindestens 30 Sekunden offengehalte wird, auch wenn
+              sie inaktiv ist. Bei einem Wert von 0 würde eine inaktive Verbindung
+              sofort geschlossen werden.
+          \end{itemize}
+          \bild{Die TCP/IP-Eigen\-schaften
+          2}{sql_server_configuration_manager_tcp_ip_properties_2}{0.58}
+          Wechselt man auf die Registerkarte \enquote{IP-Adressen} erhält man
+          dort die Möglichkeit, alle IP-Adressen des Servers einzeln zu
+          konfigurieren.
+          
+          Hier können folgende Einstellungen pro IP-Adresse geändert werden:
+          \begin{itemize}
+              \item \textbf{Aktiv}: [ Ja | Nein ] Gibt an, ob die IP-Adresse im
+              Betriebssystem aktiviert oder deaktivert ist.
+              \item \textbf{Aktiviert}: [ Ja | Nein ] Gibt an, ob der SQL Server
+              auf dieser IP-Adresse Verbindungsanforderungen entgegen nimmt oder
+              nicht. Diese Option wird nur dann wirksam, wenn auf der
+              Registerkarte \enquote{Protkoll} der Parameter \enquote{Alle
+              überwachen} den Wert Ja hat, andernfalls wird sie ignoriert.
+              \item \textbf{Dynamische TCP-Ports}: [ NULL | 0 ] Durch das
+              Eintragen des Wertes 0 wird beim nächsten Start des SQL
+              Server-Dienstes ein freier TCP-Port dynamisch vergeben. Um einen
+              Port statisch zu vergeben, muss das Feld leer gelassen werden.
+              \item \textbf{IP-Adresse}: [ w.x.y.z ] Hier wird die IP-Adresse
+              eingetragen. Dies kann sowohl eine IPv4- als auch eine IPv6-Adresse
+              sein.
+              \item \textbf{TCP-Port}: [ 0 - 65535 ] Hier wird der TCP-Port zur
+              IP-Adresse gewählt. Es kann auch eine Liste von Ports,
+              getrennt durch Koma-Zeichen, angegeben werden, wenn auf der
+              Registerkarte \enquote{Protokoll} der Parameter \enquote{Alle
+              überwachen} den Wert Ja hat.
+          \end{itemize}
+          \bild{Die Register\-karte IP-Adressen der
+          TCP/IP-Eigen\-schaften}{sql_server_configuration_manager_tcp_ip_properties_3}{0.53}
+        \subsubsection{Netzwerkkonfiguration - Dynamische Ports}
+          Der SQL Server kann dynamische Ports benutzen. Das heißt, dass bei jedem
+          Neustart des SQL Server-Dienstes automatisch ein freier TCP-Port gewählt
+          wird. Alle Clients müssen dann diesen Port zur Verbindung mit dem SQL
+          Server benutzen. Um dies realisieren zu können, wird der SQL Server
+          Browser dienst zur Verfügung gestellt.
+          \begin{merke}
+            Dynamische Ports sind nicht ganz so dynamsich, wie es auf den ersten
+            Blick scheint. SQL Server versucht nämlich den bereits
+            benutzten Port zu reservierten, es sei denn, dass dieser schon
+            anders gebunden wurde. Zudem kann die Nutzung dynamischer Ports,
+            in Verbindung mit einer Firewall zu Verbindungsproblemen bei den
+            Clients führen.
+          \end{merke}
+          Der SQL Server Browser-Dienst lauscht auf dem Port 1434 und 
+          veröffentlicht für die Clients die Verbindungsinformationen zu den SQL
+          Server-Instanzen. Ein Client muss lediglich ein UDP-Paket an den Port
+          1434 schicken, um alle notwendigen Informationen zu erhalten. 
+          \begin{merke}
+            Microsoft empfiehlt im Technet Artikel \enquote{Configure a Windows
+            Firewall for Database Engine Acces} \parencite{ms175043}, den
+            SQL Server Browser-Dienst möglichst nicht zu benutzen, da er sehr
+            viele Informationen preisgibt.
+          \end{merke}
+        \subsubsection{Netzwerkkonfiguration - Netwerkaliase}
+        Ein Netzwerkalias ist ein Name für eine Verbindungszeichenfolge zu einer
+        SQL Server-Instanz. Der Aliasname ist vom Benutzer frei wählbar. Für die
+        zugehörige Verbindungszeichenfolge gibt es drei unterschiedliche
+        Varianten:
+        \begin{itemize}
+            \item tcp:<servername>[\textbackslash<instancename>],<port>  
+            \item tcp:<IPAddress>[\textbackslash<instancename>],<port>
+            \item local 
+        \end{itemize}
+        \begin{merke}
+          In einer Verbindungszeichenfolge werden die beiden Addresstypen IPv4
+          und IPv6 akzeptiert.
+        \end{merke}
+        Netzwerkaliasnamen kommen immer dann zum Einsatz, wenn:
+        \begin{itemize}
+            \item Ein anderer Port, als der Standardport 1433 genutzt werden soll,
+            \item oder wenn eine Instanz auf einen anderen Serverumgezogen
+            werden muss.
+        \end{itemize}
+        Sie lösen das Problem, dass in jeder Clientsoftware eine
+        Verbindungszeichenfolge angegeben werden muss, die auf einen ganz
+        bestimmten Server verweist. Wenn z. B. die benannte Instanz
+        \identifier{CRM} bisher auf dem Server \identifier{SRV01} war und nun
+        auf \identifier{SRV02} umgezogen werden muss, lautete die alte
+        Verbindungszeichenfolge SRV01\textbackslash CRM. Wurde kein Alias
+        verwendet, müsste in jeder Clientsoftware die neue
+        Verbindungszeichenfolge SRV02\textbackslash CRM eingerichtet werden. Ist
+        die Zeichenfolge fest in der Anwendung codiert, ist eine solche
+        Umstellung nur mittels des Anwendungsentwicklers möglich, der die
+        Software erstellt hat. Ist die Software konfigurierbar, muss auf jedem
+        Computer, auf dem die Software benutzt wird, die Konfiguration geändert
+        werden, was einen sehr hohen Arbeitsaufwand bedeuten kann.
+        
+        Mit Hilfe eines Netzwerkaliases wird das Problem deutlich vereinfacht.
+        Statt an jeder Software eine Änderung zu vollziehen, wird lediglich die
+        Verbindungszeichenfolge des Alias geändert und die Software selbst
+        bleibt unverändert.
+        \bild{Anlegen eines
+        Netzwerk\-aliasnamens}{sql_server_configuration_manager_aliases}{0.53}
+      \subsection{Instant File Initialization}
+        Erstellt der Microsoft SQL Server eine neue Datei, wird diese immer zu
+        erst mit Nullen auf ihre volle Größe aufgefüllt, bevor sie benutztbar ist.
+        Da dieser Vorgang sehr kostenintensiv ist, sollte er umgangen werden.
+        \subsubsection{Instant File Initialization in der lokalen
+        Sicherheitsrichtlinie}
+        In der lokalen Sicherheitsrichtlinie kann dem SQL Server-Dienstkonto
+        unter:
+        \begin{itemize}
+            \item Lokale Richtlinien
+            \item Zuweisen von Benutzerrechten
+        \end{itemize}
+        das Recht: \enquote{Performe Volume Maintenance Tasks} bzw.
+        \enquote{Durchführen von Volumenwartungsaufgaben} zugewiesen werden.
+        \bild{Die lokale
+        Sicherheitsrichtlinie}{performe_volume_maintenance_tasks}{0.53}
+        \subsubsection{Instant File Initialization als Gruppenrichtlinie}
+        \label{instant_file_initialization}
+          Befindet sich der SQL Server in einer Windows-Domäne, was fast immer der
+          Fall ist, dann sollten Berechtigungen, wie das Durchführen von
+          Volumenwartungsaufgaben als Gruppenrichtlinie im Active Directory
+          hinterlegt werden. Gehen Sie dazu wie folgt vor:
+          \begin{enumerate}
+              \item Starten Sie den Gruppenrichtlinieneditor
+              \bild{Starten
+              des
+              Gruppenrichtlinieneditors}{gruppenrichtlinieneditor_starten}{0.4}
+              \item Klicken Sie im linken Teilfenster, mit der rechten Maustaste,
+              auf \enquote{Gruppenrichtlinienverwaltung}. Wählen Sie im
+              Kontextmenü \enquote{Gesamtstruktur hinzufügen}.
+              \bild{Hinzufügen einer
+              Gesamt\-struktur 1}{gesamtstruktur_hinzufuegen}{0.4}
+              \item Geben Sie im Dialogfenster \enquote{Gesamtstruktur hinzufügen}
+              den Namen der Domäne ein. Dies ist hier: \identifier{MS-C-IX-04.fus}.
+              \bild{Hinzufügen einer
+              Gesamt\-struktur 2}{dialog_gesamtstruktur_hinzufuegen}{0.4}
+              \item Klicken Sie im linken Teilfenster auf
+              \enquote{Gesamtstruktur: ms-c-ix-04.fus}, \enquote{Domänen},
+              \enquote{ms-c-ix-04.fus}, Ihre OU, z. B.
+              \enquote{MS-C-IX-04-20} und dann auf die OU \enquote{Computers}.
+              \item Klicken Sie mit der rechten Maustaste auf die OU
+              \enquote{Computers} und wählen Sie aus dem Kontextmenü den Punkt
+              \enquote{Gruppenrichtlinienobjekt hier erstellen und verknüpfen}.
+              \bild{Hinzufügen einer
+              Gruppenrichtlinie}{gruppenrichtlinie_anlegen}{0.4}
+              \item Geben Sie der Gruppenrichtlinie im Dialogfenster
+              \enquote{Neues Gruppenrichtlinienobjekt} einen Namen, z. B.
+              \enquote{MS-C-IX-04-20\_Perfome\_Volume\_Maintenance\_Tasks}
+              \bild{Hinzufügen einer
+              Gruppenrichtlinie}{neues_gruppenrichtlinienobjekt}{0.35}
+              \item Es erscheint eine Warnmeldung. Klicken Sie auf OK!
+              \bild{Warnung}{gpo_warning}{0.35}
+\clearpage
+              \item Klicken Sie mit der rechten Maustaste auf die
+              Gruppenrichtlinie und wählen Sie aus dem Kontextmenü den Punkt 
+              \enquote{Bearbeiten}
+              \bild{Die Gruppenrichtlinie bearbeiten}{edit_gpo}{0.4}
+              \item Im Gruppenrichtlinienverwaltungs-Editor wählen Sie im linken
+              Teilfenster: \enquote{Computerkonfiguration}, \enquote{Richtlinien},
+              \enquote{Windows-Einstellungen}, \enquote{Sicherheitseinstellungen},
+              \enquote{Lokale Richtlinien}, \enquote{Zuweisen von Benutzerrechten}
+              \bild{Die Gruppenrichtlinie
+              bearbeiten}{gruppenrichtlinienverwaltungseditor_1}{0.33}
+              \item Wählen Sie die Richtlinie \enquote{Durchführen von
+              Volumewartungsaufgaben} mit einem Doppelklick aus.
+\clearpage
+              \item Konfigurieren Sie die Richtlinie, in dem Sie Ihr gMSA-Konto,
+              welches von Ihrem SQL Server-Dienst genutzt wird in die Richtlinie
+              aufnehmen.
+              \bild{Die Gruppenrichtlinie
+              bearbeiten}{gruppenrichtlinienverwaltungseditor_2}{0.33}
+              \item Schließen Sie die Gruppenrichtlinienverwaltung
+          \end{enumerate}
+      \subsection{Lock Pages in Memory (Sperren von Seiten im Speicher)}
+        Um ein möglichst performantes Arbeiten mit den Nutzdaten zu ermöglichen,
+        verfügt der SQL Server über eine ganze Reihe von Buffers und Caches, die
+        im Arbeitsspeicher des Servers liegen. Um die Performance des SQL Servers
+        nicht zu schädigen ist es wichtig, dass diese Buffers und Caches keines
+        Falls auf den Datenträger ausgelagert werden (pagefile.sys). Da Microsoft
+        Windows aber standardmässig die Inhalte des Arbeitsspeichers bei bedarf
+        auslagert, könnte genau dieser unerwünschte Fall eintreten.
+        \subsubsection{Lock Pages in Memory in der lokalen Sicherheitsrichtlinie}
+          Um dies zu verhindern kann dem SQL Server-Dienstkonto in der
+          lokalen Sicherheitsrichtlinie unter:
+        \begin{itemize}
+            \item Lokale Richtlinien
+            \item Zuweisen von Benutzerrechten
+        \end{itemize}
+        das Recht: \enquote{Sperren von Seiten im Speicher} bzw. \enquote{Lock
+        pages in memory} zugewiesen werden. Diese Richtlinie erlaubt es dem SQL
+        Server, dass Auslagern seiner Speicherseiten durch das Betriebssystem zu
+        verhindern.
+        \bild{Die lokale
+        Sicherheitsrichtlinie}{lock_pages_in_memory}{0.33}
+        \subsubsection{Lock Pages in Memory als Gruppenrichtlinie}
+          Die Richtlinie \enquote{Lock Pages in Memory} wird auf die gleiche Art
+          und Weise als Gruppenrichtlinie angelegt, wie es unter
+          \ref{instant_file_initialization} beschrieben wurde.
+        \begin{literaturinternet}
+          \item \cite{ms190730}
+        \end{literaturinternet}

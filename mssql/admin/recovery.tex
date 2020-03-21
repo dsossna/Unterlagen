@@ -1,0 +1,26 @@
+      \subsection{Crashrecovery}
+        x Auch als Restart Recovery bezeichnet
+        x Kann parallel an mehreren DBs durchgeführt werden
+        x Muss zwei Situationen bereinigen
+          Bestätigte Änderungen sind im Log aber nicht in den Datendateien,
+          Änderungen sind in den Datendateien, aber im Log nicht als bestätigt
+          gekennz.
+
+                    Jedes Virtual Log File besitzt genau einen Status, der ausdrückt,
+          wofür es gebraucht wird:
+          \begin{itemize}
+              \item \textbf{Active}: VLFs die gerade mit Informationen befüllt
+              werden haben diesen Status. Er kann sich über mehrere VLFs
+              erstrecken und beginnt dort, wo sich die \enquote{Minimum LSN}
+              befindet und endet, wo die \enquote{Last Checkpoint LSN} zu
+              finden ist.
+              \item \textbf{Reusable}: Ein VLF mit diesem Status enthält keine
+              für ein Recovery relevanten Informationen mehr und kann deshalb
+              überschrieben werden.
+              \item \textbf{Recoverable}: Enthält ein VLF Informationen die zum
+              Recovery der Datenbank nach einem Instanz-Crash benötigt werden,
+              erhält es den Status \enquote{Recoverable} und darf noch nicht
+              überschrieben werden.
+              \item \textbf{Unused}: Dieser Status wird für VLFs vergeben, die
+              noch nie genutzt wurden
+                    \end{itemize}

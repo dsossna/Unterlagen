@@ -1,0 +1,2182 @@
+  \chapter{Verwalten einer SQL Server Instanz}
+  \chaptertoc{}
+  \cleardoubleevenpage
+
+    \section{Die Windows Dienste des SQL Servers}
+      Der Microsoft SQL Server ist ein Produkt, dass aus einer Vielzahl
+      verschiedener Windowsdienste besteht. Zur Kontrolle und Konfiguration dieser
+      Dienste wird der \enquote{SQL Server Configuration Manager} mitgeliefert.
+      \begin{merke}
+        Die Dienste des SQL Servers sollten immer nur mit Hilfe des SQL Server
+        Configuration Managers verwaltet werden!
+      \end{merke}
+      \bild{Die Windows\-dienste des SQL Server 2014}{sql_server_services}{0.33}
+      \subsection{SQL Server}
+        Der \enquote{SQL Server}-Dienst ist der wichtigste von allen. Von ihm
+        wird die sogenannte \enquote{Database Engine}, der
+        Datenbankdienst, zur Verfügunggestellt. Mit seiner Hilfe werden alle
+        Dateiarten verwaltet, die eine SQL Server Datenbank besitzt, er führt
+        Transakt-SQL-Statements aus, überwacht die Einhaltung der Referentiellen
+        Integrität und bewahrt somit die Konsistenz der Daten.
+        \subsubsection{Namensgebung}
+          Wenn es nur eine SQL Server Instanz auf einem Server gibt, trägt dieser
+          Dienst den Namen \identifier{SQL Server (MSSQLSERVER)}. Im Falle einer
+          benannten Instanz wird der Instanzname mitangegeben: \identifier{SQL Server
+          (MSSQLSERVER\$CRM)}.
+        \subsubsection{Startparameter}
+          Hinter dem SQL Server-Dienst verbirgt sich die ausführbare Datei
+          \oscommand{sqlserv.exe}. Diese befindet sich, wie die meisten
+          \oscommand{.EXE} Dateien im Ordner \oscommand{BINN}. Zu diesem
+          Programm gibt es eine Reihe von Startparametern. Die folgende Tabelle zeigt nur die
+          wichtigsten Parameter. Eine vollständige Auflistung kann der MSDN
+          entnommen werden.
+          \begin{literaturinternet}
+            \item \cite{ms162819}
+          \end{literaturinternet}
+          \begin{center}
+            \begin{small}
+            \tablefirsthead {
+              \hline
+            }
+            \tablehead{
+            }
+            \tabletail {
+              \hline
+            }
+            \tablelasttail {
+              \hline
+            }
+              \begin{supertabular}{|c|p{10cm}|}
+                \textbf{-d} & Gibt den vollständigen Dateipfad zur
+                Master-Datenbank an. Es dürfen sich keine Leerzeichen zwischen
+                dem Paramter und dem Dateipfad befinden. Sollte dieser Parameter
+                nicht angegeben werden, benutzt SQL Server die Angaben aus der
+                Windows-Registry. \\
+                \hline
+                \textbf{-l} & Gibt den vollständigen Dateipfad zur Log-Datei der
+                Master-Datenbank an. Es darf sich kein Leerzeichen zwischen dem
+                Paramter und dem Dateipfad befinden. \\
+                \hline
+                \textbf{-e} & Dieser Parameter gibt den vollständigen Dateipfad
+                für das Fehler\-protokoll der SQL Server-Instanz an. Sollte
+                dieser Parameter nicht angegeben worden sein, so wird für das Fehlerprotokoll der
+                Standardinstanz der Dateiname \oscommand{C:\textbackslash
+                Programme\textbackslash Microsoft SQL Server\textbackslash
+                MSSQL\textbackslash Log\textbackslash Errorlog} benutzt. Bei
+                einer benannten Instanz wird das Protokoll im Ordner \oscommand{C:\textbackslash
+                Programme\textbackslash Microsoft SQL Server\textbackslash
+                MSSQL\$\textit{Instanzname}\textbackslash Log\textbackslash
+                Errorlog} gespeichert.\\
+                \hline
+                \textbf{-f} & Ermöglicht den Start des SQL Servers mit
+                Minimalkonfiguration. Dieser Parameter sollte nur im
+                Fehlerfall zum Einsatz kommen, falls der SQL Server aufgrund
+                einer fehlerhaften Einstellung nicht mehr startet.\\
+                \hline
+                \textbf{-m} & Startet den SQL Server im Einzelbenutzermodus.
+                Verwenden Sie diesen Parameter, wenn es Probleme mit einer der
+                Systemdatenbanken gibt, z. B. die Master-Datenbank muss
+                wiederhergestellt werden.\\
+                \hline
+                \textbf{-T} & Aktiviert die Ablaufverfolgung mittels
+                Trace-Flags. Trace-Flags verändern das Verhalten des SQL
+                Servers und dienen zu sehr unterschiedlichen Zwecken, meist
+                aber zur Gewinnung zusätzlicher Informationen.\\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+        \subsubsection{Startmodus und Recovery-Startmodus auswählen}
+          Für den SQL Server-Dienst werden drei verschiedene Startmodi
+          bereitgestellt.
+          \begin{itemize}
+              \item \textbf{Automatisch}: Der Dienst wird mit dem Betriebssystem
+              gestartet
+              \item \textbf{Manuell}: Der Dienst muss manuell, durch den
+              Administrator, gestartet werden
+              \item \textbf{Deaktiviert}: Der Dienst wird nicht gestartet. Ein
+              manuelles Starten ist ebenfalls nicht möglich.
+          \end{itemize}
+          Nach der Installation der SQL Server-Software ist der
+          SQL Server-Dienst so konfiguriert, dass er automatisch mit dem
+          Betriebssystem startet. Soll der Dienst beispielsweise deaktiviert
+          oder aus irgendeinem Grund nicht automatisch gestartet werden, kann
+          man den Startmodus im SQL Server Configuration Manager verändern.
+\clearpage
+          \bild{Den Start\-modus des SQL Server-Dienstes
+          verändern}{changing_startmode_of_sql_server}{0.33}
+          Sollte der SQL Server-Dienst einmal ausfallen/abstürzen, kann über die
+          Windows Dienstekonsole eine Notfallaktion geplant werden. Auf der
+          Registerkarte \enquote{Wiederherstellung} können für jeden Dienst
+          Aktionen angegeben werden, die dann ausgeführt werden, wenn der Dienst
+          das erste mal bzw. das zweite mal oder ein wiederholtes mal abgestürzt
+          ist.
+          
+          Es empfiehlt sich, die Option \identifier{Erster Fehler} auf den
+          Wert \enquote{Dienst neu starten} einzustellen, so dass der SQL Server
+          Dienst neugestartet wird. Zusätzlich dazu sollten die beiden Optionen
+          \identifier{Fehlerzähler nach n Tagen zurücksetzen} und
+          \identifier{Dienst nach n Minute(n) neu starten} auf den Wert 1
+          eingestellt werden.
+          \bild{Eine Wieder\-herstellungs\-aktion
+          planen}{recovery_startmode}{0.42}
+      \subsection{SQL Server-Agent}
+        Der SQL Server Agent wird durch die Datei \oscommand{SQLAGENT.EXE}
+        bereitgestellt. Er ist ein Dienst, der dem Administrator die
+        Automatisierung von Aufgaben innerhalb der Datenbank erlaubt. Er kann z.
+        B. Backups zeitgesteuert ablaufen lassen, auf Warnungen des SQL Servers
+        reagieren, Nachrichten an den Admin versenden und ähnliches.
+        
+        Dieser Dienst ist immer 1:1 mit einer SQL Server-Instanz verbunden,
+        die ihm mittels des Initialisierungsparameters \oscommand{-i
+        \textit{Instanzname}} mitgeteilt wird. Im Falle einer Standardinstanz
+        trägt er den Namen \identifier{SQL Server-Agent}.
+        Bei einer benannten Instanz ist der Instanzname mit angehängt:
+        \identifier{SQL Server-Agent\$CRM}.
+      \subsection{SQL Server-Browser}
+        Der SQL Server-Browser hat die Aufgabe, nach eingehenden
+        Ressourcenanforderungen von Datenbank-Clients zu lauschen. Er stellt den
+        Clients Informationen zu allen installierten SQL Server- und SQL
+        Server Analysis Services-Instanzen zur Verfügung. Außerdem ermöglicht er
+        die Verbindung zu einer benannten SQL Server-Instanz oder den
+        Verbindungsaufbau mittels der DAC (Dedicated Administrator Connection).
+  
+        Dieser Dienst wurde mit dem SQL Server 2005, als Ersatz für das
+        \enquote{SQL Server Resolution Protocol} eingeführt. Er arbeitet auf Port
+        1434 und wird durch die \oscommand{.EXE}-Datei
+        \oscommand{sqlbrowser.exe} zur Verfügung gestellt.
+      \subsection{SQL Server Integration Services 12.0}
+        Die SQL Server Integration Services stellen eine komplexe Plattform zur
+        Transformation und Integration von Daten dar. Mit Ihnen können Daten
+        kopiert, per FTP heruntergeladen oder per Mail versandt werden. Die
+        Integration Services sind in der Lage, Daten aus einer großen Zahl von
+        Quellen (XML, relationale Datenbanken, Textdateien, Excel-Tabellen,
+        usw.) zu lesen und zu verarbeiten.
+        
+        Der Integration Services-Dienst wird durch die ausführbare Datei
+        \oscommand{MsDtsSrvr.exe} bereitgestellt. Diese benötigt keine
+        Startparameter.
+        \begin{merke}
+          Da dieser Dienst optional ist, sollte er nur bei bedarf installiert
+          werden!
+        \end{merke}
+      \subsection{Der SQL Server VSS Writer}
+        Der SQL Server VSS Writer ermöglicht es Backups von Datendateien mittels
+        des Windows Volume Shadow Copy Service zu erzeugen. Wenn er aktiviert ist,
+        kann jede Backupsoftware, die den VSS-Dienst nutzt, Online-Backups der
+        Datendateien machen. Ist der Dienst deaktiviert, können Online-Backups
+        nur mit Hilfe des SQL Servers selbst durchgeführt werden, da der SQL
+        Server-Dienst eine Sperre auf seine Dateien legt.
+        
+        Sofern Backups nur mit Hilfe des SQL Server \languagemssql{BACKUP}-Kommandos
+        gemacht werden, kann dieser Dienst deaktiviert werden.
+        \begin{merke}
+          Der SQL Server VSS Writer muss immer mit dem lokalen System-Konto
+          betrieben werden! Er ist der einzige SQL Server-Dienst, der nur über
+          die Windows Dienste Konsole konfiguriert werden kann. Er ist nicht im SQL Server
+          Configuration Manager abgebildet.
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{ms175536}
+        \end{literaturinternet}       
+    \section{Das SQL Server Management Studio}
+      Das SQL Server Management Studio (SSMS) ist das zentrale Werkzeug zur
+      Verwaltung des SQL Server 2014. Es wurde mit der Version 2005 des SQL Server
+      eingeführt und ersetzte damals eine Vielzahl von eigenständigen
+      Tools, wie z. B. den Enterprise Manager, den Query Analyzer oder den
+      Analysis-Manager.
+      \bild{Das SQL Server 2014 Management Studio}{ssms_2014}{0.4}
+      \subsection{Login mit dem Management Studio}
+        \subsubsection{Servertypes und Servername}
+          Nach dem Starten des SSMS erscheint zuerst der Dialog
+          \enquote{Verbindung mit Server herstellen}. Dieser dient dazu, sich bei
+          einem der verschiedenen Servertypen zu authentifizieren. Dabei stehen
+          zur Auswahl:
+          \begin{itemize}
+            \item Datenbankmodul
+            \item Analysis Services
+            \item Reporting Services
+            \item Integration Services
+          \end{itemize}
+          \bild{Die verschiedenen Server\-typen im
+          Login-Dialog}{ssms_login_dialog_servertypes}{0.4}
+          Unter \enquote{Servername} muss der DNS-Name des Datenbankservers
+          eingetragen werden, an dem die Anmeldung erfolgen soll. Wenn das Ziel
+          eine benannte Instanz eines SQL Servers ist, muss der Instanzname
+          zusätzlich zum Rechnernamen mit angegeben werden, z. B.
+          \identifier{FEA11-119SRV12\$CRM}.
+        \subsubsection{Authentifizierung}
+          Für die Authentifizierung stehen dem Benutzer zwei verschiedene
+          Verfahren offen:
+          \begin{itemize}
+            \item \textbf{Windows-Authentifizierung}: Diese Form der
+            Authentifizierung wird auch als \enquote{integrierte Sicherheit}
+            bezeichnet und stellt den Standardauthentifizierungsmechanismus dar.
+            Es werden bestimmte Windows Benutzer oder Gruppen im SQL Server als
+            vertrauenswürdig eingetragen, so dass sich diese, dann ohne die
+            Angabe eines Kennwortes, am SQL Server Anmelden dürfen.
+            \item \textbf{SQL Server-Authentifizierung}: Bei diesem Verfahren
+            wird die komplette Authentifizierung der Benutzer durch den SQL
+            Server selbst durchgeführt. Die Sicherheit dieses Verfahrens ist
+            längst nicht so hoch, wie bei der Windows-Authentifizierung.
+          \end{itemize}
+          \bild{Die verschiedenen Authen\-tifizierungs\-typen im
+          Login-Dialog}{ssms_authentification_types}{0.4}
+          \begin{merke}
+            Weitere Informationen zu diesen beiden Authentifizierungsverfahren
+            finden Sie im Kapitel \enquote{Sicherheit im SQL Server}.
+          \end{merke}
+      \subsection{Der Aufbau des SSMS - Objekt-Explorer}
+        Nach einer erfolgreichen Authentifizierung erscheint dann das SQL Server
+        Management Studio in seiner Grundeinstellung.
+        \bild{Das SQL Server Management Studio}{ssms_1}{0.2}
+        Zu Beginn ist nur ein einziger Bereich sichtbar, der
+        \enquote{Objekt-Explorer}. Mit ihm ist es möglich:
+        \begin{itemize}
+            \item Server zu verwalten
+            \item Objekte zu erstellen und zu verändern
+            \item Log-Dateien auszuwerten
+        \end{itemize}
+        und noch vieles Anderes. 
+        
+        Die Daten werden im Objekt-Explorer immer hierarchisch aufgebaut. Zu
+        jeder Instanz, werden die vorhandenen Objekte als Baum angezeigt. Da
+        während des Logins eine Verbindung zu einem Datenbankmodul hergestellt
+        wurde, wird im Objekt-Explorer die betreffende Datenbankinstanz
+        angezeigt.
+        \bild{Die Datenbankinstanz
+        FEA11-119SRV12}{object_explorer_instance}{0.4} 
+        Abhängig davon, mit welcher Art von Dienst man verbunden ist,
+        variiert der Inhalt des Objekt-Explorers.
+        \bild{Zwei unterschiedliche Instanzen im
+        Objekt-Explorer}{object_explorer_two_instances}{0.4}
+        \subsubsection{Wenn der Objekt-Explorer einmal nicht da ist}
+          Sollte der Objekt-Explorer aus irgendeinem Grund nicht zu sehen sein,
+          kann er über das Menü \identifier{Ansicht} -
+          \identifier{Objekt-Explorer} oder durch Drücken der Taste
+          \identifier{F8} angezeigt werden.
+          \bild{Das Menü Ansicht}{ssms_menu_view_objekt-explorer}{0.5}
+        \subsubsection{Verbindung mit einer Instanz herstellen}
+          Wie in \abbildung{object_explorer_two_instances} zu sehen ist, kann
+          der Objekt-Explorer Verbindungen zu mehreren Instanzen aufbauen. Um
+          sich mit einer Instanz zu verbinden, bzw. um eine zusätzliche
+          Verbindung herzustellen, existiert der \enquote{Verbinden}-Button,
+          oben links im Objekt-Explorer.
+          \bild{Die Schaltfläche
+          \enquote{Verbinden}}{objekt_explorer_connect_button}{0.5} Nach der
+          Auswahl des Server-Typs erscheint der Login-Dialog, um den Benutzer zu authentifizieren.
+        \subsubsection{Verbindungen trennen}
+          Wenn die Verbindung zu einem Server Typ getrennt werden soll,
+          geschieht dies über den \enquote{Trennen}-Button im Objekt-Explorer.
+          Der betroffene Server Typ wird aus dem Objekt-Explorer entfernt.
+          \bild{Die Schaltfläche
+          \enquote{Trennen}}{objekt_explorer_disconnect_button}{0.5}
+      \subsection{Der Aufbau des SSMS - Der Abfrageeditor}
+        Eines der wichtigsten Tools im SSMS ist der Abfrageeditor. Er dient zur
+        Eingabe und Ausführung jeglicher T-SQL Statements. Aufgerufen wird er
+        durch einen Klick auf die Schaltfläche \enquote{Neue Abfrage} in der
+        Symbolleiste.
+        \bild{Die Schaltfläche
+        \enquote{Neue Abfrage}}{ssms_neue_abfrage}{0.5}
+        Der Abfrageeditor bietet verschiedene Funktionen an, die dem Anwender
+        das Arbeiten sehr erleichtern können. Dies sind beispielsweise 
+        IntelliSense oder Syntax Highlighting.
+        \bild{IntelliSense und Syntax
+        highlighting}{ssms_abfrage_editor_intellisense}{0.48}
+        Wird eine Abfrage durch das Drücken der Taste \identifier{F5} oder durch
+        das Anklicken der Schaltfläche \identifier{Ausführen} ausgeführt, so
+        werden die Ergebnisse unten, im Fenster \enquote{Ergebnisse}, angezeigt.
+\clearpage
+        \begin{merke}
+          Wenn der Abfrageeditor mehrere SQL-Statements enthält, führt das
+          Drücken der Taste \identifier{F5} dazu, dass alle Statements
+          ausgeführt werden. Soll nur ein einzelnes Statement ausgeführt werden,
+          muss dieses vorher markiert werden.
+        \end{merke}
+        \bild{Die Ergebnissansicht}{ssms_abfrage_editor_ergebnisse}{0.4}
+        Wie in \abbildung{ssms_abfrage_editor_ergebnisse} zu sehen ist, können
+        die Ergebnisse einer Abfrage in unterschiedliche Art und Weise angezeigt
+        werden. Es existieren drei Möglichkeiten:
+        \begin{itemize}
+          \item Anzeige im Gitternetz
+          \item Anzeige als Text
+          \item Abspeichern in einer Textdatei
+        \end{itemize}
+        Gesteuert wird die Anzeigeart durch die drei Schaltflächen in der mitte
+        der Symbolleiste. Vorausgewählt ist die Anzeige im Gitternetz.
+        \bild{IntelliSense und Syntax
+        highlighting}{ssms_abfrage_editor_anzeige_art}{0.5}
+      \subsection{Aufbau des SSMS - Der Projektmappen-Explorer}
+        \subsubsection{Den Projektmappen-Explorer einblenden}
+          Der Projektmappen-Explorer ist ein zusätzliches Tool, welches nicht
+          standardmässig eingeblendet ist. Um ihn anzuzeigen kann der Shortcut
+          \identifier{STRG + ALT + L} oder das Menü \identifier{Ansicht} genutzt
+          werden.
+          \begin{merke}
+            Die Funktion des Projektmappen-Explorers wird, laut Aussage von
+            Microsoft ab dem SQL Server 2014, nicht mehr unterstützt werden!
+          \end{merke}
+        \subsubsection{Aufbau des Projektmappen-Explorers}
+          Der Projektmappen-Explorer untergliedert sich in Projektmappen. Eine
+          Projektmappen stellt einen Kontainer für Projekte dar.
+          Projekte können wiederum SQL-Skripte, Abfragen, Datenbankverbindungen
+          oder Textdateien enthalten.
+          \bild{Der Aufbau des
+          Projekt\-mappen-Explorers}{ssms_projekt_mappen_explorer}{0.5}
+        \subsubsection{Einsatzzweck des Projektmappen-Explorers}
+          Die Verwendung des Projektmappen-Explorers bringt folgende Vorteile
+          mit sich:
+          \begin{itemize}
+            \item Zusamenngehörende Elemente können in einem gemeinsamen
+            Kontainer gespeichert werden (z. B. SQL-Skripte und
+            Datenbankverbindungen)
+            \item Die enthaltenen Dateien werden automatisch in einer sinnvollen
+            Verzeichnisstruktur abgelegt.
+            \item Projektmappen und Projekte können auch in anderen
+            Microsoftprodukten (z. B. Microsoft Visual Studio) verwaltet und
+            bearbeitet werden.
+            \item Projektmappen können in ein Quellcodeverwaltungssystem
+            eingefügt werden (z. B. Microsoft Source Safe)
+          \end{itemize}
+    \section{Die SQL Server Systemdatenbanken}
+      \subsection{Die MASTER-Datenbank}
+        Die Datenbank \identifier{master} ist die wichtigste, innerhalb des SQL
+        Servers. Sie ist der zentrale Speicherort für instanzweite Metadaten,
+        wie z. B. Anmeldeinformationen oder Verbindungsserver. Seit SQL Server
+        2008 werden dort nur noch Metadaten und keine Objekte mehr gespeichert.
+        Systemviews beispielsweise, werden in der Resource-Datenbank
+        \identifier{mssqlsystemresource} abgelegt.
+        \begin{merke}
+          Ohne seine \identifier{master}-Datenbank kann der SQL Server nicht
+          gestartet werden.
+        \end{merke}
+        \subsubsection{Physikalische Eingeschaften}
+          Die \identifier{master}-Datenbank besteht aus zwei Dateien: Der
+          Datendatei \oscommand{master.mdf} (5 MB), die sich in der primären
+          Dateigruppe befindet und der Log-Datei \oscommand{master.ldf} (2 MB).
+          Für beide Dateien ist ein automatisches Wachstum konfiguriert.
+        \subsubsection{Einschränkungen bei der Administration}
+          Für die \identifier{master}-Datenbank gelten verschiedene
+          administrative Einschränkugen. Eine vollständige Liste kann dem
+          Microsoft Technet entnommen werden.
+          \begin{itemize}
+            \item Es können keine Dateien oder Dateigruppen hinzugefügt werden
+            \item Der Datenbankbesitzer kann nicht geändert werden (Besizter
+            ist der Nutzer \identifier{sa})
+            \item Die Datenbank kann nicht gelöscht werden
+            \item Die Datenbank kann nicht umbenannt werden
+            \item Die primäre Dateigruppe kann nur mit einem
+            speziellen Verfahren wiederhergestellt werden.
+          \end{itemize}
+        \subsubsection{Empfehlungen}
+          Da die \identifier{master}-Datenbank eine enorm wichtige Rolle spielt,
+          empfiehlt Microsoft, nach den folgenden Operationen eine
+          Sicherheitskopie dieser Datenbank anzulegen.
+          \begin{itemize}
+            \item Hinzufügen, Ändern oder Löschen von Datenbanken
+            \item Hinzufügen, Ändern oder Löschen von Anmeldungen (Logins)
+            \item Ändern von Server- oder Datenbankkonfigurationswerten
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{ms187837}
+          \end{literaturinternet}
+      \subsection{Die MSDB-Datenbank}
+        Die \identifier{msdb}-Datenbank spielt im Vergleich zur
+        \identifier{master}-Datenbank nur eine untergeordnete Rolle. Sie sammelt
+        Informationen über Datenbank-Backups, die sogenannten
+        \enquote{Sicherungsverläufe}.
+        
+        Das SQL Server Management Studio verwendet diese Informationen dann, um
+        im Falle dessen, dass ein Recovery notwendig wird, dem Nutzer einen
+        Vorschlag für den Recovery-Vorgang unterbreiten zu können.
+        \subsubsection{Physikalische Eingeschaften}
+          Die \identifier{msdb}-Datenbank besteht aus zwei Dateien: Der
+          Datendatei \oscommand{MSDBData.mdf} (17 MB), in der sich die
+          primäre Dateigruppe befindet und der Log-Datei
+          \oscommand{MSDBLog.ldf} (20 MB). Für beide Dateien ist ein
+          automatisches Wachstum konfiguriert.
+        \subsubsection{Einschränkungen bei der Administration}
+          Für die \identifier{msdb}-Datenbank gelten eine Reihe von
+          Einschränkugen bei der Administration. Eine vollständige Liste dieser
+          Einschränkungen kann dem Microsoft Technet entnommen werden. Hier
+          sollen nur die wichtigsten Einschränkungen aufgelistet werden.
+          \begin{itemize}
+            \item Die Datenbank kann nicht gelöscht werden
+            \item Die Datenbank kann nicht umbenannt werden
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{ms187112}
+          \end{literaturinternet} 
+      \subsection{Die MODEL-Datenbank}
+        Die \identifier{model}-Datenbank dient als Vorlage für die Erstellung
+        von neuen Datenbanken. Jedesmal, wenn eine Datenbank erstellt wird, wird
+        zuerst die \identifier{model}-Datenbank kopiert und anschließend werden
+        die vom Benutzer angegebenen Parameter/Datenbankoptionen geändert.
+        \begin{merke}
+          Da der SQL Server die \identifier{tempdb} bei jedem Neustart neu
+          anlegt, muss die \identifier{model}-Datenbank, die auch für die
+          \identifier{tempdb}-Datenbank als Vorlage dient, immer vorhanden sein.
+        \end{merke}
+        Es ist möglich, die \identifier{model}-Datenbank an die
+        eigenen Erfordernisse anzupassen, so dass zukünftig zu erstellende
+        Datenbanken diese Änderungen reflektieren. Beispielsweise
+        könnten direkt verschiedene Objekte, wie z. B. Tabellen oder Benutzer in
+        die \identifier{model}-Datenbank eingefügt werden, wenn diese immer in
+        allen Datenbanken vorhanden sein sollen.
+        \begin{merke}
+          Eine Veränderung an der \identifier{model}-Datenbank hat keine
+          nachträglichen Auswirkungen auf bereits bestehende Datenbanken!
+        \end{merke}
+        \subsubsection{Physikalische Eingeschaften}
+          Die \identifier{model}-Datenbank besteht aus zwei Dateien: Der
+          Datendatei \oscommand{model.mdf} (5 MB) und der Log-Datei
+          \oscommand{modellog.ldf} (1 MB). Für beide Dateien ist ein
+          automatisches Wachstum konfiguriert.
+        \subsubsection{Einschränkungen bei der Administration}
+          Für die \identifier{model}-Datenbank gelten eine Reihe von
+          Einschränkugen bei der Administration. Eine vollständige Liste dieser
+          Einschränkungen kann dem Microsoft Technet entnommen werden. Hier
+          sollen nur die wichtigsten Einschränkungen aufgelistet werden.
+          \begin{itemize}
+            \item Es können keine Dateien oder Dateigruppen hinzugefügt werden
+            \item Der Datenbankbesitzer kann nicht geändert werden (Besizter
+            ist der Nutzer \identifier{dbo})
+            \item Die Datenbank kann nicht gelöscht werden
+            \item Die Datenbank kann nicht umbenannt werden
+            \item Die Primäre Dateigruppe kann nur mit einem
+            speziellen Verfahren recovered werden.
+            \item Erstellen von verschlüsselten Objekten, da der
+            Verschlüsselungsschlüssel an die Datenbank gebunden ist. Somit
+            könnte nur \identifier{model} diese Objekte verwenden.
+          \end{itemize}
+          \begin{literaturinternet}
+            \item \cite{ms186388}
+          \end{literaturinternet}          
+      \subsection{Die TEMP-Datenbank}
+        Die \identifier{tempdb}-Datenbank ist, wie ihr Name schon sagt, ein
+        Ablageort für temporäre Objekte. Sie steht allen Benutzer zur Verfügung
+        und enthält sowohl Benutzer- als auch Systemobjekte. Des Weiteren wird
+        sie seit SQL Server 2005 auch für die Versionierung von Tabellenzeilen
+        herangezogen. Wie bereits erwähnt, wird die
+        \identifier{tempdb}-Datenbank bei jedem Neustart des SQL Server neu
+        erstellt, so dass immer eine bereinigte Version von ihr zur Verfügung
+        steht.
+        \begin{merke}
+          Für die \identifier{tempdb}-Datenbank sind keine Sicherungsvorgänge
+          zulässig, da temporäre Objekte nicht gesichert werden können.
+        \end{merke}
+        \subsubsection{Physikalische Eingeschaften}
+          Die \identifier{tempdb}-Datenbank besteht aus zwei Dateien: Der
+          Datendatei \oscommand{tempdb.mdf} (8 MB) und der Log-Datei
+          \oscommand{templog.ldf} (1 MB). Für beide Dateien ist ein
+          automatisches Wachstum konfiguriert.
+        \subsubsection{Einschränkungen bei Administration und Nutzung}
+          Für die \identifier{tempdb}-Datenbank gelten eine Reihe von
+          Einschränkugen bei der Administration. Eine vollständige Liste dieser
+          Einschränkungen kann dem Microsoft Technet entnommen werden. Hier
+          sollen nur die wichtigsten Einschränkungen aufgelistet werden.
+          \begin{itemize}
+            \item Es können keine Dateien oder Dateigruppen hinzugefügt werden
+            \item Der Datenbankbesitzer kann nicht geändert werden (Besizter
+            ist der Nutzer \identifier{dbo})
+            \item Die Datenbank kann nicht gesichert werden.
+            \item Die Datenbank kann nicht gelöscht werden
+            \item Die Datenbank kann nicht umbenannt werden
+            \item Die primäre Dateigruppe kann nicht, wie bei einer anderen
+            Datenbank wiederhergestellt, werden. Hierfür ist ein spezielles
+            Verfahren notwendig.
+            \item Erstellen von verschlüsselten Objekten, da der
+            Verschlüsselungsschlüssel an die Datenbank gebunden ist. Somit
+            könnte nur \identifier{model} diese Objekte verwenden.
+          \end{itemize}
+          Jeder Benutzer kann nur die temporären Objekte benutzen, die er selbst
+          angelegt hat oder für die er vom System zusätzliche Berechtigungen
+          erhalten hat. Es ist theoretisch sogar möglich, einem Benutzer den
+          Zugriff auf die \identifier{tempdb}-Datenbank zu verweigern, was aber
+          in der Praxis dazu führt, das verschiedene Standardroutinen des SQL
+          Server dann für diesen Benutzer nicht mehr funktionieren.
+          \begin{literaturinternet}
+            \item \cite{ms190768}
+          \end{literaturinternet}          
+      \subsection{Die DISTRIBUTION-Datenbank}
+        Die \identifier{distribution}-Datenbank spielt eine sehr spezielle Rolle
+        unter den Systemdatenbanken. Sie speichert Informationen zu allen arten
+        von Replikationen, in der SQL Server als Verteiler
+        (Distributor) eingebunden ist.
+        
+        Die \identifier{distribution} ist die einzige Systemdatenbank, deren
+        Name frei wählbar ist. \identifier{distribution} ist lediglich der
+        Standardname, sofern nichts Anderes angegeben wird.
+          \begin{literaturinternet}
+            \item \cite{ms183524}
+          \end{literaturinternet}          
+      \subsection{Die MSSQLSYSTEMRESOURCE-Datenbank}
+        Hierbei handelt es sich um eine schreibgeschützte Datenbank, die seit
+        den Tagen von SQL Server 2005 existiert. Sie enthält alle Systemobjekte
+        (Views und Tabellen), die ursprünglich einmal in der
+        \identifier{master}-Datenbank abgelegt waren. Durch diese Auslagerung
+        wurden Updates am SQL Server deutlich vereinfacht, da bei Änderungen an
+        Systemobjekten einfach die komplette
+        \identifier{mssqlsystemresource}-Datenbank ausgetauscht werden kann. Die
+        \identifier{master}-Datenbank bleibt unberührt.
+        
+        Eine weitere Besonderheit der Resourcendatenbank ist, dass ihre
+        Systemobjekte zwar physikalisch in ihr gespeichert sind, dass aber
+        logische Verknüpfungen in alle anderen Datenbanken existieren. Das
+        heißt, das z. B. die View \identifier{sys.databases} in der
+        \identifier{mssqlsystemresource}-Datenbank gespeichert, aber auch in
+        jeder anderen Datenbank verfügbar ist.
+        \begin{merke}
+          Die \identifier{mssqlsystemresource}-Datenbank darf keinerlei
+          Benutzerobjekte enthalten und wird deshalb auch nicht im SSMS
+          angezeigt.
+        \end{merke}
+        \subsubsection{Physikalische Eingeschaften}
+          Die \identifier{mssqlsystemresource}-Datenbank besteht aus zwei
+          Dateien: Aus der Datendatei
+          \oscommand{mssqlsystemresource.mdf}, und aus der
+          Log-Datei \oscommand{mssqlsystemresource.ldf}. Da es pro SQL
+          Server-Instanz nur eine Resourcendatenbank gibt,liegt sie zentral im
+          Verzeichnis \oscommand{C:\textbackslash Programme\textbackslash
+          Microsoft SQL Server\textbackslash
+          MSSQL12.\textit{<instance\_name>}\textbackslash MSSQL\textbackslash
+          Binn}.
+          \begin{literaturinternet}
+            \item \cite{ms190940}
+          \end{literaturinternet}          
+      \subsection{Der Integration Services Katalog - SSISDB}
+        Die SQL Server Integration Services, kurz SSIS, stellen ein mächtiges
+        Werkzeug für sogenannte ETL-Prozesse - die Abkürzung ETL steht 
+        für \enquote{Extract Transform and Load} - dar. SSIS kann als eine Art
+        Programmiersprache betrachtet werden. Die in SSIS erstellten Programme
+        werden als \enquote{Pakete} bezeichnet und nach ihrer Erstellung auf
+        alle SQL Server verteilt, wo sie zum Einsatz kommen sollen.
+        
+        Um die Konfiguration und Bereitstellung von SSIS-Paketen zu
+        vereinfachen, führte der SQL Server 2012 die \identifier{SSISDB}, auch
+        \enquote{SSIS-Katalog} genannt, ein. Mit ihm kommt das \enquote{Project
+        Deployment Model}, eine neue Form der Bereitstellung von
+        SSIS-Programmen. Währen Pakete im Dateisystem abgelegt und durch eine
+        Konfigurationsdatei konfiguriert wurden, werden Projekte im SSIS-Katalog
+        gespeichert und auch deren Konfiguration wird dort abgelegt. Somit
+        entsteht ein zentraler Punkt für SSIS-Programme und deren Konfiguration.
+        
+        Weitere Vorteile der Nutzung des SSIS-Kataloges sind:
+        \begin{itemize}
+            \item Durch die Möglichkeit den Katalog in Ordner zu unterteilen,
+            kann eine Berechtigungsstruktur aufgebaut werden. Projekte
+            werden in Ordnern gespeichert und Benutzer können Rechte auf Ordner
+            erteilt werden.
+            \item Mehrere Pakete können in einem Projekt zusammenarbeiten, was
+            eine bessere Unterteilung großer SSIS-Programme ermöglicht.
+            \item Projekte und Pakete können Parametrisiert werden um Projekt-
+            und Paketeigenschaften während der Ausführung zu verändern.
+            \item \enquote{Serverumgebungen}, \enquote{Servervariablen} und
+            \enquote{Serverumgebungsverweise} ermöglichen es, dass ein Projekt
+            auf den Zustand des SQL Servers, auf dem es ausgeführt wird,
+            reagiert.
+            \item Zentrales Logging vereinfacht das Debugging von Paketen.
+        \end{itemize}
+        \begin{literaturinternet}
+          \item \cite{hh479588}
+        \end{literaturinternet}          
+    \section{Konfigurieren der Servereigenschaften}
+      Die Konfiguration der Eigenschaften einer SQL Server-Instanz ist leider
+      nicht an einer zentralen Stelle möglich. Bisher wurde der SQL Server
+      Configuration Manager genutzt, um z. B. die Eigenschaften der SQL
+      Server-Dienste zu konfigurieren, oder um die Netzwerkeinstellungen
+      der Instanz zu verändern. Es gibt jedoch noch weitere Einstellungen, die
+      nicht über den Configuration Manager geändert werden können, sondern
+      über das SSMS.
+      
+      Alle Einstellungen, die nicht über den Configuration Manager geändert
+      werden können, werden im Management Studio über den
+      \enquote{Servereigenschaften-Dialog} beeinflußt. Geöffnet wird dieser,
+      durch das Kontextmenü der betreffenden SQL Server-Instanz.
+      \bild{Aufruf der
+      Server\-eigen\-schaften einer
+      Instanz}{server_properties_context_menu}{0.6}
+      \subsection{Die Grundeinstellungen}
+        Die Seite \enquote{Allgemein} der Servereigenschaften liefert einen
+        Überblick über verschiedene, unveränderliche Werte der SQL
+        Server-Instanz.
+        \bild{Seite \enquote{Allgemein} der
+        Server\-eigen\-schaften}{server_properties_general}{0.33}
+      \subsection{Konfiguration des Arbeitsspeichers}
+        Auf dieser Seite des Servereigenschaften-Dialogs kann der
+        Arbeitsspeicherkonsum der SQL Server Instanz beeinflußt werden. Die
+        beiden Werte \enquote{Minimaler Serverarbeitsspeicher (in MB)} und
+        \enquote{Maximaler Serverarbeitsspeicher (in MB)} geben an, wie viel
+        Arbeitsspeicher für die Instanz reserviert wurde bzw. wie viel sie
+        höchstens verbrauchen kann.
+        \begin{merke}
+          Wird für die Option \enquote{Minimaler Serverarbeitsspeicher} ein
+          Wert konfiguriert, bedeutet dies nicht, dass sich die Instanz von
+          Anfang an so viel Arbeitsspeicher nimmt. Es handelt sich vielmehr um
+          eine Zusicherung, dass die Instanz so viel Arbeitsspeicher
+          im Minimum bekommen kann.
+        \end{merke}
+        Gemäß einer Empfehlung von Microsoft sollten die beiden Optionen
+        minimaler und maximaler Serverarbeitsspeicher immer den gleichen Wert
+        haben, um Verwaltungsarbeiten im RAM zu minimieren.
+        \begin{merke}
+          Ein Wert von 2147483648 beim \enquote{Maximalen
+          Serverarbeitsspeicher} bedeutet, dass der Instanz keine Obergrenze
+          gesetzt wurde.
+        \end{merke} 
+        \bild{Seite
+        \enquote{Arbeitsspeicher} der
+        Server\-eigen\-schaften}{server_properties_ram}{0.35}
+        Zu beachten sind in diesem Fenster noch der \enquote{Skript}-Button,
+        oben links und die beiden Optionsfelder am unteren Rand.
+        \enquote{Konfigurierte Werte} bedeutet, dass im Fenster die Werte zu
+        sehen sind, die der Nutzer eingestellt hat. Nach einem Umschalten auf
+        \enquote{Ausgeführte Werte} werden die aktuell gültigen Verbrauchswerte
+        der Instanz angezeigt.
+        
+        Mit Hilfe des \enquote{Skript}-Buttons können die im Dialog
+        vorgenommenen Einstellungen in ein SQL-Skript verwandelt werden. Dies
+        ermöglicht das Erlernen der T-SQL-Syntax und auch die Speicherung der
+        Konfiguration einer Instanz in Form eines SQL-Skripts.
+      \subsection{Die Prozessoreinstellungen}
+        Die Seite \enquote{Prozessoren} bietet die Möglichkeit, einer SQL
+        Server Instanz bestimmte Prozessoren zu zuweisen (Prozessoraffinität).
+        Dies kann aus zweierlei Gründen nützlich sein:
+        \begin{itemize}
+            \item Wenn mehrere Instanzen des SQL Server auf einem Computer
+            laufen, kann jede ihre eigenen Prozessoren erhalten, so dass kein
+            \enquote{Streit um die Resourcen} entsteht.
+            \item Weiterhin kann so verhindert werden, dass das Betriebssystem
+            einen Thread von einem Prozessor auf einen anderen verschiebt,
+            um zusätzlicher Aufwand beim Laden und Entladen der Prozessorcaches
+            zu vermeiden.
+        \end{itemize} 
+        \begin{merke}
+          Da in Windows Server 2008 die Threadverwaltung grundlegend geändert
+          wurde, soll die Prozessoraffinitätseinstellung in künftigen SQL
+          Server-Versionen nicht mehr existieren.
+        \end{merke}
+        Da die Einstellung der Prozessoraffinität dynamisch erfolgt, muss der
+        SQL Server nicht neugestartet werden.
+        \begin{literaturinternet}
+          \item \cite{ms187104}
+        \end{literaturinternet}          
+        
+        Eine zweite Einstellungsmöglichkeit ist die \enquote{E/A-Affinität}.
+        Mit dieser Option werden die I/O-Prozesse der Instanz an bestimmte
+        Prozessoren gebunden. Der Hintergrund dieser Option ist, wie auch schon
+        bei der Prozessoraffinität, dass die Verschiebung von Threads durch das
+        Betriebssystem von einem Prozessor auf einen anderen verhindert werden
+        soll. In den meisten Fällen, muss die E/A-Affinität nicht konfiguriert
+        werden, weil durch die Standardeinstellung bereits optimale Ergebnisse
+        erzielt werden.
+        \begin{merke}
+          Laut Microsoft sollten niemals die Prozessoraffinität und die
+          E/A-Affinität auf einem Prozessor gleichzeit aktiviert sein
+        \end{merke}
+        Die Option \enquote{Maximale Arbeitsthreadanzahl} ist für Systeme mit
+        einer sehr hohen Nutzerzahl gedacht. Wird hier ein Wert ungleich 0
+        eingestellt, kann die Anzahl der Workerthreads für die Instanz
+        begrenzt werden, um eine Überlastung des Servers zu verhinden.
+        
+        Wird ein Haken bei \enquote{SQL Server-Priorität höher stufen}
+        gesetzt, behandelt das Betriebssystem die Threads des SQL Server
+        vorrangig, was eine Leistungssteigerung beim SQL Server erzielen kann.
+        Hierdurch kann es jedoch auch geschehen, dass anderen Prozessen so
+        viel Leistung entzogen wird, dass diese kaum mehr arbeitsfähig sind.
+        \bild{Seite
+        \enquote{Prozessoren} der Server\-eigen\-schaften}{server_properties_processor}{0.33}
+        \begin{literaturinternet}
+          \item \cite{ms189629}
+        \end{literaturinternet}          
+      \subsection{Sicherheitseinstellungen}
+        Die Seite \enquote{Sicherheit} besitzt vier verschiedene
+        Optionsgruppen, wobei die Gruppe \enquote{Serverauthentifizierung} die
+        wichtigste ist. Bei der Installation des SQL Servers musste
+        eine Auswahl getroffen werden, welche Form der Authentifizierung von
+        der Instanz zugelassen wird. Es standen die Windows-Authentifizierung
+        und die gemischte Authentifizierung (Windows- + SQL-Authentifizierung)
+        zur Auswahl. Dies kann hier geändert werden.
+        \begin{merke}
+          Das Ändern der Serverauthentifizierung erfordert einen Neustart des
+          SQL Server-Dienstes!
+        \end{merke}
+        Die beiden Optionsgruppen \enquote{Anmeldungsüberwachung} und
+        \enquote{Serverproxykonto} sind nur noch aus Kompatibilitätsgründen
+        vorhanden. Mit dem SQL Server 2008 wurden diese beiden Dinge durch
+        völlig neue Technologien ersetzt.
+        \bild{Seite
+        \enquote{Sicherheit} der
+        Server\-eigen\-schaften}{server_properties_security}{0.33}
+        \begin{literaturinternet}
+          \item \cite{ms188470}
+        \end{literaturinternet}          
+      \subsection{Verbingungseinstellungen}
+        Die erste Option auf dieser Seite, \enquote{Maximale Anzahl von
+        gleichzeitigen Verbindungen}, legt fest, wie viele Benutzer sich mit
+        einer SQL Server-Instanz verbinden können. Sie ist beispielsweise dann
+        interessant, wenn mit Client-Access-Licenses (CAL) gearbeitet wird und
+        die Anzahl der gleichzeitigen Anmeldungen die Anzahl der CALs nicht
+        überschreiten darf.
+        
+        Wird die Option \enquote{Abfragekontrolle verwenden, um Abfragen mit
+        langer Ausführungszeit zu verhinden} aktiviert, überwacht der SQL
+        Server für alle Abfragen die Berechnungsdauer ihres Ausführungsplanes.
+        Übersteigt diese Dauer die hier angegebene Zeitspanne,
+        wird die Berechnung abgebrochen. Besonders kostenintensive Abfragen
+        werden so unterbunden.
+        \begin{merke}
+          Zu beachten ist, dass hier nur die Zeitspanne für das Berechnen der
+          Ergebnismenge gilt, nicht aber der Zeitraum, der für das Anzeigen
+          der Ergebnismenge benötigt wird!
+        \end{merke}
+        
+        Mit den Standardverbindungsoptionen kann festgelegt werden, welche
+        Besonderheiten für alle angemeldeten Clients gelten. Eine vollständige
+        Liste mit den Bedeutungen der einzelnen Optionen, kann in der MSDN,
+        unter dem Link \parencite{ms180124}, nachgeschlagen werden.          
+        \bild{Seite
+        \enquote{Verbindungen} der
+        Server\-eigen\-schaften}{server_properties_connections}{0.33}
+        \begin{literaturinternet}
+          \item \cite{ms180124}
+        \end{literaturinternet}          
+      \subsection{Datenbankeinstellungen}
+        Fast alle Einstellungen auf dieser Seite werden nur selten geändert.
+        Beispielsweise wird der \enquote{Standardfüllfaktor für Indizes}, oft
+        nur für bestimmte Indizes angepasst, da der Standardwert 0 meist
+        optimal ist. Auch die Einstellungen der Gruppe \enquote{Sichern und
+        Wiederherstellen} werden so gut wie nie allgemein geändert, sondern für
+        alle Sicherungen getrennt.
+        \bild{Seite
+        \enquote{Datenbank\-einstellungen} der
+        Server\-eigen\-schaften}{server_properties_databasesettings}{0.33}
+        \begin{literaturinternet}
+          \item \cite{ms178521}
+        \end{literaturinternet}          
+      \subsection{Erweiterte Einstellungen}
+        Unter den erweiterten Einstellungen sind zwei, die eine
+        besondere Erwähnung verdienen. \enquote{Eigenständige Datenbank
+        aktivieren} und \enquote{FILESTREAM-Zugriffsebene}. Beide werden bei den
+        Themen \enquote{Filestream} bzw. \enquote{Partially contained databases}
+        näher besprochen.
+        \bild{Seite
+        \enquote{Erweitert} der
+        Server\-eigen\-schaften}{server_properties_advanced}{0.33}
+        Unter der Rubrik \enquote{Netzwerk} kann die Netzwerkpaketgröße und
+        der Remotetimeout angepasst werden. Eine Veränderung der
+        Netzwerkpaketgröße kann, abhängig von der Art und Weise, wie auf den
+        SQL Server zugegriffen wird, sinnvoll sein. Wenn z. B. hauptsächlich
+        Datenimports getätigt werden, kann eine höhere Paketgröße die
+        Importvorgänge beschleunigen. Bei normalen Lese-/Schreibzugriffen kann
+        sich eine Vergrößerung der Netzwerkpakete aber auch negativ auswirken,
+        da die zu transportierenden Datenmengen viel zu klein, für die großen
+        Pakete sind.
+        \begin{literaturinternet}
+          \item \cite{ms189357}
+        \end{literaturinternet}          
+      \subsection{Berechtigungen}
+        Hier können den existierenden Logins Berechtigungen auf Server-Ebene
+        erteilt werden. Nähere Informationen zu Logins und Berechtigungen
+        werden im Kapitel \enquote{Sicherheit im SQL Server} bereitgestellt.
+        
+        \bild{Seite
+        \enquote{Datenbank\-einstellungen} der
+        Server\-eigen\-schaften}{server_properties_permissions}{0.33}
+    \section{Die gespeicherte Systemprozedur sp\_configure}
+      \identifier{sp\_configure} ist eine standardmässig vorhandene
+      gespeicherte Systemprozedur, die es ermöglicht, die
+      Servereigenschaften mit Hilfe von T-SQL anzuzeigen oder zuverändern.
+      \subsection{Basisoptionen und erweiterte Optionen}
+        SQL Server unterteilt seine Konfigurationsoptionen in zwei Gruppen:
+        \begin{itemize}
+            \item \textbf{Basisparameter}: Hierbei handelt es sich um eine
+            Liste von 18 Parametern, die sehr häufig Änderungen erfahren.
+            \item \textbf{Erweiterte parameter}: Dies sind 52 weitere
+            Parameter, die lauf Empfehlung von Microsoft, nur von erfahrenen
+            Administratoren oder ausgebildeten SQL Server Technikern geändert
+            werden sollten.
+        \end{itemize}
+        Standardmässig zeigt \identifier{\identifier{sp\_configure}igure} nur die
+        Basisparameter an. Um einen erweiterten Parameter zu sehen bzw. zu
+        ändern, muss der SQL Server erst dementsprechend konfiguriert werden.
+      \subsection{Ändern der Konfiguration mit sp\_configure}
+        Die allgemeine Syntax für die Anwendung der Systemprozedur
+        \identifier{sp\_configure} lautet folgendermassen:
+        \begin{lstlisting}[language=ms_sql,caption={Die Syntax von
+sp\_configure},label=admin03_01]
+sp_configure [[@configname = ] 'option_name'] , [@configvalue = ] 'value' ]]
+          \end{lstlisting}
+        \beispiel{admin03_02} zeigt die Benutzung von
+        \languagemssql{sp_configure} zur Änderung der
+        Serverkonfigurationsoption \languagemssql{backup compression default}.
+        \begin{lstlisting}[language=ms_sql,caption={Ein erstes Beispiel zur
+          Nutzung von sp\_configure},label=admin03_02]
+EXEC §sp_configure§ @configname = 'backup compression default', 
+                  @configvalue = '1'
+          \end{lstlisting}
+        Das gleiche Kommando kann auch in einer Kurzform ausgeführt werden,
+        indem man die Parameterbezeichner \languagemssql{@configname} und
+        \languagemssql{@configvalue} nicht mit angibt.
+        \begin{lstlisting}[language=ms_sql,caption={Die Kurzform der Syntax
+          für sp\_configure},label=admin03_03]
+EXEC §sp_configure§ 'backup compression default', '0'
+          \end{lstlisting}
+        Die Tatsache, dass der SQL Server auf diese beiden Statements mit einer
+        Fehlermeldung antwortet zeigt, dass die Konfigurationseinstellung
+        bisher noch nicht wirksam geworden ist.
+        \begin{small}
+          \changefont{pcr}{m}{n}
+          \begin{mssql}
+Die Konfigurationsoption 'backup compression default' wurde von 1 in
+0 geändert. Führen Sie zum Installieren die RECONFIGURE-Anweisung
+aus.
+            \end{mssql}
+        \end{small}
+        Für jede Konfigurationseinstellung gibt es zwei Werte:
+        \begin{itemize}
+            \item Den konfigurierten Wert. Dieser wird mit Hilfe von
+            \identifier{sp\_configure} geändert.
+            \item Den aktiven Wert. Dieser wird entweder durch die Anweisung
+            \languagemssql{RECONFIGURE} oder durch einen Neustart der Instanz
+            geändert.
+        \end{itemize}
+        Um die Änderung aus \beispiel{admin03_02} bzw. \beispiel{admin03_03}
+        zu aktivieren, muss also noch das Kommando \languagemssql{RECONFIGURE}
+        ausgeführt werden.
+        \begin{lstlisting}[language=ms_sql,caption={Ein erstes Beispiel zur
+          Nutzung von sp\_configure},label=admin03_04]
+EXEC §sp_configure§ 'backup compression default', '1'
+RECONFIGURE
+          \end{lstlisting}
+        \begin{merke}
+          Vor der Ausführung des \languagemssql{RECONFIGURE}-Kommandos wird
+          der SQL Server Plan cache komplett geleert, d. h. alle
+          Ausführungspläne gehen verloren und müssen neu erarbeitet werden.
+          Dies kann in einer Produktionsumgebung zu einem massiven
+          Performanceeinbruch führen.
+        \end{merke}
+      \subsection{Basiskonfigurationseinstellungen anzeigen}
+        Wird die Prozedur \identifier{sp\_configure} ohne Parameter
+        aufgerufen, zeigt sie die aktuellen
+        Basisserverkonfigurationseinstellungen an.
+      \begin{lstlisting}[language=ms_sql,caption={sp\_configure zur Anzeige
+        der Basiskonfigurationswerte nutzen},label=admin03_05]
+EXEC §sp_configure§
+          \end{lstlisting}
+        \begin{center}
+          \begin{scriptsize}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{name}} &
+              \multicolumn{1}{l}{\textbf{minimum}} &
+              \multicolumn{1}{l}{\textbf{maximum}} &
+              \multicolumn{1}{l}{\textbf{config\_value}} &
+              \multicolumn{1}{l}{\textbf{run\_value}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}\cmidrule(l){5-5}
+              }
+            \tablehead{
+            }
+            \tabletail {
+            }
+            \tablelasttail {
+            }
+            \begin{mssql}
+              \begin{supertabular}{lllll}
+allow updates                     & 0  & 1          & 0     & 0 \\
+backup compression default        & 0  & 1          & 0     & 0 \\
+clr enabled                       & 0  & 1          & 0     & 0 \\
+contained database authentication & 0  & 1          & 0     & 0 \\
+cross db ownership chaining       & 0  & 1          & 0     & 0 \\
+default language                  & 0  & 9999       & 1     & 1 \\
+filestream access level           & 0  & 2          & 0     & 0 \\
+max text repl size (B)            & -1 & 2147483647 & 65536 & 65536 \\
+nested triggers                   & 0  & 1          & 1     & 1 \\
+remote access                     & 0  & 1          & 1     & 1 \\
+remote admin connections          & 0  & 1          & 0     & 0 \\ 
+remote login timeout (s)          & 0  & 2147483647 & 10    & 10 \\ 
+remote proc trans                 & 0  & 1          & 0     & 0 \\
+remote query timeout (s)          & 0  & 2147483647 & 600   & 600 \\
+server trigger recursion          & 0  & 1          & 1     & 1 \\
+show advanced options             & 0  & 1          & 0     & 0 \\
+user options                      & 0  & 32767      & 0     & 0 \\
+                \end{supertabular}
+            \end{mssql}
+          \end{scriptsize}
+        \end{center}
+      \subsection{Erweiterte Konfigurationseinstellungen abfragen}
+        Um erweiterte Konfigurationsoptionen sehen bzw. ändern zu können, muss
+        die Einstellung \languagemssql{show advanced options} auf den Wert 1
+        eingestellt werden.
+        \begin{lstlisting}[language=ms_sql,caption={Einblenden
+          der erweiterten Konfigurationsoptionen},label=admin03_06]
+EXEC §sp_configure§ 'show advanced options', '1'
+RECONFIGURE
+          \end{lstlisting}
+        Ein Aufruf von \identifier{sp\_configure} zeigt nun eine Liste mit
+        insgesamt 70 Parametern an. Um die erweiterten Parameter wieder
+        auszublenden, muss \languagemssql{show advanced options} auf den Wert
+        0 zurückgesetzt werden.
+        \begin{literaturinternet}
+          \item \cite{ms176069}
+          \item \cite{ms188787}
+        \end{literaturinternet}
+    \section{Datengewinnung - Systemsichten}
+      Jedes Datenbank Management System bietet dem Administrator einen Weg, um
+      Daten über den Server, die Datenbanken, die Benutzer und viele andere
+      Dinge zu sammeln. In Microsoft SQL Server werden dem Admin Views, die
+      sogenannten Systemsichten, zur Verfügung gestellt, um die gewünschten
+      Daten abfragen zu können.
+      \subsection{Katalogsichten}
+        Katalogsichten existieren seit SQL Server 2005 und liefern         
+        Informationen, die aus den verschiedenen Teilen der Software stammen
+        (Caches, Pools, SQLOS, usw.). Durch sie kann sich der
+        Administrator ein umfassendes Bild über die Instanz machen, an der er
+        arbeitet. Microsoft baut mit den Katalogsichten ein \enquote{Data
+        Dictionary}, gemäß dem SQL-Standard, auf. Mit jeder Version von SQL
+        Server wächst die Anzahl der Katalogsichten. Außerdem verändern sich
+        manche Sichten auch von Version zu Version.
+        
+        Die Bezeichner der Katalogsichten sind nach einem einfachen Schema
+        aufgebaut.
+        \begin{itemize}
+            \item Alle Katalogsichten beginnen im Namen mit der Zeichenfolge
+            \identifier{sys.}
+            \item Der Name lässt immer auf die enthaltenen Informationen
+            schließen.
+        \end{itemize}
+        Beispielsweise bietet die Katalogsicht \identifier{sys.databases}
+        Infos zu allen Datenbanken innerhalb einer SQL Server-Instanz. Im
+        Verlauf dieser Unterrichtshilfe werden immer wieder die wichtigsten
+        Katalogsichten zum jeweiligen Thema angezeigt.
+        
+        \begin{merke}
+          Die Katalogsichten sind in der Resourcen-Datenbank gespeichert und
+          werden in alle anderen Datenbanken projiziert.
+        \end{merke}
+        
+        \begin{literaturinternet}
+          \item \cite{ms174365}
+        \end{literaturinternet}
+      \subsection{Informationsschemasichten}
+        Diese Views haben den gleichen Zweck wie Katalogsichten.
+        Sie zeigen wichtige Informationen über die Instanz und ihre Datenbanken
+        an. Der Unterschied zu den Katalogsichten liegt zum einen darin, dass
+        der Aufbau der Informationsschemasichten im ANSI SQL-Standard genau definiert
+        ist, während die Katalogsichten von den Microsoftentwicklern frei
+        gestaltet werden können. Zum anderen sind die
+        Informationsschemasichten nicht in der Resourcen Datenbank
+        gespeichert, sondern in den Datenbanken selbst.
+        
+        \begin{literaturinternet}
+          \item \cite{ms186778}
+        \end{literaturinternet}
+      \subsection{Kompatibilitätssichten}
+        Kompatibilitätssichten dienen, wie ihr Name schon sagt, nur zur
+        Aufrechterhaltung der Kompatibilität. In SQL Server 2000 wurden dem
+        Administrator \enquote{Systemtabellen} zur Verfügung gestellt, deren
+        Aufgabe heute Katalog- und Informationsschemasichten übernommen
+        haben. Damit aber auch noch alte SQL Server 2000-Anwendungen
+        funktionieren, bietet Microsoft mit den Kompatibilitätassichten einen
+        temporären Ausweg.
+        
+        Sie sind daran zu erkennen, dass ihr Name immer mit
+        \identifier{sys} beginnt. Zu jeder Kompatibilitätssicht existiert
+        auch eine aktuelle Katalogsicht, beispielsweise gibt es zur View
+        \identifier{sysusers} die Katalogsicht
+        \identifier{sys.database\_principals}.
+        
+        Um veraltete Anwendungen auf den neuesten Stand zu bringen, bietet
+        Microsoft in der MSDN eine Tabelle zur Zuordnung von Systemtabellen zu
+        Katalogsichten an (\parencite{ms187997}).
+        
+        \begin{literaturinternet}
+          \item \cite{ms187376}
+        \end{literaturinternet}
+      \subsection{Dynamische Verwaltungssichten und -funktionen}
+        Dynamische Verwaltungssichten und -funktionen unterscheiden sich von
+        Katalog- und Informationsschemasichten darin, dass sie ihre Daten
+        nicht aus Tabellen generieren, sonderen dass sie sie direkt aus dem
+        SQL Server oder dem Betriebssystem abgreifen. Aus diesem Grund werden
+        sie als dynamische Views bezeichnet, weil ihre Informationen immer
+        ohne Verzögerung direkt aus dem System abgerufen werden. Mit ihrer
+        Hilfe ist es möglich, interne, versionsspezifische Statusinformationen
+        über den SQL Server abzufragen, um so nach Problemen zu suchen.
+        
+        Die Namenskonvention für dynamsiche Verwaltungssichten und -funktionen
+        sieht vor, dass die Bezeichner immer mit \identifier{sys.dm\_}
+        beginnen. Auch für diese Gruppe von Views werden im Verlauf dieser
+        Unterrichtsunterlage immer wieder die wichtigsten Vertreter zum
+        jeweiligen Thema genannt.
+        
+        \begin{literaturinternet}
+          \item \cite{ms188754}
+        \end{literaturinternet}
+    \section{Datenbanken erstellen}
+      Microsoft SQL Server ermöglicht das Erstellen von Datenbanken auf zwei
+      unterschiedlichen Wegen: Mit Hilfe des SQL Server Management Studios,
+      oder mit dem SQL-Kommando \languagemssql{CREATE DATABASE}. Um eine neue
+      Datenbank anlegen zu können, muss der Benutzer:
+      \begin{itemize}
+        \item ein Mitglied der festen Serverrole \identifier{sysadmin} sein,
+        \item oder eines der beiden Serverrechte \identifier{control} bzw.
+        \identifier{alter},
+        \item oder das Serverrecht \identifier{create database} haben. 
+      \end{itemize}
+      Um eine neue Datenbank anzulegen kopiert SQL Server einfach die
+      \identifier{model}-Datenbank, weshalb die primäre Datendatei der neuen
+      Datenbank mindestens genauso groß sein muss, wie die der
+      \identifier{model}-Datenbank. Insgesamt darf eine Datenbank unter SQL
+      Server 2014 nicht kleiner als 6 MB sein (primäre Datendatei 5 MB + Log
+      Datei 1 MB). Für sekundäre Datendateien wird eine Mindestgröße von 1 MB
+      angenommen, sofern der Benutzer keine Angabe macht.
+      \subsection{Anlegen einer Datenbank mit dem SSMS}
+        \begin{enumerate}
+          \item Klicken Sie im Objekt-Explorer mit der rechten Maustaste
+          auf den Knotenpunkt \enquote{Datenbanken}. Es erscheint ein
+          Kontextmenü. Dort wählen sie den Punkt \enquote{Neue
+          Datenbank\ldots}.
+          \bild{Anlegen einer neuen Datenbank}{create_db_1}{0.33}
+          \item Es öffnet sich der Dialog \enquote{Neue Datenbank}.
+          \bild{Der Dialog \enquote{Neue Datenbank}}{create_db_2}{0.33}
+          Auf der Seite \enquote{Allgemein} dieses Dialogfensters können die
+          folgenden Eigenschaften der neuen Datenbank geändert werden:
+          \begin{itemize}
+            \item \textbf{Datenbankname}: Ein innerhalb der SQL Server-Instanz
+            eindeutiger Bezeichner für die neue Datenbank, der maximal 128
+            Zeichen lang sein darf. Der Datenbankname muss den Regeln für
+            Bezeichner folgen.
+            \item \textbf{Besitzer}: Eine SQL Server-Anmeldung, die als
+            Besitzter der Datenbank eingetragen werden soll. Der
+            Datenbankeigentümer hat innerhalb einer Datenbank uneingeschränkte
+            Rechte. Dieser Wert sollte immer auf \oscommand{<Standard>}
+            belassen werden.
+            \item \textbf{Logischer Name}: Der logische Name Datei ist der
+            Bezeichner, mit dessen Hilfe in T-SQL auf die Datei zugegriffen
+            wird. Er muss innerhalb der Datenbank eindeutig sein und, wie der
+            Datenbankname auch, den Regeln für Bezeichner folgen.
+            \item \textbf{Dateityp}: Gibt an, welche Art von Datei angelegt
+            wird. Dies kann sein: Zeilendaten, Protokoll, Filestream.
+            \item \textbf{Dateigruppe}: Der Bezeichner der Dateigruppe, zu der
+            die angegebene Datendatei gehören soll. Die erste Dateigruppe hat
+            immer den Bezeichner \identifier{primary}. Innerhalb dieser
+            Dateigruppe befindet sich auch immer die primäre Datendatei.
+            \item \textbf{Anfangsgröße}: Legt die anfängliche Größe der Daten-
+            und Log-Dateien fest. Es können die Größenangaben KB, MB, GB und
+            TB benutzt werden. Ohne Größenangabe wird automatsich MB
+            angenommen. Der maximalwert in diesem Feld ist 2.147.483.648.
+            \item \textbf{Automatische Vergrößerung/Maximale Größe}:
+            Ermöglicht die Konfiguration eines automatischen Wachstums für
+            Datendateien (Wachstumsrate und Größenbeschränkung). Die
+            Standardwachstumsrate beträgt bei Datendateien 1 MB und bei
+            Log-Dateien 10 \% (der Prozentsatz bezieht sich immer auf die
+            aktuelle Dateigröße, zum Zeitpunkt des Anwachsens). Die hier
+            angegebene Größe wird immer auf den nächsten, durch 64 KB
+            teilbaren Wert aufgerundet. Durch die Angabe des Wertes 0 wird
+            angezeigt, das kein automatisches Wachstums stattfinden darf. Wird
+            für die Größenbeschränkung kein Wert oder der Wert
+            \languagemssql{UNLIMITED} angegeben, kann die Datei solange
+            wachsen, bis die physikalischen Grenzen des Datenträger, auf dem
+            sie sich befindet, erreicht sind.
+            \item \textbf{Pfad + Dateiname}: Gibt den physikalischen
+            Dateinamen vor. Die Datendatei darf nur auf einem lokalen
+            Datenträger, auf einer SAN oder auf einem iSCSI-Laufwerk abgelegt
+            werden. Der angegebene Pfad muss vor dem Ausführen der
+            \languagemssql{CREATE DATABASE}-Anweisung bereits vorhanden sein.
+            \begin{merke}
+              Es sollte niemals ein komprimiertes Dateisystem für die Ablage von
+              Daten- oder Log-Dateien genutzt werden.
+            \end{merke}
+          \end{itemize}
+          \item Wechseln Sie in das Fenster \enquote{Optionen}.
+          \bild{Verändern der Datenbankoptionen}{create_db_3}{0.33}
+          Hier können alle Datenbankoptionen einzeln gesetzt werden. Viele
+          dieser Einstellungen werden noch im weiteren Verlauf dieser
+          Unterrichtsunterlage behandelt. Für eine vollständige Liste der
+          Datenbankoptionen beachten Sie bitte den nächsten Literaturhinweis.
+          \item Wechseln Sie in das Fenster \enquote{Dateigruppen}. Auf dieser
+          Seite können der Datenbank weitere Dateigruppen hinzugefügt werden.
+          Der Haken in der Spalte \enquote{Standard} sagt aus, dass alle
+          Objekte, wie z. B. Tabellen in einer Datei, dieser Dateigruppe
+          angelegt werden, sofern der Benutzer keine andere Angabe macht.
+          Klicken Sie auf OK. Die Datenbank wird erstellt.
+          \bild{Anpassen der Dateigruppen}{create_db_4}{0.33}
+        \end{enumerate}
+        
+        \begin{literaturinternet}
+          \item \cite{ms187997}
+        \end{literaturinternet}
+        \subsection{Anlegen einer Datenbank mittels T-SQL (CREATE DATABASE)}
+        Da der SQL Server beim Anlegen einer neuen Bank lediglich eine Kopie
+        der \identifier{model}-Datenbank erstellt, ist die einfachste Form des
+        \languagemssql{CREATE DATABASE}-Statements ohne Parameter.
+        \begin{lstlisting}[language=ms_sql,caption={Die
+        einfachste Form von \languagemssql{CREATE DATABASE}},label=admin03_07]
+CREATE DATABASE demo_sql;
+        \end{lstlisting}
+        Der einzige Wert, der zwingend angegeben werden muss, ist der Name der
+        neuen Datenbank. Die primäre Dateigruppe und die Log-Datei sind
+        1:1-Kopien der \identifier{model}-Datenbank. Um die primäre
+        Dateigruppe zu beeinflussen, müssen die beiden Schlüsselwörter
+        \languagemssql{ON PRIMARY}, zusammen mit weiteren Angaben angefügt
+        werden.
+        \begin{lstlisting}[language=ms_sql,caption={Die
+        Dateigruppe PRIMARY verändern},label=admin03_08]
+IF EXISTS (SELECT * FROM sys.databases WHERE name='demo_sql')
+DROP DATABASE demo_sql
+
+CREATE DATABASE demo_sql
+ON PRIMARY (
+  NAME       = 'SALES',
+  FILENAME   = 'D:\data\demo_sql\sales01.mdf',
+  SIZE       = 100MB,
+  MAXSIZE    = 2GB,
+  FILEGROWTH = 100MB
+)
+        \end{lstlisting}
+        In \beispiel{admin03_08} wird eine Datenbank mit zwei Dateien
+        angelegt:
+        \begin{itemize}
+            \item \oscommand{sales01.mdf}: Die primäre Datendatei, mit einer
+            Größe von 100 MB, einer maximalen Größe von 2 GB und einer
+            Wachstumsrate von je 100 MB.
+            \item \oscommand{demo\_sql\_log.ldf}: die Log-Datei der Datenbank.
+            Diese wird mit einer Größe von 25 MB, einer maximalen Größe von 2
+            TB und einer Wachstumsrate von 10 \%. Der Name der Datei wurde aus
+            dem Datenbanknamen und dem suffix \identifier{\_log}
+            zusammengesetzt.
+        \end{itemize}
+        \begin{merke}
+          Wenn kein logischer Name für die Log-Datei angegeben wird, darf der
+          Datenbankname max. 123 Zeichen Lang sein, damit das suffix
+          \identifier{\_log} an den Log-Dateinamen angehängt werden kann.
+        \end{merke}
+        \begin{lstlisting}[language=ms_sql,caption={Eine
+        Dateigruppe mit mehreren Dateien ausstatten und die Log-Datei
+        verändern},label=admin03_09]
+IF EXISTS (SELECT * FROM sys.databases WHERE name='demo_sql')
+DROP DATABASE demo_sql
+
+CREATE DATABASE demo_sql
+ON PRIMARY (
+  NAME       = 'SALES01',
+  FILENAME   = 'D:\data\demo_sql\sales01.mdf',
+  SIZE       = 100MB,
+  MAXSIZE    = 2GB,
+  FILEGROWTH = 100MB
+),
+(
+  NAME       = 'SALES02',
+  FILENAME   = 'D:\data\demo_sql\sales02.ndf',
+  SIZE       = 100MB,
+  MAXSIZE    = 2GB,
+  FILEGROWTH = 100MB
+)
+LOG ON (
+  NAME       = 'DEMO_SQL_LOG',
+  FILENAME   = 'D:\data\demo_sql\demo_sql_log.ldf',
+  SIZE       = 64MB,
+  MAXSIZE    = 1GB,
+  FILEGROWTH = 16MB
+)
+      \end{lstlisting}
+      \beispiel{admin03_09} zeigt eine nochmals erweitere Syntax, mit deren
+      Hilfe die Dateigruppe Primary mit zwei Datenbankdatei,
+      \oscommand{sales01.mdf} und \oscommand{sales02.ndf} ausgestatt wird.
+      Des Weiteren werden die Größe, die Wachstumsrate und die Maximalgröße der
+      Log-Datei verändert.
+      
+      Im nächsten Beispiel wird gezeigt, wie eine Datenbank mit mehreren Dateigruppen
+      erstellt werden kann. Zusätzlich zur immer existenten Gruppe
+      \identifier{primary} wird die Dateigruppe \identifier{CRM} mit einer
+      Datendatei angelegt.
+\clearpage      
+      \begin{lstlisting}[language=ms_sql,caption={Eine
+        Dateigruppe mit mehreren Dateigruppen ausstatten und die Log-Datei
+        verändern},label=admin03_10]
+IF EXISTS (SELECT * FROM sys.databases WHERE name='demo_sql')
+DROP DATABASE demo_sql
+
+CREATE DATABASE demo_sql
+ON PRIMARY (
+  NAME       = 'SALES01',
+  FILENAME   = 'D:\data\demo_sql\sales01.mdf',
+  SIZE       = 100MB,
+  MAXSIZE    = 2GB,
+  FILEGROWTH = 100MB
+),
+(
+  NAME       = 'SALES02',
+  FILENAME   = 'D:\data\demo_sql\sales02.ndf',
+  SIZE       = 100MB,
+  MAXSIZE    = 2GB,
+  FILEGROWTH = 100MB
+),
+FILEGROUP CRM (
+  NAME       = 'CRM01',
+  FILENAME   = 'D:\data\demo_sql\crm01.ndf',
+  SIZE       = 500MB,
+  MAXSIZE    = 16GB,
+  FILEGROWTH = 500MB
+)
+LOG ON (
+  NAME       = 'DEMO_SQL_LOG',
+  FILENAME   = 'D:\data\demo_sql\demo_sql_log.ldf',
+  SIZE       = 64MB,
+  MAXSIZE    = 1GB,
+  FILEGROWTH = 16MB
+)
+      \end{lstlisting}
+      \begin{literaturinternet}
+        \item \cite{ms176061}
+      \end{literaturinternet}
+    \section{Datenbanken bearbeiten und löschen}
+      \subsection{Die Datenbank demo\_grafisch}
+        In den folgenden Abschnitten und Kapiteln wird für alle weiteren
+        Beispiele die SQL Server-Datenbank \identifier{demo\_grafisch} benutzt.
+        Sie hat folgenden Aufbau:
+        \begin{center}
+          \begin{scriptsize}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{>{\centering}p{1.6cm}}{\textbf{Logischer Name}}&
+              \multicolumn{1}{c}{\textbf{Dateityp}} &
+              \multicolumn{1}{>{\centering}p{1.35cm}}{\textbf{Datei- gruppe}}&
+              \multicolumn{1}{>{\centering}p{1.35cm}}{\textbf{Anfangs- größe
+              (MB)}} & 
+              \multicolumn{1}{>{\centering}p{2.5cm}}{\textbf{Automatische
+              Vergrößerung}} & \multicolumn{1}{c}{\textbf{Pfad + Dateiname}} \\
+              \hline
+              }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+            }
+            \begin{supertabular}{llll>{\centering}p{2.5cm}p{3.75cm}}
+              \identifier{primary} & Zeilendaten & \identifier{primary} & 100 & Um 100 MB,
+              auf 2048 MB & \oscommand{D:\textbackslash u01\textbackslash
+              demo\_grafisch\textbackslash data} \oscommand{primary\_01.mdf}
+              \\
+              \hline
+              \identifier{crm} & Zeilendaten & \identifier{crm} & 500 & Um 100 MB, auf 4096
+              MB & \oscommand{D:\textbackslash u01\textbackslash
+              demo\_grafisch\textbackslash data} \oscommand{crm01.ndf} \\
+              \hline
+              \identifier{sales01} & Zeilendaten & \identifier{sales} & 500 &
+              Um 100 MB, auf 4096 MB & \oscommand{D:\textbackslash u01\textbackslash
+              demo\_grafisch\textbackslash data} \oscommand{sales01.ndf} \\
+              \hline
+              \identifier{sales02} & Zeilendaten & \identifier{sales} & 500 &
+              Um 100 MB, auf 4096 MB & \oscommand{D:\textbackslash u01\textbackslash
+              demo\_grafisch\textbackslash data} \oscommand{sales02.ndf} \\
+              \hline
+              \identifier{logfile} & Protokoll & --- & 1 & Um 10 \%, auf
+              2097152 MB & \oscommand{D:\textbackslash u01\textbackslash
+              demo\_grafisch\textbackslash data} \oscommand{demo\_grafisch\_log.ldf} \\
+            \end{supertabular}
+          \end{scriptsize}
+        \end{center}
+      \subsection{Die Eigenschaften einer Datenbank verändern}
+        Die Eigenschaften einer Datenbank können entweder mit Hilfe des SSMS
+        oder durch das SQL-Kommando \languagemssql{ALTER DATABASE} geändert
+        werden. Die folgende Liste zeigt ausschnittsweise, was an einer
+        Datenbank, nach ihrer Erstellung, geändert werden kann.
+        \begin{itemize}
+            \item Ändern des Datenbanknames
+            \item Hinzufügen von Datendateien und Dateigruppen
+            \item Hinzufügen von Log-Dateien
+            \item Ändern von Dateieigenschaften (Größe, Wachstumsrate,
+            Maximalgröße, usw.)
+            \item Verändern der physikalischen Position einer Datendatei auf
+            dem Datenträger
+        \end{itemize}
+        Eine vollständige Liste der Möglichkeiten, die das
+        \languagemssql{ALTER DATABASE}-Kommando bietet ist im Microsoft
+        Developer Network abgebildet.
+        \begin{literaturinternet}
+          \item \cite{ms174269}
+        \end{literaturinternet}
+        \subsubsection{Umbenennen einer Datendatei}  
+          In der \identifier{demo\_grafisch}-Datenbank wurde der
+          logische Name der primären Datendatei \oscommand{primary01.mdf}
+          fälschlicherweise nur mit \identifier{primary}, statt mit
+          \identifier{primary01} angegeben. Dies soll nun geändert werden.
+          \begin{lstlisting}[language=ms_sql,caption={Den
+          logischen Namen einer Datendatei ändern},label=admin03_11]
+ALTER DATABASE demo_grafisch
+MODIFY FILE (
+  NAME    = 'PRIMARY',
+  NEWNAME = 'PRIMARY01')          
+          \end{lstlisting}
+        \subsubsection{Hinzufügen einer neuen Dateigruppe}
+          Die \identifier{demo\_grafisch}-Datenbank benötigt eine neue
+          Dateigruppe namens \identifier{hrm}.
+          \begin{lstlisting}[language=ms_sql,caption={Eine
+          neue Dateigruppe hinzufügen},label=admin03_12]
+ALTER DATABASE demo_grafisch
+ADD FILEGROUP HRM  
+          \end{lstlisting}
+        \subsubsection{Hinzufügen einer Datendatei}
+          Die neu hinzugefügte Dateigruppe \identifier{HRM} benötigt eine
+          Datendatei.
+          \begin{lstlisting}[language=ms_sql,caption={Eine
+          Datendatei einer Dateigruppe hinzufügen},label=admin03_13]
+ALTER DATABASE demo_grafisch
+ADD FILE ( 
+  NAME       = 'HRM01', 
+  FILENAME   = 'D:\data\demo_grafisch\hrm01.ndf', 
+  SIZE       = 500 MB, 
+  MAXSIZE    = 4 GB, 
+  FILEGROWTH = 100 MB ) 
+TO FILEGROUP HRM
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{bb522469}
+          \end{literaturinternet}
+        \subsubsection{Ändern der Standarddateigruppe}
+          Wenn in einer SQL Server Datenbank in neues Objekt (Tabelle, Index,
+          Datendatei, \ldots) angelegt wird, muss es einer Dateigruppe
+          zugeordnet werden. Dies kann auf zwei unterschiedliche Arten
+          geschehen:
+          \begin{itemize}
+              \item Durch manuelle Angabe des Administrators, oder
+              \item ohne Angabe des Administrators mit der Standarddateigruppe.
+          \end{itemize}
+          \begin{merke}
+            Alle Objekte, für die keine Dateigruppenzuordnung gemacht wird,
+            werden automatisch in der Standarddateigruppe angelegt.
+          \end{merke}
+          Standardmässig wird die Dateigruppe \identifier{primary} als
+          Standarddateigruppe angegeben. Dies kann aber nach Belieben geändert
+          werden.
+\clearpage
+          \begin{lstlisting}[language=ms_sql,caption={Ändern
+          der Standarddateigruppe},label=admin03_14]
+IF NOT EXISTS (SELECT name 
+               FROM sys.filegroups 
+               WHERE is_default=1 AND name = N'SALES')
+  ALTER DATABASE demo_grafisch
+  MODIFY FILEGROUP SALES DEFAULT
+GO
+          \end{lstlisting}
+      \subsection{Datenbankoptionen verändern}
+        Datenbankoptionen sind dazu da, um das Verhalten einer Datenbank zu
+        steuern. Der Datenbankadministrator hat mit Hilfe dieser Optionen die
+        Möglichkeit umfangreichen Einfluss auf das Verhalten der Datenbank zu
+        nehmen. Im Folgenden werde einige Beispiele für verschiedene
+        Datenbankoptionen gegeben. Ein vollständige Liste dieser Optionen kann
+        auf der MSDN eingesehen werden.
+        \begin{literaturinternet}
+          \item \cite{bb522682}
+        \end{literaturinternet}
+        \subsubsection{Die Option ANSI\_WARNINGS}
+          Mit der Datenbankoption \identifier{ansi\_warnings} wird entschieden,
+          ob Fehlermeldungen ausgegeben werden, wenn z. B. eine Division durch 0
+          geschieht oder wenn NULL-Werte in einer Aggregatfunktion verarbeitet
+          werden soll.
+          \begin{itemize}
+              \item \textbf{ON}: Es werden ANSI-Standardkonforme Fehlermeldungen
+              ausgegeben.
+              \item \textbf{OFF}: Es werden keine Fehlermeldungen erzeugt und im
+              Falle einer Division durch 0 wird der Wert NULL als Ergebnis der
+              Berechnung angenommen.
+          \end{itemize}
+          \begin{lstlisting}[language=ms_sql,caption={ANSI-Standardkonforme
+            Warnmeldungen ausgeben},label=admin03_15]
+  ALTER DATABASE demo_grafisch
+  SET ANSI_WARNINGS  ON;
+            \end{lstlisting}
+        \subsubsection{Die Option ARITHABORT}
+          Mit dieser Option wird gesteuert was im Falle eines arithmetischen
+          Überlaufs oder einer Division durch 0 geschieht.
+\clearpage
+          \begin{itemize}
+              \item \textbf{ON}: Das SQL-Statement wird abgebrochen.
+              \item \textbf{OFF}: Es wird lediglich eine Warnmeldung ausgegeben,
+              wenn einer der genannten Fehler auftritt. Das Statement wird aber
+              zuendegeführt, so als hätte es keinen Fehler gegeben.
+          \end{itemize}
+          \begin{lstlisting}[language=ms_sql,caption={Arithmetische
+          Überläufe und Divisionen durch 0 kontrollieren},label=admin03_16]
+ALTER DATABASE demo_grafisch 
+SET ARITHABORT ON;
+          \end{lstlisting}
+        \subsubsection{Die Option CONCAT\_NULL\_YIELDS\_NULL}
+          \begin{itemize}
+              \item \textbf{ON}: Eine Verkettungsoperation gibt NULL zurück,
+              wenn einer der beiden Operanden NULL war. Wird z. B. der Text
+              \enquote{Hallo Welt} mit dem Wert NULL verkettet, ist das
+              Ergebnis NULL.
+              \item \textbf{OFF}: Bei Verkettungsoperationen werden NULL-Werte
+              wie leere Zeichenfolgen behandelt. Wird z. B. der Text
+              \enquote{Hallo Welt} mit dem Wert NULL verkettet, ist das Ergebnis
+              \enquote{Hallo Welt}.
+          \end{itemize}
+          \begin{lstlisting}[language=ms_sql,caption={Behandlung
+          von NULL-Werten bei Verkettungsoperationen steuern},label=admin03_17]
+ALTER DATABASE demo_grafisch 
+SET CONCAT_NULL_YIELDS_NULL ON;
+          \end{lstlisting}          
+        \subsubsection{Das Kompatibilitätslevel der Datenbank ändern}        
+          Das Kompatibilitätslevel, gibt an welche Features in einer SQL
+          Server-Datenbank aktiviert werden können bzw. wie sich die Datenbank
+          in verschiedenen Situationen verhält. In einer SQL Server 2014-Instanz
+          können Datenbanken mit dem Kompatibilitätsgrad 90 (SQL Server 2005),
+          100 (SQL Server 2008), 110 (SQL Server 2012) oder 120 (SQL
+          Server 2014) betrieben werden. Dadurch wird die Migration einer
+          älteren Datenbank auf eine neue SQL Server-Version ermöglicht.
+          
+          Durch das ändern des Kompatibilitätslevels ist es auch möglich, dass
+          sich eine in SQL Server 2014 erstellte Datenbank verhält, als währe
+          sie mit dem SQL Server 2005 erstellt worden.
+          \begin{lstlisting}[language=ms_sql,caption={Ändern
+          des Kompatibilitätslevels einer Datenbank},label=admin03_18]
+ALTER DATABASE demo_grafisch2005
+SET COMPATIBILITY_LEVEL 120;
+          \end{lstlisting}
+          In \beispiel{admin03_18} wird die fiktive Datenbank
+          \identifier{demo\_grafisch2005}, die noch mit dem SQL Server 2005
+          erstellt wurde, auf eine SQL Server 2014-Instanz migriert und der
+          Kompatibilitätsgrad wird auf 120 angehoben. Dadurch werden für diese
+          Datenbank alle SQL Server 2014-Features aktiviert.          
+      \subsection{Vergrößern und schrumpfen einer Datenbank}
+        \subsubsection{Automatisches Wachstum und manuelles Vergrößern}
+          Das automatische Wachstum für eine Datendatei wird, wie bereits
+          demonstriert, über die beiden Dateieigenschaften
+          \identifier{filegrowth} und \identifier{maxsize} kontrolliert. Um eine
+          Datendatei manuell zu vergrößern muss deren Eigenschaft
+          \identifier{size} angepasst werden.
+          \begin{lstlisting}[language=ms_sql,caption={Eine
+          Datendatei vergrößern},label=admin03_19]
+ALTER DATABASE demo_grafisch
+MODIFY FILE (
+  NAME = 'SALES01'
+  SIZE = 2 GB
+)
+          \end{lstlisting}
+        \subsubsection{Schrumpfen der gesamten Datenbank}
+          Das Schrumpfen einer ganzen Datenbank kann auf einfachem Wege über das
+          SSMS erledigt werden. Über das Kontextmenü der Datenbank kann unter
+          \identifier{tasks}, \identifier{verkleinern}, \identifier{datenbank}
+          der Assistent zum Verkleinern der Datenbank erreicht werden.
+          \bild{Den Assistenten zum Schrum\-pfen der
+          Datenbank starten}{shrink_database_1}{0.33}
+          Nach einem Klick auf \identifier{datenbank} öffnet sich der Assistent.
+          \bild{Der Assistenten zum Schrum\-pfen der
+          Datenbank}{shrink_database_2}{0.33}
+          Der Assistent zeigt an, wie viel Speicherplatz die Datenbank aktuell
+          belegt und wie viel er davon freigeben könnte. Zusätzlich zum reinen
+          Verkleinern kann die Datenbank auch noch reorganisiert
+          (defragmentiert) werden.
+          \begin{merke}
+            Das Schrumpfen einer ganzen Datenbank kann ein sehr zeitaufwendiger
+            und resourcenintensiver Vorgang sein. Es wird daher dringend davon
+            abgerate eine Datenbank zu Schrumpfen, es sei denn, dass diese
+            Aktion unumgänglich ist.
+          \end{merke}
+        \subsubsection{Schrumpfen einzelner Datendateien}
+          SQL Server bietet auch die Möglichkeit nur einzelne Daten- und
+          Protokolldateien zu schrumpfen. Der hierfür zuständige Assistent wird,
+          genau wie beim Schrumpfen der Datenbank auch, über das Kontextmenü der Datenbank
+          erreicht (\identifier{tasks}, \identifier{verkleinern},
+          \identifier{datendatei}).
+          \bild{Der Assistenten zum Schrum\-pfen einzelner
+          Datendateien}{shrink_datafile}{0.33}
+          Für den Vorgang des Schrumpfens stehen drei verschiedene Optionen zur
+          Verfügung:
+          \begin{itemize}
+              \item \textbf{Nicht verwendeten Speicherplatz freigeben}: Es wird
+              nur der Speicherplatz am Ende der Datendatei freigegeben. Es
+              werden keine Speicherseiten umsortiert.
+              \item \textbf{Seiten vor dem Freigeben von nicht verwendetem
+              Speicherplatz neu organisieren}: Vor dem Verkleinern werden zuerst
+              alle Speicherseiten reorganisiert, so dass der Speicherplatz am
+              Ende der Datendatei möglichst frei wird. Anschließend wird
+              verkleinert. Wird zusätzlich die Option \identifier{Datei
+              verkleiner auf} aktiviert versucht SQL Server die Datendatei auf
+              den angegebenen Wert zu verkleiner, sofern dies möglich ist.
+              \item \textbf{Datei durch Migrieren ihrer Daten zu anderen Dateien
+              in der gleichen Dateigruppe leeren}: Es werden alle Speicherseiten
+              in andere Datendateien der gleichen Dateigruppe verschoben, so
+              dass die betroffene Datendatei am Ende leer ist.
+          \end{itemize}
+          \begin{merke}
+            Da beim Verkleineren einer Datendatei die Speicherseiten am Ende der
+            Datei nach vorne umsortiert werden, entsteht als Resultat eine hohe
+            Indexfragmentierung. Dies kann die Performance von Abfragen massiv
+            beeinflussen.
+          \end{merke}
+      \subsection{Datenbanken trennen und einhängen}
+      \label{movedatabases}
+        \subsubsection{Datenbanken trennen}
+          Dem Administrator ist es möglich, eine Datenbank vollständig von einer
+          SQL Server-Instanz zu trennen. Dies kann in verschiedenen Situationen
+          nützlich sein, z. B. wenn eine Datenbank auf einen anderen Server
+          umgezogen werden soll oder wenn eine Datenbank aus der Nutzung genommen
+          werden muss, um sie außerhalb der Arbeitszeiten dann zu löschen.
+          Außerdem ist es möglich, eine zugroß gewordene Log-Datei durch das
+          Trennen und Anfügen der Datenbank auf ihre Mindestgröße zu schrumpfen.
+          
+          Beim Vorgang des trennens werden alle Spuren der Datenbank aus der
+          Instanz gelöscht. Einzig ein Sicherungsverlauf in der
+          \identifier{msdb}-Datenbank kann übrig bleiben. Das Trennen der
+          Datenbank von ihrer Instanz geschieht mit der Stored Procedure
+          \identifier{sp\_detach\_db}, die für Ihre Arbeit nur den Datenbanknamen
+          als Parameter benötigt.
+          
+          Um eine Datenbank trennen zu können, müssen die folgenden
+          Voraussetzungen gegeben sein:
+          \begin{itemize}
+            \item Die Datenbank darf aktuell nicht in Verwendung sein,
+            \item sie darf keiner Replikation angehören,
+            \item es darf keinen Database-Snapshot geben,
+            \item sie darf nicht gespiegelt sein,
+            \item es darf keine Systemdatenbank sein,
+            \item die Datenbank darf nicht \enquote{fehlerverdächtig} sein.
+          \end{itemize}
+          \begin{lstlisting}[language=ms_sql,caption={Trennen der Datenbank
+          demo\_grafisch},label=admin03_20]
+USE master
+GO
+
+EXEC §sp_detach_db§ @dbname = 'demo_grafisch'
+GO
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{ms188031}
+          \end{literaturinternet}
+        \subsubsection{Datenbanken anfügen}
+          Zum Anfügen einer Datenbank existieren in SQL Server 2014 zwei
+          Möglichkeiten:
+          \begin{itemize}
+              \item Die Stored Procedure \identifier{sp\_attach\_db}. Sie
+              gilt als veraltet und sollte daher nicht mehr benutzt werden.
+              Außerdem hat sie ein Limit von max. 16 Datendateien, aus denen die
+              anzuhängende Datenbank bestehen darf.
+              \item Das SQL-Kommando \languagemssql{CREATE DATABASE ... FOR
+              ATTACH} existiert seit SQL Server 2008 und stellt nun die von
+              Microsoft empfohlene Methode zum Anfügen von Datenbanken dar. Für
+              diese Kommando existieren keinerlei Einschränkungen bezüglich der
+              Datenbankgröße oder der Anzahl der Datendateien einer Datenbank.
+          \end{itemize}
+          In \beispiel{admin03_21} wird die Datenbank
+          \identifier{demo\_grafisch} wieder an ihre SQL Server-Instanz
+          angefügt. Obwohl sie aus vier Datendateien und einer Log-Datei
+          besteht, genügt es, Pfad + Dateiname der primären Datendatei
+          anzugeben, da dort die Metadaten der anderen Dateien gespeichert sind.
+          \begin{merke}
+            Sollte beim Trennen der Datenbank deren Log-Datei beschädigt oder
+            nicht vorhanden gewesen sein, wird beim wiederanfügen der Datebank
+            eine neue Log-Datei erstellt. Voraussetzung ist, dass die Datenbank
+            nicht schreibgeschützt ist.
+          \end{merke}
+\clearpage
+          \begin{lstlisting}[language=ms_sql,caption={Anfügen der Datenbank
+          demo\_grafisch},label=admin03_21]
+USE master 
+GO
+
+CREATE DATABASE demo_grafisch
+ON 
+(
+ FILENAME = 'D:\data\demo_grafisch\primary01.mdf'
+)
+FOR ATTACH
+GO
+          \end{lstlisting}
+          \begin{merke}
+            Um eine Datenbank anfügen zu können, müssen alle \oscommand{.mdf}-
+            und \oscommand{.ndf}-Dateien verfügbar sein!
+          \end{merke}
+          Für schreibgeschützte Datenbanken gilt eine Besonderheit: Da die
+          \oscommand{.mdf}-Datendatei nicht geändert werden kann, kann auch
+          keine Log-Datei neu erstellt werden. In so einem Fall muss zwingend
+          die bestehende Log-Datei mit angegeben werden.
+          \begin{lstlisting}[language=ms_sql,caption={Anfügen der
+          schreibgeschützten Datenbank demo\_grafisch},label=admin03_22]
+USE master 
+GO
+
+CREATE DATABASE demo_grafisch
+ON 
+(
+  FILENAME = 'D:\data\demo_grafisch\primary01.mdf'
+),
+(
+  FILENAME = 'D:\data\demo_grafisch\demo_grafisch_log.ldf'
+)
+FOR ATTACH
+GO
+          \end{lstlisting}    
+          \begin{literaturinternet}
+            \item \cite{ms190794}
+          \end{literaturinternet}
+      \subsection{Systemdatenbanken verschieben}
+        \subsubsection{Verschieben Systemdatenbanken}
+          Da Systemdatenbanken nicht einfach ausgehängt werden können, muss ein
+          anderes Verfahren angewandt werden, wenn sie verschoben werden
+          sollen.
+          \begin{merke}
+            Die einzige Systemdatenbank die nicht verschoben werden kann ist die
+            \identifier{resource}-Datenbank.
+          \end{merke}
+          Der folgende Ablauf zeigt das Verschieben einer Systemdatenbank am
+          Beispiel der \identifier{msdb}-Datenbank.
+          \begin{enumerate}
+              \item Führen Sie ein \languagemssql{ALTER DATABASE ... MODIFY
+              FILE}-Kommando für alle Daten- und Log-Dateien der
+              \identifier{msdb}-Datenbank durch und geben Sie dabei den neuen
+              Pfad der Dateien an.
+              \item Stop Sie die SQL Server-Instanz
+              \item Verschieben Sie die Dateien an ihren neuen Speicherort
+              \item Starten Sie die SQL Server-Instanz erneut
+              \item Benutzen Sie die Katalogsicht
+              \identifier{sys.master\_files}, um das Ergebnis des
+              Verschiebevorganges zu verifizieren.
+                \begin{lstlisting}[language=ms_sql,caption={Abfragen
+                der View \identifier{sys.master\_files}},label=admin03_23]
+USE
+master GO
+
+SELECT name AS logical_name, physical_name AS new_location, 
+       state_desc as state
+FROM   sys.master_files
+WHERE  database_id = DB_ID('msdb')
+                \end{lstlisting}
+          \end{enumerate}
+        \subsubsection{Verschieben der Master-Datenbank}
+          Die Technik zum Verschieben der \identifier{master}-Datenbank ähnelt
+          dem Verschiebevorgang für alle anderen Systemdatenbanken sehr. Der
+          wesentliche Unterschied besteht darin, dass nach dem Herunterfahren
+          des SQL Server-Dienstes der Startparameter \oscommand{-d} geändert
+          werden muss, so dass dieser den neuen Speicherort der Datenbank
+          angibt.
+          \begin{enumerate}
+              \item Stoppen Sie die SQL Server-Instanz im Database Configuration
+              Assistant.
+              \item Verschieben Sie die Dateien an ihren neuen Speicherort
+              \item Ändern Sie den Startparameter \oscommand{-d} so, dass er den
+              neuen Speicherort der \identifier{master}-Datenbank angibt.
+              \item Starten Sie die SQL Server-Instanz neu.
+              \item Benutzen Sie Katalogsicht die
+              \identifier{sys.master\_files}, um das Ergebnis des
+              Verschiebevorganges zu verifizieren.
+                \begin{lstlisting}[language=ms_sql,caption={Abfragen
+                der View \identifier{sys.master\_files}},label=admin03_24]
+USE
+master GO
+
+SELECT name AS logical_name, physical_name AS new_location, 
+       state_desc as state
+FROM   sys.master_files
+WHERE  database_id = DB_ID('master')
+                \end{lstlisting}
+          \end{enumerate}
+      \subsection{Datenbanken löschen}
+        \subsubsection{Löschen von Datenbanken und Snapshots}
+          SQL Server bietet das SQL-Kommando \languagemssql{DROP DATABASE} zum
+          löschen von Datenbanken und Datenbank-Snapshots an. Es kann sowohl Datenbanken
+          von einem Microsoft SQL Server, als auch von einem Windows Azure SQL-Datenbank-Server löschen.
+          Die Syntax dieses Kommandos ist sehr einfach, wie \beispiel{admin03_23}
+          zeigt.
+          \begin{lstlisting}[language=ms_sql,caption={Löschen der
+            Datenbank demo\_sql},label=admin03_25]
+USE master 
+GO
+
+DROP DATABASE demo_sql
+GO 
+          \end{lstlisting}
+          Lediglich der Datenbankname ist zum Löschen der Datenbank notwendig. Der
+          Status einer Datenbank (offline, fehlerverdächtig, \ldots) ist für das
+          Löschen nicht von Bedeutung. Soll eine einmal gelöschte Datenbank wieder
+          an den Server angefügt werden, kann dies nur mittels eines Backups
+          geschehen.
+          \begin{merke}
+            Das Löschen einer Datenbank beeinhaltet auch das löschen der
+            Daten- und der Log-Dateien. Befindet sich eine Datenbank im Status
+            \identifier{offline}, werden deren Datendateien nicht automatisch
+            gelöscht.
+          \end{merke}
+          Als Alternative zum \languagemssql{DROP DATABASE}-Kommando kann auch
+          das SSMS genutzt werden. Der Dialog zum Löschen der Datenbank ist über
+          das Kontextmenü verfügbar.
+          \bild{Löschen einer Datebank im SSMS}{drop_database_ssms}{0.3}          
+          \subsubsection{Einschränkungen beim Löschen
+          von Datenbanken und Snapshots}
+          \begin{itemize}
+              \item Es können keine Systemdatenbanken gelöscht werden.
+              \item Datenbanken, zu denen Benutzerverbindungen bestehen, können
+              nicht gelöscht werden.
+              \item Vor dem Löschen einer Datenbank müssen zuerst alle
+              Datenbank-Snapshots gelöscht werden.
+              \item Das \languagemssql{DROP DATABASE}-Kommando muss im
+              Autocommitt-Modus ausgeführt werden.
+          \end{itemize}
+    \section{Der DBCC - Database Console Commands}
+      Hinter der Abkürzung DBCC - Database Console Commands - verbergen sich
+      eine ganze Reihe von Befehlen zu unterschiedlichesten Zwecken.
+      Ursprünglich waren diese Kommandos für die Softwaretesting Teams von
+      Microsoft geschaffen worden. Mit ihrer Hilfe sollte es möglich
+      werden, Aufgaben wie Informationsgewinnung, Debbuging und Testing auf
+      einfache und schnelle Art und Weise zu erledigen. Nach und nach wuchs
+      der Vorrat an DBCC-Kommandos und einige wurden sogar dokumentiert und
+      für die Nutzung durch SQL Server-Administratoren freigegeben. Viele
+      DBCC-Befehl sind aber auch heute noch undokumentiert und somit nur der
+      Benutzung durch das Supportpersonal von Microsoft vorbehalten.
+      \begin{merke}
+        Die Benutzung eines undokumentierten DBCC-Kommandos durch einen SQL
+        Server-Administrator kann, im Falle eines Fehlers, den Verlust der
+        Supportberechtigung zur Folge haben. Deshalb sollten niemals
+        undokumentierte DBCC-Kommandos auf einer operativen Datenbank
+        eingesetzt werden.
+      \end{merke}
+      In SQL Server 2014 sind aktuell 30 verschiedene DBCC-Befehle
+      dokumentiert. Diese können in vier verschiedene Kategorien unterteilt
+      werden:
+      \begin{itemize}
+          \item Verwaltung
+          \item Information
+          \item Überprüfung
+          \item Sonstiges
+      \end{itemize}
+      Alle DBCC-Kommandos nehmen Argumente entgegen, mit deren Hilfe das
+      Verhalten des jeweiligen Kommandos gesteuert werden kann.
+      \subsection{Überprüfungskommandos}
+        DBCC kennt  insgesamt sieben dokumentierte Anweisungen zur Überprüfung
+        der Datenbank bzw. von Teilen der Datenbank. Hier eine kleine Auswahl.
+        \begin{itemize}
+          \item \languagemssql{CHECKDB}: Dient zur Überprüfung der
+          physischen und der logischen Integrität aller Objekte innerhalb
+          einer Datenbank.
+          \item \languagemssql{CHECKFILEGROUP}: Verhält sich genauso, wie
+          \languagemssql{?DBCC? CHECKDB}, nur dass die Auswirkungen auf eine
+          Dateigruppe begrenzt bleiben.
+          \item \languagemssql{CHECKTABLE}: Wie \languagemssql{?DBCC?
+          CHECKDB}, aber nur für die angegebene Tabelle.
+          \item \languagemssql{CHECKCONSTRAINTS}: Überprüft die
+          Funktionsfähigkeit eines bestimmten oder aller Constraints auf
+          einer Tabelle.
+        \end{itemize}
+        \subsubsection{Konsistenzprüfung der Datenbank mit CHECKDB}
+          Mit dem Kommando \languagemssql{CHECKDB} wird die Datenkonsistenz aller
+          Objekte einer Datenbank geprüft. Um dieses Kommando ausführen zu können,
+          muss der Benutzer entweder Mitglied in der festen Serverrolle
+          \identifier{sysadmin} oder der festen Datenbankrolle
+          \identifier{db\_owner} sein.
+          
+          Der Befehl \languagemssql{DBCHECK} ist ein \enquote{Sammelkommando}, was
+          bedeutet, dass bei seiner Ausführung im Hintergrund 
+          \begin{itemize}
+            \item \languagemssql{?DBCC? CHECKCATALOG},
+            \item \languagemssql{?DBCC? CHECKALLOC} und
+            \item \languagemssql{?DBCC? CHECKTABLE}
+          \end{itemize}
+          ausgeführt werden. Zusätzlich zu diesen drei Anweisungen werden noch
+          einige weitere Prüfungen durchgeführt, die hier unerwähnt bleiben.
+          
+          Die Syntax zur Ausführung von \languagemssql{?DBCC? CHECKDB} lautet
+          (es handelt sich hier um ein auf das Wesentliche gekürztes
+          Syntaxdiagram:
+          \begin{lstlisting}[language=ebnf, caption={Die Syntax zu CHECKDB},
+          label=admin03_28]
+DBCC CHECKDB
+  [
+    [ |(| database_name / database_id / 0 
+      [ , ( §REPAIR_ALLOW_DATA_LOSS§ / §REPAIR_FAST§ / §REPAIR_REBUILD§ ) ]
+    |)| ]
+    [ WITH
+      {
+        [ §ESTIMATEONLY§ ]
+        [ , ( §PHYSICAL_ONLY§ / §DATA_PURITY§ ) ]
+      }
+    ]
+  ]        
+          \end{lstlisting}
+          \begin{itemize}
+            \item \textbf{database\_name / database\_id / 0}: Legt anhand des
+            Namens oder einer ID fest, welche Datenbank geprüft werden soll.
+            Wird dieses Argument nicht angegeben, oder wird eine 0 angegeben, so
+            wird die aktuelle Datenbank überprüft.
+            \item \textbf{ESTIMATEONLY}: Es wird berechnet, wie viel
+            Speicherplatz in der \identifier{tempdb} benötigt wird, um das
+            \languagemssql{CHECKDB}-Kommando auszuführen. Durch die Angabe
+            dieses Parameters wird die Anweisung nicht ausgeführt.
+            \item \textbf{PHYSICAL\_ONLY}: Es werden nur physikalische
+            Überprüfungen durchgeführt. Dadurch wird die Ausführungszeit des
+            DBCC-Kommandos deutlich reduziert.
+            \item \textbf{DATA\_PURITY}: Kommando zur Durchführung einer
+            logischen Konsistenzprüfung von Spaltenwerten, z. B. ob ein
+            Datums-/Zeitwert innerhalb der gültigen Grenzen einer Spalte vom Typ
+            \identifier{datetime} liegt. Diese Option wird nur benötigt, wenn
+            eine Datenbank mit einer früheren Version von SQL Server erstellt
+            wurde. Nach einmaliger und erfolgreicher Ausführung dieser Prüfung
+            muss diese Option nie wieder angegeben werden.
+          \end{itemize}
+          \begin{lstlisting}[language=ms_sql,caption={Physikalische
+          Konsistenzprüfung einer Datenbank mit DBCC},label=admin03_29]
+  USE [master]
+  GO
+  
+  ?DBCC? CHECKDB ('demo_grafisch') WITH PHYSICAL_ONLY
+  
+  Von CHECKDB wurden 0 Zuordnungsfehler und 0 Konsistenzfehler 
+  in der demo_grafisch-Datenbank gefunden.
+  Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen
+  ausgegeben hat, wenden Sie sich an den Systemadministrator.
+          \end{lstlisting}         
+          \begin{lstlisting}[language=ms_sql,caption={Konsistenzprüfung einer
+          Datenbank mit DBCC},label=admin03_30]
+  USE [master]
+  GO
+  
+  ?DBCC? CHECKDB ('demo_grafisch')
+  
+  DBCC-Ergebnis für 'demo_grafisch'.
+  Service Broker-Meldung 9675, Status 1: Analysierte Nachrichtentypen: 14.
+  Service Broker-Meldung 9676, Status 1: Analysierte Dienstverträge: 6.
+  Service Broker-Meldung 9667, Status 1: Analysierte Dienste: 3.
+  Service Broker-Meldung 9668, Status 1: Analysierte Dienstwarteschlangen: 3.
+  Service Broker-Meldung 9669, Status 1: Analysierte Konversationsendpunkte: 0.
+  Service Broker-Meldung 9674, Status 1: Analysierte Konversationsgruppen: 0.
+  Service Broker-Meldung 9670, Status 1: Analysierte Remotedienstbindungen: 0.
+  Service Broker-Meldung 9605, Status 1: Analysierte Konversationsprioritäten:0.
+  DBCC-Ergebnis für 'sys.sysrscols'.
+  Es sind 1086 Zeilen auf 14 Seiten für das sys.sysrscols-Objekt vorhanden.
+  DBCC-Ergebnis für 'sys.sysrowsets'.
+  Es sind 146 Zeilen auf 3 Seiten für das sys.sysrowsets-Objekt vorhanden.
+  DBCC-Ergebnis für 'sys.sysclones'.
+  Es sind 0 Zeilen auf 0 Seiten für das sys.sysclones-Objekt vorhanden.
+  DBCC-Ergebnis für 'sys.sysallocunits'.
+  Es sind 169 Zeilen auf 2 Seiten für das sys.sysallocunits-Objekt vorhanden.
+  
+  Ergebnis gekürzt!!!
+  
+  Von CHECKDB wurden 0 Zuordnungsfehler und 0 Konsistenzfehler 
+  in der demo_grafisch-Datenbank gefunden.
+  Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen
+  ausgegeben hat, wenden Sie sich an den Systemadministrator.
+          \end{lstlisting}
+          Zur Ausführung von \languagemssql{CHECKDB} wird ein interner Database
+          Snapshot angelegt, eine Art \enquote{Abbildung der Datenbank},
+          vergleichbar mit den Snapshots im Bereich von Virtualisierungssoftware.
+          Dies ermöglicht es dem SQL Server die Konsistanzprüfung der Datenbank so
+          durchzuführen, dass die arbeitenden Benutzer nicht gestört werden.
+          
+          Sollte \languagemssql{CHECKDB} Fehler in der Datenbank gefunden haben,
+          wird eine Logdatei mit dem Namen \oscommand{SQLDUMPnnnn.txt} im
+          \oscommand{LOG}-Verzeichnis angelegt.
+        
+          Die drei im Sytaxdiagram angegebenen Optionen
+          \languagemssql{REPAIR_ALLOW_DATA_LOSS}, \languagemssql{REPAIR_FAST} und
+          \languagemssql{REPAIR_REBUILD} bieten die Möglichkeit gefundene Fehler
+          direkt zu reparieren. Es wird jedoch empfohlen, diese Optionen als das
+          allerletzte Mittel zu betrachten, da durch ihre Anwendung weitere
+          Dateninkonsistenzen entstehen könnten. Statt dessen sollten Backups
+          genutzt werden, um fehlerhafte Datendateien wiederherzustellen.
+        \subsubsection{Konsistenzprüfung einer einzelnen Dateigruppe}
+          Die beiden Anweisungen \languagemssql{CHECKDB} und
+          \languagemssql{CHECKFILEGROUP} sind sich in ihrer Anwendung sehr
+          ähnlich. Der wesentliche Unterschied besteht darin, dass
+          \languagemssql{CHECKDB} alle Dateigruppen, inklusive der Protokolldatei,
+          einer Datenbank prüft, während mit \languagemssql{CHECKFILEGROUP}
+          gezielt eine Dateigruppe geprüft werden kann. Die Syntax for
+          \languagemssql{CHECKFILEGROUP} lautet wie folgt:
+          \begin{lstlisting}[language=ebnf, caption={Die Syntax zu
+          CHECKFILEGROUP}, label=admin03_31]
+DBCC §CHECKFILEGROUP§
+  [
+    [ |(| filegroup_name / filegroup_id / 0 
+    |)| ]
+    [ §WITH§
+      {
+        [ §ESTIMATEONLY§ ]
+        [ , §PHYSICAL_ONLY§ ]
+      }
+    ]
+  ]        
+        \end{lstlisting}
+        \begin{lstlisting}[language=ms_sql,caption={Konsistenzprüfung
+        einer Dateigruppe},label=admin03_32] 
+USE [demo_grafisch]
+GO
+
+?DBCC? CHECKFILEGROUP ('CRM')
+
+DBCC-Ergebnis für 'demo_grafisch'.
+DBCC-Ergebnis für 'sys.sysrscols'.
+Es sind 1086 Zeilen auf 14 Seiten für das sys.sysrscols-Objekt vorhanden.
+DBCC-Ergebnis für 'sys.sysrowsets'.
+Es sind 146 Zeilen auf 3 Seiten für das sys.sysrowsets-Objekt vorhanden.
+
+Ergebnis gekürzt!!!
+
+Von CHECKFILEGROUP wurden 0 Zuordnungsfehler und 0 Konsistenzfehler
+in der demo_grafisch-Datenbank gefunden.
+Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen 
+ausgegeben hat, wenden Sie sich an den Systemadministrator.
+        \end{lstlisting}
+        \subsubsection{Einzelne Tabellen überprüfen}
+          Mit \languagemssql{?DBCC? CHECKTABLE} kann eine einzelne Tabelle auf
+          ihre Konsistenz geprüft werden. Die Syntax dieser Anweisung gleicht
+          der Syntax der \languagemssql{CHECKDB}-Abweisung.
+\clearpage
+          \begin{lstlisting}[language=ms_sql,caption={Konsistenzprüfung
+          einer einzelnen Tabelle},label=admin03_33] 
+USE [demo_grafisch]
+GO
+
+?DBCC? CHECKTABLE ('demo_table')
+
+DBCC-Ergebnis für 'demo_grafisch.demo_table'.
+Es sind 99 Zeilen auf 2 Seiten für das demo_table-Objekt vorhanden.
+Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen 
+ausgegeben hat, wenden Sie sich an den Systemadministrator.
+          \end{lstlisting}         
+          \begin{literaturinternet}
+            \item \cite{ms176061}
+            \item \cite{ms187332}
+            \item \cite{ms174338}
+            \item \cite{ms189496}
+          \end{literaturinternet}
+      \subsection{Verwaltungsanweisungen}
+        Mit den DBCC-Befehlen aus der Gruppe der Verwaltungsanweisungen lassen
+        sich administrative Tätigkeiten an Datenbank, Datendatei, Tabellen und
+        Indizes durchführen. Die zwei wichtigsten Vertreter dieser Gruppe
+        sind:
+        \begin{itemize}
+          \item \languagemssql{SHRINKDATABASE}: Dient zur Reduzierung der
+          Größe von Daten- und Protokolldateien einer Datenbank.
+          \item \languagemssql{SHRINKFILE}: Reduziert die Größe einer Daten-
+          oder Protokolldatei.
+       \end{itemize}
+        \subsubsection{Schrumpfen der Datenbank}
+          Mit dem Kommando \languagemssql{SHRINKDATABASE} kann der Administrator
+          sowohl die Daten- als auch die Protokolldateien einer Datenbank
+          schrumpfen.
+          \begin{lstlisting}[language=ebnf, caption={Die Syntax zu
+          SHRINKDATABASE}, label=admin03_34]
+DBCC §SHRINKDATABASE§
+    |(| database_name / database_id / 0 
+      [ , target_percent ]
+      [ , ( §NOTRUNCATE§ / §TRUNCATEONLY§ ) ]
+    |)| 
+          \end{lstlisting}
+          \begin{itemize}
+            \item \textbf{database\_name / database\_id / 0}: Legt anhand des
+            Namens oder einer ID fest, welche Datenbank geschrumpft werden soll.
+            Wird dieses Argument nicht angegeben, oder wird eine 0 angegeben, so
+            wird die aktuelle Datenbank bearbeitet.  
+            \item \textbf{NOTRUNCATE}: \enquote{Defragmentiert} den
+            Inhalt Datendatei, verkleinert die Datei aber nicht. Es wird
+            kein Speicherplatz freigegeben, es werden lediglich Datenseite
+            verschoben. Ein mit der Option \languagemssql{NOTRUNCATE}
+            ausgeführtes \languagemssql{?DBCC? SHRINKDATABASE} wirkt sich nur
+            auf die Datendateien, aber nicht auf die Protokolldatei aus.
+            \item \textbf{TRUNCATEONLY}: Der gesamte am Ende einer
+            Datei befindliche Speicherplatz wird freigegeben/abgeschnitten.
+            Dateien werden somit verkleinert, es findet jedoch keine
+            Defragmentierung innerhalb einer Datei statt. Durch die Angabe des
+            Schlüsselwortes \languagemssql{TRUNCATEONLY} wirkt sich
+            \languagemssql{?DBCC? SHRINKDATABASE} auch auf die Protokolldatei aus.
+            \item \textbf{target\_percent}: Menge an freiem Speicher, der nach
+            der Verkleinerung in der Datendatei enthalten sein soll.
+          \end{itemize}
+          \begin{merke}
+            Die Größe einer Datenbank kann niemals unter ihre Mindestgröße
+            geschrumpft werden. Wurde eine Datenbank z. B. mit einer Größe von 10
+            MB angelegt, kann sie niemals kleiner als 10 MB werden.
+          \end{merke}
+          Das Schrumpfen einer Datenbank ist ein Online-Vorgang, d. h. während die
+          Datenbank verkleinert wird können andere Nutzer ihre Arbeit fortsetzen.
+          
+          Weiterhin ist zu beachten, das ein Ausführen von
+          \languagemssql{SHRINKDATABASE} ohne die Angabe von
+          \languagemssql{TRUNCATEONLY} und \languagemssql{NOTRUNCATE} wie folgt
+          abgearbeitet wird:
+          \begin{enumerate}
+            \item Ausführen von \languagemssql{SHRINKDATABASE} mit
+            \languagemssql{NOTRUNCATE}
+            \item Ausführen von \languagemssql{SHRINKDATABASE} mit
+            \languagemssql{TRUNCATEONLY}
+          \end{enumerate}
+          \begin{merke}
+            Werden die beiden Optionen \languagemssql{TRUNCATEONLY} und
+            \languagemssql{NOTRUNCATE} weggelassen, wird das
+            \languagemssql{SHRINKDATABASE}-Kommando zweimal ausgeführt. Zuerst mit
+            \languagemssql{NOTRUNCATE} und anschließend mit
+            \languagemssql{TRUNCATEONLY}
+          \end{merke}        
+          \begin{lstlisting}[language=ms_sql,caption={Verkleinern einer
+          Datenbank},label=admin03_35]
+USE [master] GO
+
+?DBCC? SHRINKDATABASE(demo_grafisch, 25)
+          \end{lstlisting}          
+          Das \languagemssql{SHRINKDATABASE}-Kommando aus \beispiel{admin03_35}
+          verkleinert die Datendateien der Datenbank \identifier{demo\_grafisch}
+          um 25 \%. Wenn z. B. eine Datendatei eine Größe von 20 MB und
+          eine Mindestgröße von 15 MB hat und mit 8 MB Daten gefüllt ist, wird SQL
+          Server die Datei auf 16 MB verkleinern. Somit verbleiben 8 MB freier
+          Speichern in der Datendatei. Soll diese Datei jedoch um 30 \%
+          geschrumpft werden, kann SQL Server dies nicht, da sonst die
+          Mindestgröße unterschritten werden würde.
+        
+          Bei Protokolldateien verhält sich \languagemssql{SHRINKDATABASE} etwas
+          anders. Dort gibt \languagemssql{target\_percent} die Endgröße des
+          Transaktionsprotokolls an und nicht die Menge an freiem Speicher nach
+          dem Verkleinern. Besitzt die Datenbank mehr als nur eine Protokolldatei,
+          wird für jede einzelne Protokolldatei deren Zielgröße berechnet, damit
+          das Protokoll insgesamt auf die von \languagemssql{target\_percent}
+          definierte Größe kommt.
+          \begin{merke}
+            Eine Protokolldatei kann immer nur bis zu den Grenzen eines Virtual
+            Log Files verkleinert werden. Insgesamt sollte es vermieden werden
+            eine Protokolldatei zu schrumpfen, da sich dadurch die Anzahl und die
+            Größe der VLFs in ihr verändert.
+          \end{merke}
+          Am effektivsten ist ein Verkleinerungsvorgang, wenn erst kürzlich viel
+          Speicherplatz in einer Datenbank (z. B. durch \languagemssql{DELETE}
+          oder \languagemssql{TRUNCATE}) freigegeben wurde. Da das Schrumpfen
+          einer Datenbank aber auch entscheidende negative Aspekte besitzt sollte
+          es vermieden werden eine Datenbank wiederholt zu schrumpfen.
+        \subsubsection{Schrumpfen einer Datendatei}
+          Wenn gezielt einzelne Daten- oder Protokolldateien geschrumpft werden
+          sollen kann dies mit der \languagemssql{SHRINKFILE}-Anweisung des DBCC
+          geschehen. Sie unterscheidet sich in einigen Punkten von der
+          \languagemssql{SHRINKDATABASE}-Anweisung:
+          \begin{itemize}
+              \item Die Zielgröße wird bei \languagemssql{SHRINKFILE} in MB und
+              nicht in Prozent angegeben.
+              \item Die Zielgröße bezeichnet bei \languagemssql{SHRINKFILE} die
+              Tatsächliche Größe der Datei nach dem Verkleinerungsvorgang.
+              \item Mit \languagemssql{SHRINKFILE} kann die Mindestgröße einer
+              Datendatei verringert werden.
+          \end{itemize}
+          Die Syntax für \languagemssql{SHRINKFILE} lautet:
+          \begin{lstlisting}[language=ebnf, caption={Die Syntax zu
+          SHRINKFILE}, label=admin03_36]
+DBCC §SHRINKFILE§
+    |(| { file_name / file_id }
+        { , [ §EMPTYFILE§ ] / 
+            [ 
+              [ , target_size ] [ , { §NOTRUNCATE§ / §TRUNCATEONLY§ } ]
+            ]
+         }
+    |)|
+          \end{lstlisting}
+          \begin{itemize}
+            \item \textbf{file\_name / file\_id}: Legt anhand des
+            Namens oder einer ID fest, welche Datei geschrumpft werden soll.
+            \item \textbf{EMPTYFILE}: Verlagert, wenn möglich, alle Daten aus
+            einer Datendatei in die anderen, um eine Datendatei komplett
+            freizugeben.
+            \item \textbf{NOTRUNCATE}: \enquote{Defragmentiert} den
+            Inhalt einer Datendatei, verkleinert die Datei aber nicht. Es wird
+            kein Speicherplatz freigegeben, es werden lediglich Datenseite
+            verschoben. Ein mit der Option \languagemssql{NOTRUNCATE}
+            ausgeführtes \languagemssql{?DBCC? SHRINKDATABASE} wirkt sich nur
+            auf die Datendateien, aber nicht auf die Protokolldatei aus.
+            \item \textbf{TRUNCATEONLY}: Der gesamte, am Ende einer
+            Datei befindliche Speicherplatz wird freigegeben/abgeschnitten.
+            Dateien werden somit verkleinert, es findet jedoch keine
+            Defragmentierung innerhalb einer Datei statt. Durch die Angabe
+            des Schlüsselwortes \languagemssql{TRUNCATEONLY} wirkt sich
+            \languagemssql{?DBCC? SHRINKDATABASE} auch auf die Protokolldatei aus.
+            \item \textbf{target\_size}: Größe der Datei nach der
+            Verkleinerung.
+          \end{itemize}
+          Das Schrumpfen einer Protokolldatei verläuft analog zum Kommando
+          \languagemssql{SHRINKDATABASE}.
+          \begin{literaturinternet}
+            \item \cite{ms190488}
+            \item \cite{ms189493}
+          \end{literaturinternet}
+      \subsection{Informationsanweisungen}
+        In der Gruppe der Informationsanweisungen gibt es eine Reihe von
+        DBCC-Kommandos die Informationen zu offenen Transaktionen, Auslastung
+        des Transaktionsprotokolls, SQL Statistiken uvm. anzeigen.
+        \subsubsection{Die Auslastung des Transaktionsprotokolls anzeigen}
+          Mit dem Kommando \languagemssql{SQLPERF} kann zu jeder Datenbank einer
+          SQL Server-Instanz die Auslastung ihrer Protokolldatei angezeigt
+          werden.
+          \begin{lstlisting}[language=ebnf, caption={Die Syntax zu
+          SQLPERF}, label=admin03_37]
+DBCC SQLPERF |(| §LOGSPACE§ |)|
+          \end{lstlisting}
+          \begin{lstlisting}[language=ms_sql,caption={Anzeigen
+          der Protokolldateiauslastung},label=admin03_36]
+USE [master]
+GO
+
+?DBCC? (LOGSPACE)
+          \end{lstlisting}
+\clearpage
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{l}{\textbf{Database Name}} &
+                \multicolumn{1}{l}{\textbf{Log Size (MB)}} & 
+                \multicolumn{1}{l}{\textbf{Log Space Used (\%)}} & 
+                \multicolumn{1}{l}{\textbf{Status}} \\
+                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+                }
+              \tablehead{}
+              \tabletail {
+              }
+              \tablelasttail {
+              }
+              \begin{mssql}
+                \begin{supertabular}{llll}
+                  master             & 2,242188  & 34,77787 & 0 \\
+                  tempdb             & 0,7421875 & 48,09211 & 0 \\
+                  model              & 0,9921875 & 34,49803 & 0 \\
+                  msdb               & 19,61719  & 11,27788 & 0 \\
+                  ReportServer       & 6,867188  & 22,7318  & 0 \\
+                  ReportServerTempDB & 1,039063  & 60,05639 & 0 \\
+                  demo\_grafisch     & 5,554688  & 48,31224 & 0 \\
+                \end{supertabular}
+              \end{mssql}
+            \end{small}
+          \end{center}
+          \begin{literaturinternet}
+            \item \cite{ms189768}
+          \end{literaturinternet}
+      \subsection{Sonstige Anweisungen}
+        Mit dem Kommando \languagemssql{?DBCC? HELP} kann zu jedem anderen
+        DBCC-Befehl eine Syntax-Hilfe abgerufen werden.
+        \begin{lstlisting}[language=ms_sql, caption={DBCC Help - Syntaxhilfe
+        aufrufen}, label=admin03_38] 
+DBCC HELP |(| 'CHECKDB' |)|
+
+dbcc CHECKDB 
+(
+    { 'database_name' | database_id | 0 }
+    [ , NOINDEX
+    | { REPAIR_ALLOW_DATA_LOSS
+    | REPAIR_FAST
+    | REPAIR_REBUILD
+    } ]
+)
+    [ WITH
+        {
+            [ ALL_ERRORMSGS ]
+            [ , [ NO_INFOMSGS ] ]
+            [ , [ TABLOCK ] ]
+            [ , [ ESTIMATEONLY ] ]
+            [ , [ PHYSICAL_ONLY ] ]
+            [ , [ DATA_PURITY ] ]
+            [ , [ EXTENDED_LOGICAL_CHECKS  ] ]
+        }
+    ]
+
+Die DBCC-Ausführung wurde abgeschlossen. 
+Falls DBCC Fehlermeldungen ausgegeben hat, wenden Sie sich 
+an den Systemadministrator.
+          \end{lstlisting}          
+          Mit dem Befehl aus \beispiel{admin03_38} wird eine Syntax-Hilfe zum
+          Kommando \languagemssql{?DBCC? CHECKDB} angezeigt.
+          \begin{literaturinternet}
+            \item \cite{ms176040}
+          \end{literaturinternet}

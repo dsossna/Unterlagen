@@ -1,0 +1,154 @@
+\clubpenalty = 10000
+\widowpenalty = 10000 \displaywidowpenalty = 10000
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Graphicx options
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Graphicx guide, p. 12
+\graphicspath{{../img/}}
+\DeclareGraphicsExtensions{.png,.pdf}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% KOMAScript options
+%%%
+%%% https://komascript.de/~mkohm/scrguide.pdf
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% KOMAScript guide, p. 34
+\KOMAoptions{BCOR=5mm}
+
+% KOMAScript guide, p. 37
+\KOMAoptions{DIV=14}
+
+% KOMAScript guide, p. 41
+\KOMAoptions{twoside=true}
+
+% KOMAScript guide, p. 45s
+\KOMAoptions{headheight=1cm}
+\KOMAoptions{footheight=0.8cm}
+
+% KOMAScript guide, p. 49 
+\KOMAoptions{paper=A4}
+
+% KOMAScript guide, p. 50 + table on page 52
+\KOMAoptions{pagesize=pdftex}
+
+% KOMAScript guide, p. 60
+\KOMAoptions{fontsize=11pt}
+% Typearea must be recalculated after setting the font size
+\recalctypearea
+
+% KOMAScript guide, p. 67
+\KOMAoptions{titlepage=firstiscover}
+
+% Set the font definition of the subtitle element in conformity with the title
+% element 
+\setkomafont{subtitle}{%
+    \usekomafont{title}
+    \huge
+}
+
+% Set the font definition of the author element in conformity with the title
+% element 
+\setkomafont{author}{%
+    \usekomafont{title}
+    \Large
+}
+
+% Set the font definition of the date element in conformity with the title
+% element 
+\setkomafont{date}{%
+    \usekomafont{title}
+    \Large
+}
+
+% Set the font definition for all captions
+\setkomafont{caption}{%
+    \raggedright\scriptsize
+}
+
+\renewcommand*{\figureformat}{Abb.~\thefigure\autodot}
+
+% KOMAScript guide, p. 75 + p. 76 (Tabelle 3.59
+\KOMAoptions{toc=bibliography}
+
+% KOMAScript guide, p. 81
+\KOMAoptions{parskip=full*}
+
+% KOMAScript guide, p. 84
+\KOMAoptions{headsepline=true}
+\KOMAoptions{footsepline=true}
+\pagestyle{scrheadings}
+
+% KOMAScript guide, p. 101 + p. 102 (Tabelle 3.13)
+\KOMAoptions{headings=normal}
+
+% KOMAScript guide, p. 87
+\renewcommand*{\partpagestyle}{empty}
+\renewcommand*{\chapterpagestyle}{scrheadings}
+
+% KOMAScript guide, p. 410
+\DeclareTOCStyleEntry[numwidth=1.5em]{tocline}{part}
+\DeclareTOCStyleEntries[dynnumwidth]{tocline}{part,chapter,section,subsection,subsubsection,paragraph,subparagraph}
+
+% KOMAScript guide, p. 412
+\makeatletter
+  \renewcommand{\@pnumwidth}{2.5em}
+\makeatother
+% User defined colors
+\definecolor{lightblue}{rgb}{0,0.7,0.7}
+\definecolor{darkblue}{rgb}{0,0,.5}
+\definecolor{lightgreen}{rgb}{0,0.5,0.25}
+\definecolor{darkgreen}{rgb}{0,0.75,0.5}
+\definecolor{lightyellow}{rgb}{1,1,0.4}
+\definecolor{darkmagenta}{rgb}{0.611,0.223,0.611}
+\definecolor{mediumblue}{rgb}{0.243,0.447,0.764}
+\definecolor{mediumred}{rgb}{0.6156,0.1529,0.1529}
+
+% Neue Laengen definieren
+\newlength{\bildhoehe}
+\newlength{\vertspace}
+
+\hyphenation{Ab-fra-ge An-wei-sung-en Arbeits-speicher Be-in-hal-ten Be-in-hal-tet Be-zieh-ungs-typ-rich-tung-en Da-ten Da-ten-bank Da-ten-bank-archi-tek-tur Feh-ler Hin-ter-grund Pro-zess Ser-ver Nut-zer State-ment State-ments Spei-cher-struk-tur-en SQL-State-ments Zu-griffs-rech-te}
+
+% Definitionen fuer hyperref
+\hypersetup{colorlinks=true, breaklinks=true, linkcolor=darkblue, menucolor=darkblue, urlcolor=darkblue}
+
+% Den boolschen Wert false als Kommando \FALSE darstellen
+\newboolean{boolfalse}
+\setboolean{boolfalse}{false}
+\newcommand{\FALSE}{\boolean{boolfalse}}
+
+% Den boolschen Wert true als Kommando \TRUE darstellen
+\newboolean{booltrue}
+\setboolean{booltrue}{true}
+\newcommand{\TRUE}{\boolean{booltrue}}
+
+%\boolparam wird benötigt, da #1 im END-Bereich nicht verfügbar
+\newcommand*{\boolparam}{}
+
+\input{../config/plsql_sprachdefinition}
+\input{../config/oracle_sql_sprachdefinition}
+\input{../config/ms_sql_sprachdefinition}
+\input{../config/sqlplus_sprachdefinition}
+\input{../config/rman_sprachdefinition}
+\input{../config/configfile_sprachdefinition}
+\input{../config/expdp_impdp_sprachdefinition}
+\input{../config/powershell_sprachdefinition}
+\input{../config/terminal_sprachdefinition}
+\input{../config/ebnf_sprachdefinition}
+
+\lstset {
+        tabsize=2,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        extendedchars=true,
+        formfeed=\newpage,
+        frame=single,
+        escapechar=\&
+        }
+
+\overfullrule=1mm

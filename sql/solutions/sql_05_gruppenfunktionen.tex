@@ -1,0 +1,127 @@
+\clearpage
+    \section{Lösungen - Gruppenfunktionen}
+      \begin{enumerate}
+        \item Schreiben Sie eine Abfrage, die das höchste und das niedrigste
+        Gehalt, das Durchschnittsgehalt und die Summe aller Gehälter ausgibt.
+        Beschriften Sie die Spalten, wie es in der Lösung zu sehen ist.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT MAX(Gehalt) AS "Maximum", MIN(Gehalt) AS "Minimum",
+       AVG(Gehalt) AS "Mittelwert", SUM(Gehalt) AS "Summe"
+FROM   Mitarbeiter;
+        \end{lstlisting}
+        \item Verändern Sie die Abfrage aus der vorangegangenen Abfrage so,
+        dass die Informationen für jede einzelne Bankfiliale angezeigt werden.
+        Sortieren sie das Ergebnis nach den IDs der Bankfilialen.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   Bankfiliale_ID, MAX(Gehalt) AS "Maximum", MIN(Gehalt) AS "Minimum",
+         AVG(Gehalt) AS "Mittelwert", SUM(Gehalt) AS "Summme"
+FROM     Mitarbeiter
+WHERE    Bankfiliale_ID IS NOT NULL
+GROUP BY Bankfiliale_ID
+ORDER BY Bankfiliale_ID;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die die Anzahl der Mitarbeiter pro
+        Bankfiliale ausgibt. Beschriften Sie die Spalten so, wie es in der
+        Lösung zu sehen ist und sortieren Sie das Ergebnis nach den IDs der
+        Filialen.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   Bankfiliale_ID, COUNT(*) AS "Anzahl"
+FROM     Mitarbeiter
+GROUP BY Bankfiliale_ID
+ORDER BY Bankfiliale_ID;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die für jeden Ort einzeln, die
+        Anzahl der Eigenkunden zählt, die vor dem \enquote{01.01.1990} 18
+        Jahre alt waren.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   Ort, COUNT(*) AS "Anzahl"
+FROM     Eigenkunde ek
+WHERE    Geburtsdatum + INTERVAL '18' YEAR <
+           TO_DATE('01.01.1990', 'DD.MM.YYYY')
+GROUP BY Ort;
+        \end{lstlisting}
+\clearpage
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT   Ort, COUNT(*) AS "Anzahl"
+FROM     Eigenkunde ek
+WHERE    DATEADD(YEAR, 18, Geburtsdatum) <
+           CONVERT(DATETIME2, '01.01.1990', 104)
+GROUP BY Ort;
+        \end{lstlisting}
+        \item Erstellen Sie eine Abfrage, die für alle bankeigenen Kunden die
+        Buchungen auf deren Girokonten zählt. Interessant sind nur Buchungen
+        mit einem Betrag \textgreater 10.000 EUR. Sortieren Sie die Abfrage nach
+        der Spalte \identifier{Konto\_ID}.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   ekk.Konto_ID, COUNT(*)
+FROM     EigenkundeKonto ekk INNER JOIN Girokonto g
+           ON (ekk.Konto_ID = g.Konto_ID)
+         INNER JOIN Buchung b ON (g.Konto_ID = b.Konto_ID)
+WHERE    b.Betrag > 10000
+GROUP BY ekk.Konto_ID
+ORDER BY 1;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die alle Mitarbeiter anzeigt, deren
+        Gehalt um mehr als 4.000 EUR niedriger ist, als das Durchschnittsgehalt
+        aller Mitarbeiter.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   m.Vorname, m.Nachname, m.Gehalt
+FROM     Mitarbeiter m, Mitarbeiter v
+GROUP BY m.Mitarbeiter_ID, m.Vorname, m.Nachname, m.Gehalt
+HAVING   (m.Gehalt + 4000) < AVG(v.Gehalt);
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die alle Mitarbeiter anzeigt, die
+        höchstens zwei Jahre älter sind, als der jüngste Mitarbeiter in
+        deren Bankfiliale! \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   m.Vorname, m.Nachname, m.Geburtsdatum,
+			   MAX(a.Geburtsdatum) AS "JUENGSTER MITARBEITER"
+FROM     Mitarbeiter m INNER JOIN Mitarbeiter a
+           ON (m.Bankfiliale_ID = a.Bankfiliale_ID)
+GROUP BY m.Mitarbeiter_ID, m.Vorname, m.Nachname, m.Geburtsdatum
+HAVING   m.Geburtsdatum BETWEEN MAX(a.Geburtsdatum) - INTERVAL '2' YEAR AND
+         MAX(a.Geburtsdatum);
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT   m.Vorname, m.Nachname, m.Geburtsdatum,
+				 MAX(a.Geburtsdatum) AS "JUENGSTER MITARBEITER"
+FROM     Mitarbeiter m INNER JOIN Mitarbeiter a
+           ON (m.Bankfiliale_ID = a.Bankfiliale_ID)
+GROUP BY m.Mitarbeiter_ID, m.Vorname, m.Nachname, m.Geburtsdatum
+HAVING   m.Geburtsdatum BETWEEN DATEADD(YEAR, -2, MAX(a.Geburtsdatum)) AND
+         MAX(a.Geburtsdatum);
+        \end{lstlisting}
+\clearpage
+        \item Schreiben Sie eine Abfrage, die zu jedem Filialleiter, das Gehalt
+        seines am schlechtesten bezahlten Mitarbeiters anzeigt. Sortieren Sie
+        die Abfrage nach den Bankfilial-IDs der Filialleiter.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   v.Vorname, v.Nachname, v.Gehalt, 
+         MIN(m.Gehalt) AS "Kleinstes Gehalt"
+FROM     Mitarbeiter m INNER JOIN Mitarbeiter v
+           ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)
+WHERE    v.Bankfiliale_ID IS NOT NULL
+GROUP BY v.Mitarbeiter_ID, v.Vorname, v.Nachname, v.Gehalt, v.Bankfiliale_ID
+ORDER BY v.Bankfiliale_ID;
+        \end{lstlisting}
+      \end{enumerate}
+\clearpage

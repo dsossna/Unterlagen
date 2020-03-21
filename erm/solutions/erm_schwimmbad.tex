@@ -1,0 +1,261 @@
+      \subsection{Übungsaufgabe Schwimmbad}
+        \subsubsection{Vorgaben}
+          \begin{center}
+            \scalebox{.5}{
+              \begin{tikzpicture}[node distance=1.25cm, every edge/.style={link}]
+                \node[entity](A){Kartentyp};
+                  \node[attribute](a1)[above = of A]{\key{Kartentyp\_ID}} edge (A);
+                  \node[attribute](a2)[below left  = of A]{Bezeichnung} edge (A);
+                  \node[attribute](a3)[left = of A]{Kartenpreis} edge (A);
+
+                \node[relationship](rel1)[below = of A]{gehört zu} edge node[auto,swap] {(0,*)}(A);
+
+                \node[entity](B)[below = of rel1]{Eintrittskarte} edge node[auto,swap] {(1,1)} (rel1);
+                  \node[attribute](b1)[right = of B]{\key{Eintrittskarte\_ID}} edge (B);
+                  \node[attribute](b2)[left = of B]{Barcode} edge (B);
+                  \node[attribute](b3)[below right = of B]{Verkaufsdatum} edge (B);
+
+                \node[relationship](rel2)[below = of B]{verkauft} edge node[auto,swap] {(1,1)}(B);
+
+                \node[entity](C)[below = of rel2]{Bademeister} edge node[auto,swap] {(0,*)} (rel2);
+                  \node[attribute](c1)[above left = of C]{\key{Bademeister\_ID}} edge (C);
+                  \node[attribute](c2)[above right = of C]{Vorname} edge (C);
+                  \node[attribute](c3)[right = of C]{Nachname} edge (C);
+                  \node[attribute](c4)[below right = of C]{Adresse} edge (C);
+                  \node[attribute](c5)[left = of C]{Rettungsschwimmer} edge (C);
+                  \node[attribute](c6)[below left = of C]{Erstehilfe} edge (C);
+
+                \node[relationship](rel3)[below = of C]{bearbeitet} edge node[auto,swap] {(0,*)}(C);
+                  \node[attribute](rel31)[left = of rel3]{Erledigt} edge (rel3);
+                \node[entity](D)[below = of rel3]{Aufgabe} edge node[auto,swap] {(0,*)} (rel3);
+                  \node[attribute](d1)[left = of D]{\key{Aufgaben\_ID}} edge (D);
+                  \node[attribute](d2)[right = of D]{Kurzbezeichnung} edge (D);
+                  \node[attribute](d3)[below right = of D]{Beschreibung} edge (D);
+                  \node[attribute](d4)[below = of D]{Dauer} edge (D);
+              \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Transformation}
+					\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{12cm}}
+						Kartentyp & (\pk{Kartentyp\_ID}, Kartenpreis, Bezeichnung) \\
+						Eintrittskarte & \mbox{(\pk{Eintrittskarte\_ID}, Barcode, Verkaufsdatum,
+						\nn{\fk{Kartentyp\_ID}},} \mbox{\nn{\fk{Bademeister\_ID}})} \\
+						Bademeister & \mbox{(\pk{Bademeister\_ID}, Vorname, Nachname, Adresse,
+						Rettungsschwimmer,} \mbox{Erstehilfe)} \\
+						Aufgaben & (\pk{Aufgaben\_ID}, Kurzbezeichnung, Beschreibung, Dauer) \\
+						Arbeitsplan & (\fk{\pk{Bademeister\_ID + Aufgaben\_ID}}, Erledigt) \\
+					\end{tabular}
+\clearpage
+        \subsubsection{Zusatzaufgabe 1}
+          \begin{center}
+            \scalebox{.5}{
+              \begin{tikzpicture}[node distance=1cm, every edge/.style={link}]
+                \node[entity](A){Kartentyp};
+                  \node[attribute](a1)[above = of A]{\key{Kartentyp\_ID}} edge (A);
+                  \node[attribute](a2)[below left  = of A]{Bezeichnung} edge (A);
+
+                \node[relationship](rel1)[right = of A]{gehört zu} edge node[auto,swap] {(1,*)}(A);
+
+                \node[entity](B)[right = of rel1]{Preiskategorie} edge node[auto,swap]{(1,1)} (rel1);
+                  \node[attribute](b1)[above right = of B]{\key{Preiskategorie\_ID}} edge (B);
+                  \node[attribute](b2)[right = of B]{Kartenpreis} edge (B);
+
+                \node[relationship](rel2)[above = of B]{gehört zu} edge node[auto,swap]{(1,1)} (B);
+
+                \node[entity](C)[above = of rel2]{Saison} edge node[auto,swap]{(1,*)} (rel2);
+                  \node[attribute](b1)[above right = of C]{\key{Saison\_ID}} edge (C);
+                  \node[attribute](b2)[right = of C]{Bezeichnung} edge (C);
+                  \node[attribute](b3)[above left = of C]{Anfangsdatum} edge (C);
+                  \node[attribute](b4)[left = of C]{Enddatum} edge (C);
+
+                \node[relationship](rel3)[below = of B]{gehört zu} edge node[auto,swap]{(0,*)} (B);
+
+                \node[entity](D)[below = of rel3]{Eintrittskarte} edge node[auto,swap] {(1,1)} (rel3);
+                  \node[attribute](d1)[right = of D]{\key{Eintrittskarte\_ID}} edge (D);
+                  \node[attribute](d2)[left = of D]{Barcode} edge (D);
+                  \node[attribute](d3)[below right = of D]{Verkaufsdatum} edge (D);
+
+                \node[relationship](rel4)[below = of D]{verkauft} edge node[auto,swap] {(1,1)}(D);
+
+                \node[entity](E)[below = of rel4]{Bademeister} edge node[auto,swap] {(0,*)} (rel4);
+                  \node[attribute](e1)[above left = of E]{\key{Bademeister\_ID}} edge (E);
+                  \node[attribute](e2)[above right = of E]{Vorname} edge (E);
+                  \node[attribute](e3)[right = of E]{Nachname} edge (E);
+                  \node[attribute](e4)[below right = of E]{Adresse} edge (E);
+                  \node[attribute](e5)[left = of E]{Rettungsschwimmer} edge (E);
+                  \node[attribute](e6)[below left = of E]{Erstehilfe} edge (E);
+
+                \node[relationship](rel5)[below = of E]{bearbeitet} edge node[auto,swap] {(0,*)}(E);
+                  \node[attribute](rel51)[left = of rel5]{Erledigt} edge (rel5);
+
+                  \node[entity](F)[below = of rel5]{Aufgabe} edge node[auto,swap] {(0,*)} (rel5);
+                  \node[attribute](f1)[left = of F]{\key{Aufgaben\_ID}} edge (F);
+                  \node[attribute](f2)[right = of F]{Kurzbezeichnung} edge (F);
+                  \node[attribute](f3)[below right = of F]{Beschreibung} edge (F);
+                  \node[attribute](f4)[below = of F]{Dauer} edge (F);
+              \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Transformation Zusatzaufgabe 1}
+          In dieser Transformation werden nur die Änderungen zur ursprünglichen Aufgabe gezeigt!
+					\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{12cm}}
+						Kartentyp & (\pk{Kartentyp\_ID}, Bezeichnung) \\
+						Preiskategorie & (\pk{Preiskategorie\_ID}, Kartenpreis, \nn{\fk{Kartentyp\_ID}}, \nn{\fk{Saison\_ID}}) \\
+						Eintrittskarte &\mbox{(\pk{Eintrittskarte\_ID}, Barcode, Verkaufsdatum,
+						\nn{\fk{Preiskategorie\_ID}},} \mbox{\nn{\fk{Bademeister\_ID}})} \\
+						Saison & (\pk{Saison\_ID}, Bezeichnung, Anfangsdatum, Enddatum) \\
+					\end{tabular}
+  \clearpage
+        \subsubsection{Zusatzaufgabe 2}
+          \begin{center}
+            \scalebox{.6}{
+              \begin{tikzpicture}[node distance=1.7cm, every edge/.style={link}]
+                \node[entity](A){Kartentyp};
+                  \node[attribute](a1)[above = of A]{\key{Kartentyp\_ID}} edge (A);
+                  \node[attribute](a2)[below left  = of A]{Bezeichnung} edge (A);
+
+                \node[relationship](rel1)[right = of A]{gehört zu} edge node[auto,swap] {(1,*)}(A);
+
+                \node[entity](B)[right = of rel1]{Preiskategorie} edge node[auto,swap]{(1,1)} (rel1);
+                  \node[attribute](b1)[above right = of B]{\key{Preiskategorie\_ID}} edge (B);
+                  \node[attribute](b2)[right = of B]{Kartenpreis} edge (B);
+
+                \node[relationship](rel2)[above = of B]{gehört zu} edge node[auto,swap]{(1,1)} (B);
+
+                \node[entity](C)[above = of rel2]{Saison} edge node[auto,swap]{(1,*)} (rel2);
+                  \node[attribute](b1)[above right = of C]{\key{Saison\_ID}} edge (C);
+                  \node[attribute](b2)[right = of C]{Bezeichnung} edge (C);
+                  \node[attribute](b3)[above left = of C]{Anfangsdatum} edge (C);
+                  \node[attribute](b4)[left = of C]{Enddatum} edge (C);
+
+                \node[relationship](rel3)[below = of B]{gehört zu} edge node[auto,swap]{(0,*)} (B);
+
+                \node[entity](D)[below = of rel3]{Eintrittskarte} edge node[auto,swap] {(1,1)} (rel3);
+                  \node[attribute](d1)[right = of D]{\key{Eintrittskarte\_ID}} edge (D);
+                  \node[attribute](d2)[below left = of D]{Barcode} edge (D);
+                  \node[attribute](d3)[above right = of D]{Verkaufsdatum} edge (D);
+
+                \node[isa](E)[below = of D]{isa} edge node[auto,swap]{(0,1) (1,1) disjunkt} (D);
+                \node[entity](F)[below left = of E]{Zeitkarte};
+      %             \node[attribute](f1)[below right = of F]{\key{Eintrittskarte\_ID}} edge (F);
+                  \node[attribute](f2)[left = of F]{Vorname} edge (F);
+                  \node[attribute](f3)[above left= of F]{Nachname} edge (F);
+                  \node[attribute](f4)[below = of F]{Foto} edge (F);
+                  \node[attribute](f5)[below right = of F]{Adresse} edge (F);
+                \node[entity](G)[below right = of E]{Stundenkarte};
+      %             \node[attribute](g1)[above right = of G]{\key{Eintrittskarte\_ID}} edge (G);
+                  \node[attribute](g2)[below = of G]{Zeitstempel} edge (G);
+                  \node[attribute](g3)[below right = of G]{Badedauer} edge (G);
+                \path [draw, -] (E.west) -| (F.north);
+                \path [draw, -] (E.east) -| (G.north);
+
+                \node[relationship](rel4)[left = of D]{verkauft} edge node[auto,swap] {(1,1)}(D);
+
+                \node[entity](H)[left = of rel4]{Bademeister} edge node[auto,swap] {(0,*)} (rel4);
+                  \node[attribute](h1)[above left = of H]{\key{Bademeister\_ID}} edge (H);
+                  \node[attribute](h2)[above right = of H]{Vorname} edge (H);
+                  \node[attribute](h3)[above = of H]{Nachname} edge (H);
+                  \node[attribute](h4)[below right = of H]{Adresse} edge (H);
+                  \node[attribute](h5)[left = of H]{Rettungsschwimmer} edge (H);
+                  \node[attribute](h6)[below = of H]{Erstehilfe} edge (H);
+
+                \node[relationship](rel5)[below left= of H]{bearbeitet} edge node[auto] {(0,*)}(H);
+                  \node[attribute](rel51)[left = of rel5]{Erledigt} edge (rel5);
+
+                  \node[entity](I)[below = of rel5]{Aufgabe} edge node[auto,swap] {(0,*)} (rel5);
+                  \node[attribute](i1)[below = of I]{\key{Aufgaben\_ID}} edge (I);
+                  \node[attribute](i2)[right = of I]{Kurzbezeichnung} edge (I);
+                  \node[attribute](i3)[above left = of I]{Beschreibung} edge (I);
+                  \node[attribute](i4)[left = of I]{Dauer} edge (I);
+              \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Transformation Zusatzaufgabe 2}
+					\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{12cm}}
+						Eintrittskarte &\mbox{(\pk{Eintrittskarte\_ID}, Barcode, Verkaufsdatum,
+						\nn{\fk{Preiskategorie\_ID}},} \mbox{\nn{\fk{Bademeister\_ID}})} \\
+						Zeitkarte & (\fk{\pk{Eintrittskarte\_ID}}, Vorname, Nachname, Adresse, Foto) \\
+						Stundenkarte & (\fk{\pk{Eintrittskarte\_ID}}, Zeitstempel) \\
+					\end{tabular}
+  \clearpage
+        \subsubsection{Zusatzaufgabe 3}
+          \begin{center}
+            \scalebox{.55}{
+              \begin{tikzpicture}[node distance=1.7cm, every edge/.style={link}]
+                \node[entity](A){Kartentyp};
+                  \node[attribute](a1)[above = of A]{\key{Kartentyp\_ID}} edge (A);
+                  \node[attribute](a2)[below left  = of A]{Bezeichnung} edge (A);
+
+                \node[relationship](rel1)[below right = of A]{gehört zu} edge node[auto,swap] {(1,*)}(A);
+
+                \node[entity](B)[right = of rel1]{Preiskategorie} edge node[auto,swap]{(1,1)} (rel1);
+                  \node[attribute](b1)[above right = of B]{\key{Preiskategorie\_ID}} edge (B);
+                  \node[attribute](b2)[right = of B]{Kartenpreis} edge (B);
+
+                \node[relationship](rel2)[above = of B]{gehört zu} edge node[auto,swap]{(1,1)} (B);
+
+                \node[entity](C)[above = of rel2]{Saison} edge node[auto,swap]{(1,*)} (rel2);
+                  \node[attribute](b1)[above right = of C]{\key{Saison\_ID}} edge (C);
+                  \node[attribute](b2)[right = of C]{Bezeichnung} edge (C);
+                  \node[attribute](b3)[above left = of C]{Anfangsdatum} edge (C);
+                  \node[attribute](b4)[left = of C]{Enddatum} edge (C);
+
+                \node[relationship](rel3)[below = of B]{gehört zu} edge node[auto,swap]{(0,*)} (B);
+
+                \node[entity](D)[below = of rel3]{Eintrittskarte} edge node[auto,swap] {(1,1)} (rel3);
+                  \node[attribute](d1)[right = of D]{\key{Eintrittskarte\_ID}} edge (D);
+                  \node[attribute](d2)[below left = of D]{Barcode} edge (D);
+                  \node[attribute](d3)[above right = of D]{Verkaufsdatum} edge (D);
+
+                \node[isa](E)[below = of D]{isa} edge node[auto,swap]{(0,1) (1,1) disjunkt} (D);
+                \node[entity](F)[below left = of E]{Zeitkarte};
+      %             \node[attribute](f1)[below right = of F]{\key{Eintrittskarte\_ID}} edge (F);
+                  \node[attribute](f2)[left = of F]{Vorname} edge (F);
+                  \node[attribute](f3)[above left= of F]{Nachname} edge (F);
+                  \node[attribute](f4)[below = of F]{Foto} edge (F);
+                  \node[attribute](f5)[below right = of F]{Adresse} edge (F);
+                \node[entity](G)[below right = of E]{Stundenkarte};
+      %             \node[attribute](g1)[above right = of G]{\key{Eintrittskarte\_ID}} edge (G);
+                  \node[attribute](g2)[below = of G]{Zeitstempel} edge (G);
+                  \node[attribute](g3)[below right = of G]{Badedauer} edge (G);
+                \path [draw, -] (E.west) -| (F.north);
+                \path [draw, -] (E.east) -| (G.north);
+
+                \node[relationship](rel4)[left = of D]{verkauft} edge node[auto,swap] {(1,1)}(D);
+
+                \node[entity](H)[left = of rel4]{Bademeister} edge node[auto,swap] {(0,*)} (rel4);
+                  \node[attribute](h1)[above right = of H]{Rettungsschwimmer} edge (H);
+                  \node[attribute](h2)[below = of H]{Erstehilfe} edge (H);
+
+                \node[relationship](rel5)[below left= of H]{bearbeitet} edge node[auto] {(0,*)}(H);
+                  \node[attribute](rel51)[below right = of rel5]{Erledigt} edge (rel5);
+
+                \node[entity](I)[below = of rel5]{Aufgaben} edge node[auto,swap] {(0,*)} (rel5);
+                  \node[attribute](i1)[below = of I]{\key{Aufgaben\_ID}} edge (I);
+                  \node[attribute](i2)[right = of I]{Kurzbezeichnung} edge (I);
+                  \node[attribute](i3)[above left = of I]{Beschreibung} edge (I);
+                  \node[attribute](i4)[left = of I]{Dauer} edge (I);
+
+                \node[isa](K)[above left = of H]{isa};
+
+                \node[entity](J)[below left = of K]{Ehemalige};
+                  \node[attribute](j1)[below left = of J]{Kündigungsdatum} edge (J);
+                \path [draw, -] (K.west) -| (J.north);
+                \path [draw, -] (K.east) -| (H.north);
+
+                \node[entity](L)[above = of K]{Personal} edge node[auto,swap]{(0,1)(1,1) disjunkt} (K);
+                  \node[attribute](l1)[above left = of L]{\key{Personal\_ID}} edge (L);
+                  \node[attribute](l2)[above right = of L]{Vorname} edge (L);
+                  \node[attribute](l3)[above = of L]{Nachname} edge (L);
+                  \node[attribute](l4)[below right = of L]{Adresse} edge (L);
+              \end{tikzpicture}
+            }
+          \end{center}
+          Aus Platzgründen wurde bei den beiden Entititäten \enquote{Ehemalige} und \enquote{Bademeister} das Attribut \enquote{Personal\_ID} weggelassen!
+        \subsubsection{Transformation Zusatzaufgabe 3}
+					\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{12cm}}
+						Personal & (\pk{Personal\_ID}, Vorname, Nachname, Adresse) \\
+						Bademeister & (\fk{\pk{Personal\_ID}}, Rettungsschwimmer, Erstehilfe) \\
+						Ehemalige & (\fk{\pk{Personal\_ID}}, Kündigungsdatum) \\
+					\end{tabular}
+\clearpage

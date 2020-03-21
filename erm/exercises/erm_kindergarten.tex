@@ -1,0 +1,24 @@
+      \subsection{Übungsaufgabe Kindergarten}
+        Entwerfen Sie, basierend auf der folgenden Lage, ein ER-Modell, inklusive der Beziehungen zwischen den Entit\"{a}ten.
+
+        Ein Kindergarten möchte alle anfallenden Daten in einer Datenbank speichern.
+
+        Er wird in Gruppen unterteilt. Zu jeder Gruppe ist deren Bezeichnung und der zugehörige Raum zu speichern. Des Weiteren steht in jedem Gruppenraum ein Telefon, dessen Telefonnummer ebenfalls erfasst werden muss.
+
+        In der Datenbank müssen Angaben über verschiedene Arten von Personen gespeichert werden. Zu jeder Person werden ihr Vorname, ihr Nachname und das Geschlecht gespeichert. Es gibt folgende Personenarten:
+        \begin{itemize}
+          \item Eltern: Jeder Elternteil (Vater und/oder Mutter) muss mit seiner Adresse erfasst werden. Es ist durchaus möglich, dass Elternteile getrennt leben und daher unterschiedliche Adressen haben. Kein Elternteil arbeitet im Kindergarten.
+          \item Kinder: Zu jedem Kind muss die Gruppenzugehörigkeit und sein Geburtsdatum gespeichert werden. In einer Kindergartengruppe ist immer mindestens ein Kind, höchstens jedoch 20 Kinder. Ein Kind wird immer genau einer Gruppe zugeordnet.
+          \item Weiterhin ist es wichtig zu wissen, welche Eltern (Vater und/oder Mutter) zu einem Kind gehören und bei welchem Elternteil das Kind (eines oder mehrere) lebt. Es muss möglich sein, Fälle abzubilden wie z. B.: Die Eltern sind verheiratet/leben zusammen und das Kind lebt im Haushalt; die Eltern leben getrennt und das Kind lebt bei der Mutter (oder beim Vater); das Kind hat nur noch einen Elternteil und lebt in dessen Haushalt. (Hinweis: In diesem Ausschnitt der Realität gibt es keine Waisenkinder!)
+          \item Angestellte: Jeder Angestellte wird mit Sozialversicherungsnummer (SozVersNr) und Einstellungsdatum gespeichert.
+        \end{itemize}
+
+        Um den geforderten Realitätsausschnitt exakt abbilden zu können,
+        müssen die Angestellten in zwei Gruppen unterteilt werden:
+
+        \begin{itemize}
+          \item Betreuer: Jeder Betreuer betreut genau eine Gruppe, wobei eine Gruppe immer von mindestens einem aber höchstens von zwei Betreuern beaufsichtigt wird. Zu jedem Betreuer ist dessen Gehalt zu speichern.
+
+          \item Praktikanten: Bei einem Praktikanten ist von vornherein bekannt, bis zu welchem Datum (Praktikumsende) sein Praktikum geht. Dieses Datum ist wichtig und muss gespeichert werden. Jeder Praktikant wird genau einem Betreuer zugeordnet, wobei ein Betreuer sich um höchstens einen Praktikanten kümmert.
+        \end{itemize}
+\clearpage

@@ -1,0 +1,79 @@
+\clearpage
+    \section{\"Ubungen - Schemaobjekte verwalten}
+      Benutzen Sie für die Durchführung der Übungen die Datenbank
+      \identifier{Bank\_2014}.
+      \begin{enumerate}
+        %Erstellen Sie die Tabelle \identifier{bank} gemäß Ihrem ER-Modell. 
+        %Machen Sie das Attribut \identifier{bank\_id} zum Primärschlüssel und
+        % achten sie darauf, dass die Tabelle als Heap erstellt wird.
+        \input{admin/uebungen/admin_chapter_05/item_a}
+        
+        %Ist es sinnvoll, die Tabelle \identifier{bank} als Heap anzulegen?
+        %Begründen Sie Ihre Aussage!
+        \input{admin/uebungen/admin_chapter_05/item_b}
+        
+        %Legen Sie ein \UNIQUE-Constraint auf die Spalte \identifier{bic} der
+        %Tabelle \identifier{bank}. Die Tabelle muss weiterhin in Form eines
+        %Heaps gespeichert bleiben.
+        \input{admin/uebungen/admin_chapter_05/item_c}
+        
+        %Fügen Sie Ihrer Datenbank die Dateigruppe \identifier{in\_memory} hinzu
+        %und bereiten Sie alles vor, um eine SOT darin anzulegen.
+        \input{admin/uebungen/admin_chapter_05/item_d}
+        
+        %Legen Sie die Tabelle \identifier{buchung} gemäß Ihrem ER-Modell als SOT
+        %an und fügen Sie zwischen die beiden Spalten
+        %\identifier{buchungsdatum} und \identifier{konto\_id} die Spalte
+        % \identifier{buchungstext} VARCHAR(200) ein! Legen Sie auf die
+        %Spalte \identifier{buchungsdatum} einen Index. Legen Sie auch
+        %auf die Spalte \identifier{buchungstext} einen Index.
+        \input{admin/uebungen/admin_chapter_05/item_e}
+        
+        %Erstellen Sie die Tabelle \identifier{eigenkunde} gemäß Ihrem ER-Modell
+        %und legen Sie ein \UNIQUE-Constraint auf die Spalte
+        %\identifier{personalausweisnr}. Die Sortierung des Indexes, der zu
+        % diesem Constraint gehört soll absteigend sein.
+        \input{admin/uebungen/admin_chapter_05/item_f}
+        
+        %Erstellen Sie die Tabelle \identifier{mitarbeiter} gemäß Ihrem
+        % ER-Modell und legen Sie ein \UNIQUE-Constraint auf die Spalte
+        %\identifier{sozversnr}. Schließen Sie die Spalten \identifier{nachname}
+        % und \identifier{vorname} in den Index als Nichtschlüsselspalten in.
+        \input{admin/uebungen/admin_chapter_05/item_g}
+
+        %Legen Sie einen nicht gruppierten Index auf die Tabelle
+        %\identifier{eigenkunde} (Spalte \identifier{ablaufdatum}). Der Index
+        %soll nur die Zeilen enthalten, die einen Personalausweis zeigen, der vor dem 01.01.2016
+        %abgelaufen ist. Schließen Sie die Spalte \identifier{personalausweisnr}
+        % als Nichtschlüsselspalte in den Index ein.
+        \input{admin/uebungen/admin_chapter_05/item_h}
+
+        %Ermitteln Sie den Prozentsatz der logischen Indexfragmentierung der
+        % beiden Indizes \identifier{mitarbeiter\_pk} und \identifier{girokonto\_pk}.
+        \input{admin/uebungen/admin_chapter_05/item_i}
+
+        %Ergreifen Sie für jeden der beiden Indizes die geeignete Maßnahme, um
+        %deren Fragmentierung zu reduzieren.
+        \input{admin/uebungen/admin_chapter_05/item_j}
+
+        %Erstellen Sie die Tabelle \identifier{girokonto} gemäß Ihrem ER-Modell.
+        %Legen Sie den Primärschlüssel dieser Tabelle mit einem clustered Index
+        % an.
+        \input{admin/uebungen/admin_chapter_05/item_k}
+
+        %Erstellen Sie einen nicht gruppierten Index aufl der Spalte
+        %\identifier{guthaben} der Tabelle \identifier{girokonto}.
+        \input{admin/uebungen/admin_chapter_05/item_l}
+
+        %Deaktivieren Sie den gruppierten Index der Tabelle
+        % \identifier{girokonto} und beantworten Sie die folgenden Fragen:
+        \input{admin/uebungen/admin_chapter_05/item_m}
+
+        %Suchen Sie einen Weg, den gruppierten und den nicht gruppierten Index
+        % der Tabelle \identifier{girokonto} in einem Zug zu reaktivieren.
+        \input{admin/uebungen/admin_chapter_05/item_n}
+
+        %Lesen Sie den Artikel \parencite{utilUDPaC} und notieren Sie sich
+        mindestens drei sinnvolle Fragen!
+        \input{admin/uebungen/admin_chapter_05/item_o}
+      \end{enumerate}

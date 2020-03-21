@@ -1,0 +1,460 @@
+\clearpage
+    \section{Übungen - Erweiterte Datenselektion}
+      \begin{enumerate}
+        \item Schreiben Sie eine Abfrage, die für jeden Mitarbeiter den
+        Vornamen, den Nachnamen, die Bankfiliale\_ID und den Ort anzeigt, an dem
+        sich seine Filiale befindet.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{93 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{93 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llrl}
+                Marie & Kipp & 1 & Aschersleben \\
+                Louis & Schmitz & 1 & Aschersleben \\
+                Johannes & Lehmann & 1 & Aschersleben \\
+                Dirk & Peters & 1 & Aschersleben \\
+                Amelie & Krüger & 1 & Aschersleben \\
+                Martin & Schacke & 2 & Aschersleben \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, welche die Mitarbeiternummer, den
+        Nachnamen, das Gehalt und ein um 3,5 \% erhöhtes Gehalt für alle
+        Mitarbeiter anzeigt, die in einer Filiale in \enquote{Aschersleben}
+        arbeiten. Das erhöhte Gehalt soll als ganze Zahl und mit dem
+        Spaltenalias \enquote{Neues Gehalt} ausgegeben werden.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{GEHALT}} &
+              \multicolumn{1}{r}{\textbf{Neues Gehalt}} \\
+              \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{10 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{10 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rlrr}
+                8 & Peters & 12000 & 12420 \\
+                9 & Winter & 12000 & 12420 \\
+                28 & Lehmann & 2000 & 2070 \\
+                29 & Schmitz & 2000 & 2070 \\
+                30 & Kipp & 2000 & 2070 \\
+                31 & Krüger & 2500 & 2588 \\
+                32 & Beck & 1500 & 1553 \\
+                33 & Schacke & 1000 & 1035 \\
+                34 & Oswald & 1500 & 1553 \\
+                35 & Wolf & 1000 & 1035 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die zu jedem Eigenkunden, der ein
+        Depot besitzt, seinen Vor- und Nachnamen, die Strasse mit der
+        Hausnummer, sowie PLZ und Ort anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{STRASSE}} &
+              \multicolumn{1}{l}{\textbf{PLZ}} &
+              \multicolumn{1}{l}{\textbf{ORT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}\cmidrule(l){5-5}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{5}{l}{\textbf{239 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lllll}
+                Sophie & Junge & Plutoweg 3 & 39435 & Bördeaue \\
+                Hanna & Beck & Beimsstraße 9 & 39439 & Güsten \\
+                Sebastian & Peters & Steinigstraße 3 & 39240 & Staßfurt \\
+                Tina & Berger & Bundschuhstraße 1 & 04177 & Leipzig \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Schreiben Sie eine Abfrage, die für alle Eigenkunden deren Vor-
+        und Nachnamen anzeigt, sowie den Vor- und den Nachnamen ihres
+        persönlichen Finanzberaters (Tabelle
+        \identifier{EigenkundeMitarbeiter}). Sortieren Sie die Abfrage nach den
+        Nachnamen der Finanzberater.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{Vorname Kunde}} &
+              \multicolumn{1}{l}{\textbf{Nachname Kunde}} &
+              \multicolumn{1}{l}{\textbf{Vorname Berater}} &
+              \multicolumn{1}{l}{\textbf{Nachname Berater}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{384 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{384 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Amelie & Fuchs & Leonie & Bauer \\
+                Sarah & Becker & Leonie & Bauer \\
+                Pia & Zimmermann & Leonie & Bauer \\
+                Hanna & Schreiber & Leonie & Bauer \\
+                Frank & Zimmermann & Leonie & Bauer \\
+                Chris & Wagner & Leonie & Bauer \\
+                Petra & Berger & Leonie & Bauer \\
+                Maximilian & Junge & Leonie & Bauer \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, die für alle Eigenkunden, die keinen
+        Berater haben (die nicht in der Tabelle
+        \identifier{EigenkundeMitarbeiter} enthalten sind), den Vor- und den
+        Nachnamen anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{16 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{16 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Sebastian & Schröder \\
+                Udo & Schumacher \\
+                Mia & Huber \\
+                Simon & Witte \\
+                Max & Bunzel \\
+                Finn & Fischer \\
+                Lara & Meierhöfer \\
+                Jannis & Meier \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, die zu jedem Mitarbeiter (Vorname,
+        Nachname) den Vor- und den Nachnamen seines Vorgesetzten anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME\_M}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME\_M}} &
+              \multicolumn{1}{l}{\textbf{VORNAME\_V}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME\_V}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{99 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Finn & Seifert & Max & Winter \\
+                Sarah & Werner & Max & Winter \\
+                Tim & Sindermann & Sarah & Werner \\
+                Sebastian & Schwarz & Sarah & Werner \\
+                Emily & Meier & Finn & Seifert \\
+                Peter & Möller & Finn & Seifert \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass alle Mitarbeiter, einschließlich des Mitarbeiters
+        \enquote{Winter}, der keinen Vorgesetzten hat, angezeigt werden.
+        Sortieren Sie das Ergebnis aufsteigend nach der Vorgesetzten\_ID. Der
+        Mitarbeiter \enquote{Winter} soll ganz oben auf der Liste stehen.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{100 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Max & Winter &  &  \\
+                Finn & Seifert & Max & Winter \\
+                Sarah & Werner & Max & Winter \\
+                Tim & Sindermann & Sarah & Werner \\
+                Sebastian & Schwarz & Sarah & Werner \\
+                Emily & Meier & Finn & Seifert \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt,
+        die keine Kundenberatung durchführen. Ausgenommen sind leitende
+        Mitarbeiter (Mitarbeiter die in keiner Bankfiliale arbeiten).
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{60 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{60 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Finn & Bauer \\
+                Stefan & Beck \\
+                Lina & Becker \\
+                Emma & Berger \\
+                Udo & Bosse \\
+                Georg & Dühning \\
+                Tom & Fischer \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, die für alle Mitarbeiter, die
+        höchstens 3 Jahre älter, aber keinesfalls jünger sind als ihr
+        Vorgesetzter, den Vornamen, den Nachnamen, das Geburtsdatum und das
+        Geburtsdatum des Vorgesetzten anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{GEBURTSDATUM}} &
+              \multicolumn{1}{l}{\textbf{Geburtstag Chef}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+%               \multicolumn{4}{l}{\textbf{20 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{20 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Finn & Seifert & 17.10.85 & 31.08.88 \\
+                Jessica & Weber & 10.06.92 & 27.06.92 \\
+                Dirk & Peters & 16.09.91 & 27.06.92 \\
+                Chris & Lang & 08.10.86 & 30.01.89 \\
+                Marie & Kipp & 27.09.90 & 16.09.91 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Schreiben Sie eine Abfrage, die für alle Mitarbeiter, die am
+        gleichen Ort arbeiten, an dem sie auch wohnen, deren Vorname, Nachname
+        den Wohnort und den Arbeitsort anzeigt. Beschriften Sie die Spalten, wie
+        es in der Lösung zu sehen ist. Sortieren Sie die Abfragen in
+        absteigender Reihenfolge nach dem Wohnort.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{l}{\textbf{Wohnort}} &
+              \multicolumn{1}{l}{\textbf{Arbeitsort}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llll}
+                Emily & Günther & Plötzkau & Plötzkau \\
+                Jannis & Friedrich & Güsten & Güsten \\
+                Tim & Zimmermann & Egeln & Egeln \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt
+        (Vorname und Nachname), die keine Kundenberatung durchführen.
+        Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner
+        Bankfiliale arbeiten) und Filialleiter.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{40 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{40 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Amelie & Krüger \\
+                Anna & Schneider \\
+                Chris & Simon \\
+                Christian & Haas \\
+                Elias & Sindermann \\
+                Emilia & Köhler \\
+                Emma & Krüger \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die alle Eigenkunden anzeigt, die nur
+        Girokonten aber keine anderen Konten besitzen.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Amelie & Becker \\
+                Amelie & Richter \\
+                Chris & Walther \\
+                Emilia & Keller \\
+                Georg & Keller \\
+                Johanna & Schäfer \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Erstellen Sie mit Hilfe einer Abfrage eine Liste, die den Vor- und
+        den Nachnamen aller Kunden enthält, die sowohl ein Sparbuch, als auch
+        ein Depot besitzten. Ob die Kunden ein Girokonto haben oder nicht ist
+        irrelevant.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{176 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Alexander & Lorenz \\
+                Alina & Baumann \\
+                Alina & Huber \\
+                Alina & Peters \\
+                Alina & Schumacher \\
+                Alina & Schütz \\
+                Amelie & Fuchs \\
+                Amelie & Günther \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, die eine Liste aller Eigenkunden
+        ausgibt, die ein Girokonto und ein Sparbuch besitzten, aber kein Depot.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{134 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{134 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Alina & Braun \\
+                Andy & Klingner \\
+                Anna & Schubert \\
+                Anna & Sindermann \\
+                Anna & Wagner \\
+                Bea & Witte \\
+                Ben & Lehmann \\
+                Chris & Beck \\
+                Chris & Weber \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+      \end{enumerate}

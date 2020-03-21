@@ -1,0 +1,54 @@
+      \subsection{Übungsaufgabe Sportverein}
+        \begin{center}
+        \scalebox{.5}{
+          \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](sportart){Sportart};
+              \node[attribute](sportartid)[above left = of sportart]{\key{Sportart\_ID}} edge (sportart);
+              \node[attribute](bezeichnung)[above right  = of sportart]{Bezeichnung} edge (sportart);
+            \node[relationship](bestehtaus)[below = 2.5cm of sportart]{besteht aus} edge node[auto] {(1,1)}(sportart);
+            \node[entity](sportabteilung)[below = 2.5cm of bestehtaus]{Abteilung}edge node[auto,swap] {(1,*)} (bestehtaus);;
+              \node[attribute](sportabteilungsid)[above left = of sportabteilung]{\key{Abteilung\_ID}} edge (sportabteilung);
+              \node[attribute](bezeichnung)[above right  = of sportabteilung]{Bezeichnung} edge (sportabteilung);
+              \node[entity](trainer)[left = 5cm of sportabteilung]{Trainer};
+              \node[attribute](trainerid)[above left = of trainer]{\key{Trainer\_ID}} edge (trainer);
+              \node[attribute](vorname)[right = of trainer]{Vorname} edge (trainer);
+              \node[attribute](nachname)[below right = of trainer]{Nachname} edge (trainer);
+              \node[attribute](geburtsdatum)[below left = of trainer]{Geburtsdatum} edge (trainer);
+              \node[attribute](eintrittsdatum)[left = of trainer]{Eintrittsdatum} edge (trainer);
+            \node[entity](sportler)[right = 5cm of sportabteilung]{Sportler};
+              \node[attribute](sportlerid)[above right = of sportler]{\key{Sportler\_ID}} edge (sportler);
+              \node[attribute](vorname)[left = of sportler]{Vorname} edge (sportler);
+              \node[attribute](nachname)[below right = of sportler]{Nachname} edge (sportler);
+              \node[attribute](geburtsdatum)[right = of sportler]{Geburtsdatum} edge (sportler);
+              \node[attribute](eintrittsdatum)[below left = of sportler]{Eintrittsdatum} edge (sportler);
+            \node[relationship](istbei)[below = 2.5cm of sportabteilung]{ist bei} edge node[auto,swap] {(1,*)}(sportabteilung);
+            \node[entity](adresse)[below = 2.5cm of istbei]{Adresse} edge node[auto,swap] {(0,*)} (istbei);
+              \node[attribute](adressid)[above left = of adresse]{\key{Adress\_ID}} edge (adresse);
+              \node[attribute](plz)[above right = of adresse]{PLZ} edge (adresse);
+              \node[attribute](ort)[below right = of adresse]{Ort} edge (adresse);
+              \node[attribute](strasse)[below = of adresse]{Straß e} edge (adresse);
+              \node[attribute](hausnummer)[below left = of adresse]{Hausnummer} edge (adresse);
+						\node[relationship](trainiert)[left = 5.3cm of sportart]{trainiert} edge node[auto,swap,yshift=-70] {(1,*)}(trainer);
+							\path[draw, -] (trainiert.east) -| (sportart.west) node[auto,swap,xshift=-25,yshift=8]{(0,1)};
+						\node[relationship](istaktivin)[right = 5.1cm of sportart]{ist aktiv in} edge node[auto,swap,yshift=-70] {(1,*)}(sportler);
+							\path[draw, -] (istaktivin.west) -| (sportart.east) node[auto,swap,xshift=25,yshift=8]{(1,*)};
+            \node[relationship](wohntbei)[left = 5.2cm of adresse]{wohnt bei} edge node[auto,swap] {(1,1)}(trainer);
+              \path[draw, -] (wohntbei.east) -| (adresse.west) node[auto,swap, xshift=-70,yshift=10]{(0,*)};
+            \node[relationship](wohntbei2)[right = 5.2cm of adresse]{wohnt bei} edge node[auto,swap] {(1,1)}(sportler);
+              \path[draw, -] (wohntbei2.west) -| (adresse.east) node[auto,swap, xshift=80,yshift=10]{(0,*)};
+          \end{tikzpicture}
+          }
+        \end{center}
+        \subsubsection{Transformation}
+					\begin{tabular}{>{\textbf\bgroup}p{4.0cm}<{\egroup}>{\small}p{11cm}}
+						Abteilung & (\pk{Abteilung\_ID}, Bezeichnung) \\
+						Sportart & (\pk{Sportart\_ID}, Bezeichnung, \fk{Trainer\_ID},\nn{\fk{Abteilung\_ID}}) \\
+						Trainer & \mbox{(\pk{Trainer\_ID}, Vorname, Nachname,
+						Geburtsdatum, Eintrittsdatum,} \mbox{\nn{\fk{Adresse\_ID}})} \\
+						Adresse & (\pk{Adresse\_ID}, PLZ, Ort, Strasse, Hausnummer) \\
+						Sportler & \mbox{(\pk{Sportler\_ID}, Vorname, Nachname,
+						Geburtsdatum, Eintrittsdatum,} \mbox{\nn{\fk{Adresse\_ID}})} \\
+						SportartSportler & (\fk{\pk{Sportart\_ID + Sportler\_ID}}) \\
+						AbteilungAdresse & (\fk{\pk{Abteilung\_ID + Adresse\_ID}}) \\
+          \end{tabular}
+\clearpage

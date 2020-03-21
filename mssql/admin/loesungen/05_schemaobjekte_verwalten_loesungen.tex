@@ -1,0 +1,291 @@
+\clearpage
+    \section{Lösungen - Schemaobjekte verwalten}
+      Benutzen Sie für die Durchführung der Übungen die Datenbank
+      \identifier{Bank\_2014}.
+      \begin{enumerate}
+        %Erstellen Sie die Tabelle \identifier{bank} gemäß Ihrem ER-Modell. 
+        %Machen Sie das Attribut \identifier{bank\_id} zum Primärschlüssel und
+        % achten sie darauf, dass die Tabelle als Heap erstellt wird.
+        \input{admin/uebungen/admin_chapter_05/item_a}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+CREATE TABLE bank (
+  Bank_ID         NUMERIC NOT NULL,
+  BIC             VARCHAR(11) NOT NULL,
+  Name            VARCHAR(50) NOT NULL,
+  Strasse         VARCHAR(50),
+  Hausnummer      VARCHAR(20),
+  PLZ             CHAR(5),
+  Ort             VARCHAR(20),
+  Rating          VARCHAR(3),
+  CONSTRAINT bank_pk PRIMARY KEY NONCLUSTERED (Bank_ID)
+)
+ON KAM;
+GO
+        \end{lstlisting}
+        
+        %Ist es sinnvoll, die Tabelle \identifier{bank} als Heap anzulegen?
+        %Begründen Sie Ihre Aussage!
+        \input{admin/uebungen/admin_chapter_05/item_b}
+        
+        Die Nutzung einer Tabelle in Form eines Heaps, anstatt eines gruppierten
+        Indizes, kann sinnvoll sein, wenn die Tabelle sehr klein ist und somit
+        das Lesen der gesamten Tabelle kostengünstiger ist, als das Durchsuchen
+        eines clustered Index. 
+        
+        In der Praxis kann es hierfür noch weitere Gründe geben, die allerdings
+        den Rahmen dieser Unterrichtsunterlage deutlich sprengen würden.
+
+\clearpage
+        %Legen Sie ein \UNIQUE-Constraint auf die Spalte \identifier{bic} der
+        %Tabelle \identifier{bank}. Die Tabelle muss weiterhin in Form eines
+        %Heaps gespeichert bleiben.
+        \input{admin/uebungen/admin_chapter_05/item_c}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+ALTER TABLE bank
+ADD CONSTRAINT bic_uk UNIQUE NONCLUSTERED (BIC);
+GO
+        \end{lstlisting}
+        
+        %Fügen Sie Ihrer Datenbank die Dateigruppe \identifier{in\_memory} hinzu
+        %und bereiten Sie alles vor, um eine SOT darin anzulegen.
+        \input{admin/uebungen/admin_chapter_05/item_d}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+-- Memory optimized filegroup anlegen
+ALTER DATABASE [Bank_2014] 
+ADD FILEGROUP [in_memory]
+CONTAINS MEMORY_OPTIMIZED_DATA; 
+GO
+
+-- Es muss eine Filestream Datendatei geben,
+-- um Tabellen anlegen zu koennen.
+ALTER DATABASE [Bank_2014]
+ADD FILE (
+  NAME =     'bank_2014_in_memory_01',
+  FILENAME = 'D:\u01\bank_2014\filestream\in_memory'
+)
+TO FILEGROUP [in_memory]
+GO
+        \end{lstlisting}
+\clearpage        
+        %Legen Sie die Tabelle \identifier{buchung} gemäß Ihrem ER-Modell als SOT
+        %an und fügen Sie zwischen die beiden Spalten
+        %\identifier{buchungsdatum} und \identifier{konto\_id} die Spalte
+        % \identifier{buchungstext} VARCHAR(200) ein! Legen Sie auf die
+        %Spalte \identifier{buchungsdatum} einen Index. Legen Sie auch
+        %auf die Spalte \identifier{buchungstext} einen Index.
+        \input{admin/uebungen/admin_chapter_05/item_e}        
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+CREATE TABLE Buchung (
+  Buchungs_ID       NUMERIC NOT NULL,
+  Betrag            NUMERIC(12,2),
+  Buchungsdatum     DATETIME2 NOT NULL,
+  Buchungstext      VARCHAR(200) COLLATE LATIN1_GENERAL_BIN2 NOT NULL,
+  Konto_ID          NUMERIC,
+  Transaktions_ID   NUMERIC,
+  CONSTRAINT Buchung_pk PRIMARY KEY NONCLUSTERED (Buchungs_ID),
+  INDEX      idx_Buchungsdatum NONCLUSTERED (Buchungsdatum),
+  INDEX      idx_Buchungstext NONCLUSTERED (Buchungstext)
+)
+WITH (
+  MEMORY_OPTIMIZED = ON
+)
+GO
+        \end{lstlisting}
+        %Erstellen Sie die Tabelle \identifier{mitarbeiter} gemäß Ihrem
+        % ER-Modell und legen Sie ein \UNIQUE-Constraint auf die Spalte \identifier{sozversnr}. Die
+        %Sortierung des Indexes, der zu diesem Constraint gehört soll absteigend
+        %sein.
+        \input{admin/uebungen/admin_chapter_05/item_f}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+CREATE TABLE Eigenkunde (
+  Kunden_ID            NUMERIC NOT NULL,
+  Geburtsdatum         DATETIME2,
+  Strasse              VARCHAR(50),
+  Hausnummer           VARCHAR(15),
+  PLZ                  CHAR(5),
+  Ort                  VARCHAR(20),
+  PersonalausweisNr    VARCHAR(9),
+  Ausstellungsdatum    DATETIME2,
+  Ablaufdatum          DATETIME2,
+  Staatsangehoerigkeit VARCHAR(20),
+  Geburtsort           VARCHAR(50),
+  Telefon              VARCHAR(15),
+  Emailadresse         VARCHAR(25),
+  CONSTRAINT eigenkunde_pk PRIMARY KEY (Kunden_ID),
+  CONSTRAINT personalausweisNr_uk UNIQUE (PersonalausweisNr DESC)
+)
+ON KAM;
+GO
+        \end{lstlisting}
+      
+        %Erstellen Sie die Tabelle \identifier{mitarbeiter} gemäß Ihrem
+        % ER-Modell und legen Sie ein \UNIQUE-Constraint auf die Spalte
+        %\identifier{sozversnr}. Schließen Sie die Spalten \identifier{nachname}
+        % und \identifier{vorname} in den Index als Nichtschlüsselspalten in.
+        \input{admin/uebungen/admin_chapter_05/item_g}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+CREATE TABLE Mitarbeiter (
+  Mitarbeiter_ID   NUMERIC NOT NULL,
+  Vorname          VARCHAR(30),
+  Nachname         VARCHAR(35),
+  Vorgesetzter_ID  NUMERIC,
+  Bankfiliale_ID   NUMERIC,
+  Geburtsdatum     DATETIME2,
+  SozVersNr        VARCHAR(20),
+  Gehalt           NUMERIC(12,2),
+  Strasse          VARCHAR(50),
+  Hausnummer       VARCHAR(20),
+  PLZ              CHAR(5),
+  Ort              VARCHAR(20),
+  Provision        NUMERIC,
+  CONSTRAINT Mitarbeiter_pk PRIMARY KEY (Mitarbeiter_ID)
+)
+ON KAM;
+GO
+
+CREATE UNIQUE NONCLUSTERED INDEX idx_SozVersNr
+ON dbo.Mitarbeiter (SozVersNr)
+INCLUDE (Vorname, Nachname);
+GO
+        \end{lstlisting}
+
+        %Legen Sie einen nicht gruppierten Index auf die Tabelle
+        %\identifier{eigenkunde} (Spalte \identifier{ablaufdatum}). Der Index
+        %soll nur die Zeilen enthalten, die einen Personalausweis zeigen, der vor dem 01.01.2016
+        %abgelaufen ist. Schließen Sie die Spalte \identifier{personalausweisnr}
+        % als Nichtschlüsselspalte in den Index ein.
+        \input{admin/uebungen/admin_chapter_05/item_h}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+CREATE NONCLUSTERED INDEX idx_ablaufdatum
+ON Eigenkunde (Ablaufdatum)
+INCLUDE (PersonalausweisNr)
+WHERE  Ablaufdatum < CONVERT(DATETIME2, '2016-01-01');
+GO
+        \end{lstlisting}
+\clearpage
+        %Ermitteln Sie den Prozentsatz der logischen Indexfragmentierung der
+        % beiden Indizes \identifier{mitarbeiter\_pk} und \identifier{girokonto\_pk}.
+        \input{admin/uebungen/admin_chapter_05/item_i}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+SELECT a.index_id, name, avg_fragmentation_in_percent
+FROM   sys.dm_db_index_physical_stats(DB_ID(N'Bank'), 
+       OBJECT_ID('dbo.mitarbeiter'), NULL, NULL, NULL) AS a
+       JOIN sys.indexes AS b
+     ON (a.object_id = b.object_id AND a.index_id = b.index_id);
+GO
+
+/* 1 mitarbeiter_pk 80 -> REBUILD */ 
+
+SELECT a.index_id, name, avg_fragmentation_in_percent
+FROM   sys.dm_db_index_physical_stats(DB_ID(N'Bank'), 
+       OBJECT_ID('dbo.girokonto'), NULL, NULL, NULL) AS a
+       JOIN sys.indexes AS b
+     ON (a.object_id = b.object_id AND a.index_id = b.index_id);
+GO
+
+/* 1 girokonto_pk 25 -> REORGANIZE */
+        \end{lstlisting}
+
+        %Ergreifen Sie für jeden der beiden Indizes die geeignete Maßnahme, um
+        %deren Fragmentierung zu reduzieren.
+        \input{admin/uebungen/admin_chapter_05/item_j}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+/* 1 mitarbeiter_pk 80 -> REBUILD */ 
+
+ALTER INDEX mitarbeiter_pk 
+ON Mitarbeiter
+REBUILD;
+
+/* 1 girokonto_pk 25 -> REORGANIZE */
+
+ALTER INDEX girokonto_pk
+ON Girokonto
+REORGANIZE;
+        \end{lstlisting}
+\clearpage
+        %Erstellen Sie die Tabelle \identifier{girokonto} gemäß Ihrem ER-Modell.
+        %Legen Sie den Primärschlüssel dieser Tabelle mit einem clustered Index
+        % an.
+        \input{admin/uebungen/admin_chapter_05/item_k}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+CREATE TABLE Girokonto (
+  Konto_ID       NUMERIC NOT NULL,
+  Gebuehr        NUMERIC(12,2),
+  Guthaben       NUMERIC(12,2),
+  Habenzins      NUMERIC(5,2),
+  Kreditrahmen   NUMERIC(12,2),
+  CONSTRAINT girokonto_pk PRIMARY KEY CLUSTERED (Konto_ID)
+)
+ON KAM;
+        \end{lstlisting}
+
+        %Erstellen Sie einen nicht gruppierten Index aufl der Spalte
+        %\identifier{guthaben} der Tabelle \identifier{girokonto}.
+        \input{admin/uebungen/admin_chapter_05/item_l}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+CREATE NONCLUSTERED INDEX idx_guthaben
+ON Girokonto (Guthaben);
+GO
+        \end{lstlisting}
+
+        %Deaktivieren Sie den gruppierten Index der Tabelle
+        % \identifier{girokonto} und beantworten Sie die folgenden Fragen:
+        \input{admin/uebungen/admin_chapter_05/item_m}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+ALTER INDEX girokonto_pk
+ON Girokonto
+DISABLE;
+        \end{lstlisting}
+\clearpage
+        %Suchen Sie einen Weg, den gruppierten und den nicht gruppierten Index
+        % der Tabelle \identifier{girokonto} in einem Zug zu reaktivieren.
+        \input{admin/uebungen/admin_chapter_05/item_n}
+        \begin{lstlisting}[language=ms_sql]
+USE [Bank_2014]
+GO
+
+ALTER INDEX ALL
+ON Girokonto
+REBUILD;
+        \end{lstlisting}
+
+        %Lesen Sie den Artikel \parencite{utilUDPaC} und notieren Sie sich
+        %mindestens drei sinnvolle Fragen!
+        \input{admin/uebungen/admin_chapter_05/item_o}
+      \end{enumerate}

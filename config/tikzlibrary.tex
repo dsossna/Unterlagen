@@ -1,0 +1,33 @@
+  % Einstellungen fuer Tikz
+  \usetikzlibrary{positioning}
+  \usetikzlibrary{shadows}
+  \usetikzlibrary{calc}
+  \usetikzlibrary{arrows}
+  \tikzstyle{every entity} = [top color=white, bottom color=blue!30,
+                              draw=blue!50!black!100, drop shadow]
+  \tikzstyle{every weak entity} = [drop shadow={shadow xshift=.7ex,
+                                  shadow yshift=-.7ex}]
+  \tikzstyle{every attribute} = [top color=white, bottom color=yellow!20,
+                                draw=yellow, node distance=1cm, drop shadow]
+  \tikzstyle{every relationship} = [top color=white, bottom color=red!20,
+                                    draw=red!50!black!100, drop shadow]
+  \tikzstyle{every isa} = [top color=white, bottom color=green!20,
+                          draw=green!50!black!100, drop shadow]
+  \tikzstyle{isa90} = [isosceles triangle, isosceles triangle apex angle=60,
+                      shape border rotate=90,draw, black, very thick, minimum size=3em, every isa]
+  \tikzstyle{circleA} = [circle, top color=white, bottom color=red!20, draw=red!50!black!100, drop shadow, scale=1.4]
+  \tikzstyle{circleB} = [circle, top color=white, bottom color=blue!30, draw=blue!50!black!100, drop shadow, scale=1.4]
+  \tikzstyle{circleC} = [circle, top color=white, bottom color=yellow!20, draw=yellow!50!black!100, drop shadow, scale=1.4]
+  \tikzstyle{redspot} =  [circle, top color=red, bottom color=red, draw=red, drop shadow, scale=0.6]
+  \tikzstyle{bluespot} =  [circle, top color=blue, bottom color=blue, draw=blue, drop shadow, scale=0.6, text=white, text centered]
+  \tikzstyle{yellowspot} =  [circle, top color=yellow, bottom color=yellow, draw=yellow, drop shadow, scale=0.6]
+
+  \tikzstyle{treenode}   = [align=center, inner sep=0.5pt, text centered, font=\sffamily]
+  \tikzstyle{arn_root}   = [treenode, circle, top color=white, bottom color=red!20,
+                            draw=red!50!black!100, drop shadow, text width=1.5em, very thick]
+  \tikzstyle{arn_first}  = [treenode, circle, top color=white, bottom color=blue!30,
+                            draw=blue!50!black!100, drop shadow, minimum width=2.5em]
+  \tikzstyle{arn_second} = [treenode, circle, top color=white, bottom color=green!30,
+                            draw=green!50!black!100, drop shadow, minimum width=2.5em]
+  \tikzstyle{arn_third} = [treenode, circle, top color=white, bottom color=yellow!20,
+                            draw=yellow!50!black!100, drop shadow,, minimum width=2.5em]

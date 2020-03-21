@@ -1,0 +1,155 @@
+\section{Lösungen - Datenbank Storage Strukturen verwalten}
+  \begin{enumerate}
+    \input{exercises/dbadmin_05/item_a}
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a15
+SQL> col value format a10
+SQL> SELECT name, value
+  2  FROM   v$system_parameter
+  3  WHERE  name LIKE 'db_block_size';
+
+NAME            VALUE
+--------------- ----------
+db_block_size   8192
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_b}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT tablespace_name
+  2  FROM   dba_tablespaces;
+
+TABLESPACE_NAME
+------------------------------
+&SYSTEM&
+SYSAUX
+UNDOTBS1
+TEMP
+USERS
+EXAMPLE
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_c}
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col allocation_type format a15
+SQL> SELECT tablespace_name, allocation_type
+  2  FROM   dba_tablespaces
+  3  WHERE  allocation_type LIKE 'UNIFORM';
+
+TABLESPACE_NAME                ALLOCATION_TYPE
+------------------------------ ---------------
+TEMP                           &UNIFORM&
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_d}
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col segment_name format a30
+SQL> SELECT segment_name, extents
+  2  FROM   dba_segments
+  3  WHERE  LOWER(segment_name) LIKE 'buchung';
+
+SEGMENT_NAME                      EXTENTS
+------------------------------ ----------
+BUCHUNG                                32
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_e}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE TABLESPACE uebung_ts
+  2 DATAFILE '/u02/oradata/orcl/uebung_ts01.dbf' SIZE 100M
+  3          AUTOEXTEND ON MAXSIZE 500M,
+  4          '/u03/oradata/orcl/uebung_ts02.dbf' SIZE 200M;
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_f}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE BIGFILE TABLESPACE big_data
+  2 DATAFILE '/u02/oradata/orcl/big_data.dbf' SIZE 1G
+  3 EXTENT MANAGEMENT LOCAL UNIFORM SIZE 512K;
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_g}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT tablespace_name, bigfile
+  2  FROM   dba_tablespaces
+  3  WHERE  bigfile LIKE 'YES'
+
+TABLESPACE_NAME                BIG
+------------------------------ ---
+BIG_DATA                       YES
+
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_h}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT tablespace_name, bytes / POWER(1024, 2) AS MB
+  2  FROM   dba_temp_files;
+
+TABLESPACE_NAME                        MB
+------------------------------ ----------
+TEMP                                   20
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_i}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE TEMPORARY TABLESPACE temp_ts
+  2  TEMPFILE '/u02/oradata/orcl/temp_ts01.dbf' SIZE 500M
+  3           AUTOEXTEND ON MAXSIZE 4G
+  4  EXTENT MANAGEMENT LOCAL UNIFORM SIZE 1M;
+      \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_05/item_j}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE '/u03/oradata/orcl/uebung_ts02.dbf'
+  3           AUTOEXTEND ON MAXSIZE 1G
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_k}
+    \input{exercises/dbadmin_05/item_l}
+		\begin{lstlisting}[language=oracle_sql]
+ERROR at line 1:
+ORA-01653: unable to extend table ALICE.&FULL& by 128 in tablespace FULLTS
+		\end{lstlisting}
+		\input{exercises/dbadmin_05/item_m}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT file_name
+  2  FROM   dba_data_files
+  3  WHERE  tablespace_name LIKE 'FULLTS';
+
+FILE_NAME
+---------------------------------------------------------------------------
+/u02/oradata/orcl/fullts01.dbf
+
+-- Loesung 1
+SQL> ALTER DATABASE
+  2  DATAFILE '/u02/oradata/orcl/fullts01.dbf' RESIZE 20M;
+
+-- Loesung 2
+SQL> ALTER TABLESPACE fullts
+  2  ADD DATAFILE '/u03/oradata/orcl/fullts02.dbf' SIZE 20M;
+      \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_05/item_n}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER TABLESPACE fullts OFFLINE NORMAL;
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_o}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> DROP TABLESPACE fullts
+  2  INCLUDING CONTENTS AND DATAFILES;
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_p}
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col file_name format a50
+SQL> SELECT file_name, file_id
+  2  FROM   dba_data_files
+  3  WHERE  tablespace_name LIKE 'UEBUNG_TS';
+
+FILE_NAME                                             FILE_ID
+-------------------------------------------------- ----------
+/u02/oradata/orcl/uebung_ts01.dbf                           8
+/u03/oradata/orcl/uebung_ts02.dbf                           9
+
+SQL> ALTER TABLESPACE uebung_ts OFFLINE NORMAL;
+
+SQL> host mv /u03/oradata/orcl/uebung_ts02.dbf /u02/oradata/orcl
+
+SQL> ALTER DATABASE
+  2  RENAME FILE '/u03/oradata/orcl/uebung_ts02.dbf'
+  3           TO '/u02/oradata/orcl/uebung_ts02.dbf';
+
+SQL> ALTER TABLESPACE uebung_ts ONLINE;
+      \end{lstlisting}
+    \input{exercises/dbadmin_05/item_q}
+    \end{enumerate}

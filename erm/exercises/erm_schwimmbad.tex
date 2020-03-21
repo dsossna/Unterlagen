@@ -1,0 +1,52 @@
+      \subsection{Übungsaufgabe Schwimmbad}
+        Entwerfen Sie, basierend auf der folgenden Lage, ein ER-Modell, inklusive der Beziehungen zwischen den Entitäten.
+
+        Für ein groß{}es Freizeitbad soll eine Datenbank für die Buchhaltung geschaffen werden. Im Einzelnen müssen die nachfolgend beschriebenen Zusammenhänge in der Datenbank abgebildet werden.
+
+        \subsubsection{Vorgaben}
+          \begin{itemize}
+            \item Ein Freizeitbad besitzt 15 verschiedene Kartentypen, von denen deren Bezeichnung, der
+            Kartenpreis und eine eindeutige ID zu speichern sind. Die unterschiedlichen Kartentypen sind nachfolgend aufgeschlüsselt:
+              \begin{itemize}
+                \item Stundenkarte (2 und 4 Stunden) für Kinder, Erwachsene, Studenten
+                \item Tageskarte für Kinder, Erwachsene, Studenten
+                \item Monatskarte für Kinder, Erwachsene, Studenten
+                \item Saisonkarte für Kinder, Erwachsene, Studenten
+              \end{itemize}
+            \item Für die Buchhaltung ist es wichtig, dass jede verkaufte Eintrittskarte gespeichert wird, so
+            dass am Jahresende eine korrekte Steuererklärung erstellt werden kann. Zu jeder Eintrittskarte wird
+            eine Karten\_ID, ein Barcode und das Verkaufsdatum gespeichert.
+            \item Jede Eintrittskarte ist von genau einem Kartentyp, wobei es vorkommen kann, dass von einem Kartentyp keine Eintrittskarte verkauft wird.
+            \item Der Verkauf der Eintrittskarten erfolgt durch die Bademeister. Zu jedem Bademeister ist
+            sein Name (Vorname, Nachname), seine Wohnadresse, das Datum der Teilnahme am letzten Rettungsschwimmerkurs und das Teilnahmedatum am letzten Erstehilfekurs, sowie eine eindeutige ID zu speichern.
+            \item Wird eine Eintrittskarte verkauft, geschieht dies durch einen Bademeister. Es ist immer mindestens ein Bademeister mit dem Verkauf von Eintrittskarten beschäftigt.
+\clearpage
+            \item Die Bademeister können noch andere Aufgaben (Aufsicht, Reinigungsarbeiten,
+            Wartungsarbeiten, etc.), die in Arbeitsplänen zusammengestellt werden, ausführen. Jeder Bademeister muss im System festhalten, wann er welche Arbeit auf seinem aktuellen Arbeitsplan erledigt hat. Dabei ist es möglich, dass eine Aufgabe von keinem Bademeister erledigt wird.
+            \item Für jede Aufgabe ist deren Kurzbezeichnung, eine Beschreibung und die
+            Arbeitsdauer in Stunden, sowie eine eindeutige ID zu speichern.
+          \end{itemize}
+
+        \subsubsection{Zusatzaufgaben}
+          \begin{enumerate} %{itemize}
+            \item Nach der Fertigstellung des Modells verlangt der Kunde, dass der Preis eines
+            Kartentyps abhängig von der jeweiligen Badesaison sein muss. Für eine Saison wird deren
+            Bezeichnung (z. B. Sommer 2012), das Anfangsdatum und das Enddatum gespeichert.
+
+            Modellieren Sie dieses Szenario und entscheiden Sie selbst, welche Kardinalitäten für die
+            Beziehung/Beziehungen notwendig sind!
+
+            \item Unser Kunde, das Freizeitbad, benötigt eine weitere Änderung am bestehenden System.
+            Bei der Ermittlung der Vorgaben wurde vergessen, dass alle Monats- und Saisonkarten
+            Namensbezogen (Vorname, Nachname, Adresse) und mit einem Foto versehen, verkauft werden.
+            Auß{}erdem muss bei den Stundenkarten ein Zeitstempel gespeichert werden, so dass die
+            Datenbank automatisch errechnen kann, wann die Person das Bad wieder verlassen, bzw. ob die
+            Person bereits eine Nachzahlung leisten muss.
+
+            \item In einer erneuten Anfrage bittet die Leitung des Freizeitbades darum, dass eine weitere
+            Änderung eingearbeitet wird. Wenn einem Bademeister gekündigt wird, wird dieser nicht aus
+            dem System gelöscht, sondern nur sein Kündigungsdatum gespeichert.
+
+            Setzen Sie diese Änderung so um, dass keine NULL-Werte im System erzeugt werden.
+          \end{enumerate}%{itemize}
+\clearpage

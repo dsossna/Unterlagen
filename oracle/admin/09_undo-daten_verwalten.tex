@@ -1,0 +1,180 @@
+\chapter{Undo-Daten verwalten}
+    \label{undodata}
+    \chaptertoc{}
+    \cleardoubleevenpage
+    
+        \section{Undo-Tablespaces verwalten}
+      \subsection{Automatic Undo Management aktivieren}
+        Oracle ist in der Lage, Undo-Daten voll automatisiert zu verwalten. Der
+        dazu verwendete Mechanismus heißt \enquote{Automatic Undo
+        Management}. Wird er benutzt, muss nur ein Undo-Tablespace erstellt
+        werden und Oracle kümmert sich um den Rest.
+
+        Zur Aktivierung dieses Features, muss der Parameter \parameter{undo\_management} auf den Wert \enquote{auto} gesetzt werden. Dadurch wird bei der Erstellung der Datenbank automatisch ein \enquote{Default Undo-Tablespace} angelegt. Ebenfalls werden auch alle Initialisierungsparameter, die mit manuellem Undo-Management zu tun haben ignoriert.
+        \begin{merke}
+          Manuelles Undo Management ist zwar noch immer möglich, wird aber von Oracle keinesfalls mehr empfohlen!
+        \end{merke}
+        Ist der Undo-Tablespace nicht verfügbar, kann die Datenbank nicht
+        geöffnet werden. Tritt dieser Fall ein, wird ein Eintrag in der Alert
+        log Datei gemacht.
+        \begin{lstlisting}[caption={Fehlermeldung bei nicht vorhandenem
+        Undo-Tablespace},label=admin501,language=terminal]
+Mon Sep 23 15:52:19 2007 
+Errors in file /u01/app/oracle/diag/rdbms/orcl/orcl/trace/orcl_ora_544.trc:
+ORA-30012: Undo Tablespace 'UNDOTBS01' ist nicht vorhanden oder hat den falschen
+Typ
+Mon Sep 23 15:52:19 2007
+Error 30012 happened during db &open&, shutting down database
+&user&: terminating instance due to error 30012
+Mon Sep 23 15:52:19 2007
+Error in file /u01/app/oracle/diag/rdbms/orcl/orcl/trace/orcl/orcl_pmon_3000.trc
+ORA-30012: undo tablespace '' does not exist or of wrong type
+        \end{lstlisting}
+        Der Parameter \parameter{undo\_tablespace} legt den Undo-Tablespace der Instanz fest.
+        \begin{lstlisting}[caption={Der Parameter \parameter{undo\_management}},label=admin502,language=oracle_sql]
+UNDO_TABLESPACE = undotbs_01
+        \end{lstlisting}
+      \subsection{Einen Undo-Tablespace erstellen}
+        Es gibt zwei Möglichkeiten einen Undo-Tablespace zu erstellen:
+        \begin{itemize}
+          \item Durch das \languageorasql{CREATE DATABASE}-Kommando, beim Anlegen der Datenbank.
+          \item Mit dem \languageorasql{CREATE UNDO TABLESPACE}-Statement
+        \end{itemize}
+        Wird ein Undo-Tablespace mit dem \languageorasql{CREATE UNDO TABLESPACE}-Statement erstellt, sind die beiden einzigen Parameter die dabei geändert werden können:
+        \begin{itemize}
+          \item die Datafile-Klausel
+          \item die Extent-Management-Klausel
+        \end{itemize}
+        Im folgenden Beispiel wird ein automatisch wachsender Undo-Tablespace erstellt.
+        \begin{lstlisting}[caption={Undo-Tablespace erstellen},label=admin503,language=oracle_sql]
+SQL> CREATE UNDO TABLESPACE undotbs02
+  2  DATAFILE '/u02/oradata/orcl/undotbs02_01.dbf' SIZE 10M
+  3  AUTOEXTEND ON;
+        \end{lstlisting}
+        \begin{merke}
+          Es können mehrere Undo-Tablespaces erstellt werden, jedoch ist immer
+          nur einer aktiv.
+        \end{merke}
+      \subsection{Einen Undo-Tablespace verändern}
+        Undo-Tablespaces werden mit dem Kommando \languageorasql{ALTER TABLESPACE} verändert. Da die meisten Parameter für einen Undo-Tablespace direkt vom System verwaltet werden, muss sich der DBA nur um folgende Dinge kümmern:
+        \begin{itemize}
+          \item Datendateien zum Tablespace hinzufügen
+          \item Datendateien des Tablespaces umbenennen
+          \item Datendateien des Tablespaces on-/offline setzen
+          \item (De-)Aktivieren der Retention Guarantee
+        \end{itemize}
+        Andere Parameter können nicht durch den Administrator verändert werden.
+
+        Um zu verhindern, dass der Platz in einem Undo-Tablespace nicht mehr ausreicht, kann eine Datendatei hinzugefügt werden.
+          \begin{lstlisting}[caption={Datendatei zum Undo-Tablespace hinzufügen},label=admin504,language=oracle_sql]
+SQL> ALTER TABLESPACE undotbs02
+  2  ADD DATAFILE '/u01/app/oracle/oradata/orcl/undotbs02_02.dbf' SIZE 100M
+  3  AUTOEXTEND ON MAXSIZE 5G;
+          \end{lstlisting}
+          Eine andere Möglichkeit besteht darin, eine bestehende Datendatei mit dem \languageorasql{ALTER DATABASE}-Kommando in ihrer Größe zu verändern.
+          \begin{lstlisting}[caption={Datendatei in ihrer Größe verändern},label=admin505,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE '/u01/app/oracle/oradata/orcl/undotbs02_02.dbf'
+  3  RESIZE 250M;
+          \end{lstlisting}
+      \subsection{Einen Undo-Tablespace löschen}
+        Um einen Undo-Tablespace zu löschen, wird das \languageorasql{DROP TABLESPACE}-Kommando verwendet.
+        \begin{lstlisting}[caption={Undo-Tablespace löschen},label=admin506,language=oracle_sql]
+SQL> DROP TABLESPACE undotbs02;
+        \end{lstlisting}
+        \begin{merke}
+          Ein Undo-Tablespace kann nur gelöscht werden, wenn keine offenen Transaktionen ihn mehr verwenden. Zu beachten ist dabei, dass ein Undo-Tablespace, trotz der Tatsache, dass als unexpired markierte Undo-Records existieren, gelöscht werden kann. Daher ist beim Löschen von Undo-Tablespaces größte Vorsicht geboten.
+        \end{merke}
+      \subsection{Den Undo-Tablespace wechseln}
+        Da der \parameter{undo\_tablespace}-Initialisierungsparameter dynamisch ist, ist es möglich den Undo-Tablespace im laufenden Betrieb zu wechseln.
+        \begin{lstlisting}[caption={Undo-Tablespace wechseln},label=admin507,language=oracle_sql]
+SQL> ALTER SYSTEM SET undo_tablespace = undotbs02;
+        \end{lstlisting}
+        \subsubsection{Auswirkungen des Wechsels}
+          Hat der Wechsel funktioniert, wird der neue Undo-Tablespace, ohne für die Nutzer spürbare Änderungen, verwendet.
+
+          Ein Fehlschlagen des Wechsels kann aus folgenden Gründen geschehen:
+          \begin{itemize}
+            \item Der neue Tablespace existiert nicht
+            \item Der neue Tablespace ist kein Undo-Tablespace
+            \item Der neue Undo-Tablespace wird bereits von einer anderen Instanz benutzt (RAC)
+          \end{itemize}
+          Wenn nach dem Wechsel neue Transaktionen durch Nutzer gestartet werden, werden die Undo-Daten hierfür im neuen Undo-Tablespace verwaltet. Der alte Undo-Tablespace bekommt den Status \enquote{pending offline}. Transaktionen, die vor dem Wechsel bereits bestanden, werden noch aus dem alten Undo-Tablespace bedient, es können jedoch keine neuen mehr hinzukommen.
+
+          Während ein Undo-Tablespace im pending offline-Modus ist, kann er nicht gelöscht werden. Erst wenn alle diesen Undo-Tablespace betreffenden Transaktionen beendet wurden, wird der Status des Tablespaces von pending offline auf offline gesetzt. Jetzt kann dieser Undo-Tablespace entweder einer anderen Instanz zur Verfügung gestellt oder gelöscht werden.
+    \section{Undo Retention}
+      \label{undoretention}
+      Durch das Ausführen von Transaktionen sammeln sich Undo-Daten an, die für das Zurückrollen der Transaktionen oder für Recoveryzwecke gebraucht werden. Auch nach dem Abschluss einer Transaktion ist es notwendig, diese Daten weiterhin vorzuhalten, da sie zur Aufrechterhaltung der Lesekonsistenz anderer Transaktionen wichtig sind.
+
+      Die Undo Retention bestimmt, wie lange Undo-Daten im Undo-Tablespace verweilen. Je nach dem, wie die Datenbank genutzt wird (viele Schreibvorgänge, lange Lesevorgänge, usw.) ist es wichtig diesen Wert höher oder niedriger einzustellen. Mit der Aktivierung der automatischen Undo-Verwaltung wird auch ein Standardwert von 900 Sekunden für die Undo Retention gesetzt.      Abhängig von der Undo Retention und davon, wie lange ein Datenblock bereits im Undo-Tablespace verweilt, kann er zwei verschiedene Markierungen erhalten:
+      \begin{itemize}
+        \item \textbf{expired}: Alte Undo-Daten, deren Transaktionen bereits bestätigt wurden und deren Alter größer ist, als die aktuelle Undo Retention, werden als expired\footnote{expired = engl. abgelaufen} markiert.
+        \item \textbf{unexpired}: Undo-Daten, deren Transaktionen bereits bestätigt wurden, die aber noch jünger sind, als die aktuelle Undo Retention, werden als unexpired\footnote{unexpired = engl. noch nicht abgelaufen} markiert.
+      \end{itemize}
+
+      Die Undo Retention wird durch Oracle automatisch, basierend auf der Größe des Undo-Tablespace und der aktuellen Aktivitäten im System, richtig gesetzt. Eine manuelle Einstellung der Undo Retention kann über den Parameter \parameter{undo\_retention} geschehen. Die Angabe erfolgt in Sekunden. Vorausgesetzt der Undo-Tablespace ist groß genug, hält die Datenbank diese Vorgabe ein.
+
+      Wird der Platz für neue Transaktionen zu knapp, werden als expired markierte Undo-Daten überschrieben. Sollte dann immer noch nicht genug Platz vorhanden sein, beginnt die Datenbank, die als unexpired markierten Daten zu überschreiben. Dies kann dazu führen, dass die überschriebenen Daten, noch von einer lang laufenden Abfrage benötigt würden, weshalb die Datenbank die Abfrage mit der Fehlermeldung \enquote{Snapshot too old} abbricht.
+
+      Die beiden folgenden Punkte beschreiben noch einmal kurz, wie sich die Undo Retention auf die Lesekonsistenz der Datenbank auswirkt.
+\clearpage
+			\bild{Die Fehler\-meldung Snapshot too old}{snapshot_too_old}{0.2}
+			\begin{itemize}
+        \item Hat der Undo-Tablespace eine vordefinierte Größe und kann nicht wachsen (autoextend wurde nicht benutzt), wird der Parameter \parameter{undo\_retention} ignoriert, sobald der Platz im Undo-Tablespace zu knapp wird. In dieser Situation werden als unexpired markierte Undo-Daten überschrieben.
+        \item Kann der Undo-Tablespace wachsen, versucht die Datenbank sich an den Vorgabewert für die Undo Retention zu halten. Wird der Platz im Undo-Tablespace zu knapp wird der Tablespace vergrößert, bis eine evtl. definierte Maximalgröße erreicht wird. Danach werden unter Umständen wieder als unexpired markierte Undo-Records gelöscht.
+      \end{itemize}
+      \subsection{Automatisches Tuning der Undo Retention}
+        Wie bereits erwähnt, versucht Oracle den Wert für die Undo Retention automatisch zu tunen. Dies geschieht nach den folgenden Vorgaben:
+        \begin{itemize}
+          \item Hat der Undo-Tablespace eine feste Größe, tuned Oracle die Undo Retention so, das sie für die Größe des Undo-Tablespaces und die aktuelle Transaktionslast optimal ist.
+          \item Wurde der Undo-Tablespace so konfiguriert, das er wachsen kann, versucht Oracle die Undo Retention so zu tunen, das sie gro\ss\ genug für die bisher größte gelaufene Abfrage ist.
+        \end{itemize}
+\clearpage
+				Die aktuelle \textit{Tuned Undo Retention} kann in der dynamischen Performance View\\ \identifier{v\$undostat} in 10-Minuten-Intervallen über die letzten 4 Tage hinweg abgefragt werden. Der Wert wird dort in Sekunden angegeben. Soll die Tuned Undo Retention über einen längeren Zeitraum, als 4 Tage, hinweg beobachtet werden, kann hierzu die View \identifier{dba\_hist\_undostat} verwendet werden.
+        \begin{lstlisting}[caption={Die Tuned Undo Retention abfragen},label=admin508,language=oracle_sql]
+SQL> SELECT   TO_CHAR(begin_time, 'DD.MM.YY HH24:MI') AS "Begin Time",
+  2           TO_CHAR(end_time,   'DD.MM.YY HH24:MI') AS "End Time",
+  3           tuned_undoretention
+  4  FROM     v$undostat
+  5  ORDER BY end_time;
+        \end{lstlisting}
+      \bild{Undo Retention}{undo_retention}{0.58}
+
+      \subsection{Retention Guarantee}
+        Um den Erfolg von besonders lang laufenden Abfragen garantieren zu können, bietet Oracle die \enquote{Retention Guarantee}. Sie wird beim Anlegen des Undo-Tablespaces durch die Klausel \languageorasql{RETENTION GUARANTEE} aktiviert. Ist dies der Fall, werden die als unexpired markierten Undo-Records solange gespeichert, wie sie benötigt werden, um die Lesekonsistenz für alle laufenden Abfragen aufrecht zu erhalten.
+\clearpage
+        Die Aufrechterhaltung der Lesekonsistenz geschieht jedoch nicht ohne Kosten. Durch die Retention Guarantee ist es möglich, dass für DML-Statements bzw. deren Transaktionen nicht mehr genügend Speicher im Undo-Tablespace vorhanden ist. Eine solche Transaktion muss dann abgebrochen und zurückgerollt werden. Aus diesem Grund wird von Oracle empfohlen, diesen Mechanismus mit Bedacht zu benutzen.
+
+        Um die Retention Guarantee zu deaktivieren gibt es das \languageorasql{ALTER TABLESPACE}-Statement zusammen mit der \languageorasql{RETENTION NOGUARANTEE}-Klausel.
+        \begin{lstlisting}[caption={(De-)aktivieren der Retention Guarantee},label=admin509,language=oracle_sql]
+SQL> ALTER TABLESPACE undotbs02 RETENTION GUARANTEE;
+
+SQL> ALTER TABLESPACE undotbs02 RETENTION NOGUARANTEE;
+        \end{lstlisting}
+        Ob für den Undo-Tablespace die Retention Guarantee aktiviert wurde, kann der View \identifier{dba\_tablespaces} entnommen werden.
+        \begin{lstlisting}[caption={Den Status der Retention Guarantee abfragen},label=admin510,language=oracle_sql]
+SQL> SELECT tablespace_name, retention
+  2  FROM   dba_tablespaces
+  3  WHERE  contents = 'UNDO';
+
+TABLESPACE_NAME                &RETENTION&
+------------------------------ -----------
+UNDOTBS1                       &NOGUARANTEE&
+        \end{lstlisting}
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        \begin{literaturinternet}
+          \item \cite{REFRN10224}
+          \item \cite{REFRN10225}
+          \item \cite{REFRN10227}
+        \end{literaturinternet}
+\clearpage
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{sthref3583}
+          \item \cite{sthref3800}
+          \item \cite{sthref2575}
+          \item \cite{sthref3804}
+          \item \cite{REFRN23460}
+        \end{literaturinternet}
+\clearpage

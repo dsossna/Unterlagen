@@ -1,0 +1,32 @@
+\documentclass{scrbook}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Use option draft=true to enable markers in the text helping the author
+%%% to find typographic errors
+%%%
+%%% Use draft=false for productive use, e. g. printing the document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\KOMAoptions{draft=true}
+
+% Include LaTex packages
+\input{../config/packages}
+
+% Include the options file
+\input{../config/options}
+
+% Include all user defined commands
+\input{../config/commands}
+
+% KOMAScript guide, p. 66 (3.7 Dokumenttitel)
+% Define title and author of this document
+\title{Datenbankadministration}
+\author{Florian Weidinger}
+
+% KOMAScript guide, p. 271 ff.
+\lehead*{}
+\rohead*{}
+\chead{\leftmark}
+\makeatletter
+\lofoot*{\normalfont\textbf{\@title{} \@subtitle}}
+\makeatother
+\rofoot*{\Large\pagemark}
+\lefoot*{\Large\pagemark}

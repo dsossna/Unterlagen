@@ -1,0 +1,156 @@
+\section{Lösungen - Recovery mit dem RMAN}
+  \begin{enumerate}
+    \input{exercises/dbadmin_18/item_a}
+      \begin{lstlisting}[caption={Ermitteln des betroffenen Redo Log Members im Alert Log},language=terminal]
+Errors in file /u01/app/oracle/diag/rdbms/orcl/orcl/trace/orcl_arc0_3513.trc
+ORA-00313: &open& failed for members of log group 5 of thread 1
+ORA-00312: online log 5 thread 1: '/u01/app/oracle/oradata/orcl/redo05a.log'
+ORA-27037: unable to obtain file status
+Linux-x86_64 Error: 2: No such file or directory
+      \end{lstlisting}
+      \begin{lstlisting}[caption={Recovern des Members},language=terminal]
+[oracle@FEA11-119SRV ~]$ cd /u01/app/oracle/oradata/orcl
+[oracle@FEA11-119SRV ~]$ cp /u02/oradata/orcl/redo05b.log redo05a.log
+      \end{lstlisting}
+    \input{exercises/dbadmin_18/item_b}
+    \input{exercises/dbadmin_18/item_c}
+    \input{exercises/dbadmin_18/item_d}
+      \begin{lstlisting}[caption={Ermitteln des betroffenen Tempfiles im Alert Log},language=terminal]
+Errors in file /u01/app/oracle/diag/rdbms/orcl/orcl/trace/orcl_m000_7480.trc
+ORA-01116: error in opening database file 201
+ORA-01110: data file 201: '/u01/app/oracle/oradata/orcl/temp01.dbf'
+ORA-27041: unable to &open& file
+Linux-x86_64 Error: 2: No such file or directory
+Additional information: 3
+      \end{lstlisting}
+      \begin{lstlisting}[caption={Neues Tempfile erstellen},language=oracle_sql]
+SQL> ALTER TABLESPACE temp
+  2  ADD TEMPFILE '/u02/oradata/ORCL/temp02.dbf'
+  3  SIZE 20 M AUTOEXTEND ON MAXSIZE 500M;
+      \end{lstlisting}
+\clearpage
+      \begin{lstlisting}[caption={Beschädigtes Tempfile löschen},language=oracle_sql]
+SQL> ALTER TABLESPACE temp
+  2  DROP TEMPFILE '/u02/oradata/ORCL/temp01.dbf';
+      \end{lstlisting}
+    \input{exercises/dbadmin_18/item_e}
+      \begin{lstlisting}[caption={Ermitteln der betroffenen Kontrolldatei im Alert Log},language=terminal]
+Errors in file /u01/app/oracle/diag/rdbms/orcl/orcl/trace/orcl_ora_2765.trc:
+ORA-00210: cannot &open& the specified control file
+ORA-00202: control file: '/u01/app/oracle/oradata/orcl/control01.ctl'
+ORA-27041: unable to &open& file
+Linux-x86_64 Error: 2: No such file or directory
+      \end{lstlisting}
+      \begin{lstlisting}[caption={Recovern der Kontrolldatei},language=terminal]
+[oracle@FEA11-119SRV ~]$ cd /u01/app/oracle/oradata/orcl
+[oracle@FEA11-119SRV ~]$ cp control02.ctl control01.ctl
+      \end{lstlisting}
+    \input{exercises/dbadmin_18/item_f}
+      \begin{lstlisting}[caption={Recovern der Datendatei},language=rman]
+RMAN> VALIDATE database;
+Starting validate at 03-NOV-13
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=21 device type=&DISK&
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=144 device type=&DISK&
+RMAN-06169: could not read file header for datafile 6 error reason 5
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of validate command at 11/03/2013 09:24:26
+RMAN-06056: could not access datafile 6
+      \end{lstlisting}
+\clearpage
+      \begin{lstlisting}[language=rman,emph={[9]ALTER,DATABASE, DATAFILE,OFFLINE,ONLINE},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE DATAFILE 6 OFFLINE';
+
+RMAN> RESTORE datafile 6;
+
+RMAN> RECOVER datafile 6;
+
+RMAN> SQL 'ALTER DATABASE DATAFILE 6 ONLINE';
+      \end{lstlisting}
+    \input{exercises/dbadmin_18/item_g}
+      \begin{lstlisting}[caption={Recovern der Systemdatendatei},language=rman,alsolanguage=sqlplus,emph={[9]ALTER,DATABASE,OPEN},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> VALIDATE database; 
+Starting validate at 03-NOV-13
+released channel: ORA_SBT_TAPE_1
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting validation of datafile
+channel ORA_DISK_1: specifying datafile(s) for validation
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03009: failure of validate command on ORA_DISK_1 channel at 11/03/2013
+ORA-01122: database file 1 failed verification check
+ORA-01110: data file 1: '/u01/app/oracle/oradata/orcl/system01.dbf'
+ORA-01565: error in identifying file 
+           '/u01/app/oracle/oradata/orcl/system01.dbf'
+ORA-27037: unable to obtain file status
+Linux-x86_64 Error: 2: No such file or directory
+Additional information: 3
+
+RMAN> shutdown abort
+
+RMAN> startup mount
+
+RMAN> RESTORE datafile 1;
+
+RMAN> RECOVER datafile 1;
+
+RMAN> ALTER DATABASE OPEN;
+      \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_18/item_h}
+      \begin{lstlisting}[caption={Herunterfahren der Datenbank in SQL*Plus},language=oracle_sql,alsolanguage=sqlplus]
+SQL> shutdown abort
+      \end{lstlisting}
+      \begin{lstlisting}[caption={Recovern der Kontrolldateien},language=rman,alsolanguage=sqlplus,emph={[9]ALTER,DATABASE, MOUNT,OPEN,RESETLOGS},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SET DBID 1351916467;
+RMAN> startup nomount
+RMAN> RESTORE controlfile
+2>    FROM AUTOBACKUP
+3>    RECOVERY AREA '/u05/fast_recovery_area'
+4>    DB_NAME = 'orcl';
+
+Starting restore at 03-NOV-13
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=134 device type=&DISK&
+
+recovery area destination: /u05/fast_recovery_area
+database name (or database unique name) used for search: ORCL
+channel ORA_DISK_1: &AUTOBACKUP& /u05/fast_recovery_area/ORCL/autobackup/
+channel ORA_DISK_1: looking for &AUTOBACKUP& on day: 20131103
+channel ORA_DISK_1: restoring control file from &AUTOBACKUP&
+channel ORA_DISK_1: control file restore from &AUTOBACKUP& complete
+output file name=/u01/app/oracle/oradata/orcl/control01.ctl
+output file name=/u05/fast_recovery_area/orcl/control02.ctl
+Finished restore at 03-NOV-13
+
+RMAN> SQL 'ALTER DATABASE MOUNT';
+
+RMAN> RECOVER database;
+
+RMAN> SQL 'ALTER DATABASE OPEN RESETLOGS';
+      \end{lstlisting}
+
+    \input{exercises/dbadmin_18/item_i}
+    \input{exercises/dbadmin_18/item_j}
+      \begin{lstlisting}[caption={Validieren der Datenbank},language=rman]
+RMAN> VALIDATE database;
+
+      \end{lstlisting}
+    \input{exercises/dbadmin_18/item_k}
+      \begin{lstlisting}[caption={Validieren der Datenbank},language=rman]
+RMAN> RUN {
+2>      SET MAXCORRUPT FOR datafile 7 TO 999;
+3>      BACKUP AS BACKUPSET DATAFILE 7;
+4>    }
+      \end{lstlisting}
+    \input{exercises/dbadmin_18/item_l}
+      \begin{lstlisting}[caption={Recovern der Datendatei},language=rman]
+RMAN> BLOCKRECOVER CORRUPTION LIST;
+      \end{lstlisting}
+  \end{enumerate}

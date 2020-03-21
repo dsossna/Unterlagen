@@ -1,0 +1,212 @@
+\section{Lösungen - Backups mit dem RMAN}
+  \begin{enumerate}
+    \input{exercises/dbadmin_17/item_a}
+
+    \begin{lstlisting}[caption={TNS-Eintrag in der tnsnames.ora},
+    language=configfile]
+CATDB =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119CAT)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = CATDB.local)
+    )
+  )
+    \end{lstlisting}
+    \begin{lstlisting}[caption={Erstellen des
+    Katalogschemas},language=oracle_sql,alsolanguage=sqlplus]
+[oracle@FEA11-119SRV ~]$ sqlplus sys/oracle@CATDB as sysdba
+
+SQL> CREATE TABLESPACE catts99
+  2  DATAFILE '/u03/oradata/CATDB/catts99_01.dbf' SIZE 10M
+  3  AUTOEXTEND ON MAXSIZE 20M;
+
+Tablespace created.
+
+SQL> CREATE USER catowner99
+  2  IDENTIFIED BY SeCuRe
+  3  DEFAULT TABLESPACE catts99
+  4  QUOTA unlimited ON catts99;
+
+User created.
+
+SQL> GRANT create session, recovery_catalog_owner
+  2  TO catowner99;
+    \end{lstlisting}
+\clearpage
+    \begin{lstlisting}[caption={Recovery Katalog erstellen und Datenbank registrieren},language=rman]
+[oracle@FEA11-119SRV ~]$ export NLS_DATE_FORMAT='DD.MM.YYYY HH24:MI'
+[oracle@FEA11-119SRV ~]$ rman catalog catowner/catpass@CATDB
+RMAN> CREATE CATALOG;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_b}
+    \begin{lstlisting}[language=rman]
+RMAN> connect target /
+RMAN> REGISTER DATABASE;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_c}
+    \begin{lstlisting}[language=rman]
+RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_d}
+    \begin{lstlisting}[language=rman]
+RMAN> BACKUP AS BACKUPSET tablespace bank;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_e}
+    \begin{lstlisting}[language=rman]
+RMAN> LIST backupset OF tablespace bank SUMMARY
+2>    COMPLETED AFTER '29.10.2013'
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time #Pieces #Copies Compressed Tag
+------- -- -- - ----------- --------------- ------- ------- ---------- ---
+9       B  F  A DISK        29.10.13 11:54  1       1       NO         TAG...
+
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_f}
+    \begin{lstlisting}[language=rman]
+RMAN> DELETE backupset 9;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_g}
+    \begin{lstlisting}[language=rman]
+RMAN> BACKUP AS COMPRESSED BACKUPSET tablespace bank
+2>    TAG='ts_bank_29.10.2013-13:53';
+    \end{lstlisting}
+\clearpage
+    \input{exercises/dbadmin_17/item_i}
+    \begin{lstlisting}[language=rman]
+RMAN> CONFIGURE CHANNEL DEVICE TYPE sbt
+2>    PARMS 'SBT_LIBRARY=oracle.disksbt,ENV=(BACKUP_DIR=/u04)';
+
+RMAN> BACKUP DEVICE TYPE sbt
+2>    backupset FROM TAG='ts_bank_29.10.2013-13:53';
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_j}
+    \begin{lstlisting}[language=rman]
+RMAN> DELETE backuppiece 11;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_k}
+    \begin{lstlisting}[language=rman]
+RMAN> CONFIGURE DEVICE TYPE disk PARALLELISM 2
+2>    BACKUP TYPE TO COMPRESSED BACKUPSET;
+RMAN> RUN {
+2>      BACKUP DEVICE TYPE disk database
+3>      TAG='database_29.10.2013-14:37';
+4>
+5>      BACKUP DEVICE TYPE sbt
+6>      backupset FROM TAG='database_29.10.2013-14:37'
+7>      DELETE INPUT;
+8>    }
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_l}
+    \begin{lstlisting}[language=rman]
+RMAN> REPORT NEED BACKUP;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_m}
+    \begin{lstlisting}[language=rman]
+RMAN> REPORT obsolete;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_n}
+    \begin{lstlisting}[language=rman]
+RMAN> LIST BACKUP OF controlfile SUMMARY;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_o}
+\clearpage
+    \begin{lstlisting}[language=oracle_sql]
+SQL> col name format a30
+SQL> SELECT name, space_limit, space_used
+  2  FROM   v$recovery_file_dest;
+
+NAME                           SPACE_LIMIT SPACE_USED
+------------------------------ ----------- ----------
+/u05/fast_recovery_area         4294967296 1446789120
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_p}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT file_type, percent_space_used
+  2  FROM   v$recovery_area_usage
+  3  WHERE  file_type LIKE 'BACKUP PIECE';
+
+FILE_TYPE            PERCENT_SPACE_USED
+-------------------- ------------------
+&BACKUP& PIECE                      33,69
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_q}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET db_recovery_file_dest_size=6G;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_r}
+      \begin{lstlisting}[caption={Block Change Tracking aktivieren},language=oracle_sql]
+SQL> ALTER DATABASE
+  2  ENABLE BLOCK CHANGE TRACKING
+  3  USING FILE '/u02/rman_change_track.f' REUSE;
+      \end{lstlisting}
+      \begin{lstlisting}[caption={Retention Policy setzen},language=rman]
+RMAN> CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+      \end{lstlisting}
+      \begin{lstlisting}[caption={\oscommand{backup\_sunday\_level\_0.cmd}},language=rman]
+RMAN> RUN {
+2>      ALLOCATE CHANNEL c_disk_1
+3>      DEVICE TYPE disk;
+4>
+5>      BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 
+6>      CHANNEL c_disk_1
+7>      database;
+8>    }
+      \end{lstlisting}
+      \begin{lstlisting}[caption={\oscommand{backup\_archive\_log.cmd}},language=rman]
+RMAN> RUN {
+2>      ALLOCATE CHANNEL c_disk_1
+3>      DEVICE TYPE disk
+4>      FORMAT '/u02/backup/archive_log_%u_%c.bkp';
+5>
+6>      ALLOCATE CHANNEL c_disk_2
+7>      DEVICE TYPE disk
+8>      FORMAT '/u03/backup/archive_log_%u_%c.bkp';
+9>
+10>     BACKUP COPIES 2 archivelog all
+11>     DELETE ALL INPUT;
+12>   }
+      \end{lstlisting}
+      \begin{lstlisting}[caption={\oscommand{backup\_mon\_tue\_thu\_fri.cmd}},language=rman]
+RMAN> BACKUP INCREMENTAL LEVEL 1 database;
+      \end{lstlisting}
+      \begin{lstlisting}[caption={\oscommand{backup\_wed.cmd}},language=rman]
+RMAN> BACKUP CUMULATIVE INCREMENTAL LEVEL 1 database;
+      \end{lstlisting}
+\clearpage
+      \begin{lstlisting}[caption={\oscommand{backup\_sat\_fra.cmd}},language=rman]
+RMAN> RUN {
+2>      ALLOCATE CHANNEL c_sbt_1
+3>      DEVICE TYPE sbt
+4>      PARMS 'SBT_LIBRARY=oracle.disksbt,ENV=(BACKUP_DIR=/u04)';
+5>
+6>      BACKUP recovery area;
+7>
+8>      BACKUP archivelog all;
+9>    }
+      \end{lstlisting}
+    \input{exercises/dbadmin_17/item_s}
+    \begin{lstlisting}[language=terminal]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+SQL> @labs/lab_delete_backups.sql
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_t}
+    \begin{lstlisting}[language=rman]
+RMAN> CROSSCHECK backup;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_u}
+    \begin{lstlisting}[language=rman]
+RMAN> DELETE expired backup;
+    \end{lstlisting}
+    \input{exercises/dbadmin_17/item_v}
+    \begin{lstlisting}[language=rman]
+RMAN> CATALOG START WITH '/u02/backup/';
+    \end{lstlisting}
+  \end{enumerate}

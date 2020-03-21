@@ -1,0 +1,296 @@
+\clearpage
+    \section{Lösungen - Erweiterte Datenselektion}
+      \begin{enumerate}
+        \item Schreiben Sie eine Abfrage, die für jeden Mitarbeiter den
+        Vornamen, den Nachnamen, die Bankfiliale\_ID und den Ort anzeigt, an dem
+        sich seine Filiale befindet.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT m.Vorname, m.Nachname, m.Bankfiliale_ID, b.Ort
+FROM   Mitarbeiter m INNER JOIN Bankfiliale b
+         ON (b.Bankfiliale_ID = m.Bankfiliale_ID);
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, welche die Mitarbeiternummer, den
+        Nachnamen, das Gehalt und ein um 3,5 \% erhöhtes Gehalt für alle
+        Mitarbeiter anzeigt, die in einer Filiale in \enquote{Aschersleben}
+        arbeiten. Das erhöhte Gehalt soll als ganze Zahl und mit dem
+        Spaltenalias \enquote{Neues Gehalt} ausgegeben werden.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT m.Mitarbeiter_ID, m.Nachname, m.Gehalt,
+       ROUND(m.Gehalt * 1.035, 0) AS "Neues Gehalt"
+FROM   Mitarbeiter m INNER JOIN Bankfiliale b
+         ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+WHERE  LOWER(b.Ort) LIKE 'aschersleben';
+        \end{lstlisting}
+        \item Erstellen Sie eine Abfrage, die zu jedem Eigenkunden, der ein
+        Depot besitzt, seinen Vor- und Nachnamen, die Strasse mit der
+        Hausnummer, sowie PLZ und Ort anzeigt.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT k.Vorname, k.Nachname, ek.Strasse || ' ' || ek.Hausnummer AS Strasse,
+       ek.PLZ, ek.Ort
+FROM   Kunde k INNER JOIN Eigenkunde ek
+         ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk
+         ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Depot d
+         ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT k.Vorname, k.Nachname, ek.Strasse + ' ' + ek.Hausnummer AS Strasse,
+       ek.PLZ, ek.Ort
+FROM   Kunde k INNER JOIN Eigenkunde ek
+         ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk
+         ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Depot d
+         ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+\clearpage
+        \item Schreiben Sie eine Abfrage, die für alle Eigenkunden deren Vor-
+        und Nachnamen anzeigt, sowie den Vor- und den Nachnamen ihres
+        persönlichen Finanzberaters (Tabelle
+        \identifier{EigenkundeMitarbeiter}). Sortieren Sie die Abfrage nach den
+        Nachnamen der Finanzberater.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   k.Vorname AS "Vorname Kunde", k.Nachname AS "Nachname Kunde",
+         m.Vorname AS "Vorname Berater", m.Nachname AS "Nachname Berater"
+FROM     Kunde k INNER JOIN Eigenkunde ek
+           ON (k.Kunden_ID = ek.Kunden_ID)
+         INNER JOIN EigenkundeMitarbeiter ekm
+           ON (ek.Kunden_ID = ekm.Kunden_ID)
+         INNER JOIN Mitarbeiter m
+           ON (ekm.Mitarbeiter_ID = m.Mitarbeiter_ID)
+ORDER BY m.Nachname;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die für alle Eigenkunden, die keinen
+        Berater haben (die nicht in der Tabelle
+        \identifier{EigenkundeMitarbeiter} enthalten sind), den Vor- und den
+        Nachnamen anzeigt.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek
+         ON (k.Kunden_ID = ek.Kunden_ID)
+       LEFT OUTER JOIN EigenkundeMitarbeiter ekm
+         ON (ek.Kunden_ID = ekm.Kunden_ID)
+WHERE  ekm.Kunden_ID IS NULL;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die zu jedem Mitarbeiter (Vorname,
+        Nachname) den Vor- und den Nachnamen seines Vorgesetzten anzeigt.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT m.Vorname AS Vorname_M, m.Nachname AS Nachname_M,
+       v.Vorname AS Vorname_V, v.Nachname AS Nachname_V
+FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+         ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID);
+        \end{lstlisting}
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass alle Mitarbeiter, einschließlich des Mitarbeiters
+        \enquote{Winter}, der keinen Vorgesetzten hat, angezeigt werden.
+        Sortieren Sie das Ergebnis aufsteigend nach der Vorgesetzten\_ID. Der
+        Mitarbeiter \enquote{Winter} soll ganz oben auf der Liste stehen.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   m.Vorname AS Vorname_M, m.Nachname AS Nachname_M,
+         v.Vorname AS Vorname_V, v.Nachname AS Nachname_V
+FROM     Mitarbeiter m LEFT OUTER JOIN Mitarbeiter v
+           ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)
+ORDER BY m.Vorgesetzter_ID NULLS FIRST;
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT   m.Vorname AS Vorname_M, m.Nachname AS Nachname_M,
+         v.Vorname AS Vorname_V, v.Nachname AS Nachname_V
+FROM     Mitarbeiter m LEFT OUTER JOIN Mitarbeiter v
+           ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)
+ORDER BY m.Vorgesetzter_ID;
+        \end{lstlisting}
+        \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt,
+        die keine Kundenberatung durchführen. Ausgenommen sind leitende
+        Mitarbeiter (Mitarbeiter die in keiner Bankfiliale arbeiten).
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT m.Vorname, m.Nachname
+FROM   Mitarbeiter m LEFT OUTER JOIN EigenkundeMitarbeiter ekm
+         ON (m.Mitarbeiter_ID = ekm.Mitarbeiter_ID)
+WHERE  ekm.Mitarbeiter_ID IS NULL
+  AND  m.Bankfiliale_ID IS NOT NULL;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die für alle Mitarbeiter, die
+        höchstens 3 Jahre älter, aber keinesfalls jünger sind als ihr
+        Vorgesetzter, den Vornamen, den Nachnamen, das Geburtsdatum und das
+        Geburtsdatum des Vorgesetzten anzeigt.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT m.Vorname, m.Nachname, m.Geburtsdatum,
+       v.Geburtsdatum AS "Geburtstag Chef"
+FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+         ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)
+WHERE  m.Geburtsdatum BETWEEN v.Geburtsdatum - INTERVAL '3' YEAR AND
+                              v.Geburtsdatum;
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT m.Vorname, m.Nachname, m.Geburtsdatum,
+       v.Geburtsdatum AS "Geburtstag Chef"
+FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+         ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID)
+WHERE  m.Geburtsdatum BETWEEN DATEADD(YEAR, -3, v.Geburtsdatum) AND
+                              v.Geburtsdatum;
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die für alle Mitarbeiter, die am
+        gleichen Ort arbeiten, an dem sie auch wohnen, deren Vorname, Nachname
+        den Wohnort und den Arbeitsort anzeigt. Beschriften Sie die Spalten, wie
+        es in der Lösung zu sehen ist. Sortieren Sie die Abfragen in
+        absteigender Reihenfolge nach dem Wohnort.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT   m.Vorname, m.Nachname, m.Ort AS "Wohnort", b.Ort AS "Arbeitsort"
+FROM     Mitarbeiter m INNER JOIN Bankfiliale b
+           ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
+WHERE    m.Ort = b.Ort
+ORDER BY m.Ort DESC;
+        \end{lstlisting}
+\clearpage
+        \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt
+        (Vorname und Nachname), die keine Kundenberatung durchführen.
+        Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner
+        Bankfiliale arbeiten) und Filialleiter.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT m.Vorname, m.Nachname
+FROM   Mitarbeiter m LEFT OUTER JOIN EigenkundeMitarbeiter ekm
+         ON (m.Mitarbeiter_ID = ekm.Mitarbeiter_ID)
+WHERE  ekm.Mitarbeiter_ID IS NULL
+MINUS
+SELECT DISTINCT v.Vorname, v.Nachname
+FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+         ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID);
+        \end{lstlisting}
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT m.Vorname, m.Nachname
+FROM   Mitarbeiter m LEFT OUTER JOIN EigenkundeMitarbeiter ekm
+         ON (m.Mitarbeiter_ID = ekm.Mitarbeiter_ID)
+WHERE  ekm.Mitarbeiter_ID IS NULL
+EXCEPT
+SELECT DISTINCT v.Vorname, v.Nachname
+FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
+         ON (m.Vorgesetzter_ID = v.Mitarbeiter_ID);
+        \end{lstlisting}
+        \item Erstellen Sie eine Abfrage, die alle Eigenkunden anzeigt, die nur
+        Girokonten aber keine anderen Konten besitzen.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+MINUS
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Sparbuch s ON (ekk.Konto_ID = s.Konto_ID)
+MINUS
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+\clearpage
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+EXCEPT
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Sparbuch s ON (ekk.Konto_ID = s.Konto_ID)
+EXCEPT
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+        \item Erstellen Sie mit Hilfe einer Abfrage eine Liste, die den Vor- und
+        den Nachnamen aller Kunden enthält, die sowohl ein Sparbuch, als auch
+        ein Depot besitzten. Ob die Kunden ein Girokonto haben oder nicht ist
+        irrelevant.
+        \begin{msoraclesql}[\FALSE]
+        \end{msoraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Sparbuch s ON (ekk.Konto_ID = s.Konto_ID)
+INTERSECT
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+        \item Schreiben Sie eine Abfrage, die eine Liste aller Eigenkunden
+        ausgibt, die ein Girokonto und ein Sparbuch besitzten, aber kein Depot.
+        \begin{oraclesql}[\FALSE]
+        \end{oraclesql}
+        \begin{lstlisting}[language=oracle_sql]
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+INTERSECT
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Sparbuch s ON (ekk.Konto_ID = s.Konto_ID)
+MINUS
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+\clearpage
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+        \begin{lstlisting}[language=ms_sql]
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
+INTERSECT
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Sparbuch s ON (ekk.Konto_ID = s.Konto_ID)
+EXCEPT
+SELECT k.Vorname, k.Nachname
+FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
+       INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
+       INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
+        \end{lstlisting}
+      \end{enumerate}
+\clearpage

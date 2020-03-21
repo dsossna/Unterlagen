@@ -1,0 +1,373 @@
+\chapter{Beschreibung sachlogischer Zusammenhänge zwischen Objekttypen}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+  Bisher wurden im Rahmen der Datenmodellierung die speicherwürdigen Objekte mit ihren relevanten Eigenschaften lediglich isoliert beschrieben. In der Praxis stehen die interessanten Objekte jedoch in vielfältiger Weise miteinander in Zusammenhang: Dienststellen befinden sich an Orten, Soldaten arbeiten in Dienststellen usw. Auch Objekte desselben Typs können miteinander in Zusammenhang stehen: Lehrer leiten Lehrer an, Schulen haben Partnerschaften mit anderen Schulen usw. Diese Zusammenhänge müssen ebenfalls im Datenmodell dargestellt werden, denn sie bringen wesentliche Aspekte der betrachteten Realität zum Ausdruck.
+
+    Die sachlogischen Zusammenhänge zwischen den Objekten werden in drei Gruppen von Beziehungstypen unterteilt:
+    \begin{itemize}
+      \item \textbf{Binäre Beziehungstypen}: Beschreiben den Zusammenhang zwischen jeweils zwei Objekten, die verschiedenen Objekttypen angehören.
+      \item \textbf{Beziehungstypen n-ten Grades}: Sie Beschreiben den Zusammenhang zwischen mehr als zwei Objekten, die verschiedenen Objekttypen angehören.
+      \item \textbf{Rekursiv-Beziehungstypen}: Objekte, die aus demselben Objekttyp stammen, stehen in Zusammenhang.
+    \end{itemize}
+
+    Im Folgenden werden nur die binären oder auch dualen Beziehungstypen erläutert. Auf Beziehungstypen höheren Grades wird im
+    weiteren Verlauf nicht eingegangen, da diese in der Praxis kaum Relevanz besitzen. Die Behandlung der Rekursiven
+    Beziehungstypen erfolgt im Kapitel 3.
+
+      Für den weiteren Verlauf sind die nachfolgenden zwei Definitionen zu unterscheiden:
+      \begin{itemize}
+        \item \textbf{Beziehung (engl. Relationship)}: Kennzeichnet den konkreten Zusammenhang zwischen zwei realen Objekten. Beispiel: \enquote{Max Mustermann} ist Lehrgangsteilnehmer im Lehrgang \enquote{Datenbank Administrator}
+        \item \textbf{Beziehungstypen}: Beschreibt den typmäß igen Zusammenhang, der zwischen den Objekttypen besteht. Beispiel: Objekttypen sind \enquote{Soldat} \enquote{Lehrgang} mit dem Beziehungstyp \enquote{ist Lehrgangsteilnehmer in}
+      \end{itemize}
+
+      Während in der realen Welt der Zusammenhang zwischen zwei konkreten Objekten \textbf{beobachtet} wird, \textbf{beschreibt} man in der Modellwelt das verallgemeinerte Wechselspiel zwischen zwei Objekttypen. Im mathematischen Sinne ist ein Beziehungstyp zwischen den Objekten A und B die Menge der Beziehungen zwischen jeweils einem Objekt aus dem Objekttyp A und einem Objekt aus dem Objekttyp B. Die für den Beziehungstyp formulierten Angaben müssen somit für alle konkreten Beziehungen zwischen den betrachteten Objekttypen gültig sein.
+      \section{Benennung, Optionalität und Kardinalität}\label{naming_optionaliy_kardinality}
+        Der sachlogische Zusammenhang zwischen den Objekten zweier Objekttypen, der durch einen Beziehungstyp beschrieben wird, besteht immer in \textbf{beiden Richtungen}: Soldaten stehen beispielsweise in einem Zusammenhang mit Dienststellen (sie arbeiten dort) und Dienststellen stehen im Zusammenhang mit Soldaten (sie beschäftigen sie). Jede der beiden Beziehungstyp-Richtungen wird durch 3 Angaben näher bestimmt.
+        \subsection{Benennung}
+          Betrachtet man im Beispiel aus Kapitel 1.1 den Zusammenhang zwischen Soldat und Ausrüstung, könnte man sich für folgende Dinge interessieren:
+          \begin{itemize}
+            \item Ein Soldat besitzt Ausrüstung.
+            \item Ein Soldat empfängt seine Ausrüstung.
+            \item Ein Soldat hat bestimmte Ausrüstungsgegenstände mitzuführen.
+          \end{itemize}
+          Welcher Zusammenhang gespeichert werden soll, wird durch die Benennung zum Ausdruck gebracht.
+          Hier ist es \enquote{besitzt}.
+        \subsection{Optionalität}
+          Die Optionalität klärt die Frage, ob jedes Objekt des Objekttyps A mit mindestens einem Objekt des Objekttyp B in Beziehung stehen muss? Je nach Antwort unterscheidet man zwei Fälle:
+          \begin{itemize}
+            \item \textbf{Ja}: Die Beziehungstyp-Richtung wird als nichtoptional, also als \textbf{obligatorisch\footnote{obligare lat. = bindend, verpflichtend}} bezeichnet.
+            \item \textbf{Nein}: Die Beziehungstyp-Richtung wird als optional, also \textbf{kann vorhanden sein} bezeichnet.
+          \end{itemize}
+        \subsection{Kardinalität}
+          Für die Angabe der Kardinalität einer Beziehungstyp-Richtung vom Objekttyp A zum Objekttyp B stellt man sich folgende Frage: \enquote{Kann ein Objekt des Objekttyps A mit mehreren Objekten des Objekttyps B in Beziehung stehen?} Es können dabei zwei unterschiedliche Fälle auftreten:
+\clearpage
+          \begin{itemize}
+            \item \textbf{Ja}: Der Beziehungstyp-Richtung wird die Kardinalität \textbf{N} zugeordnet. Dabei steht \textbf{N} für eine beliebige Zahl größ er oder gleich 0.
+            \item \textbf{Nein}: Die Beziehungstyp-Richtung wird die Kardinalität \textbf{1} zugeordnet, denn es gibt \textbf{höchstens ein} Objekt des Objekttyps B zu dem Objekt aus Objekttyp A.
+          \end{itemize}
+        \subsection{Darstellung im Modell}
+          Es gibt verschiedene Formen der Darstellung. Man kann jede Beziehungstyp-Richtung benennen, jedoch ist die Benennung meist nur für eine Richtung passend. Die Gegenrichtung müsste dann bei Bedarf umformuliert werden. Im Folgenden soll ein Beispiel die Zusammehänge zwischen Benennung, Optionalität und Kardinalität zeigen. Gegeben seien die Objekttypen Soldat und Ausrüstung mit der angezeigten Beziehung.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](soldat){Soldat};
+                  \node[attribute](personenid)[above = 1.6cm of soldat]{\key{Personen\_ID}} edge (soldat);
+                  \node[attribute](pk)[above right = of soldat]{PK} edge (soldat);
+                  \node[attribute](name)[below right = of soldat]{Name} edge (soldat);
+                  \node[attribute](vorname)[below left = of soldat]{Vorname} edge (soldat);
+                  \node[attribute](dienstgrad)[above left = of soldat]{Dienstgrad} edge (soldat);
+                \node[relationship](besitzt)[right = 3cm of soldat]{besitzt} edge node[auto,swap] {n}(soldat);
+                \node[entity](ausruestung)[right = 8cm of soldat]{Ausrüstung} edge node [auto,swap] {m}(besitzt);
+                  \node[attribute](ausruestungsid)[right = of ausruestung]{\key{Ausruestungs\_ID}} edge (ausruestung);
+                  \node[attribute](versorgungsnummer)[below right = of ausruestung]{Versorgungsnummer} edge (ausruestung);
+                  \node[attribute](bezeichnung)[above = 1.7cm of ausruestung]{Bezeichnung} edge (ausruestung);
+                  \node[attribute](material)[above left = of ausruestung]{Material} edge (ausruestung);
+                  \node[attribute](farbe)[below left = of ausruestung]{Farbe} edge (ausruestung);
+            \end{tikzpicture}
+            }
+          \end{center}
+
+        Zu diesem Ausschnitt aus einem ER-Modell ergeben sich die drei folgenden Fragen:
+        \begin{enumerate}
+          \item Welcher Zusammenhang soll ausgedrückt werden (\textbf{Benennung})?
+
+          Durch die Benennung der beiden Objekttypen mit \enquote{Soldat} und \enquote{Ausrüstung} zeigt sich der Zusammenhang, dass ein Soldat Ausrüstung besitzt.
+          \item Sind die beiden Objekttypen aneinader gebunden (\textbf{Optionalität})?
+
+          In diesem Beispiel ist es so, dass ein Soldat Ausrüstung besitzen kann aber nicht muss, z.B. vor der Einkleidung ist man schon Soldat, obwohl noch jegliche Ausrüstungsgegenstände fehlen. Anders herum ist es möglich, dass Ausrüstungsgegenstände einem Soldaten
+          zugeordnet wurden oder der Ausrüstungsgegenstand noch im Lager liegt.
+          Antwort: Beide Richtungen sind optional.
+          \item Wie stehen die beiden Objekttypen in Zusammenhang (\textbf{Kardinalität})?
+
+          \begin{itemize}
+            \item Fragerichtung vom Objekttyp \enquote{Soldat}  zum Objekttyp \enquote{Ausrüstung}:
+            \enquote{Kann ein Soldat mehrere Ausrüstungsgegenstände besitzen?}, Antwort: Ja, daher N.
+            \item Fragerichtung vom Objekttyp \enquote{Ausrüstung}  zu \enquote{Soldat}:
+
+            \enquote{Kann ein Ausrüstungsgegenstand von mehreren Soldaten besessen werden?}
+            Antwort: Ja, d. h. die Kardinalität lautet M.
+          \end{itemize}
+        \end{enumerate}
+        Ein Ausrüstungsgegenstand ist durch eine Versorgungsnummer
+        gekennzeichnet. Somit ist es möglich, unterschiedliche
+        Ausrüstungsgegenstände mit der gleichen Versorgnugnsnummer an die
+        Soldaten auszugeben. Es entsteht eine \enquote{N:M} Kardinalität (vgl.
+        \ref{NotationKardinalitaet}).
+
+        Bei der Festlegung der Kardinalität ist auß erdem zu beachten,
+        über welchen Zeitraum hinweg die Angaben zu Beziehungen in der
+        Datenbank aufgenommen werden sollen. Bei der Beziehung \enquote{Soldat
+        arbeitet in Dienststelle}, ist die Kardinalität auf 1 zu setzen, wenn
+        der Soldat immer nur in einer Dienststelle arbeiten soll. Will man aber
+        die Zuordnungsverhältnisse über einen längeren Zeitraum speichern,
+        so ist die Kardinalität auf N festzulegen, weil es dann vorkommen
+        kann, dass ein Soldat mit mehreren Dienststellen in Verbindung gebracht
+        werden muss, also eine Historie gespeichert wird.
+      \section{Notationen für Kardinalitäten} \label{NotationKardinalitaet}
+        Für die Kardinalität gibt es verschiedene Notationen, also
+        einheitliche Schreibweisen. In dieser Unterlage wird die Chen-Notation
+        kurz vorgestellt und die (Min,Max)-Notation eingehender behandelt.
+        Sofern die Chen-Notation von Interesse ist, kann diese in vielen
+       Fachbüchern leicht nachgelesen werden.
+        \subsection{Die Chen-Notation}
+          In der Chen-Notation gibt es im Wesentlichen drei verschiedene
+          Beziehungstypen, dabei ist es unerheblich, ob die verwendeten
+          Buchstaben groß\ oder klein geschrieben werden. Die Werte geben die
+          maximale Anzahl von beteiligten Objekten an.
+
+          Mögliche Varianten (binäre Beziehungen):
+          \begin{itemize}
+            \item 1:1
+            \item 1:n
+            \item n:m
+            \item n:m:k (ternäre Beziehungen)
+          \end{itemize}
+          Welche Werte können angenommen werden bzw. wofür stehen die
+          Buchstaben?
+          \begin{itemize}
+            \item n: beliebig viele (0,1,2...n)
+            \item 1: höchstens ein (0 oder 1)
+            \item m oder k: entsprichen der n-Definition
+          \end{itemize}
+          Die Angabe von genaueren Werten ist in der Chen-Notation nicht
+          vorgesehen.
+        \subsection{(Min,Max)-Notation}
+          Die (Min,Max)-Notation ist im Wesentlichen eine Konkretisierung der
+          Angaben in der Chen-Notation, denn es werden nicht nur die maximalen,
+          sondern auch die minimalen Werte angegeben. Folgende Abbildung zeigt
+          die oben verwendete Beziehung in der (Min,Max)-Notation.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](soldat){Soldat};
+                  \node[attribute](personenid)[above = 1.6cm of soldat]{\key{Personen\_ID}} edge (soldat);
+                  \node[attribute](pk)[above right = of soldat]{PK} edge (soldat);
+                  \node[attribute](name)[below right = of soldat]{Name} edge (soldat);
+                  \node[attribute](vorname)[below left = of soldat]{Vorname} edge (soldat);
+                  \node[attribute](dienstgrad)[above left = of soldat]{Dienstgrad} edge (soldat);
+                \node[relationship](besitzt)[right = 3cm of soldat]{besitzt} edge node[auto,swap] {(0,*)}(soldat);
+                \node[entity](ausruestung)[right = 8cm of soldat]{Ausrüstung} edge node [auto,swap] {(0,*)}(besitzt);
+                  \node[attribute](ausruestungsid)[above right = of ausruestung]{\key{Ausruestungs\_ID}} edge (ausruestung);
+                  \node[attribute](versorgungsnummer)[below right = of ausruestung]{Versorgungsnummer} edge (ausruestung);
+                  \node[attribute](bezeichnung)[above = 1.7cm of ausruestung]{Bezeichnung} edge (ausruestung);
+                  \node[attribute](material)[above left = of ausruestung]{Material} edge (ausruestung);
+                  \node[attribute](farbe)[below left = of ausruestung]{Farbe} edge (ausruestung);
+            \end{tikzpicture}
+            }
+          \end{center}
+
+          Welche Werte können angenommen werden bzw. wofür stehen diese Werte? Bei der Min, Max-Notation gibt es eine Vielzahl von Möglichkeiten, diese hier aufzulisten, wäre schier unmöglich. Daher einige häufige Kombinationen.
+
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Möglichkeit}} &
+            \multicolumn{1}{l}{\textbf{Bedeutung}} \\
+          }
+          \begin{supertabular}[ht]{lp{11cm}}
+            (1,1) & genau 1 $\Longrightarrow$ mindestens 1 und höchstens 1\\
+            (1,*) & mindestens 1 $\Longrightarrow$ mindestens 1 und höchstens beliebig viele\\
+            (0,1) & höchstens 1 $\Longrightarrow$ mindestens 0 und höchstens 1\\
+            (0,*) & kann haben $\Longrightarrow$ 0 oder beliebig viele\\
+            \\
+            (2,100) & mindestens 2 und höchstens 100\\
+            (4,*) & mindestens 4 und höchstens beliebig viele\\
+          \end{supertabular}
+
+          Die beiden letzten Zeilen der obigen Auflistung sollen verdeutlichen, dass für die Min- und Max-Werte beliebige ganze Zahlen verwendet werden können. Hier ist jedoch zu beachten, dass die Umsetzung bestimmter Kombinationen in den Kardinalitäten in einem relationalen Datenbanksystem nicht mehr mit der referentiellen Integrität sichergestellt werden kann, sondern mit Elementen einer Programmiersprache auf Seiten der Anwendung oder der Datenbank. Später dazu mehr.
+          \subsection{Schreib-/Leseweise der Kardinalitäten}
+          Für die Syntax der Kardinalitäten gilt folgende Vorgehensweise.
+          \begin{itemize}
+            \item Die (Min,Max)-Notation: Man betrachtet zunächst ein Objekt a auf der Seite des Objekttyps A und schreibt die Kardinalität auf die gleiche Seite des Beziehungstyps, an den Objekttyp A.
+            \item (Chen)-Notation: Inverse Bezeichnung der Kardinalitäten wie bei der (Min,Max)-Notation. Die Kardinalität des Objekts a auf der Seite des Objekttyps A wird auf die andere Seite des Beziehungstyps, also Objekttyp B, geschrieben.
+            \item Anschließ end in gleicher Weise am Objekttyp B für die jeweilige Notation.
+          \end{itemize}
+          \subsection{Referentielle Integrität}
+            Die Referentielle Integrität stellt einen Satz aus zwei Regeln dar, der dazu dient, den korrekten Zusammenhang zwischen den Datensätzen zweier Tabellen zu regeln. Sie besagt:
+            \begin{enumerate}
+              \item Datensätze einer untergeordneten Entität dürfen nur auf existierende Datensätze ihrer übergeordneten Entität verweisen.
+              \item Datensätze aus einer übergeordneten Entität dürfen nur dann gelöscht werden, wenn es keine abhängigen Datensätze in einer untergeordneten Entität mehr gibt.
+            \end{enumerate}
+            Hierzu ein Beispiel:
+          \begin{center}
+           \scalebox{.68}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](dienststelle){Dienststelle};
+                \node[attribute](dienststellennummer)[left = of dienststelle]{\key{Dienststellen\_ID}} edge (dienststelle);
+                \node[attribute](dienststellennummer)[below left = of dienststelle]{Dienststellennummer} edge (dienststelle);
+                \node[attribute](bezeichung)[above = of dienststelle]{Bezeichnung} edge (dienststelle);
+                \node[attribute](groesse)[above left = of dienststelle]{Größ e} edge (dienststelle);
+              \node[relationship](besetzt)[right = 3cm of dienststelle]{besetzt} edge node[auto,swap] {(1,*)}(soldat);
+              \node[entity](dienstposten)[right = 3cm of besetzt]{Dienstposten} edge node[auto,swap] {(1,1)} (besetzt);
+                \node[attribute](dpid)[above = of dienstposten]{\key{DP\_ID}} edge (dienstposten);
+                \node[attribute](dienstpostenid)[above left = of dienstposten]{Dienstposten\_ID} edge (dienstposten);
+                \node[attribute](beginndatum)[above right = of dienstposten]{Beginndatum} edge (dienstposten);
+                \node[attribute](enddatum)[below right = of dienstposten]{Enddatum} edge (dienstposten);
+                \node[attribute](aufgabenbeschreibung)[below left = of dienstposten]{Aufgabenbeschreibung} edge (dienstposten);
+            \end{tikzpicture}
+           }
+          \end{center}
+          In diesem Beispiel stehen die beiden Entitäten Dienststelle und Dienstposten in Zusammenhang. Die Entität Dienststelle ist dabei der Entität Dienstposten übergeordnet. Wendet man die Regeln der Referentiellen Integrität an, bedeutet dies:
+          \begin{enumerate}
+            \item Es darf keinen Dienstposten geben, der zu einer nicht existenten Dienststelle gehört.
+            \item Es darf keine Dienststelle gelöscht werden, zu der es noch Dienstposten gibt.
+          \end{enumerate}
+      \section{Redundante Beziehungstypen}
+        Lässt man den Vergleich von einem Objekttyp mit einer Dateninsel zu, kann man folgendes Bild aufbauen. Die Objekttypen werden als Dateninseln dargestellt und die Beziehungstypen bilden die Brücken zwischen diesen Inseln. Mit Hilfe der Beziehungen, die ja konkrete Ausprägungen der Beziehungstypen darstellen, kann man nun eine Brückenwanderung durchführen, indem man von den Eigenschaften eines Objektes zu den Eigenschaften des verknüpften Objektes gelangen kann.
+
+        Nun können die Brücken aber so angelegt sein, dass es von Dateninsel A nach Dateninsel B zwei (oder mehr) verschiedene Wege gibt. Sind dann eine oder mehrere Brücken überflüssig? Bei der Datenmodellierung spricht man in solchen Fällen von \textbf{redundanten Beziehungstypen}. Das sind Beziehungstypen, die einen sachlogischen Zusammenhang zwischen zwei Objekttypen beschreiben, der bereits durch die Kombination anderer Beziehungstypen in gleicher Weise zum Ausdruck gebracht wird.
+
+        Der Begriff der Redundanz spielt bei der Informationsspeicherung eine groß e Rolle. Im praktischen Datenbankbetrieb wird zum Teil Redundanz erzeugt, um Suchprozesse innerhalb der Datenbank zu beschleunigen. In der Phase der Datenmodellierung sollte man Redundanzen vermeiden, denn diese führen u. a. zu folgenden Problemen:
+        \begin{itemize}
+          \item Mehrfache Eingabe derselben Informationen
+          \item Unnötiger Speicherplatzbedarf
+          \item Bei der änderung der Informationen muss garantiert werden, dass alle Exemplare der redundant gespeicherten Information geändert werden, weil sonst sog. inkonsistente Daten vorliegen.
+        \end{itemize}
+
+        Der Verdacht auf einen redundanten Beziehungstyp ergibt sich i.d.R. bei zyklischen Be\-zieh\-ungs\-typ-Struk\-turen. Kann man nun aber allein aus strukturellen Merkmalen des Datenmodells die Redundanz ableiten? Wenn dies so wäre, könnten automatisierte Optimierungsprozesse diese Redundanz wieder entfernen. Zur Verdeutlichung soll das in der folgenden Abbildung gezeigte Beispiel untersucht werden.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](soldat){Soldat};
+                \node[relationship](besetzt)[right = of soldat]{besetzt} edge node[auto,swap] {(1,1)}(soldat);
+                \node[entity](dienstposten)[right = of besetzt]{Dienstposten} edge node [auto,swap] {(1,1)}(besetzt);
+                \node[relationship](gehoertzu)[below = of dienstposten]{gehört zu} edge node [auto,swap] {(1,1)} (dienstposten);
+                \node[entity](dienststelle)[below = of gehoertzu]{Dienststelle} edge node [auto,swap] {(1,*)}(gehoertzu);
+            \end{tikzpicture}
+            }
+          \end{center}
+
+          Ein Soldat besetzt genau einen Dienstposten und ein Dienstposten kann zu gleichen Zeit auch immer nur von einem Soldaten besetzt werden. Ein Dienstposten gehört zu genau einer Dienststelle, wobei eine Dienststelle aus mindestens einem Dienstposten bestehen muss, um die Sinnhaftigkeit des Modells zu wahren.
+
+          Nun kommt die \enquote{arbeitet für}-Beziehung hinzu, so dass auf
+          Grund der entstehenden zyklischen Struktur zwei Wege vom Soldaten zur
+          Dienststelle führen. Ist dieser Beziehungstyp nun redundant?
+          Betrachten wir zwei verschiedene Interpretationen dieses
+          Beziehungstyps.
+
+          Ein Soldat arbeitet für genau eine Dienststelle. Für eine
+          Dienststelle arbeitet mindestens ein Soldat.
+          \begin{center}
+            \scalebox{.68}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](soldat){Soldat};
+                \node[relationship](besetzt)[right = of soldat]{besetzt} edge
+                node[auto,swap] {(0,1)}(soldat);
+                \node[entity](dienstposten)[right = of besetzt]{Dienstposten}
+                edge node [auto,swap] {(1,1)}(besetzt);
+                \node[relationship](gehoertzu)[below = of dienstposten]{gehört
+                zu} edge node [auto,swap] {(1,1)} (dienstposten);
+                \node[entity](dienststelle)[below = of gehoertzu]{Dienststelle}
+                edge node [auto,swap] {(1,*)}(gehoertzu);
+                \node[relationship](arbeitetfuer)[below = of soldat]{arbeitet
+                für} edge node [auto,swap] {(1,1)} (soldat); \draw[link]
+                (dienststelle.west) -| node [pos=0.4,auto,xshift=4cm] {(1,*)}
+                (arbeitetfuer.south);
+            \end{tikzpicture}
+            }
+          \end{center}
+          In diesem Falle wäre der Beziehungstyp  \enquote{arbeitet für} redundant, denn aus der Tatsache, dass ein Soldat einen Dienstposten besetzt und der Dienstposten zu einer Dienststelle gehört, folgt stets die Aussage, dass der Soldat für eine Dienststelle arbeitet.
+
+          Ein Soldat leitet höchstens eine Dienststelle und eine Dienststelle wird von genau einem Soldaten geleitet.
+          \begin{center}
+            \scalebox{.68}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](soldat){Soldat};
+                \node[relationship](besetzt)[right = of soldat]{besetzt} edge node[auto,swap] {(1,1)}(soldat);
+                \node[entity](dienstposten)[right = of besetzt]{Dienstposten} edge node [auto,swap] {(1,1)}(besetzt);
+                \node[relationship](gehoertzu)[below = of dienstposten]{gehört zu} edge node [auto,swap] {(1,1)} (dienstposten);
+                \node[entity](dienststelle)[below = of gehoertzu]{Dienststelle} edge node [auto,swap] {(1,*)}(gehoertzu);
+                \node[relationship](arbeitetfuer)[below = of soldat]{leitet} edge node [auto,swap] {(0,1)} (soldat);
+                \draw[link] (dienststelle.west) -| node [pos=0.4,auto,xshift=4cm] {(1,1)} (arbeitetfuer.south);
+            \end{tikzpicture}
+            }
+          \end{center}
+          Der Beziehungstyp ist jetzt nicht redundant, weil aus der Tatsache, dass ein Soldat einen Dienstposten besetzt und der Dienstposten zu einer Dienststelle gehört, nicht in jedem Falle folgt, dass der Soldat die Dienststelle leitet.
+
+          Das Beispiel zeigt, dass sich die Frage, ob ein Beziehungstyp redundant ist, nicht auf Grund der Struktur des Datenmodells beantworten lässt, sondern dass sie nur durch eine inhaltliche Betrachtung der Zusammenhänge entschieden werden kann.
+      \section{Parallele Beziehungstypen}
+        Häufig ist es bei der Sammlung von Informationen der Fall, dass unterschiedliche sachlogische Zusammenhänge zwischen zwei Objekttypen A und B zu berücksichtigen sind. Dies geschieht, in dem man mehrere Beziehungstypen zwischen A und B einfügt. Diese werden dann als \textbf{parallele Beziehungstypen} bezeichnet.
+
+        Sind nun Optionalität und Kardinalität der jeweiligen Beziehungstyp-Richtungen durch die beteiligten Objekttypen vorgegeben?
+
+        Nehmen wir an Sie wollen wie in der folgenden Abbildung dargestellt, für eine Personengruppe und eine definierte Menge von Autos drei Beziehungstypen modellieren.
+
+        Eine Person muss weder Eigentümer noch Halter noch Benutzer eines der betrachteten Autos sein, sie kann aber auch Eigentümer, Halter und Benutzer mehrerer Autos sein. Andererseits muss ein Auto mindestens einen, kann aber auch mehrere Eigentümer haben. Es kann keinen Halter haben, wenn es stillgelegt wurde, sonst aber höchstens einen. Es kann im betrachteten Zeitraum von keinem, aber auch von mehreren Personen benutzt werden. Man sieht, das die Optionalität und Kardinalität nicht allein durch die beteiligten Objekttypen festgelegt sind, sondern, dass sie durch die spezielle Semantik des jeweiligen sachlogischen Zusammenhangs bestimmt werden.
+        \begin{center}
+          \scalebox{.8}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](auto){Auto};
+              \node[relationship](benutzt)[below left = 2.75cm of auto]{benutzt};
+              \node[relationship](besitzt)[below = of auto]{besitzt} edge node [auto,swap] {(1,*)} (auto);
+              \node[relationship](haelt)[below right = 3.2cm of auto]{hält};
+              \node[entity](person)[below = of besitzt]{Person} edge node [auto,swap] {(0,*)}(besitzt);
+              \draw[link] (person.west) -| node [pos=0.4, auto, swap] {(0,*)} (benutzt);
+              \draw[link] (person.east) -| node [pos=0.4, auto] {(0,*)} (haelt);
+              \draw[link] (auto.west) -| node [pos=0.4, auto, swap] {(0,*)} (benutzt);
+              \draw[link] (auto.east) -| node [pos=0.4, auto] {(0,1)} (haelt);
+          \end{tikzpicture}
+          }
+        \end{center}
+
+      \section{Mehrfachbeziehungen}
+        Ein Objekttyp kann nicht nur mit einer, sondern mit beliebig vielen anderen Objekttypen in Beziehung stehen. Wenn man den Spezialfall \enquote{Parallele Beziehungstypen} ausklammert, so lässt sich folgendes Beispiel aufzeichnen.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](obj1){Objekt 1};
+                \node[relationship](rel1)[below = of obj1]{} edge node[auto,swap] {(1,1)}(obj1);
+                \node[entity](obj5)[below = of rel1]{Objekt 5} edge node [auto,swap] {(0,*)}(rel1);
+                \node[relationship](rel2)[right = of obj5]{} edge node[auto,swap] {(1,1)}(obj5);
+                \node[entity](obj2)[right = of rel2]{Objekt 2} edge node [auto,swap] {(0,*)}(rel2);
+                \node[relationship](rel3)[below = of obj5]{} edge node[auto,swap] {(1,1)}(obj5);
+                \node[entity](obj3)[below = of rel3]{Objekt 3} edge node [auto,swap] {(0,*)}(rel3);
+                \node[relationship](rel4)[left = of obj5]{} edge node[auto,swap] {(1,1)}(obj5);
+                \node[entity](obj4)[left = of rel4]{Objekt 4} edge node [auto,swap] {(0,*)}(rel4);
+            \end{tikzpicture}
+            }
+          \end{center}
+
+        Der Objekttyp 5 steht hier mit vier anderen Objekttypen in Beziehung.
+        Auch die übrigen Objekttypen können mit anderen Objekttypen in
+        Beziehung stehen. Eine evtl. Problematik ergibt sich erst durch die
+        Transformation der Beziehungstypen, da bei diesem Prozess weitere
+        Fremdschlüssel, in die dann entstandenen Tabellen aufgenommen werden
+        müssen. Die Transformation wird im Kapitel 4 ausführlich behandelt.
+      \section{Eigenschaften von Beziehungstypen}
+        \label{attributes_of_entities}
+        Häufig besteht die Notwendigkeit, die konkrete Beziehung, die zwei
+        Objekte des betrachteten Gegenstandsbereichs eingehen, genauer zu
+        spezifizieren. Betrachten wir dazu folgenden Fall:
+
+        In der Bekleidungsstammkarte eines Soldaten werden Informationen
+        darüber gespeichert, welcher Soldat welchen Ausrüstungsgegenstand
+        empfangen hat. Nun soll das Datum der Ausgabe des
+        Ausrüstungsgegenstandes gespeichert werden - in unserem Beispiel durch
+        das Attribut \enquote{Ausgabedatum}. Diese Eigenschaft kann aber weder
+        dem Objekttyp \enquote{Soldat}, noch dem Objekttyp
+        \enquote{Ausrüstung} zugeordnet werden. Es ist eine Eigenschaft des
+        Beziehungstyps, der zwischen Soldat und Ausrüstung besteht. Folgende
+        Abbildung stellt diese Situation dar.
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](soldat){Soldat};
+                \node[relationship](empfaengt)[right = of soldat]{empfängt} edge node[auto,swap] {(0,*)}(soldat);
+                  \node[attribute](ausgabedatum)[below = of empfaengt]{Ausgabedatum} edge (empfaengt);
+                \node[entity](ausruestung)[right = of empfaengt]{Ausrüstung} edge node [auto,swap] {(0,*)}(empfaengt);
+            \end{tikzpicture}
+            }
+          \end{center}
+
+      \section{Begriffe}
+        An dieser Stelle soll eine Terminologie eingeführt werden, die beim Datenbank-Design üblich ist und in vielen Fällen eine kürzere Sprechweise ermöglicht:
+        \begin{itemize}
+          \item \textbf{Schlüssel}: Die minimale Kombination von Eigenschaften / Attributen durch die die Objekte eines Objekttyps eindeutig identifiziert werden können, wird als Schlüs\-sel des Objekttyps bezeichnet. Ein Schlüssel kommt somit nicht doppelt vor. Der Eigenschaftswert des Schlüssels eines Objekttyps darf nicht leer sein.
+          \item \textbf{Zusammengesetzter Schlüssel}: Ein Schlüssel, der sich aus mehreren Eigenschaften / Attributen zusammensetzt wird zusammengesetzter Schlüssel genannt. Häufig sind die verwendeten Eigenschaften Fremdschlüssel (siehe \ref{basics_definitions}).
+          \item \textbf{Teilschlüssel}: Ein Teilschlüssel entsteht dadurch, dass man aus einem zusammengesetzten Schlüssel wenigstens ein teilidentifizierendes Element (Attribut) entfernt.
+        \end{itemize}
+        Eine weitere und feinere Unterteilung erfolgt im Kapitel \ref{basics_definitions} (Transformation).
+\clearpage

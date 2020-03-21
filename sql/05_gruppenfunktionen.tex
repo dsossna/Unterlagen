@@ -1,0 +1,552 @@
+  \chapter{Gruppenfunktionen}
+    \label{groupingfunctions}
+    \chaptertoc{}
+    \cleardoubleevenpage
+
+    In vielen Fällen ist es notwendig, die aus einer Abfrage resultierenden Datensätze nicht einzeln anzuzeigen, sondern sie nach bestimmten Kriterien zusammenzufassen. Dieser Vorgang wird als \enquote{gruppieren} bezeichnet und mittels der \GROUPBY-Klausel umgesetzt. Sie wird zwischen die beiden Klauseln \WHERE{} und \ORDERBY{} eingefügt.
+    \section{Die GROUP BY-Klausel}
+      In einem ersten Beispiel werden aus der Tabelle \identifier{Mitarbeiter} die IDs aller Vorgesetzten angezeigt, so dass eine \enquote{Liste der Vorgesetzten} entsteht.
+      \begin{lstlisting}[language=oracle_sql,caption={Die \enquote{Liste der Vorgesetzten}},label=sql05_01]
+SELECT   Vorgesetzter_ID
+FROM     Mitarbeiter
+GROUP BY Vorgesetzter_ID
+ORDER BY 1;
+      \end{lstlisting}
+      \begin{center}
+        \begin{small}
+          \changefont{pcr}{m}{n}
+          \tablefirsthead {
+            \multicolumn{1}{r}{\textbf{VORGESETZTER\_ID}} \\
+            \cmidrule(r){1-1}
+          }
+          \tablehead{}
+          \tabletail {
+            \multicolumn{1}{l}{\textbf{28 Zeilen ausgewählt}} \\
+          }
+          \tablelasttail {
+            \multicolumn{1}{l}{\textbf{28 Zeilen ausgewählt}} \\
+          }
+          \begin{msoraclesql}
+            \begin{supertabular}{r}
+              1 \\
+              2 \\
+              3 \\
+              \dots \\
+              27 \\
+              NULL\\
+              \\
+            \end{supertabular}
+          \end{msoraclesql}
+        \end{small}
+      \end{center}
+
+      \bild{Gruppieren von Datensätzen}{group_by}{1}
+
+       Mit Hilfe der \GROUPBY-Klausel werden die einzelnen IDs in Gruppen eingeteilt. Anschließend wird für jede Gruppe die ID genau einmal angezeigt.
+
+       Statt einer einfachen Gruppierung, wie sie in \beispiel{sql05_01} erzeugt wurde, kann auch eine mehrfache Gruppierung erzeugt werden. Diese sind aber meist nur in Verbindung mit Aggregatfunktionen, die im folgenden Abschnitt behandelt werden, sinnvoll.
+    \section{Die Aggregatfunktionen}
+      Im Gegensatz zu den Single Row Functions, die sich immer nur auf eine Zeile auswirken und deshalb pro Zeile einmal ausgeführt werden müssen, beziehen sich Aggregatfunktionen immer auf eine Gruppierung. Dies können alle Werte einer Spalte oder mehrere getrennte Bereiche sein. Sinn und Zweck dieser Funktionen ist es, den Anwender dabei zu unterstützen, vordefinierte Berechnungen durchzuführen. \tabelle{aggregatfunktionen} zeigt einen Überblick, über die wichtigsten Aggregatfunktionen.
+      \begin{center}
+        \tablecaption{Aggregatfunktionen}
+        \label{aggregatfunktionen}
+        \begin{small}
+          \tablefirsthead{
+            \multicolumn{1}{c}{\textbf{Aggregatfunktion}} &
+            \multicolumn{1}{c}{\textbf{Bedeutung}} &
+            \multicolumn{1}{c}{\textbf{Wertebereich}} \\
+            \hline
+          }
+          \tabletail{
+            \hline
+          }
+          \tablelasttail {
+            \hline
+          }
+          \begin{supertabular}{|l|p{8.5cm}|p{2cm}|}
+            AVG & Berechnet für den übergebenen Bereich den Durchschnitt aller Werte. NULL-Werte werden bei der Berechnung nicht berücksichtigt. & Numerisch \\
+            \hline
+            COUNT & Zählt die zur Gruppierung gehörenden Datensätze. Als Funktionsargument kann ein beliebiger Ausdruck übergeben werden. Wird ein Spaltenbezeichner verwendet, zählt die Funktion die Anzahl der Werte in dieser Spalte. NULL-Werte werden von dieser Funktion nicht berücksichtigt. & Universell \\
+            \hline
+            MAX & Liefert den größten Wert eines Bereiches zurück. & Universell \\
+            \hline
+            MIN & Liefert den kleinsten Wert eines Bereiches zurück. & Universell \\
+            \hline
+            SUM & Berechnet die Summe, für den übergebenen Bereich. NULL-Werte werden bei der Berechnung nicht berücksichtigt. & Numerisch \\
+          \end{supertabular}
+        \end{small}
+      \end{center}
+      \beispiel{sql05_02} zeigt die Anwendung der Summen-Funktion \languageorasql{SUM}, um die Gehälter aller Mitarbeiter pro Filiale zu ermitteln.
+      \begin{lstlisting}[language=oracle_sql,caption={Fehler in der Gruppierung},label=sql05_02]
+SELECT Bankfiliale_ID, SUM(Gehalt)
+FROM   Mitarbeiter;
+      \end{lstlisting}
+      Auch wenn auf den ersten Blick an dieser Abfrage nichts falsches zu bemerken ist, antwortet das DBMS mit einer Fehlermeldung, was daran liegt, dass die Funktion \languageorasql{SUM} automatisch eine Gruppierung bildet, in die die Spalte \identifier{Bankfiliale\_ID} nicht mit einbezogen wird.
+      \begin{lstlisting}[language=oracle_sql,caption={Die Fehlermeldung in Oracle},label=sql05_03]
+Fehler beim Start in Zeile 1 in Befehl:
+SELECT Bankfiliale_ID, SUM(Gehalt)
+FROM   Mitarbeiter
+Fehler bei Befehlszeile:1 Spalte:7
+Fehlerbericht:
+SQL-Fehler: ORA-00937: keine Gruppenfunktion fuer Einzelgruppe
+00937. 00000 -  "not a single-group group function"
+      \end{lstlisting}
+\clearpage
+			\begin{lstlisting}[language=ms_sql,caption={Die Fehlermeldung in SQL Server},label=sql05_04]
+Meldung 8120, Ebene 16, Status 1, Zeile 1
+Die 'Bank.dbo.Bankfiliale_ID'-Spalte
+ist in der Auswahlliste ungueltig, da sie nicht in einer
+Aggregatfunktion und nicht in der GROUP BY-Klausel enthalten ist.
+      \end{lstlisting}
+      \begin{merke}
+        Sobald eine Gruppenfunktion zum Einsatz kommt, müssen alle in der \SELECT-Klausel gelisteten Attribute gruppiert werden. Dies kann durch die Anwendung weiterer Gruppenfunktionen oder durch die \GROUPBY-Klausel geschehen.
+      \end{merke}
+      Um diesen Fehler zu beheben, muss das Statement aus \beispiel{sql05_02} um eine \GROUPBY-Klausel erweitert werden.
+      \begin{lstlisting}[language=oracle_sql,caption={Der korrekte Einsatz der \languageorasql{SUM}-Funktion},label=sql05_05]
+SELECT   Bankfiliale_ID, SUM(Gehalt)
+FROM     Mitarbeiter
+GROUP BY Bankfiliale_ID;
+      \end{lstlisting}
+      \begin{center}
+        \begin{small}
+          \changefont{pcr}{m}{n}
+          \tablefirsthead {
+            \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}} &
+            \multicolumn{1}{r}{\textbf{SUM(GEHALT)}} \\
+            \cmidrule(r){1-1}\cmidrule(r){2-2}
+          }
+          \tablehead{}
+          \tabletail {
+            \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+          }
+          \tablelasttail {
+            \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+          }
+          \begin{msoraclesql}
+            \begin{supertabular}{rr}
+              & 308000 \\
+              1 & 20500 \\
+              6 & 21000 \\
+              11 & 23000 \\
+              13 & 20000 \\
+              2 & 17000 \\
+              14 & 19500 \\
+              20 & 19500 \\
+           \end{supertabular}
+          \end{msoraclesql}
+        \end{small}
+      \end{center}
+        \subsection{Die Funktion COUNT}
+          Wie in \tabelle{aggregatfunktionen} beschrieben, wird \languageorasql{COUNT} zum Zählen von Werten genutzt. In \beispiel{sql05_06} wird ermittelt, wie viele Mitarbeiter in der Tabelle \identifier{Mitarbeiter} gespeichert sind.
+          \begin{lstlisting}[language=oracle_sql,caption={Das Zählen von Datensätzen},label=sql05_06]
+SELECT COUNT(*) AS "Mitarbeiter"
+FROM   Mitarbeiter;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{MITARBEITER}} \\
+                \cmidrule(r){1-1}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{r}
+                  100 \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          \begin{merke}
+            Der Stern * kann in der \languageorasql{COUNT}-Funktion als \enquote{Joker} genutzt werden. \languageorasql{COUNT(*)} zählt alle Zeilen einer Tabelle und hat somit den gleichen Effekt, wie das Zählen der Einträge der Primärschlüsselspalte einer Tabelle.
+          \end{merke}
+          Ein weiteres Beispiel zeigt, dass die \languageorasql{COUNT}-Funktion NULL-Werte nicht berücksichtigt.
+          \begin{lstlisting}[language=oracle_sql,caption={NULL-Werte werden nicht gezählt!},label=sql05_07]
+SELECT COUNT(Vorgesetzter_ID)
+FROM   Mitarbeiter;
+          \end{lstlisting}
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{COUNT(VORGESETZTER\_ID)}} \\
+                \cmidrule(r){1-1}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{r}
+                  99 \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Da der Mitarbeiter Winter (\identifier{Mitarbeiter\_ID} = 1) keinen Vorgesetzten hat, ist bei ihm ein NULL-Wert in der Spalte \identifier{Vorgesetzter\_ID}, was dazu führt, dass \languageorasql{COUNT} nur 99 Werte zählt.
+      \subsection{Die Funktion SUM}
+        Mit Hilfe von \languageorasql{SUM} kann die Summe aller Werte eines Bereichs gebildet werden. Ein Beispiel zu dieser Funktion ist in \beispiel{sql05_05} zu sehen. Im Gegensatz zur \languageorasql{COUNT}-Funktion, spielen NULL-Werte keine Rolle, in Bezug auf die \languageorasql{SUM}-Funktion. Ein NULL-Wert wird durch die \languageorasql{SUM}-Funktion einfach ignoriert und verfälscht das Ergebnis dadurch nicht.
+      \subsection{Die Funktion AVG}
+        Die Abkürzung \enquote{AVG} steht für das englische Wort \enquote{average} = Durchschnitt (arithmetisches Mittel). Die Funktion \languageorasql{AVG} berechnet den Durchschnitt der Werte einer Gruppierung.
+
+        In \beispiel{sql05_08} wird die \languageorasql{AVG}-Funktion genutzt, um das Durchschnittsgehalt für jede Filiale zu berechnen.
+        \begin{lstlisting}[language=oracle_sql,caption={Die AVG-Funktion},label=sql05_08]
+SELECT   Bankfiliale_ID, AVG(Gehalt)
+FROM     Mitarbeiter
+GROUP BY Bankfiliale_ID;
+        \end{lstlisting}
+\clearpage
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}} &
+              \multicolumn{1}{r}{\textbf{AVG(GEHALT)}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rr}
+                & 44000 \\
+                1 & 4100 \\
+                6 & 4200 \\
+                11 & 4600 \\
+                13 & 5000 \\
+                2 & 3400 \\
+                14 & 4875 \\
+                20 & 4875 \\
+                4 & 4100 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        Das nächste Beispiel erläutert den Zusammenhang zwischen \languageorasql{AVG} und NULL-Werten. Im Versuch soll die durchschnittliche Provision, die ein Mitarbeiter erhält, berechnet werden. Wichtig für diesen Versuch ist, dass nur ein Teil der Mitarbeiter eine Provision erhält.
+        \begin{lstlisting}[language=oracle_sql,caption={AVG und NULL-Werte in Oracle},label=sql05_09]
+SELECT COUNT(Provision) AS Anzahl, ROUND(AVG(Provision), 2) AS "AVG",
+       COUNT(NVL(Provision, 0)) AS "Anzahl NVL",
+       AVG(NVL(Provision, 0)) AS "AVG NVL"
+FROM   Mitarbeiter;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{ANZAHL}} &
+              \multicolumn{1}{r}{\textbf{AVG}} &
+              \multicolumn{1}{r}{\textbf{ANZAHL NVL}} &
+              \multicolumn{1}{r}{\textbf{AVG NVL}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+
+            \begin{oraclesql}
+              \begin{supertabular}{rrrr}
+                33 & 22,58 & 100 & 7,45 \\
+              \end{supertabular}
+            \end{oraclesql}
+          \end{small}
+        \end{center}
+        \begin{lstlisting}[language=ms_sql,caption={AVG und NULL-Werte im MS SQL Server},label=sql05_10]
+SELECT COUNT(Provision) AS Anzahl, ROUND(AVG(Provision), 2) AS "AVG",
+       COUNT(ISNULL(Provision, 0)) AS "Anzahl ISNULL",
+       AVG(ISNULL(Provision, 0)) AS "AVG ISNULL"
+FROM   Mitarbeiter;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{ANZAHL}} &
+              \multicolumn{1}{l}{\textbf{AVG}} &
+              \multicolumn{1}{l}{\textbf{ANZAHL NVL}} &
+              \multicolumn{1}{l}{\textbf{AVG NVL}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+
+            \begin{mssql}
+              \begin{supertabular}{llll}
+                33 & 22,58 & 100 & 7,45 \\
+              \end{supertabular}
+            \end{mssql}
+          \end{small}
+        \end{center}
+        Je nach dem, ob NULL-Werte durch die \languageorasql{NVL}-Funktion/\languagemssql{ISNULL}-Funktion bereinigt werden oder nicht, wird ein unterschiedliches Ergebnis, durch die \languageorasql{AVG}-Funktion, errechnet.
+      \subsection{Die Funktionen MIN und MAX}
+        Die Funktionen \languageorasql{MIN} und \languageorasql{MAX} ermitteln den größten bzw. kleinsten Wert aus einer Menge und können auf nahezu jeden Datentyp angewendet werden.  \beispiel{sql05_11} zeigt die Anwendung von \languageorasql{MAX} auf Spalten verschiedener Datentypen.
+        \begin{lstlisting}[language=oracle_sql,caption={Anwendung von MAX auf verschiedene Datentypen},label=sql05_11]
+SELECT MAX(Nachname), MAX(Geburtsdatum), MAX(PLZ), MAX(Provision)
+FROM   Mitarbeiter;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{MAX(NACHNAME)}} &
+              \multicolumn{1}{l}{\textbf{MAX(GEBURTSDATUM)}} &
+              \multicolumn{1}{l}{\textbf{MAX(PLZ)}} &
+              \multicolumn{1}{r}{\textbf{MAX(PROVISION)}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(r){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+
+            \begin{msoraclesql}
+              \begin{supertabular}{lllr}
+                Zimmermann & 31.05.93 & 80995 & 30 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        Zu beachten ist, dass die angezeigten Daten in keiner Beziehung zueinander stehen. Es handelt sich um die Maximalwerte aus den einzelnen Spalten. Der Angestellte Zimmermann hat keinesfalls das Geburtsdatum 31.05.1993 und er bekommt auch keine Provision.
+
+        Bezüglich NULL-Werte gibt es, sowohl in Oracle, als auch in MS SQL Server, keine Probleme mit \languageorasql{MIN} oder \languageorasql{MAX}, wie das folgende \beispiel{sql05_12} zeigt.
+        \begin{lstlisting}[language=oracle_sql,caption={Die MAX-Funktion und NULL-Werte (Oracle)},label=sql05_12]
+SELECT MAX(Provision), MAX(NVL(Provision,0))
+FROM   Mitarbeiter;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{MAX(PROVISION)}} &
+              \multicolumn{1}{r}{\textbf{MAX(NVL(PROVISION,0))}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{oraclesql}
+              \begin{supertabular}{rr}
+                30 & 30 \\
+              \end{supertabular}
+            \end{oraclesql}
+          \end{small}
+        \end{center}
+        Das gleiche Beispiel kann in MS SQL Server, mit Hilfe der \languagemssql{ISNULL}-Funktion reproduziert werden.
+
+        \begin{merke}
+          Alle Eigenschaften, die für die \languageorasql{MAX}-Funktion gelten, gelten uneingeschränkt auch für die \languageorasql{MIN}-Funktion.
+        \end{merke}
+      \subsection{Gruppierungen mit mehreren Ebenen}
+        Wie bereits angekündigt, ist es möglich, mit Hilfe der \GROUPBY-Klausel, eine Abfrage mehrfach zu gruppieren. Eine Mehrfachgruppierung ist immer dann notwendig, wenn innerhalb einer Gruppe weitere Gruppen gebildet werden müssen. \beispiel{sql05_13} listet alle Kunden auf, die nach dem 01.01.1995 geboren wurden, gruppiert nach Ort und Strasse.
+        \begin{lstlisting}[language=oracle_sql,caption={Eine Gruppierung mit mehreren Ebenen},label=sql05_13]
+SELECT Ort, Strasse, COUNT(*) AS Anzahl
+FROM   Kunde k INNER JOIN Eigenkunde ek
+         ON (k.Kunden_ID = ek.Kunden_ID)
+WHERE  Geburtsdatum > '01.01.1995'
+GROUP BY Ort, Strasse
+ORDER BY Ort;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{ORT}} &
+              \multicolumn{1}{l}{\textbf{STRASSE}} &
+              \multicolumn{1}{r}{\textbf{ANZAHL}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{21 Zeilen ausgewählt}} \\
+            }
+
+            \begin{msoraclesql}
+              \begin{supertabular}{llr}
+                Aschersleben & Am Markt & 1 \\
+                Bördeaue & Plutoweg & 1 \\
+                Bördeaue & Okerstraße & 1 \\
+                \dots & \dots & \dots \\
+                Hecklingen & Turmstraße & 1 \\
+                Hecklingen & Pestalozzistraße & 1 \\
+                Hecklingen & Seestraße & 1 \\
+                \dots & \dots & \dots \\
+                Staßfurt & Wielandstraße & 2 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+    \section{Gruppierte Abfragen filtern}
+      \subsection{Die WHERE-Klausel}
+        Das die \WHERE-Klausel auch auf gruppierte Abfragen angewandt werden
+        kann, ist bereits in \beispiel{sql05_13} zu sehen. Wesentlich dabei
+        ist, dass sie vor dem Gruppieren abgearbeitet wird, d. h. es wird die
+        Menge der Zeilen eingeschränkt, die noch gruppiert werden muss. Hierzu
+        ein Beispiel: Mit Hilfe einer Abfrage soll ermittelt werden, wer der
+        jüngste Kunde ist.
+        \begin{lstlisting}[language=oracle_sql,caption={Wer ist der jüngste Kunde},label=sql05_14]
+SELECT MAX(Geburtsdatum)
+FROM   Eigenkunde;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{MAX(GEBURTSDATUM)}} \\
+              \cmidrule(l){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{l}
+                07.04.97 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        Im Folgenden wird \beispiel{sql05_14} durch eine \WHERE-Klausel eingeschränkt.
+        \begin{lstlisting}[language=oracle_sql,caption={Der jüngest Kunde aus Alsleben},label=sql05_15]
+SELECT MAX(Geburtsdatum)
+FROM   Eigenkunde
+WHERE  Ort LIKE 'Alsleben';
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{MAX(GEBURTSDATUM)}} \\
+              \cmidrule(l){1-1}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{l}
+                21.05.93 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        Die angefügte \WHERE-Klausel sorgt dafür, dass die Gruppierung, die durch die \languageorasql{MAX}-Funktion entsteht, nur auf die Kunden angewandt wird, die in Alsleben wohnen.
+
+        \begin{merke}
+          Die \WHERE-Klausel wird immer vor dem Gruppieren abgearbeitet!
+        \end{merke}
+      \subsection{Die HAVING-Klausel}
+        Gerade eben wurde gezeigt, dass mit Hilfe der \WHERE-Klausel eine Selektion vor der Gruppierung der Datensätze erreicht werden kann. Was aber ist, wenn eine Auswahl auf gruppierten Datensätzen erfolgen soll? Im folgenden Versuch soll für jede Bankfiliale das niedrigste Gehalt aufgelistet werden, aber nur dann, wenn es größer als 1.500 EUR ist.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Versuch\dots mit Oracle},label=sql05_16]
+SELECT   Bankfiliale_ID, MIN(Gehalt)
+FROM     Mitarbeiter
+WHERE    MIN(Gehalt) > 1500
+GROUP BY Bankfiliale_ID;
+
+ORA-00934: group function is not allowed here
+00934. 00000 -  "group function is not allowed here"
+        \end{lstlisting}
+        \begin{lstlisting}[language=ms_sql,caption={Der gleiche Versuch\dots mit MS SQL Server},label=sql05_17]
+SELECT   Bankfiliale_ID, MIN(Gehalt)
+FROM     Mitarbeiter
+WHERE    MIN(Gehalt) > 1500
+GROUP BY Bankfiliale_ID;
+
+Meldung 147, Ebene 15, Status 1, Zeile 3
+An aggregate may not appear in the WHERE clause unless it is in a subquery contained in a HAVING clause or a select list, and the column being aggregated is an outer reference.
+Verweise.
+        \end{lstlisting}
+        \beispiel{sql05_16} und \beispiel{sql05_17} zeigen, dass die Verarbeitung einer Aggregatfunktion in der \WHERE-Klausel nicht möglich ist. Dies liegt daran, dass, wie bereits erwähnt, die \WHERE-Klausel schon vor der Gruppierungsphase abgearbeitet wird.
+
+        Um das gewünschte Ziel erreichen zu können, muss eine neue Klausel, die \HAVING-Klausel, eingeführt werden. Sie ermöglicht es, Selektionen auf gruppierten Zeilen durchzuführen. \beispiel{sql05_16} muss korrekt lauten:
+        \begin{lstlisting}[language=oracle_sql,caption={Die HAVING-Klausel},label=sql05_18]
+SELECT   Bankfiliale_ID, MIN(Gehalt)
+FROM     Mitarbeiter
+GROUP BY Bankfiliale_ID
+HAVING   MIN(Gehalt) > 1500;
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}} &
+              \multicolumn{1}{r}{\textbf{MIN(GEHALT)}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{9 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{9 Zeilen ausgewählt}} \\
+            }
+
+            \begin{msoraclesql}
+              \begin{supertabular}{rr}
+                & 30000 \\
+                1 & 2000 \\
+                6 & 2000 \\
+                11 & 2000 \\
+                7 & 2000 \\
+                18 & 2500 \\
+                15 & 2000 \\
+                16 & 3000 \\
+                19 & 2000 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        Die \HAVING-Klausel eliminiert, nach dem Gruppieren, alle Datensätze, auf die die Bedingung zutrifft: \languageorasql{MIN(Gehalt) <= 1500}.
+
+        \begin{merke}
+          Die \HAVING-Klausel wird auf gruppierte Zeilen angewandt und kann deshalb nur in Verbindung mit der \GROUPBY-Klausel stehen.
+        \end{merke}
+\clearpage
+    \section{Die Abarbeitungsreihenfolge des SELECT-Statements}
+      Nachdem nun in den vorangegangenen Kapiteln alle standardisierten Klauseln des \SELECT-Kommandos behandelt wurden, stellt sich noch immer die Frage: \enquote{In welcher Reihenfolge werden die Klauseln des \SELECT-Kommandos abgearbeitet?}. Die korrekte Antwort lautet:
+      \begin{enumerate}
+        \item \FROM
+        \item \WHERE
+        \item \GROUPBY
+        \item \HAVING
+        \item \SELECT
+        \item \ORDERBY
+      \end{enumerate}
+      Zuerst wird mit Hilfe der \FROM-Klausel ermittelt, auf welche Tabellen sich das \SELECT-Statement bezieht. Im zweiten Schritt filtert die \WHERE-Klausel alle Zeilen aus den Quelltabellen, die für das Statement nicht mehr relevant sind. Die beiden Klauseln \GROUPBY{} und \HAVING{} sorgen für Gruppierungen und das Filtern von gruppierten Zeilen. Zu guter letzt werden die \SELECT- und die \ORDERBY-Klausel abgearbeitet, so dass das Ergebnis auf dem Bildschirm ausgegeben werden kann.

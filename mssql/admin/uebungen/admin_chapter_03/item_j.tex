@@ -1,0 +1,47 @@
+\item Fügen Sie Ihre Instanz MSSQLSERVER die Datenbank \identifier{Bank
+2014} hinzu. Der Aufbau der Datenbank kann der folgenden Tabelle
+entnommen werden. Die Namen der Dateigruppen sind in den logischen Namen der
+Datendateien enthalten (Primary, HR, CRM, KAM und MAIL).
+\begin{center}
+  \begin{small}
+    \changefont{pcr}{m}{n}
+    \tablefirsthead {
+      \multicolumn{1}{c}{\textbf{Name}} &
+      \multicolumn{1}{c}{\textbf{Größe}} &
+      \multicolumn{1}{c}{\textbf{Wachstum}} &
+      \multicolumn{1}{c}{\textbf{G Max.}} &
+      \multicolumn{1}{c}{\textbf{Pfad}} \\
+    }
+    \tablehead{
+    }
+    \tabletail {
+    }
+    \tablelasttail {
+    }
+    \begin{supertabular}{lrrrl}
+      bank\_2014\_primary\_01 &  10 M &  + 10 M & 500 M &
+      D:\textbackslash u01\textbackslash bank\_2014\textbackslash data \\
+      \hline
+      bank\_2014\_hr\_01     & 100 M &  + 20 M & 500 M &
+      D:\textbackslash u01\textbackslash bank\_2014\textbackslash data \\
+      bank\_2014\_hr\_02     & 100 M &  + 20 M & 500 M &
+      D:\textbackslash u01\textbackslash bank\_2014\textbackslash data \\
+      \hline
+      bank\_2014\_crm\_01    &  50 M &  + 10 M & 500 M &
+      E:\textbackslash u02\textbackslash bank\_2014\textbackslash data \\
+      \hline
+      bank\_2014\_kam\_01    & 100 M & + 100 M & 500 M & E:\textbackslash
+      u02\textbackslash bank\_2014\textbackslash data \\
+      \hline
+      bank\_2014\_mail\_01    & 500 M & + 100 M & 1 G &
+      D:\textbackslash u01\textbackslash bank\_2014\textbackslash data \\
+      bank\_2014\_mail\_02    & 500 M & + 100 M & 1 G &
+      D:\textbackslash u01\textbackslash bank\_2014\textbackslash data \\
+      bank\_2014\_mail\_03    & 500 M & + 100 M & 1 G &
+      D:\textbackslash u01\textbackslash bank\_2014\textbackslash data \\
+      \hline
+      bank\_2014\_log         & 768 M & + 768 M & 3 G &
+      F:\textbackslash u03\textbackslash bank\_2014\textbackslash log  \\
+    \end{supertabular}
+  \end{small}
+\end{center}

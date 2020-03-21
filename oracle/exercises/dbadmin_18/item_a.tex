@@ -1,0 +1,9 @@
+    \item Führen Sie ein Recovery bei Verlust einer Redo Log Datei durch!
+      \begin{enumerate}
+        \item Starten Sie das Skript \oscommand{lab\_delete\_redolog\_member.sql}! Es löscht einen beliebigen Member einer Ihrer Redo Log Gruppen.
+          \begin{lstlisting}[language=terminal]
+SQL> @/home/oracle/labs/lab_delete_redolog_member.sql
+          \end{lstlisting}
+        \item Die Datenbank läuft weiterhin normal und es liegen keinerlei Probleme vor. Öffnen Sie die Alert Log Datei, um herauszufinden welcher Redo Log Member gelöscht wurde!
+        \item Führen Sie geeignete Maßnahmen zur Problembehebung durch!
+      \end{enumerate}

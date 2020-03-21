@@ -1,0 +1,87 @@
+\section{Lösungen - Verwalten des Result Caches}
+  \begin{enumerate}
+    \input{exercises/dbadmin_11/item_a}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT DBMS_RESULT_CACHE.STATUS() AS cache_status
+  2  FROM   dual;
+
+CACHE_STATUS
+----------------------
+ENABLED
+      \end{lstlisting}
+    \input{exercises/dbadmin_11/item_b}
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a30
+SQL> col value format a20
+SQL> SELECT *
+  2  FROM   v$result_cache_statistics
+  3  WHERE  id IN (1, 3);
+      \end{lstlisting}
+    \input{exercises/dbadmin_11/item_c}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET result_cache_max_size = 1G;
+      \end{lstlisting}
+    \input{exercises/dbadmin_11/item_d}
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a30
+SQL> col modus format a30
+SQL> SELECT name, value as Modus
+  2  FROM   v$system_parameter
+  3  WHERE  LOWER(name) LIKE 'result_cache_mode';
+
+NAME                           MODUS
+------------------------------ ------------------------------
+result_cache_mode              MANUAL
+      \end{lstlisting}
+    \input{exercises/dbadmin_11/item_e}
+    \input{exercises/dbadmin_11/item_f}
+    \input{exercises/dbadmin_11/item_g}
+    \input{exercises/dbadmin_11/item_h}
+      \begin{lstlisting}[caption={Der Ausführungsplan wurde
+      gekürzt},language=terminal]
+-----------------------------------------------------------------------
+| Id | Operation            | Name                        |Cost (%CPU)|
+-----------------------------------------------------------------------
+|  0 | SELECT STATEMENT     |                            | 1404   (2)|
+|  1 |  RESULT CACHE        | 4ygxpvhbjy9q7ggm3jz5p8vh50 |           |
+|  2 |   HASH GROUP BY PIVOT|                            | 1404   (2)|
+|  3 |    TABLE ACCESS FULL | BUCHUNG                    |  566   (1)|
+----------------------------------------------------------------------
+
+Elapsed: &\textcolor{red}{00:00:00.20}&
+      \end{lstlisting}
+    \input{exercises/dbadmin_11/item_i}
+      \begin{lstlisting}[caption={Der Ausführungsplan wurde
+      gekürzt},language=terminal]
+-----------------------------------------------------------------------
+| Id | Operation            | Name                        |Cost (%CPU)|
+-----------------------------------------------------------------------
+|  0 | SELECT STATEMENT     |                            | 1404   (2)|
+|  1 |  RESULT CACHE        | 4ygxpvhbjy9q7ggm3jz5p8vh50 |           |
+|  2 |   HASH GROUP BY PIVOT|                            | 1404   (2)|
+|  3 |    TABLE ACCESS FULL | BUCHUNG                    |  566   (1)|
+----------------------------------------------------------------------
+
+Elapsed: &\textcolor{red}{00:00:00.03}&
+      \end{lstlisting}
+    \input{exercises/dbadmin_11/item_j}
+    \input{exercises/dbadmin_11/item_k}
+\clearpage
+      \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a30
+SQL> col value format a30
+SQL> SELECT *
+  2  FROM   v$result_cache_statistics
+  3  WHERE  id <= 5;
+
+        ID NAME                           VALUE
+---------- ------------------------------ ------------------------------
+         1 Block Size (Bytes)             1024
+         2 Block Count Maximum            327680
+         3 Block Count Current            32
+         4 Result Size Maximum (Blocks)   &\textcolor{red}{16384}&
+         5 Create Count Success           &\textcolor{red}{1}&
+      \end{lstlisting}
+  \end{enumerate}
+

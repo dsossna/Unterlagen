@@ -1,0 +1,366 @@
+\clearpage
+    \section{Lösungen - Verwalten einer SQL Server-Instanz}
+      \begin{enumerate}
+          \input{admin/uebungen/admin_chapter_03/item_a}
+          
+          Fügen Sie Ihrem Computer die \enquote{Richtlinienverwaltung} und die
+          \enquote{Remoteverwaltungstools} hinzu!
+          
+          \input{admin/uebungen/admin_chapter_03/item_b}
+          \begin{lstlisting}[language=powershell, caption={Aufnehmen eines
+          Computers in eine Windows Domäne}, label=admin_03_loesung_01]
+~$ou~ = "OU=Computers,OU=Serverxx,OU=EXER,OU=IT-SysAdmin,DC=MS-C-IX-04-DC=FUS"
+Add-Computer |-ComputerName| FEA11-119SRVxx `
+|-LocalCredential| FEA11-119SRVxx\Administrator `
+|-DomainName| MS-C-IX-04.FUS `
+|-Credential| MS-C-IX_04\Administrator `
+|-OUPath| ~$ou~
+|-Restart| |-Force|
+          \end{lstlisting}
+          
+          \input{admin/uebungen/admin_chapter_03/item_c}
+          \bild{Den Shared Memory-Zugriff
+          deaktivieren}{deactivate_shared_memory}{2}
+\clearpage          
+          \input{admin/uebungen/admin_chapter_03/item_d}
+          \bild{IP-Adressen deaktivieren}{deactivate_ip_addresses}{2}
+          
+          \input{admin/uebungen/admin_chapter_03/item_e}
+          \begin{lstlisting}[language=powershell, caption={Die notwendigen
+          gMSAs erstellen}, label=admin_03_loesung_02]
+~$gou~ = "OU=GROUPS,OU=Serverxx,OU=EXER,OU=IT-SysAdmin,DC=MS-C-IX-04-DC=FUS"
+New-ADGroup |-Name| SQLServerSVCxx |-GroupScope| Global `
+|-GroupCategory| Security `
+|-Path| ~$gou~
+
+~$cou~ = "OU=Computers,OU=Serverxx,OU=EXER,OU=IT-SysAdmin,DC=MS-C-IX-04-DC=FUS"
+~$identity~ = "CN=SQLServerSVCxx," + ~$cou~
+~$member~ = "CN=FEA11-119SRVxx," + ~$cou~
+
+Add-ADGroupMember |-Identity| ~$identity~ |-Members| $member
+          \end{lstlisting}
+\clearpage
+          \begin{lstlisting}[language=powershell]           
+~$mou~ = "OU=gMSAs,OU=Serverxx,OU=EXER,OU=IT-SysAdmin,DC=MS-C-IX-04-DC=FUS"
+
+New-ADServiceAccount |-Name| MSSQLSRVRxx `
+|-DNSHostname| FEA11-119SRVAD.MS-C-IX-04.FUS `
+|-Path| ~$mou~ `
+|-PrincipalsAllowedToRetrieveManagedPassword| ~$identity~ `
+|-Enabled| ~$true~
+
+New-ADServiceAccount |-Name| MSSQLAGENTxx `
+|-DNSHostname| FEA11-119SRVAD.MS-C-IX-04.FUS `
+|-Path| ~$mou~ `
+|-PrincipalsAllowedToRetrieveManagedPassword| ~$identity~ `
+|-Enabled| ~$true~
+
+New-ADServiceAccount |-Name| MSDTSSRVRxx `
+|-DNSHostname| FEA11-119SRVAD.MS-C-IX-04.FUS `
+|-Path| ~$mou~ `
+|-PrincipalsAllowedToRetrieveManagedPassword| ~$identity~ `
+|-Enabled| ~$true~
+
+New-ADServiceAccount |-Name| MSRPTSRVRxx `
+|-DNSHostname| FEA11-119SRVAD.MS-C-IX-04.FUS `
+|-Path| ~$mou~ `
+|-PrincipalsAllowedToRetrieveManagedPassword| ~$identity~ `
+|-Enabled| ~$true~
+
+New-ADServiceAccount |-Name| MSSQLBRWSRxx `
+|-DNSHostname| FEA11-119SRVAD.MS-C-IX-04.FUS `
+|-Path| ~$mou~ `
+|-PrincipalsAllowedToRetrieveManagedPassword| ~$identity~ `
+|-Enabled| ~$true~
+
+#Execute these steps as local admin on your computer
+
+~$identity~ = "CN=MSSQLSRVRxx," + ~$mou~
+Install-ADServiceAccount |-Identity| ~$identity~
+
+~$identity~ = "CN=MSSQLAGENTxx," + ~$mou~
+Install-ADServiceAccount |-Identity| ~$identity~
+
+~$identity~ = "CN=MSDTSSRVRxx," + ~$mou~
+Install-ADServiceAccount |-Identity| ~$identity~
+
+~$identity~ = "CN=MSRPTSRVRxx," + ~$mou~
+Install-ADServiceAccount |-Identity| ~$identity~
+
+~$identity~ = "CN=MSSQLBRWSRxx," + ~$mou~
+Install-ADServiceAccount |-Identity| ~$identity~
+          \end{lstlisting}        
+        \input{admin/uebungen/admin_chapter_03/item_f}
+        \begin{lstlisting}[language=powershell, caption={Stoppen und
+        umkonfigurieren von Diensten}, label=admin_03_loesung_03]
+Set-Service |-DisplayName| 'SQL Server Integration Services 12.0' `
+|-StartupType| Manual
+
+Set-Service |-DisplayName| 'SQL Server Reporting Services (MSSQLSERVER)' `
+|-StartupType| Manual
+
+Stop-Service |-DisplayName| 'SQL Server Integration Services 12.0'
+Stop-Service |-DisplayName| 'SQL Server Reporting Services (MSSQLSERVER)'     
+        \end{lstlisting}
+        \input{admin/uebungen/admin_chapter_03/item_g}
+        \begin{lstlisting}[language=ms_sql, caption={Ändern der
+        Servereigenschaften}, label=admin_03_loesung_04]
+EXEC sp_configure 'min server memory (MB)', '200'
+EXEC sp_configure 'max server memory (MB)', '2048'
+RECONFIGURE
+        \end{lstlisting}
+        \input{admin/uebungen/admin_chapter_03/item_h}
+        \begin{lstlisting}[language=ms_sql, caption={Ändern der
+        Servereigenschaften}, label=admin_03_loesung_05]
+SELECT name, value, value_in_use
+FROM   sys.configurations
+WHERE  configuration_id IN (1543, 1544)
+GO
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{name}} &
+              \multicolumn{1}{l}{\textbf{value}} &
+              \multicolumn{1}{l}{\textbf{value\_in\_use}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{1}{l}{\textbf{2 Zeilen ausgew\"ahlt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{1}{l}{\textbf{2 Zeilen ausgew\"ahlt}} \\
+            }
+            \begin{mssql}
+              \begin{supertabular}{lll}
+                min server memory (MB) & 200 & 200 \\
+                max server memory (MB) & 2048 & 2048 \\
+              \end{supertabular}
+            \end{mssql}
+          \end{small}
+        \end{center}
+        \input{admin/uebungen/admin_chapter_03/item_i}
+        \begin{lstlisting}[language=ms_sql, caption={Ändern der
+        Servereigenschaften}, label=admin_03_loesung_06]
+USE [master]
+GO
+
+EXEC xp_instance_regwrite N'HKEY_LOCAL_MACHINE', 
+     N'Software\Microsoft\MSSQLServer\MSSQLServer', 
+     N'AuditLevel', REG_DWORD, 0
+GO
+        \end{lstlisting}
+        
+        \input{admin/uebungen/admin_chapter_03/item_j}
+        \begin{lstlisting}[language=ms_sql, caption={Ändern der
+        Servereigenschaften}, label=admin_03_loesung_07]
+USE [master]
+GO
+
+CREATE DATABASE [Bank 2014]
+  CONTAINMENT = NONE
+  ON  PRIMARY 
+  ( NAME = N'bank_2014_primary_01', 
+    FILENAME = N'D:\u01\bank_2014\data\bank_2014_primary_01.mdf', 
+    SIZE = 10 MB, MAXSIZE = 500 MB, FILEGROWTH = 10 MB ), 
+  FILEGROUP [CRM] 
+  ( NAME = N'bank_2014_crm_01', 
+    FILENAME = N'E:\u02\bank_2014\data\bank_2014_crm_01.ndf', 
+    SIZE = 50 MB, MAXSIZE = 100 MB, FILEGROWTH = 10 MB ), 
+  FILEGROUP [HR] 
+  ( NAME = N'bank_2014_hr_01', 
+    FILENAME = N'D:\u01\bank_2014\data\bank_2014_hr_01.ndf', 
+    SIZE = 100 MB, MAXSIZE = 500 MB, FILEGROWTH = 20 MB ),
+  ( NAME = N'bank_2014_hr_02', 
+    FILENAME = N'D:\u01\bank_2014\data\bank_2014_hr_02.ndf', 
+    SIZE = 100 MB, MAXSIZE = 500 MB, FILEGROWTH = 20 MB ), 
+  FILEGROUP [KAM] 
+  ( NAME = N'bank_2014_kam_01', 
+    FILENAME = N'E:\u02\bank_2014\data\bank_2014_kam_01.ndf', 
+    SIZE = 100 MB, MAXSIZE = 500 MB, FILEGROWTH = 100 MB ), 
+        \end{lstlisting}
+\clearpage
+        \begin{lstlisting}[language=ms_sql]        
+  FILEGROUP [MAIL] 
+  ( NAME = N'bank_2014_mail_01', 
+    FILENAME = N'D:\u01\bank_2014\data\bank_2014_mail_01.ndf', 
+    SIZE = 500 MB, MAXSIZE = 1 GB, FILEGROWTH = 100 MB ),
+  ( NAME = N'bank_2014_mail_02', 
+    FILENAME = N'D:\u01\bank_2014\data\bank_2014_mail_02.ndf', 
+    SIZE = 500 MB, MAXSIZE = 1 GB, FILEGROWTH = 100 MB ),
+  ( NAME = N'bank_2014_mail_03', 
+    FILENAME = N'D:\u01\bank_2014\data\bank_2014_mail_03.ndf', 
+    SIZE = 500 MB, MAXSIZE = 1 GB, FILEGROWTH = 100 MB )
+  LOG ON 
+  ( NAME = N'Bank 2014_log', 
+    FILENAME = N'F:\u03\bank_2014\log\bank_2014_log.ldf', 
+    SIZE = 768 MB, MAXSIZE = 3 GB, FILEGROWTH = 768 MB )
+GO
+        \end{lstlisting}
+        
+        \input{admin/uebungen/admin_chapter_03/item_k}
+        \begin{lstlisting}[language=ms_sql, caption={Hinzufügen einer
+        Dateigruppe mit Datendatei}, label=admin_03_loesung_08]
+USE [master]
+GO
+
+ALTER DATABASE [Bank 2014] 
+ADD FILEGROUP [STAGING]
+GO
+
+ALTER DATABASE [Bank 2014] 
+ADD FILE (NAME = N'bank_2014_staging', 
+          FILENAME = N'E:\u02\bank_2014\data\bank_2014_staging_01.ndf', 
+          SIZE = 800 MB, MAXSIZE = 2 GB, FILEGROWTH = 40 MB) 
+TO FILEGROUP [STAGING]
+GO
+        
+        \end{lstlisting}
+\clearpage        
+        \input{admin/uebungen/admin_chapter_03/item_l}
+        \begin{lstlisting}[language=ms_sql, caption={Hinzufügen einer
+        Datendatei zu einer bestehenden Dateigruppe}, label=admin_03_loesung_09]
+USE [master]
+GO
+
+ALTER DATABASE [Bank 2014] 
+ADD FILE (NAME = N'bank_2014_crm_02', 
+          FILENAME = N'E:\u02\bank_2014\data\bank_2014_crm_02.ndf', 
+          SIZE = 50 MB, MAXSIZE = 500 MB, FILEGROWTH = 10 MB )
+TO FILEGROUP [CRM]
+GO        
+        \end{lstlisting}
+        
+      \input{admin/uebungen/admin_chapter_03/item_m}
+      \begin{lstlisting}[language=ms_sql, caption={Ändern der
+      Datendateieigenschaften}, label=admin_03_loesung_10]
+USE [master]
+GO
+
+ALTER DATABASE [Bank 2014] 
+MODIFY FILE ( NAME = N'bank_2014_hr_01', MAXSIZE = 1 GB )
+GO
+
+ALTER DATABASE [Bank 2014] 
+MODIFY FILE ( NAME = N'bank_2014_hr_02', MAXSIZE = 1 GB )
+GO
+
+ALTER DATABASE [Bank 2014] 
+MODIFY FILE ( NAME = N'bank_2014_kam_01', SIZE = 500 MB, MAXSIZE = 2 GB )
+GO
+
+ALTER DATABASE [Bank 2014]
+MODIFY FILE ( NAME = N'bank_2014_primary_01', MAXSIZE = 768 MB )
+GO
+      \end{lstlisting}
+\clearpage
+      \input{admin/uebungen/admin_chapter_03/item_n}
+      \begin{lstlisting}[language=ms_sql, caption={Abfragen der
+      Datendateieigenschaften}, label=admin_03_loesung_11]
+USE [Bank 2014]
+GO
+
+SELECT name, size * 8 / 1024 AS Size, 
+       growth * 8 / 1024 AS Growth, 
+       max_size * 8 / 1024 AS Max_Size
+FROM   sys.database_files
+      \end{lstlisting}
+      
+      \input{admin/uebungen/admin_chapter_03/item_o}
+      \begin{lstlisting}[language=ms_sql, caption={Verschieben einer
+      Datendatei}, label=admin_03_loesung_12]
+USE [master]
+GO
+
+ALTER DATABASE [Bank 2014]
+SET OFFLINE;
+
+-- Move Datafile on filesystem
+-- Change filesystemrights
+
+ALTER DATABASE [Bank 2014]
+MODIFY FILE ( NAME = N'bank_2014_kam_01',
+FILENAME = N'D:\u01\bank_2014\data\bank_2014_kam_01.ndf' )
+GO
+
+ALTER DATABASE [Bank 2014]
+SET ONLINE;     
+      \end{lstlisting}
+
+      \input{admin/uebungen/admin_chapter_03/item_p}
+      \begin{lstlisting}[language=ms_sql, caption={Ändern der
+      Standarddateigruppe}, label=admin_03_loesung_12]
+USE [Bank 2014]
+GO
+
+IF NOT EXISTS (
+   SELECT name 
+   FROM sys.filegroups 
+   WHERE is_default=1 AND name = N'CRM')
+     ALTER DATABASE [Bank 2014]
+     MODIFY FILEGROUP [CRM] DEFAULT
+GO
+      \end{lstlisting}
+            
+      \input{admin/uebungen/admin_chapter_03/item_q}
+      \begin{lstlisting}[language=ms_sql, caption={Die Datenbankoption
+      quoted\_identifier ändern}, label=admin_03_loesung_13]
+USE [master]
+GO
+
+ALTER DATABASE [Bank 2014] 
+SET QUOTED_IDENTIFIER ON 
+WITH NO_WAIT
+GO 
+      \end{lstlisting}
+      
+      \input{admin/uebungen/admin_chapter_03/item_r}
+      
+      Die Datenbankoption \identifier{auto\_close} bewirkt, dass die Datenbank
+      geschlossen wird, sobald sich der letzte noch aktive Nutzer abgemeldet
+      hat. Dies hat zur Folge, dass alle im Arbeitspeicher befindlichen Teile
+      der Datenbank von dort entfernt werden, wodurch die Performance dieser
+      Datenbank sehr starkt negativ beeinflusst wird.
+      
+      \input{admin/uebungen/admin_chapter_03/item_s}
+      \begin{lstlisting}[language=ms_sql, caption={Verschieben der
+      Systemdatenbank tempdb}, label=admin_03_loesung_14]
+USE [master]
+GO
+
+ALTER DATABASE [tempdb]
+MODIFY FILE ( NAME = N'tempdev',
+              FILENAME = N'G:\u04\tempdb\data\tempdb.mdf' )
+GO
+
+ALTER DATABASE [tempdb]
+MODIFY FILE ( NAME = N'templog',
+              FILENAME = N'F:\u03\tempdb\log\templog.ldf' )
+GO
+
+-- Shutdown the instance
+
+-- Move file on filesystem to their new locations
+
+-- Change filesystemrights
+
+-- Startup the instance
+      \end{lstlisting}
+\clearpage      
+      \input{admin/uebungen/admin_chapter_03/item_t}
+      \bild{Verschieben des errorlog}{move_error_log}{0.48}
+      
+      \input{admin/uebungen/admin_chapter_03/item_u}
+      \begin{lstlisting}[language=ms_sql, caption={Umbennen einer Datenbank},
+      label=admin_03_loesung_15]
+USE [master]
+GO
+
+ALTER DATABASE [Bank 2014]
+Modify Name = Bank_2014
+GO
+      
+      \end{lstlisting}
+    \end{enumerate}

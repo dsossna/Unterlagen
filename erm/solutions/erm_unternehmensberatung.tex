@@ -1,0 +1,43 @@
+      \subsection{Übungsaufgabe Unternehmensberatung}
+        \begin{center}
+          \scalebox{.6}{
+            \begin{tikzpicture}[node distance=1.8cm, every edge/.style={link}]
+              \node[entity](A){Produktionsbetrieb};
+                \node[attribute](a1)[above right = of A]{\key{Betriebs\_ID}} edge (A);
+                \node[attribute](a2)[above left = of A]{Bezeichnung} edge (A);
+              \node[relationship](rel1)[below = of A]{besteht aus} edge node[auto,swap] {(1,*)}(A);
+              \node[entity](B)[below = of rel1]{Abteilung} edge node[auto,swap] {(1,1)} (rel1);
+                \node[attribute](b1)[below right = of B]{\key{Abteilung\_ID}} edge (B);
+                \node[attribute](b2)[right = of B]{Bezeichnung} edge (B);
+              \node[relationship](rel2)[below = of B]{arbeitet in} edge node[auto,swap] {(1,*)}(B);
+              \node[entity](C)[below = of rel2]{Mitarbeiter} edge node[auto,swap] {(1,1)} (rel2);
+                \node[attribute](c1)[below left = of C]{\key{Mitarbeiter\_ID}} edge (C);
+                \node[attribute](c2)[above left = of C]{Name} edge (C);
+                \node[attribute](c7)[above right = of C]{Gehalt} edge (C);
+              \node[relationship](rel3)[left = of C]{verkauft} edge node[auto,swap] {(0,*)}(C);
+                \node[attribute](rel31)[above left = of rel3]{Stunden} edge (rel3);
+              \node[entity](D)[below left= of rel3]{Produkt} edge node[auto] {(1,*)} (rel3);
+                \node[attribute](d1)[above left = of D]{\key{Produkt\_ID}} edge (D);
+                \node[attribute](d2)[below = of D]{Bezeichnung} edge (D);
+              \node[relationship](rel4)[right = of C]{arbeitet} edge node[auto,swap] {(0,1)}(C);
+              \node[entity](E)[below right= of rel4]{Projekt} edge node[auto,swap] {(1,*)} (rel4);
+                \node[attribute](e1)[above right = of E]{\key{Projekt\_ID}} edge (E);
+                \node[attribute](e2)[below = of E]{Bezeichnung} edge (E);
+              \node[relationship](rel5)[left = of E]{leitet};
+
+              \path (C) edge node[auto,swap]{(0,1)} (rel5)
+                (rel5) edge node[auto,swap]{(1,1)} (E);
+          \end{tikzpicture}
+          }
+        \end{center}
+        \subsubsection{Transformation}
+					\begin{tabular}{>{\textbf\bgroup}p{4.5cm}<{\egroup}>{\small}p{10.6cm}}
+						Produktionsbetrieb & (\pk{Betriebs\_ID}, Bezeichnung) \\
+						Abteilung & (\pk{Abteilungs\_ID}, Bezeichung, \nn{\fk{Betriebs\_ID}}) \\
+						Mitarbeiter &\mbox{(\pk{Mitarbeiter\_ID}, Name, Gehalt,
+						\nn{\fk{Abteilungs\_ID}},} \mbox{\fk{Projekt\_ID})} \\
+						Projekt & (\pk{Projekt\_ID}, Bezeichung, \nn{\un{\fk{Leiter\_ID}}}) \\
+						Produkt & (\pk{Produkt\_ID}, Bezeichung) \\
+						ProduktMitarbeiter & (\fk{\pk{Produkt\_ID + Mitarbeiter\_ID}}, Stunden) \\
+					\end{tabular}
+\clearpage

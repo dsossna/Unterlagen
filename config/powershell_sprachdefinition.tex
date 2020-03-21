@@ -1,0 +1,24 @@
+\lstdefinelanguage{powershell}{%
+morekeywords=[1]{Add-ADGroupMember, Add-KDSRootKey, get-date, Import-Module,
+Install-ADServiceAccount, New-ADGroup, New-ADServiceAccount,
+Reset-ADServiceAccountPassword,Test-ADServiceAccount,Uninstall-ADServiceAccount},
+morecomment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  moredelim=[is][\color{mediumblue}]{|}{|}, %% For Parameters
+  moredelim=[is][\color{red}]{~}{~},        %% For $true and $false
+  moredelim=[is][\color{black}]{§}{§},       %% For Methods
+  keywordstyle=[1]\color{blue},
+  commentstyle=\color{darkgreen},
+  identifierstyle=\color{darkmagenta},
+  stringstyle=\color{mediumred},
+  basicstyle=\ttfamily\footnotesize,
+  tabsize=2,
+  showtabs=false,
+  showspaces=false,
+  showstringspaces=false,
+  extendedchars=true,
+  frame=single,
+  escapechar=\&,
+  formfeed=\newline,
+  alsoletter=-|
+}

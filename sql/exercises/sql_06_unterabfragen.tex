@@ -1,0 +1,341 @@
+\clearpage
+    \section{Übungen - Unterabfragen}
+      \begin{enumerate}
+        \item Schreiben Sie eine Abfrage, die für alle Eigenkunden, die keinen
+        Berater haben (die nicht in der Tabelle
+        \identifier{EigenkundeMitarbeiter} enthalten sind), den Vor- und den
+        Nachnamen anzeigt.
+        \begin{itemize}
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{EXISTS}-Operators!
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{IN}-Operators!
+        \end{itemize}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{16 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{16 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Sebastian & Schröder \\
+                Udo & Schumacher \\
+                Mia & Huber \\
+                Simon & Witte \\
+                Max & Bunzel \\
+                Finn & Fischer \\
+                Lara & Meierhöfer \\
+                Jannis & Meier \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt
+        (Vorname und Nachname), die keine Kundenberatung durchführen.
+        Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner
+        Bankfiliale arbeiten) und Filialleiter.
+        \begin{itemize}
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{EXISTS}-Operators!
+          \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{IN}-Operators!
+        \end{itemize}
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{40 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{40 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Amelie & Krüger \\
+                Anna & Schneider \\
+                Chris & Simon \\
+                Christian & Haas \\
+                Elias & Sindermann \\
+                Emilia & Köhler \\
+                Emma & Krüger \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Schreiben Sie eine Abfrage, die den häufigsten Vornamen der
+        Bankmitarbeiter anzeigt und wie oft dieser in der Tabelle
+        \identifier{Mitarbeiter} vorkommt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{r}{\textbf{ANZAHL}} \\
+              \cmidrule(l){1-1}\cmidrule(r){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lr}
+                Chris & 5 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, welche die drei Eigenkunden mit den
+        niedrigsten Guthaben auf den Girokonten anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{GUTHABEN}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llr}
+                Franz & Walther & -140505,1 \\
+                Jan & Simon & -98218,6 \\
+                Philipp & Hartmann & -69705,6 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass die drei Eigenkunden mit dem niedrigsten Guthaben (Girokonto +
+        Sparbuch) angezeigt werden. Es müssen auch diejenigen Kunden angezeigt
+        werden, die nur ein Girokonto oder nur ein Sparbuch haben!
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{SUM(GUTHABEN)}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{llr}
+                Franz & Walther & -139154,4 \\
+                Jan & Simon & -98218,6 \\
+                Philipp & Hartmann & -69065,9 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, die alle Eigenkunden anzeigt, welche
+        im Jahr 1985 keine Buchungen verursacht haben.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{2}{l}{\textbf{285 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{2}{l}{\textbf{285 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{ll}
+                Sarah & Bauer \\
+                Sofia & Bauer \\
+                Tom & Bauer \\
+                Alina & Baumann \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Schreiben Sie eine Abfrage, die für jede Bankfiliale den
+        Mitarbeiter mit dem höchsten Gehalt ausgibt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{BANKFILIALE}} &
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{GEHALT}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(r){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{20 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{20 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lllr}
+                Poststraße 1 06449 Aschersleben & Dirk & Peters & 12000 \\
+                Kirchstraße 8 39444 Hecklingen & Leonie & Kaiser & 12000 \\
+                Schmiedestraße 3 39240 Staßfurt & Finn & Köhler & 12000 \\
+                Am Dom 11 06449 Giersleben & Lena & Große & 12000 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Schreiben Sie eine Abfrage, die für jeden Wohnort
+        (\identifier{Eigenkunde.Ort}) den Kunden anzeigt, der im Jahr 1987 das
+        höchste Einkommen hatte (Das Einkommen ist die Summe aller Beträge
+        eines Kunden, in der Tabelle \identifier{Buchung}). Sortieren Sie die
+        Abfrage nach den Wohnorten.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{ORT}} &
+              \multicolumn{1}{l}{\textbf{VORNAME}} &
+              \multicolumn{1}{l}{\textbf{NACHNAME}} &
+              \multicolumn{1}{r}{\textbf{BETRAG}} \\
+              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(r){4-4}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{4}{l}{\textbf{30 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{4}{l}{\textbf{30 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lllr}
+                Alsleben & Peter & Koch & 57855,4 \\
+                Aschersleben & Lara & Dühning & 2395,7 \\
+                Barby & Chris & Beck & -6817,8 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Erstellen Sie eine Abfrage, die die Umsätze der Bank
+        (SUM(Buchung.Betrag)) für die Jahre 1985 bis einschließlich 1989
+        als Pivottabelle anzeigt.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{r}{\textbf{'1985'}} &
+              \multicolumn{1}{r}{\textbf{'1986'}} &
+              \multicolumn{1}{r}{\textbf{'1987'}} &
+              \multicolumn{1}{r}{\textbf{'1988'}} &
+              \multicolumn{1}{r}{\textbf{'1989'}} \\
+              \cmidrule(r){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(r){5-5}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{5}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{5}{l}{\textbf{1 Zeile ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{rrrrr}
+                559132,5 & 539497,2 & -2036841,3 & 1081361 & 1027003,1 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+\clearpage
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass die Beträge innerhalb der einzelnen Jahre nach Quartalen
+        aufgeteilt werden.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{QUARTAL}} &
+              \multicolumn{1}{r}{\textbf{'1985'}} &
+              \multicolumn{1}{r}{\textbf{'1986'}} &
+              \multicolumn{1}{r}{\textbf{'1987'}} &
+              \multicolumn{1}{r}{\textbf{'1988'}} &
+              \multicolumn{1}{r}{\textbf{'1989'}} \\
+              \cmidrule(l){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(r){5-5}\cmidrule(r){6-6}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{6}{l}{\textbf{4 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{6}{l}{\textbf{4 Zeilen ausgewählt}} \\
+            }
+            \begin{msoraclesql}
+              \begin{supertabular}{lrrrrr}
+                1 & 32204,8 & 985,2 & 2981,1 & 176852 & 9777,1 \\
+                3 & -11792,8 & -71935,3 & 191697,3 & 282848 & 681185,9 \\
+                2 & 151841,1 & 53654,8 & -2174503,9 & 430097,2 & 223402,7 \\
+                4 & 386879,4 & 556792,5 & -57015,8 & 191563,8 & 112637,4 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+        \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
+        dass eine Summenzeile, unterhalb der Pivottabelle angezeigt wird.
+        \begin{center}
+          \begin{small}
+            \changefont{pcr}{m}{n}
+            \tablefirsthead {
+              \multicolumn{1}{l}{\textbf{QUARTAL}} &
+              \multicolumn{1}{r}{\textbf{'1985'}} &
+              \multicolumn{1}{r}{\textbf{'1986'}} &
+              \multicolumn{1}{r}{\textbf{'1987'}} &
+              \multicolumn{1}{r}{\textbf{'1988'}} &
+              \multicolumn{1}{r}{\textbf{'1989'}} \\
+              \cmidrule(l){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}\cmidrule(r){5-5}\cmidrule(r){6-6}
+            }
+            \tablehead{}
+            \tabletail {
+              \multicolumn{6}{l}{\textbf{5 Zeilen ausgewählt}} \\
+            }
+            \tablelasttail {
+              \multicolumn{6}{l}{\textbf{5 Zeilen ausgewählt}} \\
+            }
+
+            \begin{msoraclesql}
+              \begin{supertabular}{lrrrrr}
+                1 & 32204,8 & 985,2 & 2981,1 & 176852 & 9777,1 \\
+                2 & 151841,1 & 53654,8 & -2174503,9 & 430097,2 & 223402,7 \\
+                3 & -11792,8 & -71935,3 & 191697,3 & 282848 & 681185,9 \\
+                4 & 386879,4 & 556792,5 & -57015,8 & 191563,8 & 112637,4 \\
+                Summe & 559132,5 & 539497,2 & -2036841,3 & 1081361 & 1027003,1 \\
+              \end{supertabular}
+            \end{msoraclesql}
+          \end{small}
+        \end{center}
+      \end{enumerate}
