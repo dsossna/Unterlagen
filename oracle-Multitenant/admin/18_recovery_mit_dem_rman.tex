@@ -1,0 +1,1455 @@
+\chapter{Recovery mit dem RMAN}
+  \label{recoverywithrman}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+      Obwohl der RMAN das Recovery einer Oracle-Datenbank wesentlich vereinfacht, sind im Vorfeld trotzdem noch einige Planungsarbeiten notwendig. Welche dies sind, ist im Wesentlichen von der Art des Datenverlustes abhängig.
+    \section{Ein Recovery planen und vorbereiten}
+      Die Durchführung eines Restore und Recovery Prozesses besteht aus 5 Schritten.
+      \begin{enumerate}
+        \item Ermitteln welche Datenbankdateien wiederhergestellt werden müssen und welche Backups dafür herangezogen werden können. Dies kann auch Archive Logs, dass SPFile und die Kontrolldatei einschließen.
+        \item Die Datenbank in den benötigten Zustand versetzen. Für ein vollständiges Restore and Recovery der ganzen Datenbank ist dies meist der MOUNT-Status. Müssen nur ein einzelner Tabelspace oder einzelne Datendateien wiederhergestellt werden, genügt es, den betreffenden Tablespace in den Offline-Status zu versetzen.
+        \item Durchführen der Restore-Phase. Hierbei kann es notwendig sein, die Datenbankdateien an einem neuen Speicherort wiederherzustellen, weil der Alte nicht mehr verfügbar ist. Eventuelle Anpassungen am SPFile dürfen dabei nicht vergessen werden.
+        \item Durchführen der Recovery-Phase.
+        \item Durchführen von Tätigkeiten, die zum weiteren Betrieb der Datenbank notwendig sind, z. B. öffnen der Datenbank.
+      \end{enumerate}
+      Nicht jeder Recovery-Prozess benötigt immer alle 5 Schritte. Muss beispielsweise nur das SPFile aus einem Backup wiederhergestellt werden, ist ein Recovery der Datenbank nicht notwendig.
+    \section{Pflege- und Erhaltungsmaßnahen}
+      \subsection{Datenbankdateien auf Fehler prüfen}
+        Mit dem \languagerman{VALIDATE}-Kommando können Datenbankdateien vor einem Backup auf Funktionsfähigkeit geprüft werden. Dabei wird getestet, ob die Datenbankdateien existieren, ob sie sich am richtigen Speicherort befinden und ob sie physische bzw. logische Beschädigungen aufweisen. RMAN verfährt dabei genauso wie bei einem Backup, nur wird beim Validieren kein Backup Set erzeugt.
+\clearpage
+        \begin{lstlisting}[caption={Eine Datendatei validieren},label=admin1400,language=rman]
+RMAN> VALIDATE datafile 1;
+
+Starting validate at 29-OCT-13
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=25 device type=&DISK&
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=145 device type=&DISK&
+channel ORA_DISK_1: starting validation of datafile
+channel ORA_DISK_1: specifying datafile(s) for validation
+input datafile file number=00001 name=/u01/app/oracle/oradata/orcl/system01.dbf
+channel ORA_DISK_2: starting validation of datafile
+channel ORA_DISK_2: specifying datafile(s) for validation
+including current &SPFILE& in backup set
+channel ORA_DISK_2: validation complete, elapsed time: 00:00:01
+List of Control File and &SPFILE&
+===============================
+File Type    Status Blocks Failing Blocks Examined
+------------ ------ -------------- ---------------
+&SPFILE&        OK     0              2
+channel ORA_DISK_2: starting validation of datafile
+channel ORA_DISK_2: specifying datafile(s) for validation
+including current control file for validation
+channel ORA_DISK_2: validation complete, elapsed time: 00:00:01
+List of Control File and &SPFILE&
+===============================
+File Type    Status Blocks Failing Blocks Examined
+------------ ------ -------------- ---------------
+Control File OK     0              594
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:48
+List of Datafiles
+=================
+File Status Marked Corrupt Empty Blocks Blocks Examined High &SCN&
+---- ------ -------------- ------------ --------------- ----------
+1    OK     0              13310        92201           2086674
+  File Name: /u01/app/oracle/oradata/orcl/system01.dbf
+  Block Type Blocks Failing Blocks Processed
+  ---------- -------------- ----------------
+  Data       0              59907
+  Index      0              12711
+  Other      0              6232
+
+Finished validate at 29-OCT-13
+        \end{lstlisting}
+        Die Syntax des \languagerman{VALIDATE}-Befehls ist der des \languagerman{BACKUP}-Kommandos sehr ähnlich. Es können Archive Logs, Kontrolldateien, SPFiles, Datendateien, Tablespaces oder auch die gesamte Datenbank geprüft werden.
+\clearpage
+        \begin{lstlisting}[caption={Eine ganze Datenbank validieren},label=admin1401,language=rman]
+RMAN> VALIDATE database;
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Validieren der Archive Logs},label=admin1402,language=rman]
+RMAN> VALIDATE archivelog all;
+Starting validate at 29-OCT-13
+released channel: ORA_SBT_TAPE_1
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting validation of archived log
+channel ORA_DISK_1: specifying archived log(s) for validation
+input archived log thread=1 sequence=56 RECID=89 STAMP=830101540
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:01
+List of Archived Logs
+=====================
+Thrd Seq     Status Blocks Failing Blocks Examined Name
+---- ------- ------ -------------- --------------- ---------------
+1    56      OK     0              130             /u02/backup/archive_logs/1...
+Finished validate at 29-OCT-13
+        \end{lstlisting}
+        Wird während der Validierung ein Fehler in einer Datenbankdatei entdeckt, wird die View \identifier{v\$database\_block\_corruption} mit Informationen gefüllt. Diese Fehler können dann evtl. durch ein Block-Media Recovery behoben werden.
+      \subsection{Funktionsfähigkeit eines Backup Sets ermitteln}
+        Das Kommando \languagerman{VALIDATE BACKUPSET} ermöglicht die Validierung eines Backup Sets. Dabei wird das Backup Set auf logische und physikalische Fehler überprüft.
+        \begin{lstlisting}[caption={Ein Backup Set validieren},label=admin1403,language=rman]
+RMAN> VALIDATE backupset 4711;
+
+Starting validate at 29-OCT-13
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_SBT_TAPE_1
+channel ORA_SBT_TAPE_1: starting validation of datafile backup set
+channel ORA_SBT_TAPE_1: reading from backup piece 06on9l7u_1_1
+channel ORA_SBT_TAPE_1: piece handle=06on9l7u_1_1 tag=TAG20131025T112446
+channel ORA_SBT_TAPE_1: restored backup piece 1
+channel ORA_SBT_TAPE_1: validation complete, elapsed time: 00:00:04
+Finished validate at 29-OCT-13
+        \end{lstlisting}
+      \subsection{Wiederherstellbarkeit einer Datenbankdatei prüfen}
+        Neben den Möglichkeiten Datenbankdateien und Backups auf Fehlerfreiheit zu prüfen, kann noch ein weiterer Prüfschritt unternommen werden. Mit \languagerman{RESTORE VALIDATE} kann festgestellt werden, ob eine Datenbankdatei, mit Hilfe der bestehenden Backups wiederhergestellt werden kann.
+        \begin{lstlisting}[caption={Kann der Tablespace \identifier{bank} wiederhergestellt werden?},label=admin1404,language=rman]
+RMAN> RESTORE VALIDATE tablespace bank;
+
+Starting restore at 29-OCT-13
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+allocated channel: ORA_SBT_TAPE_1
+channel ORA_SBT_TAPE_1: SID=21 device type=SBT_TAPE
+channel ORA_SBT_TAPE_1: WARNING: Oracle Test Disk API
+
+channel ORA_DISK_1: starting validation of datafile backup set
+channel ORA_DISK_2: starting validation of datafile backup set
+channel ORA_DISK_1: reading from backup piece /u05/fast_recovery_area/ORCL/...
+channel ORA_DISK_2: reading from backup piece /u05/fast_recovery_area/ORCL/...
+channel ORA_DISK_2: piece handle=/u05/fast_recovery_area/ORCL/...
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: validation complete, elapsed time: 00:00:03
+channel ORA_DISK_1: piece handle=/u05/fast_recovery_area/ORCL/backupset/...
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:15
+Finished restore at 29-OCT-13
+        \end{lstlisting}
+        In \beispiel{admin1404} wird der Restore-Prozess für den Tablespace bank validiert. Dabei wird geprüft, ob alle notwendigen Backup Sets, Image Copies und Archive Logs vorhanden und funktionsfähig sind.
+      \subsection{Der Paramter DB\_Ultra\_Safe}
+        Der Initialisierungsparameter \parameter{db\_ultra\_safe} wurde mit Oracle 11g neu eingeführt. Er soll helfen, Beschädigungen an Datenblöcken zu vermeiden. Er selbst stellt keine neuen Mechanismen zur Verfügung, sondern beeinflusst drei andere Initialisierungsparameter, die teilweise bereits seit Oracle 8i vorhanden sind. Dies sind:
+        \begin{itemize}
+          \item \parameter{db\_block\_checking}
+          \item \parameter{db\_lost\_write\_protect}
+          \item \parameter{db\_block\_checksum}
+        \end{itemize}
+        \subsubsection{DB\_Block\_Checking}
+          Der Parameter \parameter{db\_block\_checking} legt fest, ob Oracleblöcke einer semantischen Prüfung unterzogen werden. Unter einer semantischen Prüfung versteht man den Abgleich der Blockstruktur mit seinem Inhalt. Wenn beispielsweise eine Spalte den Wert \enquote{Florian Weidinger} enthält, aber den Datentyp \identifier{DATE} aufweist, muss dies ein Fehler sein. Ein anderes Beispiel sind Spalten des Typs \identifier{VARCHAR2}. Diese können in Oracle maximal 4.000 Byte lang sein. Taucht plötzlich eine Spalte auf, die größer als 4.000 Byte ist, so muss auch dies ein Fehler sein. Diese Art von Fehlern wird zumeist durch fehlerhafte Speichermedien hervorgerufen.
+
+          \parameter{db\_block\_checking} kennt folgende Werte:
+          \begin{itemize}
+            \item \textbf{OFF}: Das Blockchecking wird lediglich im \identifier{system}-Tablespace durchgeführt.
+            \item \textbf{FALSE}: Dieser Wert hat die gleiche Bedeutung wie \enquote{OFF} und wird nur aus Kompatibilitätsgründen bereitgestellt.
+            \item \textbf{LOW}: Es findet eine semantische Überprüfung der Blockheader, in allen Tablespaces statt.
+            \item \textbf{MEDIUM}: Es findet eine vollständige semantische Prüfung der Oracleblöcke, in allen Tablespaces statt. Ausgenommen sind Indexstrukturen.
+            \item \textbf{FULL}: Es findet eine vollständige semantische Prüfung der Oracleblöcke, in allen Tablespaces statt. Auch Indexstrukturen werden geprüft.
+            \item \textbf{TRUE}: Dieser Wert hat die gleiche Bedeutung wie \enquote{FULL} und wird nur aus Kompatibilitätsgründen bereitgestellt.
+          \end{itemize}
+        \subsubsection{DB\_Lost\_Write\_Protect}
+          Dieser Parameter ist nur in einer Oracle Data Guard Umgebung sinnvoll und hilft dort, Datenverlust durch Fehlfunktionen von Datenträgern zu vermeiden. Er kennt die Werte \enquote{NONE}, \enquote{TYPICAL} und \enquote{FULL}.
+        \subsubsection{DB\_Block\_Checksum}
+          Mit Hilfe von \parameter{db\_block\_checksum} kann die Datenbank dazu veranlasst werden, jedem Block, der in eine Datendatei geschrieben wird, eine Checksumme zu geben. Mit Hilfe dieser Checksumme kann beim Lesen des Blockes sichergestellt werden, dass der Inhalt gelesen wird, der vorher geschrieben wurde (dass der Block unverändert geblieben ist).
+\clearpage
+          Anders als mit \parameter{db\_block\_checking} kann mit diesem Parameter nicht verhindert werden, dass ein fehlerhafter Block gelesen wird. Wird ein Block beim Schreiben auf den Datenträger beschädigt, wird von diesem beschädigten Block eine Checksumme gebildet. Beim erneuten Lesen des Blockes wird nur die Checksumme geprüft und es wird festgestellt, dass der Block unverändert (fehlerhaft) geblieben ist.
+
+          \parameter{db\_block\_checksum} kennt folgende Werte:
+          \begin{itemize}
+            \item \textbf{OFF}: Nur im \identifier{system}-Tablespace werden Blockchecksummen gebildet.
+            \item \textbf{FALSE}: Dieser Wert hat die gleiche Bedeutung wie \enquote{OFF} und wird nur aus Kompatibilitätsgründen bereitgestellt.
+            \item \textbf{TYPICAL}: In allen Tablespaces werden Blockchecksummen gebildet und vor jedem Lesevorgang verglichen.
+            \item \textbf{FULL}: Wie \enquote{TYPICAL}, aber zusätzlich wird vor jedem \languageorasql{UPDATE} oder \languageorasql{DELETE}, dass auf einen Block angewandt wird, die Checksumme überprüft und direkt nach der Änderung neu berechnet, nicht erst, wenn der Block auf den Datenträger geschrieben wird.
+            \item \textbf{TRUE}: Dieser Wert hat die gleiche Bedeutung wie \enquote{TYPICAL} und wird nur aus Kompatibilitätsgründen bereitgestellt.
+          \end{itemize}
+          \bild{Der Unter\-schied zwischen TYPICAL und FULL}{db_block_checksum_typical_and_full}{1.3}
+        \subsubsection{Werte für DB\_Ultra\_Safe}
+          Der Parameter \parameter{db\_ultra\_safe} kann folgende Werte annehmen:
+          \begin{itemize}
+            \item \textbf{OFF}: Es gelten die Einstellungen der Initialisierungsparameter \parameter{db\_block\_checking}, \parameter{db\_lost\_write\_protect} und \parameter{db\_block\_checksum}.
+            \item \textbf{DATA\_ONLY}: Die Einstellung der Parameter werden verändert:
+              \begin{itemize}
+                \item \parameter{db\_block\_checking}: MEDIUM
+                \item \parameter{db\_lost\_write\_protect}: TYPICAL
+                \item \parameter{db\_block\_checksum}: FULL
+              \end{itemize}
+            \item \textbf{DATA\_AND\_INDEX}: Die Einstellung der Parameter werden verändert:
+              \begin{itemize}
+                \item \parameter{db\_block\_checking}: FULL
+                \item \parameter{db\_lost\_write\_protect}: TYPICAL
+                \item \parameter{db\_block\_checksum}: FULL
+              \end{itemize}
+          \end{itemize}
+          Es wird von Seiten Oracle empfohlen, \parameter{db\_ultra\_safe} auf den Wert \enquote{DATA\_ONLY} oder höher einzustellen. Da dies kein dynamischer Parameter ist, muss ein Neustart der Datenbank erfolgen.
+    \section{Recovery unkritischer Verluste}
+      Bei unkritischen Verlusten handelt es sich um Schäden, welche die Datenbank nicht unmittelbar zum Stillstand bringen. Die Datenbank kann trotz Beschädigung weiterarbeiten, möglicherweise auch nur für begrenzte Zeit. Beispielsweise wird der Verlust eines SPFiles die Datenbank nicht beeinträchtigen, solange kein Neustart erfolgen soll. Auch eine Passwortdatei ist unkritisch für den Betrieb der Datenbank. Lediglich die Anmeldung der DBAs wird dadurch beeinträchtigt.
+      \subsection{Verlust eines SPFile beheben (mit Recovery Katalog)}
+        \subsubsection{Wiederherstellung aus einem Controlfile Autobackup}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank und am Recovery Katalog anmelden.
+              \begin{lstlisting}[caption={An der Zieldatenbank und am Recovery Katalog anmelden},label=admin1405,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target / catalog catowner/catpass@CATDB
+              \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1406,language=rman,alsolanguage=sqlplus]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des SPFiles aus dem Controlfile Autobackup. Dieser Schritt unterscheidet sich, je nachdem, ob die Instanz in der NOMOUNT-Phase oder geöffnet ist.
+              \begin{itemize}
+                \item \textbf{NOMOUNT-Phase}
+                  \begin{lstlisting}[caption={Wiederherstellen des SPFiles aus dem Controlfile Autobackup},label=admin1407,language=rman]
+RMAN> RESTORE spfile FROM AUTOBACKUP;
+                  \end{lstlisting}
+                \item \textbf{MOUNT-Phase oder geöffnete Instanz}
+
+                Bei geöffneter oder gemounteter Instanz muss im Anschluss an diesen Arbeits\-schritt, dass wiederhergestellte SPFile in das \oscommand{\$ORACLE\_HOME/dbs}-Verzeichnis verschoben werden. Dies ist notwendig, da Oracle das (vermeindlich noch vorhandene) SPFile mit einer Schreibsperre, im Dateisystem belegt.
+								\begin{lstlisting}[caption={Wiederherstellen des SPFiles aus dem Controlfile Autobackup},label=admin1408,language=rman]
+RMAN> RESTORE spfile
+2>    TO '/u01/app/oracle/product/11.2.0/ORCL/spfileorcl.ora'
+3>    FROM AUTOBACKUP;
+                  \end{lstlisting}
+              \end{itemize}
+            \item Durchstarten der Instanz
+              \begin{lstlisting}[caption={Neustart der Instanz},label=admin1409,language=rman,alsolanguage=sqlplus]
+RMAN> startup force
+              \end{lstlisting}
+              Nach dem Neustart werden die Initialisierungsparameter gemäß dem wiederhergestellten SPFile gesetzt und müssen auf ihre Aktualität überprüft werden.
+          \end{enumerate}
+        \subsubsection{Wiederherstellung aus einem Backup Set}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank und am Recovery Katalog anmelden.
+              \begin{lstlisting}[caption={An der Zieldatenbank und am Recovery Katalog anmelden},label=admin1410,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target / catalog catowner/catpass@CATDB
+              \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1411,language=rman,alsolanguage=sqlplus]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des SPFiles. Dieser Schritt unterscheidet sich, je nachdem, ob die Instanz in der NOMOUNT-Phase oder geöffnet ist.
+              \begin{itemize}
+                \item \textbf{NOMOUNT-Phase}
+                  \begin{lstlisting}[caption={Wiederherstellen des SPFiles in der NOMOUNT-Phase},label=admin1412,language=rman]
+RMAN> RESTORE spfile;
+                  \end{lstlisting}
+                \item \textbf{MOUNT-Phase oder geöffnete Instanz}
+
+                Bei geöffneter oder gemounteter Instanz muss im Anschluss an diesen Arbeitsschritt das wiederhergestellte SPFile in das \oscommand{\$ORACLE\_HOME/dbs}-Verzeichnis verschoben werden. Dies ist notwendig, da Oracle das (vermeindlich noch vorhandene) SPFile mit einer Schreibsperre, im Dateisystem belegt.
+								\begin{lstlisting}[caption={Wiederherstellen des SPFiles in der MOUNT-Phase},label=admin1413,language=rman]
+RMAN> RESTORE spfile
+2>    TO '/u01/app/oracle/product/11.2.0/spfileorcl.ora';
+                  \end{lstlisting}
+              \end{itemize}
+            \item Durchstarten der Instanz
+              \begin{lstlisting}[caption={Neustart der Instanz},label=admin1414,language=rman,alsolanguage=sqlplus]
+RMAN> startup force
+              \end{lstlisting}
+              Nach dem Neustart werden die Initialisierungsparameter gemäß dem wiederhergestellten SPFile gesetzt und müssen auf ihre Aktualität überprüft werden.
+          \end{enumerate}
+\clearpage
+      \subsection{Verlust eines SPFiles beheben (ohne Recovery Katalog)}
+        \subsubsection{Die Datenbank-ID (DBID)}
+          Jede Oracle-Datenbank wird anhand einer zehnstelligen ID, der Datenbank-ID (DBID) identifiziert. Diese ist in der Kontrolldatei gespeichert und wird vom RMAN benötigt, damit dieser erkennen kann, welche Backup Sets zu welcher Datenbank gehören. Ist die Instanz nicht gemountet oder geöffnet, kann der RMAN die DBID nicht selbstständig ermitteln.
+
+          Es gibt drei Möglichkeiten, an die DBID zu gelangen:
+            \begin{enumerate}
+              \item Abfragen der View \identifier{v\$database}
+                \begin{lstlisting}[caption={Abfragen von \identifier{v\$database}},label=admin1415,language=oracle_sql]
+SQL> SELECT dbid
+  2  FROM   v$database;
+
+      DBID
+----------
+1351916467
+                \end{lstlisting}
+              \item Starten des RMAN: Beim Starten des RMAN wird die DBID der Zieldatenbank rechts unten in der Startmeldung angezeigt, sofern die Instanz hochgefahren ist.
+                \begin{lstlisting}[caption={Startmeldung des RMAN},label=admin1416,language=terminal]
+Recovery Manager: Release 11.2.0.1.0 - Production &on& Tue Oct 29 17:34:34 2013
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL &\textcolor{red}{(DBID=1351916467)}&
+                \end{lstlisting}
+              \item Durchsuchen eines unkomprimierten Backups, welches die Datendatei Nummer 1 beinhaltet.
+                \begin{lstlisting}[caption={Die DBID in einem Backup Set suchen},label=admin1417,language=terminal]
+[oracle@FEA11-119SRV ~]$ strings /u02/backup/ORCL_29-10-2013_4aklgp2d.bkp \
+> | grep &MAXVALUE&,
+
+&\textcolor{red}{1351916467}, MAXVALUE,&
+                \end{lstlisting}
+                Das Linux-Kommando \oscommand{strings} durchsucht eine Binärdatei nach \enquote{lesbaren} Zeichenketten. In einem unkomprimierten und unverschlüsselten Backup Set kann so die DBID sichtbar gemacht werden.
+              \end{enumerate}
+        \subsubsection{Wiederherstellung aus einem Controlfile Autobackup}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden.
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1418,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle
+              \end{lstlisting}
+            \item Setzen der DBID
+              \begin{lstlisting}[caption={Setzen der DBID},label=admin1419,language=rman]
+RMAN> SET DBID 1351916467;
+              \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1420,language=rman,alsolanguage=sqlplus]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des SPFiles aus dem Controlfile Autobackup. Dieser Schritt unterscheidet sich, je nachdem, ob die Instanz in der NOMOUNT-Phase oder geöffnet ist.
+              \begin{itemize}
+                \item \textbf{NOMOUNT-Phase}
+                  \begin{lstlisting}[caption={Wiederherstellen des SPFiles aus dem Controlfile Autobackup},label=admin1421,language=rman]
+RMAN> RESTORE spfile FROM AUTOBACKUP
+2>    RECOVERY AREA '/u05/fast_recovery_area'
+3>    DB_NAME       'orcl';
+                  \end{lstlisting}
+                  \begin{merke}
+                    Wenn die Instanz nicht gemountet oder geöffnet ist, ist es dem RMAN unmöglich, den Speicherort der Controlfile Autobackups zu ermitteln. Mit Hilfe der beiden Parameter \languagerman{RECOVERY AREA} und \languagerman{DB_NAME} wird der Speicherort, die Fast Recovery Area, dem RMAN mitgeteilt.
+                  \end{merke}
+                \item \textbf{MOUNT-Phase oder geöffnete Instanz}
+                  \begin{lstlisting}[caption={Wiederherstellen des SPFiles aus dem Controlfile Autobackup},label=admin1422,language=rman]
+RMAN> RESTORE spfile
+2>    TO '/u01/app/oracle/product/11.2.0/ORCL/spfileorcl.ora'
+3>    FROM AUTOBACKUP;
+                  \end{lstlisting}
+              \end{itemize}
+              Bei geöffneter oder gemounteter Instanz muss im Anschluss an diesen Arbeitsschritt das wiederhergestellte SPFile in das \oscommand{\$ORACLE\_HOME/dbs}-Verzeichnis verschoben werden. Dies ist notwendig, da Oracle das (vermeindlich noch vorhandene) SPFile mit einer Schreibsperre, im Dateisystem belegt.
+            \item Durchstarten der Instanz
+              \begin{lstlisting}[caption={Neustart der Instanz},label=admin1423,language=rman,alsolanguage=sqlplus]
+RMAN> startup force
+              \end{lstlisting}
+              Nach dem Neustart werden die Initialisierungsparameter gemäß dem wiederhergestellten SPFile gesetzt und müssen auf ihre Aktualität überprüft werden.
+            \end{enumerate}
+        \subsubsection{Wiederherstellung aus einem Backup Set}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden und diee DBID setzen.
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden und die DBID setzen},label=admin1424,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target /
+
+RMAN> SET DBID 1351916467;
+                  \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1425,language=rman]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des SPFiles. Dieser Schritt unterscheidet sich, je nachdem, ob die Instanz in der NOMOUNT-Phase oder geöffnet ist.
+              \begin{itemize}
+                \item \textbf{NOMOUNT-Phase}
+                  \begin{lstlisting}[caption={Wiederherstellen des SPFiles in der NOMOUNT-Phase},label=admin1426,language=rman]
+RMAN> RESTORE spfile
+2>    FROM '/u02/backup/3ukkpd6p.bkp';
+                  \end{lstlisting}
+\clearpage
+                \item \textbf{MOUNT-Phase oder geöffnete Instanz}
+
+								Bei geöffneter oder gemounteter Instanz muss im Anschluss an diesen Arbeitsschritt das wiederhergestellte SPFile in das \oscommand{\$ORACLE\_HOME/dbs}-Verzeichnis verschoben werden. Dies ist notwendig, da Oracle das (vermeindlich noch vorhandene) SPFile mit einer Schreibsperre, im Dateisystem belegt.
+								\begin{lstlisting}[caption={Wiederherstellen des SPFiles in der MOUNT-Phase},label=admin1427,language=rman]
+RMAN> RESTORE spfile
+2>    TO '/u01/app/oracle/product/11.2.0/spfileorcl.ora'
+3>    FROM '/u02/backup/3ukkpd6p.bkp';
+                  \end{lstlisting}
+              \end{itemize}
+            \item Durchstarten der Instanz
+              \begin{lstlisting}[caption={Neustart der Instanz},label=admin1428,language=rman,alsolanguage=sqlplus]
+RMAN> startup force
+              \end{lstlisting}
+              Nach dem Neustart werden die Initialisierungsparameter gemäß dem wiederhergestellten SPFile gesetzt und müssen auf ihre Aktualität überprüft werden.
+            \end{enumerate}
+        \subsubsection{Wiederherstellen eines PFiles}
+          Da ein PFile nicht automatisch durch den Datenbankserver verwaltet wird, gibt es auch keinen datenbankeigenen Backupmechanismus. Für die Sicherung und Wiederherstellung eines PFiles muss manuell gesorgt werden. Es empfiehlt sich daher, bei Benutzung eines PFiles, dieses durch Betriebssystemmittel vor Verlust zu schützen.
+          \begin{merke}
+            Schon seit Oracle 9i wird davon abgeraten, ein PFile zu benutzen.
+          \end{merke}
+      \subsection{Verlust einer Passwortdatei beheben}
+        Die Passwortdatei gehört zu den Dateien, die nicht durch RMAN gesichert werden können. Daher sollte auch diese auf anderem Wege gesichert werden. Geht die Passwortdatei verloren und es existiert kein Backup, muss sie wie neu erstellt werden.
+      \subsection{Verlust von Konfigurationsdateien beheben}
+        Für Konfigurationsdateien wie, z. B. die \oscommand{tnsnames.ora}, \oscommand{listener.ora} oder die Datei \oscommand{sqlnet.ora} gilt Gleiches, wie für die Passwortdatei. Bei einem Verlust müssen sie neu angelegt werden und sollten daher auf jeden Fall gesichert werden.
+      \subsection{Verlust eines Tempfiles beheben}
+        Geht im laufenden Betrieb der Datenbank ein Tempfile verloren, kann bei der Ausführung eines SQL-Statements folgende Fehlermeldung auftreten:
+        \begin{lstlisting}[caption={Verlust eines Tempfiles},label=admin1429,language=oracle_sql]
+ORA-01565: error in identifying file
+'/u02/oradata/ORCL/temp01.dbf'
+ORA-27037: unable to obtain file status
+Linux Error: 2: No such file or directory
+        \end{lstlisting}
+        Es gibt zwei Möglichkeiten auf diese Situation zu reagieren:
+        \begin{itemize}
+          \item Neustarten der Instanz. Hierbei wird das Tempfile automatisch neu erstellt. In der Alert Log Datei wird eine Meldung ausgegeben, ähnlich dieser:
+          \begin{lstlisting}[caption={Automatisches Neuerstellen eines Tempfiles},label=admin1430,language=oracle_sql]
+Recreating tempfile
+'/u02/oradata/ORCL/temp01.dbf'
+          \end{lstlisting}
+          \item Erstellen eines neuen Tempfiles und löschen der verlorenen Datei aus dem Data Dictionary.
+            \begin{enumerate}
+              \item Ermitteln zu welchem Temp-Tablespace die beschädigte Datei gehört.
+                \begin{lstlisting}[caption={Ermitteln des richtigen Temp-Tablespace},label=admin1431,language=oracle_sql]
+SQL> SELECT tablespace_name
+  2  FROM   dba_temp_files
+  3  WHERE  file_name LIKE '/u02/oradata/ORCL/temp01.dbf'
+
+TABLESPACE_NAME
+------------------------------
+TEMP
+                \end{lstlisting}
+              \item Neues Tempfile erstellen
+              \begin{lstlisting}[caption={Neues Tempfile erstellen},label=admin1432,language=oracle_sql]
+SQL> ALTER TABLESPACE temp
+  2  ADD TEMPFILE '/u02/oradata/ORCL/temp02.dbf'
+  3  SIZE 20 M AUTOEXTEND ON MAXSIZE 500M;
+              \end{lstlisting}
+              \item Das beschädigte Tempfile löschen.
+              \begin{lstlisting}[caption={Beschädigtes Tempfile löschen},label=admin1433,language=oracle_sql]
+SQL> ALTER TABLESPACE temp
+  2  DROP TEMPFILE '/u02/oradata/ORCL/temp01.dbf';
+              \end{lstlisting}
+            \end{enumerate}
+        \end{itemize}
+    \section{Datafile Media Recovery}
+      Ein Media Recovery kümmert sich immer um die Behebung von Datenbankfehlern, die durch den Verlust einer der folgenden Dateiarten zustande gekommen sind:
+      \begin{itemize}
+        \item Datendateien
+        \item Kontrolldatei
+        \item Archive Log Dateien
+      \end{itemize}
+      Archive Log Dateien bilden dabei eine Ausnahme, da sie meist nur temporär für ein Recovery benötigt werden, müssen sie nicht zwingend sofort wiederhergestellt werden, sondern es genügt eine funktionsfähige Kopie dieser Dateien zu besitzen.
+      \subsection{Identifizieren beschädigter Dateien}
+        \label{identifyfiles}
+        Um zu analysieren welche Dateien ein Recovery brauchen, ist Folgendes notwendig:
+        \begin{enumerate}
+          \item Starten von SQL*Plus
+          \item Status der Instanz abfragen
+          \begin{lstlisting}[caption={Status der Instanz abfragen},label=admin1434,language=oracle_sql]
+SQL> SELECT status FROM v$instance;
+
+STATUS
+------------
+&OPEN&
+          \end{lstlisting}
+          Auch wenn der Status \enquote{OPEN} angezeigt wird, ist es möglich,
+          dass Teile der Datenbank ein Recovery benötigen.
+          \item Damit die folgenden Abfragen sinnvolle Ergebnisse liefern, muss zuerst ein Checkpoint stattfinden, da erst dann der Status der Datendateien aktualisiert wird.
+          \begin{lstlisting}[caption={Einen Checkpoint absetzen},label=admin1435,language=oracle_sql]
+SQL> ALTER SYSTEM CHECKPOINT;
+          \end{lstlisting}
+          \item Den Dateistatus abfragen. Hierfür gibt es mehrere Mög\-lich\-kei\-ten:
+          \begin{enumerate}
+            \item Abfragen der View \identifier{v\$datafile\_header}
+
+						Jede zurückgegebene Zeile steht stellvertretend für eine Datendatei. Die Spalte \identifier{recover} zeigt an, ob eine Datendatei ein Recovery benötigt oder nicht. In der Spalte \identifier{error} wird angezeigt, ob ein Problem mit der Datendatei vorliegt (z. B. ob der Datendateiheader nicht gelesen werden konnte).
+						\begin{lstlisting}[caption={Status der Datendateien abfragen mit	V\$DATAFILE\_HEADER},label=admin1436,language=oracle_sql,alsolanguage=sqlplus,emph={[9]FILE,OFFLINE,TABLESPACE, NOT},emphstyle={[9]\color{black}}]
+SQL> col file# format 999
+SQL> col status format A7
+SQL> col error format A10
+SQL> col tablespace_name format A10
+SQL> col name format A30
+SQL> SELECT file#, status, error, recover, tablespace_name, name
+  2  FROM   v$datafile_header
+  3  WHERE  recover = 'YES'
+  4    OR   (recover IS NULL
+  5    AND  error IS NOT NULL);
+
+&\textcolor{black}{FILE\#}&  STATUS  ERROR           REC &\textcolor{black}{TABLESPACE}&   NAME
+----- ------- --------------- --- ---------- ----------------
+6     &\textcolor{black}{OFFLINE}&   &\textcolor{black}{FILE}& &\textcolor{black}{NOT}& FOUND
+              \end{lstlisting}
+
+              Zeigt die Spalte \identifier{error} einen Wert an, sollte zuerst nach Hardware- oder Betriebssystemproblemen gesucht werden. Liegen keine derartigen Probleme vor, muss die betreffende Datendatei wiederhergestellt werden.
+
+              Zeigt die Spalte \identifier{recover} den Wert YES und die Spalte \identifier{error} ist leer, so ist meist nur ein Recovery der Datendatei notwendig. Da diese View aber nur die Header der Datendateien liest, kann sie nicht alle Probleme anzeigen, die ein Recovery der Datendatei notwendig machen!
+              \begin{merke}
+                Die Anzeige defekter Datendateien funktioniert nur dann
+                zuverlässig, wenn der Parameter
+                \parameter{filesystemio\_options} den Wert \textit{directIO}
+                hat. Diese Einstellung sorgt dafür, dass Informationen direkt
+                auf den Datenträger geschrieben und Caching-Mechanismen des
+                Dateisystems umgangen werden.
+              \end{merke}
+            \item Abfragen der View \identifier{v\$recover\_file}
+              \begin{lstlisting}[texcl=true, caption={Status der Datendateien abfragen mit V\$RECOVER\_FILE},label=admin1437,language=oracle_sql,emph={[10]FILE,OFFLINE,CHANGE, TIME, NOT},emphstyle={[10]\color{black}}]
+SQL> SELECT file#, error, online_status, change#, time 
+  2  FROM   v$recover_file;
+
+&\textcolor{black}{FILE\#}& ERROR         ONLINE_ &\textcolor{black}{CHANGE\#}& &\textcolor{black}{TIME}& 
+----- ------------------------------- ----------------- ------------------- -------
+6    &\textcolor{black}{FILE}& &\textcolor{black}{NOT}& FOUND &\textcolor{black}{OFFLINE}&         0
+              \end{lstlisting}
+              Zusätzlich zu \identifier{v\$datafile\_header} zeigt sie an, dass eine Datendatei defekte Blöcke enthält. Im Gegensatz zu \identifier{v\$datafile\_header} kann sie nur dann verwendet werden, wenn die Kontrolldatei nicht wiederhergestellt werden musste.
+\clearpage
+            \item Abfragen der Views \identifier{v\$datafile} und \identifier{v\$tablespace}
+              \begin{lstlisting}[caption={Status der Datendateien abfragen},label=admin1438,language=oracle_sql,alsolanguage=sqlplus,emph={[9]FILE,OFFLINE,CHANGE, TIME, NOT},emphstyle={[9]\color{black}}]
+col df#       format 999
+col df_name   format A35
+col tbsp_name format A7
+col status    format A7
+col error     format A10
+col change#   format 99999999
+SELECT r.file# AS df#, d.name AS df_name, t.name AS tbsp_name,
+      d.status, r.error
+FROM   v$recover_file r, v$datafile d, v$tablespace t
+WHERE  t.ts# = d.ts#
+  AND  d.file# = r.file#;
+
+ DF# DF_NAME                             TBSP_NA STATUS  ERROR       
+---- ----------------------------------- ------- ------- ----------
+   6 /u02/oradata/ORCL/example01.dbf     EXAMPLE RECOVER &\textcolor{black}{FILE}& &\textcolor{black}{NOT}&
+                                                         FOUND
+              \end{lstlisting}
+          \end{enumerate}
+        \end{enumerate}
+    \subsection{Ermitteln der benötigten Backups}
+      RMAN bietet mit dem Kommando \languagerman{RESTORE PREVIEW} die Möglichkeit festzustellen, welche Backups für einen Restore-Prozess benötigt werden. Dies ist gerade dann wichtig, wenn Backup Sets auf SBT-Tapes liegen und erst wieder in die FRA zurückgeholt werden müssen. Im folgenden Beispiel wird angenommen, dass der Tablespace \identifier{bank} vollständig wiederhergestellt werden muss.
+      \begin{lstlisting}[caption={Vorschau auf ein Restore},label=admin1439,language=rman]
+RMAN> RESTORE PREVIEW tablespace bank;
+
+Starting restore at 30-OCT-13
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_SBT_TAPE_1
+
+
+List of Backup Sets
+===================
+
+
+BS Key  Type LV Size
+------- ---- -- ----------
+16      Full    26.34M
+					\end{lstlisting}
+\clearpage
+					\begin{lstlisting}[language=rman]
+  List of Datafiles in backup set 16
+  File LV Type Ckp &SCN&    Ckp Time  Name
+  ---- -- ---- ---------- --------- ----
+  6       Full 2084386    29-OCT-13 /u01/app/oracle/oradata/orcl/bank01.dbf
+
+...
+
+BS Key  Size       Device Type Elapsed Time Completion Time
+------- ---------- ----------- ------------ ---------------
+30      240.25M    SBT_TAPE    00:00:03     30-OCT-13
+        BP Key: 48   Status: &AVAILABLE&  Compressed: NO  Tag: TAG20131030T111928
+        Handle: 18onmqq1_1_1   Media: /u04,18onmqq1_1_1
+
+  List of Archived Logs in backup set 30
+  Thrd Seq     Low &SCN&    Low Time  Next &SCN&   Next Time
+  ---- ------- ---------- --------- ---------- ---------
+  1    56      2085711    29-OCT-13 2086381    29-OCT-13
+  1    57      2086381    29-OCT-13 2111298    30-OCT-13
+  1    58      2111298    30-OCT-13 2111915    30-OCT-13
+  1    59      2111915    30-OCT-13 2112126    30-OCT-13
+validation succeeded for backup piece
+Media recovery start &SCN& is 2084386
+Recovery must be done beyond &SCN& 2084393 to clear datafile fuzziness
+validation succeeded for backup piece
+Finished restore at 30-OCT-13
+            \end{lstlisting}
+      Die Ausgabe des \languagerman{RESTORE PREVIEW}-Befehls zeigt eine komplette Auflistung aller Backup Sets und Copies, die der RMAN für den angegebenen Restore-Prozess heranziehen würde. Besonderes Augenmerk muss auf die Backup Sets gelegt werden, die auf SBT-Tapes gespeichert sind, wie hier z. B. Backup Set Nummer 30. Dessen Inhalt sollte vor dem Restore des Tablespaces in die FRA zurückgeholt werden.
+    \subsection{Wiedherstellen der gesamten Datenbank}
+      \begin{merke}
+        Sollte die Datenbank eines oder mehrere verschlüsselte Elemente (Tabellenspalten, Tablespaces, o. ä.) enthalten, muss vor dem Recovery das Encryption Wallet geöffnet werden. \ref{recoverencryptedts} zeigt wie ein verschlüsselter Tablespace recovered wird.
+      \end{merke}
+\clearpage
+      \subsubsection{Alle benötigten Dateien befinden sich in der FRA}
+        Das Wiederherstellen der gesamten Datenbank ist der mit Sicherheit zeitaufwendigste Recovery-Fall der entstehen kann. Ob und wann die gesamte Datenbank wiederherzustellen ist, kann von verschiedenen Faktoren abgeleitet werden. Die folgende Liste zeigt nur einige dieser Gründe:
+        \begin{itemize}
+          \item Es wurden mehr als 70 \% aller Datendateien zerstört.
+          \item Die Datenbank muss auf einen anderen Server umgezogen werden.
+        \end{itemize}
+        Im Folgenden wird ein einfaches vollständiges Restore and Recovery einer ganzen Datenbank, ohne Recovery Katalog durchgeführt. Die Kontrolldatei, dass SPFile und mindestens eine gespiegelte Kopie der Redo Logs der Datenbank sind noch erhalten. Des Weiteren befinden sich alle benötigten Archive Logs in der FRA.
+        \begin{enumerate}
+          \item Mit dem RMAN an der Zieldatenbank anmelden
+            \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1440,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target /
+            \end{lstlisting}
+          \item Die Datenbank in den Mount-Status bringen
+            \begin{lstlisting}[caption={Datenbank mounten},label=admin1441,language=rman,alsolanguage=sqlplus]
+RMAN> startup force mount
+          \end{lstlisting}
+          \item Das Restore durchführen
+            \begin{lstlisting}[caption={Restore der Datendateien},label=admin1442,language=rman]
+RMAN> RESTORE database;
+            \end{lstlisting}
+          \item Recovern der Datenbank
+            \begin{lstlisting}[caption={Recovery der Datenbank},label=admin1443,language=rman]
+RMAN> RECOVER database;
+            \end{lstlisting}
+          \item Öffnen der Datenbank
+            \begin{lstlisting}[caption={Öffnen der Datenbank nach dem Recovery},label=admin1444,language=rman,emph={[10]ALTER,DATABASE,OPEN},emphstyle={[10]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN';
+            \end{lstlisting}
+        \end{enumerate}
+        \begin{merke}
+          Da in diesem Fall die Kontrolldatei der Zieldatenbank erhalten blieb,
+          gibt es keinen Unterschied zwischen einem Recovery mit Hilfe eines
+          Recovery Katalogs und einem Recovery ohne Nutzung des Recovery
+          Katalogs.
+        \end{merke}
+        \subsubsection{Archive Logs  müssen von SBT zurückgeholt werden}
+          Das vorangegangene Beispiel wird nun dahingehend abgewandelt, dass nicht alle benötigten Archive Logs in der FRA vorliegen.
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1445,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target /
+              \end{lstlisting}
+            \item Die Datenbank in den Mount-Status bringen
+              \begin{lstlisting}[caption={Datenbank mounten},label=admin1446,language=rman,alsolanguage=sqlplus]
+RMAN> startup force mount
+            \end{lstlisting}
+            \item Ermitteln welche Backup Sets auf SBT-Tape liegen.
+              \begin{lstlisting}[caption={Ermitteln der benötigten Dateien},label=admin1447,language=rman]
+RMAN> RESTORE PREVIEW database;
+              \end{lstlisting}
+            \item Zurückholen der benötigten Archive Logs.
+              \begin{lstlisting}[caption={Restore der Archive Logs von SBT in die FRA},label=admin1448,language=rman]
+RMAN> RESTORE archive log UNTIL SEQUENCE 60;
+              \end{lstlisting}
+            \item Das Restore der Datenbank durchführen
+              \begin{lstlisting}[caption={Restore der Datendateien},label=admin1449,language=rman]
+RMAN> RESTORE database;
+              \end{lstlisting}
+            \item Recovern der Datenbank
+              \begin{lstlisting}[caption={Recovery der Datenbank},label=admin1450,language=rman]
+RMAN> RECOVER database;
+              \end{lstlisting}
+            \item Öffnen der Datenbank
+              \begin{lstlisting}[caption={Öffnen der Datenbank nach dem Recovery},label=admin1451,language=rman,emph={[10]ALTER,DATABASE,OPEN},emphstyle={[10]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN';
+              \end{lstlisting}
+            \item Löschen der nicht mehr benötigten Archive Logs.
+              \begin{lstlisting}[caption={Löschen der Archive Logs, die bereits auf SBT-Tape gesichert wurden},label=admin1452,language=rman]
+RMAN> DELETE archivelog all BACKED UP 1 TIMES
+2>    TO DEVICE TYPE sbt;
+              \end{lstlisting}
+              \begin{lstlisting}[caption={Löschen der Archive Logs, die bereits auf Disk gesichert wurden},label=admin1453,language=rman]
+RMAN> DELETE archivelog all BACKED UP 1 TIMES
+2>    TO DEVICE TYPE disk;
+              \end{lstlisting}
+          \end{enumerate}
+          Durch die Klausel \languagerman{BACKUPED UP 1 TIMES} wird beim
+          Löschen sichergestellt, dass nur solche Archive Logs aus der FRA entfernt werden, die bereits mindestens 1x gesichert worden sind.
+      \subsection{Wiederherstellung eines Tablespaces}
+        \subsubsection{Wenn der Tablespace unverschlüsselt ist}
+          Die Wiederherstellung eines Tablespaces kann sowohl im MOUNT- als auch im OPEN-Status der Datenbank durchgeführt werden. Im folgenden Beispiel wird angenommen, dass der Tablespace \identifier{bank} beschädigt wurde, während die Datenbank geöffnet ist. Wie schon beim Recovery der gesamten Datenbank, so muss auch hier erst geprüft werden, ob alle benötigten Dateien in der FRA vorliegen.
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1454,language=terminal]
+[oracle@FEA11-119SRV ~]$ rman target /
+              \end{lstlisting}
+            \item Überprüfen ob alle benötigten Dateien in der FRA vorliegen
+              \begin{lstlisting}[caption={Voraussetzungen überprüfen},label=admin1455,language=rman]
+RMAN> RESTORE PREVIEW tablespace bank;
+              \end{lstlisting}
+            \item Nicht vorliegende Archive Logs von SBT-Tapes holen
+              \begin{lstlisting}[caption={Voraussetzungen überprüfen},label=admin1456,language=rman]
+RMAN> RESTORE archive log UNTIL SEQUENCE 60;
+              \end{lstlisting}
+            \item Offline setzen des betreffenden Tablespaces
+              \begin{lstlisting}[caption={Betreffenden Tablespace Offline
+              setzen},label=admin1457,language=rman,emph={[10]ALTER,TABLESPACE,OFFLINE,IMMEDIATE},emphstyle={[10]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER TABLESPACE bank OFFLINE IMMEDIATE';
+              \end{lstlisting}
+            \item Das Restore des Tablespaces durchführen
+              \begin{lstlisting}[caption={Restore des betreffenden Tablespaces},label=admin1458,language=rman]
+RMAN> RESTORE tablespace bank;
+              \end{lstlisting}
+            \item Recovern des Tablespaces
+              \begin{lstlisting}[caption={Recovery des Tablespaces},label=admin1459,language=rman]
+RMAN> RECOVER tablespace bank DELETE archivelog;
+              \end{lstlisting}
+              Die Klausel \languagerman{DELETE archivelog} sorgt dafür, dass alle nicht mehr benötigten Archive Logs sofort gelöscht werden. Dabei werden keine Logs gelöscht, die noch nicht gesichert wurden.
+            \item Online setzen des betreffenden Tablespaces nach dem Recovery
+              \begin{lstlisting}[caption={Betreffenden Tablespace Online setzen},label=admin1460,language=rman,emph={[10]ALTER,TABLESPACE,ONLINE},emphstyle={[10]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER TABLESPACE bank ONLINE';
+              \end{lstlisting}
+          \end{enumerate}
+        \subsubsection{Wenn der Tablespace verschlüsselt ist}
+          \label{recoverencryptedts}
+          Bei einem verschlüsselten Tablespace sind grundsätzlich die gleichen Schritte für ein Restore and Recovery notwendig, wie bei einem Unverschlüsselten. Der einzige Unterschied ist, dass ein kryptierter Tablespace nur dann recovered werden kann, wenn das Wallet vorher geöffnet wurde.
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1461,language=terminal]
+[oracle@FEA11-119SRV ~]$ rman target /
+              \end{lstlisting}
+            \item Das Wallet öffnen
+              \begin{lstlisting}[caption={Öffnen des Wallets},label=admin1462,language=rman,emph={[9]ALTER,SYSTEM,SET,ENCRYPTION,WALLET,OPEN,IDENTIFIED,BY},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL'ALTER SYSTEM SET ENCRYPTION WALLET OPEN IDENTIFIED BY "P@ssw0rd"';
+              \end{lstlisting}
+            \item Überprüfen ob alle benötigten Dateien in der FRA vorliegen
+              \begin{lstlisting}[caption={Voraussetzungen überprüfen},label=admin1463,language=rman]
+RMAN> RESTORE PREVIEW tablespace bank;
+              \end{lstlisting}
+            \item Nicht vorliegende Archive Logs von SBT-Tapes holen
+              \begin{lstlisting}[caption={Voraussetzungen überprüfen},label=admin1464,language=rman]
+RMAN> RESTORE archive log UNTIL SEQUENCE 60;
+              \end{lstlisting}
+            \item Offline setzen des betreffenden Tablespaces
+              \begin{lstlisting}[caption={Betreffenden Tablespace Offline setzen},label=admin1465,language=rman,emph={[9]ALTER,TABLESPACE,OFFLINE,IMMEDIATE},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER TABLESPACE bank OFFLINE IMMEDIATE';
+              \end{lstlisting}
+            \item Das Restore des Tablespaces durchführen
+              \begin{lstlisting}[caption={Restore des betreffenden Tablespaces},label=admin1466,language=rman]
+RMAN> RESTORE tablespace bank;
+              \end{lstlisting}
+            \item Recovern des Tablespaces
+              \begin{lstlisting}[caption={Recovery des Tablespaces},label=admin1467,language=rman]
+RMAN> RECOVER tablespace bank DELETE archivelog;
+              \end{lstlisting}
+              Die Klausel \languagerman{DELETE archivelog} sorgt dafür, dass alle nicht mehr benötigten Archive Logs sofort gelöscht werden. Dabei werden keine Logs gelöscht, die noch nicht gesichert wurden.
+            \item Online setzen des betreffenden Tablespaces nach dem Recovery
+              \begin{lstlisting}[caption={Betreffenden Tablespace Online setzen},label=admin1468,language=rman,emph={[9]ALTER,TABLESPACE,ONLINE},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER TABLESPACE bank ONLINE';
+              \end{lstlisting}
+            \item Das Wallet schließen
+              \begin{lstlisting}[caption={Schließen des Wallets},label=admin1469,language=rman,emph={[9]ALTER,SYSTEM,SET,ENCRYPTION,WALLET,CLOSE,IDENTIFIED,BY},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL'ALTER SYSTEM SET ENCRYPTION WALLET CLOSE IDENTIFIED BY "P@ssw0rd"';
+              \end{lstlisting}
+          \end{enumerate}
+      \subsection{Wiederherstellen einzelner Datendateien}
+        Sind nur einzelne Datendateien beschädigt, ist es meist wirtschaftlicher, explizit die beschädigten Dateien wiederherzustellen und nicht die gesamten Tablespaces.
+        \subsubsection{Datendateien Offline setzen}
+          Datendateien können genauso wie Tablespaces Offline gesetzt werden. Wenn dies geschieht, ist der Tablespace der sie enthält nicht verfügbar, bis die Datendatei wieder Online gesetzt wurde.
+
+          Um eine Datendatei Offline zu setzen, wird das \languageorasql{ALTER DATABASE}-Kommando und das \privileg{alter database}-System Privileg benötigt.
+          \begin{lstlisting}[caption={Eine Datendatei offline setzen},label=admin1470,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE '/u02/oradata/orcl/bankl01.dbf' OFFLINE;
+          \end{lstlisting}
+          Eine Datendatei kann nicht nur mit ihrem Dateinamen, sondern auch mit ihrer internen Dateinummer angesprochen werden. Herausfinden kann man die Dateinummer mit Hilfe der View \identifier{dba\_data\_files}.
+          \begin{lstlisting}[caption={Herausfinden der file\_id einer Datendatei},label=admin1471,language=oracle_sql]
+SQL> SELECT file_id
+  2  FROM   dba_data_files
+  3  WHERE  file_name LIKE '%bank01%';
+
+   FILE_ID
+----------
+         6
+          \end{lstlisting}
+          Im \languageorasql{ALTER DATABASE}-Kommando wird der Dateiname durch die Dateinummer ersetzt.
+          \begin{lstlisting}[caption={Eine Datendatei mit Hilfe der file\_id Offline setzen},label=admin1472,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE 6 OFFLINE;
+          \end{lstlisting}
+          Soll die Datendatei wieder Online gebracht werden, wird das \languageorasql{ALTER DATABASE}-Statement zusammen mit dem Schlüsselwort \languageorasql{ONLINE} verwendet.
+          \begin{lstlisting}[caption={Eine Datendatei online setzen},label=admin1473,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE 6 ONLINE;
+          \end{lstlisting}
+        \subsubsection{Restore and Recovery von Datendateien}
+          Im folgenden Beispiel wird angenommen, dass die Datenbank geöffnet ist.
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1474,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle
+              \end{lstlisting}
+            \item Offline setzen der betreffenden Datendatei
+              \begin{lstlisting}[caption={Betreffende Datendatei Offline setzen},label=admin1475,language=rman,emph={[9]ALTER,DATABASE,DATAFILE,OFFLINE,IMMEDIATE},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE DATAFILE 6 OFFLINE';
+              \end{lstlisting}
+            \item Das Restore der Datendatei durchführen
+              \begin{lstlisting}[caption={Restore der betreffenden Datendatei},label=admin1476,language=rman]
+RMAN> RESTORE datafile 6;
+              \end{lstlisting}
+            \item Recovern der Datendatei
+              \begin{lstlisting}[caption={Recovery der Datendatei},label=admin1477,language=rman]
+RMAN> RECOVER datafile 6 DELETE archivelog;
+              \end{lstlisting}
+            \item Online setzen der Datendatei nach dem Recovery
+              \begin{lstlisting}[caption={Betreffende Datendatei Online setzen},label=admin1478,language=rman,emph={[9]ALTER,DATABASE,DATAFILE,ONLINE},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE DATAFILE 6 ONLINE';
+              \end{lstlisting}
+          \end{enumerate}
+        \subsubsection{Restore and Recovery einer Datendatei an einem neuen Speicherort}
+          Um eine Datendatei an einem neuen Speicherort wiederherzustellen, muss dieser in der Kontrolldatei angegeben werden. RMAN bietet für das Angeben des neuen Speicherorts das \languagerman{SET NEWNAME}-Kommando und \languagerman{SWITCH DATAFILE} zum Umschalten auf den neuen Speicherort.
+
+          Die Kombination der beiden RMAN-Kommandos \languagerman{SET NEWNAME} und \languagerman{SWITCH DATAFILE} ist vergleichbar mit dem SQL-Kommando \languageorasql{ALTER DATABASE RENAME FILE}.
+
+          Im folgenden Beispiel wird davon ausgegangen, dass der Tablespace \identifier{bank} beschädigt wurde. Eine der beiden Datendateien dieses Tablespaces, muss an einem anderen Speicherort wiederhergestellt werden, da der Originalspeicherort derzeit nicht verfügbar ist. Mit Hilfe der unter \ref{identifyfiles} beschriebenen Methode wurde herausgefunden, dass die Datendatei \oscommand{bank02.dbf} die Nummer 7 hat.
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1479,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle
+              \end{lstlisting}
+            \item Offline setzen der betreffenden Datendatei
+              \begin{lstlisting}[caption={Betreffende Datendatei Offline setzen},label=admin1480,language=rman,emph={[9]ALTER,TABLESPACE,OFFLINE,TEMPORARY},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER TABLESPACE bank OFFLINE TEMPORARY';
+              \end{lstlisting}
+            \item Öffnen eines RUN-Blocks
+            \begin{lstlisting}[caption={Einen RUN-Block öffnen},label=admin1481,language=rman]
+RMAN> RUN {
+            \end{lstlisting}
+            \item Neuen Speicherort der Datendatei festlegen
+            \begin{lstlisting}[caption={Neuen Speicherort festlegen},label=admin1482,language=rman]
+2>      SET NEWNAME FOR datafile 7 TO '/u02/oradata/ORCL/bank02.dbf';
+            \end{lstlisting}
+            \item Durchführen des Restores
+            \begin{lstlisting}[caption={Restore durchführen},label=admin1483,language=rman]
+3>      RESTORE datafile 7;
+            \end{lstlisting}
+            \item Umschalten auf den neuen Speicherort der Datendatei
+            \begin{lstlisting}[caption={Auf den neuen Speicherort umschalten},label=admin1484,language=rman]
+4>      SWITCH DATAFILE ALL;
+            \end{lstlisting}
+            \item Recovery der Datendatei durchführen und den RUN-Block schließen.
+            \begin{lstlisting}[caption={Recovery durchführen},label=admin1485,language=rman]
+5>      RECOVER datafile 7;
+6>   }
+            \end{lstlisting}
+            \item Datendatei in den ONLINE-Status bringen
+            \begin{lstlisting}[caption={Datendatei in den ONLINE-Status bringen},label=admin1486,language=rman,emph={[9]ALTER,TABLESPACE,ONLINE},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER TABLESPACE bank ONLINE';
+            \end{lstlisting}
+          \end{enumerate}
+      \subsection{Wiederherstellen von Archive Logs}
+        Benötigt der RMAN Archive Logs für ein Recovery, stellt er diese selbstständig wieder her. In manchen Fällen ist es jedoch notwendig, Archive Logs manuell wiederherzustellen. Im Folgenden werden zwei Szenarios beschrieben, bei denen die Archive Logs manuell wiederherzustellen sind.
+        \subsubsection{Die Archive Logs an einem neuen Speicherort wiederherstellen}
+          Standardmässig geben \parameter{log\_archive\_format} und \parameter{log\_archive\_dest\_n} vor, unter welchem Namen und an welchem Speicherort die Archive Logs wiederhergestellt werden. Wenn es sinnvoll ist, kann mit dem \languagerman{SET ARCHIVELOG DESTINATION}-Kommando des RMAN ein anderer Ort definiert werden.
+          \begin{enumerate}
+            \item Öffnen eines RUN-Blocks
+              \begin{lstlisting}[caption={Einen RUN-Block öffnen},label=admin1488,language=rman]
+RMAN> RUN {
+              \end{lstlisting}
+            \item Neuen Speicherort der Archive Logs festlegen
+              \begin{lstlisting}[caption={Neuen Speicherort festlegen},label=admin1489,language=rman]
+2>      SET ARCHIVELOG DESTINATION TO '/tmp';
+              \end{lstlisting}
+            \item Wiederherstellen der Archive Logs und schließen des RUN-Blockes.
+              \begin{lstlisting}[caption={Wiederherstellen der Archive Logs},label=admin1490,language=rman]
+3>      RESTORE archivelog ALL;
+4>    }
+              \end{lstlisting}
+          \end{enumerate}
+        \subsubsection{Archive Logs auf mehrere Speicherorte verteilen}
+          Es ist möglich die Menge der Archive Logs auf mehrere Orte aufzuteilen, falls dies aus Speicherplatzgründen notwendig ist. Das folgende Beispiel stellt 150 Archive Logs wieder her und verteilt diese auf zwei Locations.
+          \begin{lstlisting}[caption={Wiederherstellen der Archive Logs an verschiedenen Speicherorten},label=admin1491,language=rman]
+RMAN> RUN {
+2>      SET ARCHIVELOG DESTINATION TO '/u02/backup';
+3>      RESTORE ARCHIVELOG FROM SEQUENCE 1 UNTIL SEQUENCE 75;
+4>
+5>      SET ARCHIVELOG DESTINATION TO '/u03/backup';
+6>      RESTORE ARCHIVELOG FROM SEQUENCE 76 UNTIL SEQUENCE 150;
+7>    }
+          \end{lstlisting}
+          Wird innerhalb dieses RUN-Blocks ein Recovery durchgeführt, findet RMAN automatisch seine Archive Logs an den unterschiedlichen Speicherorten.
+          \begin{merke}
+            Durch den Befehl \languagerman{SET} getätigte Einstellungen gelten immer nur innerhalb des RUN-Blockes, in dem Sie vorgenommen wurden.
+          \end{merke}
+    \section{Block Media Recovery}
+      Es kann vorkommen, dass durch einen Fehler, einzelne Blöcke in einer Datendatei beschä\-digt werden. Um solche Schäden zu beheben, ist es zum einen möglich, die gesamte Datendatei wiederherzustellen oder aber nur die defekten Blöcke zu recovern. Werden nur einzelne Blöcke einer Datendatei repariert, spricht man von \enquote{Block Media Recovery}.
+
+      Block Media Recovery hat dem Datafile Media Recovery (Recovery einer
+      ganzen Datendatei) gegenüber folgende Vorteile:
+      \begin{itemize}
+        \item Die Zeit für das Instance Recovery verringert sich, da nur die wiederhergestellten Blöcke dem Instance Recovery unterzogen werden müssen.
+        \item Die betroffene Datendatei kann während eines Block Media Recovery Online bleiben.
+      \end{itemize}
+      Das Block Media Recovery unterliegt aber auch einer ganzen Reihe von
+      Einschränkungen, die beachtet werden müssen:
+      \begin{itemize}
+        \item Block Media Recovery kann nur aus dem RMAN heraus gesteuert werden.
+        \item Ein einmal begonnenes Block Media Recovery muss vollständig durchgeführt werden.
+				\item Für Block Media Recovery können nur Full-Backups herangezogen werden, keine inkrementellen Backups.
+        \item Es können nur solche Blöcke mit Block Media Recovery repariert werden, die als corrupt\footnote{corrupt = engl. fehlerhaft} markiert wurden. In \identifier{v\$database\_block\_corruption} kann ersehen werden, welche Blöcke dies sind. Diese View wird aber nicht automatisch befüllt. Die betroffene Datendatei muss erst mit \languagerman{VALIDATE} validiert werden.
+      \end{itemize}
+      \begin{merke}
+        Block Media Recovery ist nur in der Enterprise Version von Oracle 11g möglich!
+      \end{merke}
+      \subsection{Wann sollte Block Media Recovery angewendet werden?}
+        Block Media Recovery stellt eine Erweiterung zum Datafile Media Recovery dar. In Fällen, in denen die Anzahl der defekten Blöcke sehr hoch ist, kann Block Media Recovery das Datafile Media Recovery nicht ersetzen.
+
+        Das ein defekter Block vorliegt, kann an der Fehlermeldung ORA-01578 festgestellt werden. Hier ein Beispiel für eine solche Fehlermeldung:
+        \begin{lstlisting}[caption={Der Fehler ORA-01578},label=admin1492,language=terminal]
+ORA-01578: ORACLE data block corrupted (file # 7, block # 3)
+ORA-01110: data file 7: '/u02/oradata/orcl/bank02.dbf'
+ORA-01578: ORACLE data block corrupted (file # 7, block # 235)
+ORA-01110: data file 2: '/u02/oradata/orcl/bank02.dbf'
+        \end{lstlisting}
+      \subsection{Block Media Recovery und die Redo Logs}
+        Für Datafile Media Recovery ist immer eine ununterbrochene Kette von Archived Logs notwendig, da das Recovery sonst nicht erfolgreich sein kann. Block Media Recovery kann unter Umständen auch dann noch erfolgreich sein, wenn einzelne Archived Logs verloren gegangen sind. Die einzige Bedingung für Block Media Recovery ist, dass alle Archived Logs, die Informationen über die wiederherzustellenden Blöcke enthalten, vorhanden sein müssen.
+
+        Wenn der RMAN das Fehlen eines Archived Logs feststellt, bricht er seine Arbeit nicht sofort ab. Es kann vorkommen, dass ein Datenblock in einem späteren Archive Log als \enquote{newed block} geführt wird. Dies geschieht beispielsweise dann, wenn alle Zeilen einer Tabelle gelöscht wurden oder die gesamte Tabelle aus dem Block gelöscht wurde.
+        In so einem Fall formatiert Oracle den Block neu, wodurch alle alten Redo Informationen irrelevant werden.
+      \subsection{Backups defekter Datendateien anfertigen}
+        \label{corruptfile}
+        Bevor ein Block Media Recovery durchgeführt wird, sollte zuerst ein Backup der betroffenen Datendatei(en) gemacht werden. Standardmäßig weigert sich der RMAN eine Datendatei mit beschädigten Blöcken zu sichern. Dies resultiert aus der Standardeinstellung des RMAN-Parameters \languagerman{MAXCORRUPT} mit dem Wert 0. Dieser Parameter kann so konfiguriert werden, dass eine bestimmte Anzahl defekter Blöcke für eine Datendatei zulässig ist.
+        \begin{lstlisting}[caption={Hotbackup einer defekten Datendatei anfertigen},label=admin1493,language=rman]
+RMAN> RUN {
+2>      SET MAXCORRUPT FOR datafile 6 TO 999;
+3>      BACKUP AS BACKUPSET DATAFILE 6;
+4>    }
+        \end{lstlisting}
+      \subsection{Block Media Recovery durchführen}
+        Das RMAN-Kommando \languagerman{BLOCKRECOVER} kann einzelne Datenblöcke in der Datenbank wiederherstellen. Das folgende Szenario zeigt eine einfache Nutzung dieses Kommandos.
+        \begin{enumerate}
+          \item Zwei defekte Blöcke werden angezeigt.
+          \begin{lstlisting}[caption={Der Fehler ORA-01578},label=admin1494,language=terminal]
+ORA-01578: ORACLE data block corrupted (file # 7, block # 3)
+ORA-01110: data file 7: '/u02/oradata/orcl/bank02.dbf'
+ORA-01578: ORACLE data block corrupted (file # 7, block # 235)
+ORA-01110: data file 2: '/u02/oradata/orcl/bank02.dbf'
+          \end{lstlisting}
+          \item Die Blöcke können recovered werden, während die Datenbank geöffnet ist.
+          \begin{lstlisting}[caption={Das Kommando BLOCKRECOVER},label=admin1495,language=rman]
+RMAN> BLOCKRECOVER datafile 7 block 3
+2>    datafile 2 block 235;
+          \end{lstlisting}
+        \end{enumerate}
+        Ist die Liste der defekten Blöcke sehr groß, kann das folgende Kommando genutzt werden, um alle korrupten Blöcke in einem Arbeitsgang zu recovern:
+          \begin{lstlisting}[caption={Das Kommando BLOCKRECOVER},label=admin1496,language=rman]
+RMAN> BLOCKRECOVER CORRUPTION LIST;
+          \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{i1016424}
+        \end{literaturinternet}
+    \section{Unvollständiges Recovery (Point-In-Time Recovery)}
+      Point-In-Time Recovery versetzt die Datenbank in einen Stand zurück, der zeitlich vor dem Aktuellen liegt. Diese Art des Recovery wird auch \textit{unvollständiges Recovery} genannt, da nicht alle vorhandenen Archive Logs und inkrementellen Backups zur Wiederherstellung der Datenbank benutzt werden. Ein Point-In-Time-Recovery kann gezielt erfolgen oder unfreiwillig notwendig werden, da bestimmte Teile der Datenbank verloren gegangen sind.
+      \subsection{Die Datenbank im Verlauf der Zeit}
+        Ist Datenverlust für eine Datenbank inakzeptabel, müssen zwei Dinge sichergestellt werden:
+        \begin{enumerate}
+          \item Die Datenbank muss sich im ARCHIVELOG Modus befinden.
+          \item Es müssen regelmässig Backups der Datenbank angefertigt werden.
+        \end{enumerate}
+        Wenn diese beiden Bedingungen erfüllt sind, könnte ein Ausschnitt aus dem Lebenszyklus einer Datenbank wie folgt aussehen:
+        \bild{Lebenszyklus einer Datenbank erster Teil}{lebenszyklus1}{0.4}
+        \abbildung{lebenszyklus1} zeigt eine Datenbank für die die drei Backups, Backup 1, Backup 2 und Backup 3 existieren. Desweitern sind insgesamt 16 Archive Logs mit der Logsequenz Nummern 1 bis 16 vorhanden. In diesem Szenario kann die Datenbank auf jeden beliebigen Zeitpunkt zwischen der Erstellung von Backup 1 und JETZT zurückgesetzt werden.
+
+        In der folgenden \abbildung{lebenszyklus2} wird der Fall dargestellt, dass zum Zeitpunkt X fälschlicher Weise eine Tabelle gelöscht wurde, die unbedingt wiederhergestellt werden muss.
+        \bild{Lebenszyklus einer Datenbank zweiter Teil}{lebenszyklus2}{0.4}
+        Um den Verlust der Tabelle wieder auszugleichen, muss die Datenbank auf einen Zeitpunkt zurückgesetzt werden, der vor dem Zeitpunkt X liegt.
+        \bild{Lebenszyklus einer Datenbank dritter Teil}{lebenszyklus3}{0.4}
+        Um dieses Ziel zu erreichen, müssen folgende Schritte durchgeführt
+        werden:
+        \begin{enumerate}
+          \item RESTORE: Wiederherstellen von Backup Nummer 3
+          \item RECOVER: Benutzen der Archive Logs Nummer 12, 13, 14 und von Teilen des Archive Log Nummer 15 um sich an den Zeitpunkt (X - n) heranzutasten.
+          \item Öffnen der Datenbank
+        \end{enumerate}
+        Die Folgen dieses Szenarios wären:
+        \begin{itemize}
+          \item Die Datenbank wurde zurückgesetzt auf die Logsequenz Nummer 14.
+          \item Der Inhalt der aktuellen Redo Log Datei, mit der Logsequenz Nummer 17 ist unbrauchbar.
+        \end{itemize}
+        Daraus ergibt sich Folgendes:
+        \begin{enumerate}
+          \item Die Redo Log Dateien müssen geleert/formatiert werden, da ihr Inhalt unbrauchbar ist. Die Redo Logs werden im weiteren Verlauf mit neuem Inhalt gefüllt.
+          \item Bei einem Logswitch würde erneut eine Archive Log Datei mit der Nummer 15 erzeugt werden, die es aber bereits gibt.
+        \end{enumerate}
+        Um die Problematik der Erzeugung von Archive Log Dateien mit gleicher Log Sequenze Nummer (in diesem Beispiel LSN 15) zu vermeiden, hat Oracle den Begriff der \enquote{Inkarnation} eingeführt.
+        \begin{merke}
+          Unter einer Inkarnation versteht Oracle den Lebenszyklus einer Datenbank. Der Anfang eines Lebenszykluses wird durch den Zeitpunkt markiert, an dem die Logsequenz Nummer 1 vergeben wurde. Das Ende wird durch ein Point-In-Time-Recovery markiert.
+        \end{merke}
+        Mit diesen neuen Erkenntnissen ergibt sich nach dem Recovery der Datenbank, aus dem obigen Beispiel, ein anderes Bild:
+
+        \bild{Lebens\-zyklus einer Datenbank vierter Teil}{lebenszyklus4}{0.5}
+
+        Durch das Öffnen der Datenbank und das Zurücksetzen der Logsequenz Nummer auf 1 wird ein neuer Lebenszyklus der Datenbank begonnen, also eine neue Inkarnation.
+        \begin{merke}
+          Eine neue Datenbankinkarnation wird immer dann erstellt, wenn beim Öffnen der Datenbank das Kommando \languageorasql{ALTER DATABASE OPEN RESETLOGS} verwendet wird. Die Zählung der Inkarnationen beginnt bei 1 und wird fortlaufend durchgeführt.
+        \end{merke}
+        Obwohl in dieser Situation jetzt zwei Archive Log Dateien mit der Logsequenz Nummer 1 existieren, kann die Datenbank diese Beiden, anhand der Inkarnationsnummer 1 bzw. 2 auseinanderhalten.
+
+        \begin{merke}
+          Um sehen zu können, welche Datenbankinkarnationen existieren, kann im RMAN das Kommando \languagerman{LIST INCARNATION} oder in SQL*Plus die View  \identifier{v\$database\_incarnation} benutzt werden.
+        \end{merke}
+
+        \begin{lstlisting}[caption={Die View v\$database\_incarnation},label=admin1497,language=oracle_sql,emph={[9]CURRENT},emphstyle={[9]\color{black}}]
+SQL> SELECT incarnation#, resetlogs_change#, prior_incarnation#
+  2  FROM   v$database_incarnation
+
+INCARNATION# RESETLOGS_CHANGE# PRIOR_INCARNATION#
+------------ ----------------- ------------------
+           1                 1                  0
+           2            446075                  1
+           3            498982                  2
+           4            500243                  2
+
+          \end{lstlisting}
+\clearpage
+          In \beispiel{admin1497} zeigt die Spalte \textit{RESETLOGS\_CHANGE\#}
+          die SCN, des Startzeitpunktes der jeweiligen Inkarnation an. Wie zu
+          sehen ist, beginnt Inkarnation Nummer 1 mit SCN 1 und jede weitere
+          Inkarnation mit einer höheren SCN. Somit läst sich folgendes Bild
+          zeichnen:
+
+          \bild{Da\-ten\-bank\-in\-kar\-na\-tion\-en}{incarnations_scn}{0.375}
+
+        \subsubsection{Inkarnationen und die Logsequenz Nummer (LSN)}
+          Eine neue Inkarnation wird mit dem Kommando \lstinline[language=oracle_sql]{ALTER DATABASE OPEN RESETLOGS} erzeugt. Das Schlüsselwort \lstinline[language=oracle_sql]{RESETLOGS} deutet darauf hin, dass die Logsequenz Nummer bei jeder neuen Inkarnation auf den Wert 1 zurückgesetzt wird. Tatsächlich geschehen folgende Schritte:
+          \begin{enumerate}
+            \item Die aktuellen Redo Logs werden archiviert,
+            \item die Log Sequenze Nummer wird auf den Wert 1 zurückgesetzt und
+            \item die Redo Logs erhalten einen neuen Zeitstempel, sowie eine neue SCN.
+          \end{enumerate}
+      \subsection{Voraussetzungen für Database Point-In-Time Recovery}
+        Um ein Database-Point-In-Time-Recovery durchführen zu können, müssen die folgenden Voraussetzungen gegeben sein:
+        \begin{itemize}
+          \item Die betreffende Datenbank muss sich im Archivelog-Modus befinden.
+          \item Es müssen Backups aller Datendateien bestehen, die vor dem gewünschten Reco\-very\-zeit\-punkt entstanden sind.
+          \item Alle Archive Logs, die zum Roll-Forward des Backups bis zum gewünschten Reco\-very\-zeit\-punkt benötigt werden, müssen vorhanden sein.
+        \end{itemize}
+      \subsection{Database Point-In-Time Recovery vorbereiten}
+        Die folgenden Schritte sollten für ein Datenbank Point-In-Time Recovery vorbereitet werden.
+        \begin{itemize}
+          \item Festlegen des Zielzeitpunktes, der SCN, des Restore-Points oder der Log Sequence Number, bei der das Recovery stoppen soll. Dies kann mit Hilfe der Oracle Flashback Features geschehen. Auch die Alert.log-Datei kann hierbei dienlich sein.
+          \item Soll als Abbruchkriterium für das Recovery ein Zeitpunkt verwendet werden, sollten die beiden Umgebungsvariablen \oscommand{NLS\_LANG} und \oscommand{NLS\_DATE\_FORMAT} gesetzt sein.
+        \end{itemize}
+      \subsection{Point-In-Time Recovery durchführen}\label{dbpitrinc}
+        \begin{enumerate}
+          \item Starten des RMAN und mit der Zieldatenbank verbinden.
+            \begin{lstlisting}[caption={Starten und Anmelden},label=admin1498,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle
+            \end{lstlisting}
+          \item Überführen der Datenbank in die MOUNT-Phase.
+            \begin{lstlisting}[caption={Shutdown und Mounten},label=admin1499,language=rman,alsolanguage=sqlplus]
+RMAN> shutdown immediate
+RMAN> startup mount
+            \end{lstlisting}
+          \item Die folgenden Schritte sollten in einem RUN-Block ausgeführt werden:
+            \begin{enumerate}
+              \item Zielzeitpunkt mit dem \languagerman{SET UNTIL}-Kommando festlegen.
+              \item Kanäle zum Zugriff auf die Datenbank konfigurieren, falls keine automatisch Vorkonfigurierten vorhanden sind.
+              \item Restore and Recovery
+            \end{enumerate}
+            \begin{lstlisting}[caption={Restore and Recovery},label=admin1500,language=rman]
+RMAN> RUN {
+2>      SET UNTIL TIME '31.10.2013 10:30:00';
+#Alternativen
+# SET UNTIL SCN 487159;
+# SET UNTIL SEQUENCE 62;
+# SET UNTIL RESTORE POINT before_update;
+3>
+4>      RESTORE database;
+5>      RECOVER database;
+6>    }
+            \end{lstlisting}
+          \item Datenbank mit \languageorasql{OPEN RESETLOGS} öffnen
+            \begin{lstlisting}[caption={Datenbank mit open resetlogs öffnen},label=admin1501,language=rman,emph={[9]ALTER,DATABASE,OPEN,RESETLOGS},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN RESETLOGS';
+            \end{lstlisting}
+        \end{enumerate}
+      \subsection{Recovery nach Verlust der Kontrolldatei (mit Recovery Katalog)}
+        \label{recoverywithabackupcontrolfile}
+        Wenn es vorkommt, dass alle Kopien der Kontrolldatei einer Datenbank zerstört werden oder verloren gehen, muss eine Kontrolldatei aus einem Backup wiederhergestellt werden. Diese wird dann als \enquote{Backupcontrolfile} bezeichnet. Da die Kontrolldatei aus einem Backup, nicht mehr den aktuellsten Stand der Datenbank wiederspiegelt, muss die gesamte Datenbank auf den Stand des Backupcontrolfile recovered werden.
+        \subsubsection{Wiederherstellen eines Controlfiles aus einem Controlfile Autobackup}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank und am Recovery Katalog anmelden.
+              \begin{lstlisting}[caption={An der Zieldatenbank und am Recovery Katalog anmelden},label=admin1502,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle catalog catowner/catpass@CATDB
+              \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1503,language=rman,alsolanguage=sqlplus]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des Controlfiles aus dem Controlfile Autobackup
+              \begin{lstlisting}[caption={Wiederherstellen des Controlfiles},label=admin1504,language=rman]
+RMAN> RESTORE controlfile
+2>    FROM AUTOBACKUP;
+              \end{lstlisting}
+            \item Die Zieldatenbank in den MOUNT-Status versetzen
+              \begin{lstlisting}[caption={Zieldatenbank mounten},label=admin1505,language=rman,emph={[9]ALTER,DATABASE,MOUNT},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE MOUNT';
+              \end{lstlisting}
+            \item Wiederherstellen aller Datendateien
+              \begin{lstlisting}[caption={Datendateien wiederherstellen},label=admin1506,language=rman]
+RMAN> RESTORE database;
+              \end{lstlisting}
+            \item Recovern der Datenbank
+              \begin{lstlisting}[caption={Recovern der Datenbank},label=admin1507,language=rman]
+RMAN> RECOVER database;
+              \end{lstlisting}
+            \item Öffnen der Datenbank mit der Option \languageorasql{OPEN RESETLOGS}
+              \begin{lstlisting}[caption={Datenbank mit open resetlogs öffnen},label=admin1508,language=rman,emph={[9]ALTER,DATABASE,OPEN,RESETLOGS},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN RESETLOGS';
+              \end{lstlisting}
+            \end{enumerate}
+        \subsubsection{Wiederherstellen eines Controlfiles aus einem Backup Set}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank und am Recovery Katalog anmelden.
+              \begin{lstlisting}[caption={An der Zieldatenbank und am Recovery Katalog anmelden},label=admin1509,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle catalog catowner/catpass@CATDB
+              \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1510,language=rman,alsolanguage=sqlplus]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des Controlfiles.
+              \begin{lstlisting}[caption={Wiederherstellen des Controlfiles},label=admin1511,language=rman]
+RMAN> RESTORE controlfile;
+              \end{lstlisting}
+            \item Die Zieldatenbank in den MOUNT-Status versetzen
+              \begin{lstlisting}[caption={Zieldatenbank mounten},label=admin1512,language=rman,emph={[9]ALTER,DATABASE,MOUNT},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE MOUNT';
+              \end{lstlisting}
+            \item Wiederherstellen aller Datendateien
+              \begin{lstlisting}[caption={Datendateien wiederherstellen},label=admin1513,language=rman]
+RMAN> RESTORE database;
+              \end{lstlisting}
+            \item Recovern der Datenbank
+              \begin{lstlisting}[caption={Recovern der Datenbank},label=admin1514,language=rman]
+RMAN> RECOVER database;
+              \end{lstlisting}
+            \item Öffnen der Datenbank mit der Option \languageorasql{OPEN RESETLOGS}
+              \begin{lstlisting}[caption={Datenbank mit open resetlogs öffnen},label=admin1515,language=rman,emph={[9]ALTER,DATABASE,OPEN,RESETLOGS},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN RESETLOGS';
+              \end{lstlisting}
+            \end{enumerate}
+\clearpage
+      \subsection{Recovery nach Verlust der Kontrolldatei (ohne Recovery Katalog)}
+        \subsubsection{Wiederherstellen eines Controlfiles aus einem Controlfile Autobackup}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden.
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden},label=admin1516,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle
+              \end{lstlisting}
+            \item Setzen der DBID
+              \begin{lstlisting}[caption={Setzen der DBID},label=admin1517,language=rman]
+RMAN> SET DBID 1351916467;
+              \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1518,language=rman,alsolanguage=sqlplus]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des Controlfiles aus dem Controlfile Autobackup
+              \begin{lstlisting}[caption={Wiederherstellen des Controlfiles},label=admin1519,language=rman]
+RMAN> RESTORE controlfile FROM AUTOBACKUP
+2>    RECOVERY AREA '/u05/fast_recovery_area'
+3>    DB_NAME       'orcl';
+              \end{lstlisting}
+              \begin{merke}
+                Wenn die Instanz nicht gemountet oder geöffnet ist, ist es dem
+                RMAN unmöglich, den Speicherort der Controlfile Autobackups zu
+                ermitteln. Mit Hilfe der beiden Parameter \languagerman{RECOVERY
+                AREA} und \languagerman{DB_NAME} wird der Speicherort, die Fast
+                Recovery Area, dem RMAN mitgeteilt.
+              \end{merke}
+            \item Die Zieldatenbank in den MOUNT-Status versetzen
+              \begin{lstlisting}[caption={Zieldatenbank
+              mounten},label=admin1520,language=rman,emph={[9]ALTER,DATABASE,MOUNT},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE MOUNT'
+              \end{lstlisting}
+\clearpage
+            \item Wiederherstellen aller Datendateien
+              \begin{lstlisting}[caption={Datendateien wiederherstellen},label=admin1521,language=rman]
+RMAN> RESTORE database;
+              \end{lstlisting}
+            \item Recovern der Datenbank
+              \begin{lstlisting}[caption={Recovern der Datenbank},label=admin1522,language=rman]
+RMAN> RECOVER database;
+              \end{lstlisting}
+            \item Öffnen der Datenbank mit der Option \languageorasql{OPEN RESETLOGS}
+              \begin{lstlisting}[caption={Datenbank mit open resetlogs öffnen},label=admin1523,language=rman,emph={[9]ALTER,DATABASE,OPEN,RESETLOGS},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN RESETLOGS';
+              \end{lstlisting}
+            \end{enumerate}
+        \subsubsection{Wiederherstellen eines Controlfiles aus einem Backup Set}
+          \begin{enumerate}
+            \item Mit dem RMAN an der Zieldatenbank anmelden und die DBID setzen.
+              \begin{lstlisting}[caption={An der Zieldatenbank anmelden und die DBID setzen},label=admin1524,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target sys/oracle
+
+RMAN> SET DBID 1351916467;
+                  \end{lstlisting}
+            \item Wurde die Zieldatenbank heruntergefahren, muss erst eine Instanz erzeugt werden. Der RMAN benutzt Standardeinstellungen, um eine Minimalinstanz zuerstellen. Diese kann für das weitere Recovery genutzt werden.
+              \begin{lstlisting}[caption={Zieldatenbank im RMAN in den NOMOUNT-Status bringen},label=admin1525,language=rman,alsolanguage=sqlplus]
+RMAN> startup nomount
+              \end{lstlisting}
+              \begin{merke}
+                Dieser Schritt ist in SQL*Plus nicht möglich!
+              \end{merke}
+            \item Wiederherstellen des Controlfiles.
+              \begin{lstlisting}[caption={Wiederherstellen des Controlfiles},label=admin1526,language=rman]
+RMAN> RESTORE controlfile
+2>    FROM '/u02/3ukkpd6p.bkp';
+              \end{lstlisting}
+            \item Die Zieldatenbank in den MOUNT-Status versetzen
+              \begin{lstlisting}[caption={Zieldatenbank mounten},label=admin1527,language=rman,emph={[9]ALTER,DATABASE,MOUNT},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE MOUNT'
+              \end{lstlisting}
+            \item Wiederherstellen aller Datendateien
+              \begin{lstlisting}[caption={Datendateien wiederherstellen},label=admin1528,language=rman]
+RMAN> RESTORE database;
+              \end{lstlisting}
+            \item Recovern der Datenbank
+              \begin{lstlisting}[caption={Recovern der Datenbank},label=admin1529,language=rman]
+RMAN> RECOVER database;
+              \end{lstlisting}
+            \item Öffnen der Datenbank mit der Option \languageorasql{OPEN RESETLOGS}
+              \begin{lstlisting}[caption={Datenbank mit open resetlogs öffnen},label=admin1530,language=rman,emph={[9]ALTER,DATABASE,OPEN,RESETLOGS},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN RESETLOGS';
+              \end{lstlisting}
+            \end{enumerate}
+      \subsection{Wiederherstellen einer Datenbank im NOARCHIVELOG Modus}
+        Das Wiederherstellen einer Datenbank im NOARCHIVELOG Modus ist ähnlich dem Wiederherstellen einer Datenbank im ARCHIVELOG Modus. Die Hauptunterschiede dabei sind:
+        \begin{itemize}
+          \item Es können nur Coldbackups zur Wiederherstellung verwendet werden.
+          \item Block Media Recovery ist nicht möglich, da keine Archive Logs existieren.
+        \end{itemize}
+        Mit Hilfe von inkrementellen Backups ist auch im NOARCHIVELOG Modus eine eingeschränkte Form des Recovery möglich.
+
+        Das folgende Szenario verdeutlicht das Recovery einer Datenbank im NOARCHIVELOG Modus.
+        \begin{itemize}
+          \item Die Datenbank läuft im NOARCHIVELOG Modus.
+          \item Es wird ein Recovery Katalog benutzt.
+          \item Die Datenbank wird konsistent heruntergefahren und es wird ein Level 0 Backup am Sonntagabend gemacht.
+          \item Am darauf folgenden Mittwoch wird die Datenbank ebenfalls konsistent heruntergefahren und es wird ein Level 1 Backup angefertigt.
+          \item Donnerstagabend crashed die Datenbank. Es gehen 50 \% aller Datendateien und sämtliche Redo Logs verloren.
+        \end{itemize}
+        In solch einem Fall muss ein Media Recovery unter Nutzung des Level 0 und des Level 1 Backups durchgeführt werden. Weiterhin muss berücksichtig werden, dass die Redo Logs komplett verloren gegangen sind.
+        \begin{enumerate}
+          \item Mit dem RMAN an der Zieldatenbank und am Recovery Katalog anmelden.
+            \begin{lstlisting}[caption={An der Zieldatenbank und am Recovery Katalog anmelden},label=admin1531,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target / catalog catowner/catpass@CATDB
+            \end{lstlisting}
+          \item Herunterfahren der Datenbank und starten im NOMOUNT-Status.
+            \begin{lstlisting}[caption={Shutdown und Mounten},label=admin1532,language=rman,alsolanguage=sqlplus]
+RMAN> startup force nomount;
+            \end{lstlisting}
+            Ein \languagesqlplus{startup force nomount} kann ohne Weiteres durchgeführt werden, da die Datenbank bereits irreparabel beschädigt ist. Ein konsistentes Herunterfahren ist nicht mehr nötig/möglich.
+          \item Wiederherstellen der Kontrolldatei auf einem Autobackup oder einem Backup Set.
+            \begin{lstlisting}[caption={Kontrolldatei wiederherstellen},label=admin1533,language=rman]
+RMAN> RESTORE controlfile;
+            \end{lstlisting}
+          \item Die Datenbank in den MOUNT-Status überführen
+            \begin{lstlisting}[caption={MOUNT-Status erreichen},label=admin1534,language=rman,emph={[9]ALTER, DATABASE,MOUNT},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE MOUNT';
+            \end{lstlisting}
+          \item Wiederherstellen der Datenbankdateien
+            \begin{lstlisting}[caption={Datenbankdateien wiederherstellen},label=admin1535,language=rman]
+RMAN> RESTORE database;
+            \end{lstlisting}
+          \item Recovern der Datenbank
+            \begin{lstlisting}[caption={Datenbankdateien wiederherstellen},label=admin1536,language=rman]
+RMAN> RECOVER database NOREDO;
+            \end{lstlisting}
+          \item Öffnen der Datenbank
+            \begin{lstlisting}[caption={Datenbank mit open resetlogs öffnen},label=admin1537,language=rman,emph={[9]ALTER,DATABASE,OPEN,RESETLOGS},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN RESETLOGS';
+            \end{lstlisting}
+        \end{enumerate}
+        Bei diesem Vorgang werden alle Änderungen, die bis einschließlich des Level 1 Backups vorgenommen wurden recovered. Die Angabe von \languagerman{NOREDO} sorgt dafür, dass RMAN nicht versucht, die Redo Logs beim Recovery zu nutzen, da diese nicht mehr existieren.
+
+        Selbst wenn die Redo Logs noch existieren würden, müsste trotzdem die \languagerman{NOREDO}-Klausel angegeben werden, da zwischen den letzten Änderung im Level 1 Backup und den Redo Logs eine große Lücke klafft.
+    \section{Der Data Recovery Advisor}
+      Der Data Recovery Advisor ist eine mit Oracle 11g neu eingeführte PL/SQL-Anwendung, die den Adminstrator bei einem Recovery-Szenario unterstützt. Er kann automatisch nach Fehlern und Lösungen suchen und, per Anweisung des Admins, eine Reparatur ausführen.
+
+      Ohne dieses Tool muss der Admin selbstständig eine Fehlerdiagnose durchführen und anschließend geeignete Maßnahmen ergreifen, um die Schäden zu beheben. Eine solches Prozedere ist sehr umständlich und fehleranfällig, weshalb es gute Kenntnisse der Materie und ein hohes Maß an Erfahrung erfordert.
+      \subsection{Fehler}
+        Fehler, im Sinne des Data Recovery Advisors sind persistente Störungen der Datenbank die durch einen \enquote{Data Integrity Check} gefunden wurden. Sobald ein Fehler festgestellt wurde, kann der Data Recovery Advisor Informationen darüber liefern und ihn gegeben\-en\-falls beheben. Gespeichert werden Fehler nicht innerhalb der Datenbank, sondern im Automatic Diagnostic Repository, kurz ADR, einer Verzeichnisstruktur im Dateisystem. Daher wird die Funktionsweise des Data Recovery Advisor nicht beeinträchtigt, falls sich die Datenbank in der NOMOUNT-Phase befindet.
+        \subsubsection{Fehlerarten}
+          Der Data Recovery Advisor ist in der Lage, verschiedenste Fehlerarten zu erkennen. Beispielsweise kann er feststellen, dass Datenbankdateien (Datendateien, Kontroll- und Redo Log Dateien) nicht geöffnet werden können, weil sie nicht existieren oder Zugriffsrechte fehlen. Des Weiteren kann er Beschädigungen von Dateien erkennen, wenn z. B. eine Datendatei nicht mehr synchron mit der Datenbank ist (Inkonsistenz) oder wenn einzelne Oracleblöcke physikalisch beschädigt sind. Teilweise kann er sogar Fehler erkennen, die nicht in der Datenbank, sondern im Betriebssystem auftreten (Disk I/O, Treiberfehler, usw.).
+        \subsubsection{Status und Priorität}
+          Jeder Fehler hat einen Status und eine Priorität. Wenn ein Fehler entsteht, erhält er automatisch den Status \enquote{Open}. Sobald der Fehler behoben wurde, wird der Status auf \enquote{Closed} geändert. Diese Statusänderung geschieht entweder durch das RMAN-Kommando \languagerman{LIST FAILURE} oder durch \languagerman{CHANGE FAILURE}.
+
+          Wie schwerwiegend ein Fehler ist, wird in drei Prioritätsklassen ausgedrückt: \enquote{LOW}, \enquote{HIGH} und \enquote{CRITICAL}.
+          \begin{itemize}
+            \item \textbf{CRITICAL}: Dies sind schwerwiegende Fehler, die die Verfügbarkeit der gesamten Datenbank beeinflussen können und die deshalb sofortiger Aufmerksamkeit bedürfen (Ausfall von Kontrolldateien oder des \identifier{system}-Tablespaces).
+            \item \textbf{HIGH}: Dies Fehlerklasse umfasst alle Ereignisse, welche die Verfügbarkeit von Teilen der Datenbank beeinflussen können (Korrupte Blöcke, Ausfall von Nicht-System-Tablespaces, fehlen von Archive Logs).
+            \item \textbf{LOW}: Die Fehlerklasse \enquote{LOW} wird nicht vom System, sondern nur vom Administrator vergeben, wenn er Fehler der Klasse \enquote{HIGH} als \enquote{nicht besonders wichtig} einstuft.
+          \end{itemize}
+      \subsection{Die Fehlersuche - LIST FAILURE}
+        Das Kommando \languagerman{LIST FAILURE} dient dazu, die Ergebnisse von automatischen oder manuellen Fehlerdiagnosen anzuzeigen. \languagerman{LIST FAILURE} selbst diagnostiziert keine Fehler.
+        \begin{lstlisting}[caption={Das Kommando \languagerman{LIST FAILURE}},label=admin1538,language=rman]
+RMAN> LIST FAILURE;
+
+List of Database Failures
+=========================
+
+Failure ID Priority Status    Time Detected Summary
+---------- -------- --------- ------------- -------
+42         HIGH     &OPEN&      01-NOV-13     One or more non-system
+datafiles are missing
+1141       HIGH     &OPEN&      01-NOV-13     Datafile 7:
+'/u01/app/oracle/oradata/orcl/bank02.dbf' contains one or more corrupt blocks
+        \end{lstlisting}
+        \beispiel{admin1538} zeigt zwei Fehler der Kategorie \enquote{HIGH}, versehen mit den IDs 42 und 1141. In der Spalte \enquote{Summary} wird eine kurze Erklärung zu diesen Fehlern angezeigt.
+      \subsection{Der Ratschlag - ADVISE FAILURE}
+        Mit dem \languagerman{ADVISE FAILURE}-Befehl können durch den RMAN generierte Reparaturskripte angezeigt und bereits behobene Fehler geschlossen werden (Status \enquote{CLOSED}).
+        \begin{merke}
+          Es muss immer zuerst das Kommando \languagerman{LIST FAILURE} ausgeführt werden, bevor der Befehl \languagerman{ADVISE FAILURE} ausgeführt werden kann.
+        \end{merke}
+
+        \begin{lstlisting}[caption={Das Kommando \languagerman{ADVISE FAILURE}},label=admin1539,language=rman]
+RMAN> ADVISE FAILURE;
+
+List of Database Failures
+=========================
+
+Failure ID Priority Status    Time Detected Summary
+---------- -------- --------- ------------- -------
+42         HIGH     &OPEN&      01-NOV-13     One or more non-system
+datafiles are missing
+1141       HIGH     &OPEN&      01-NOV-13     Datafile 7:
+'/u01/app/oracle/oradata/orcl/bank02.dbf' contains one or more corrupt blocks
+
+analyzing automatic repair options; this may take some time
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+allocated channel: ORA_SBT_TAPE_1
+channel ORA_SBT_TAPE_1: SID=134 device type=SBT_TAPE
+channel ORA_SBT_TAPE_1: WARNING: Oracle Test Disk API
+analyzing automatic repair options complete
+
+Mandatory Manual Actions
+========================
+no manual actions available
+
+Optional Manual Actions
+=======================
+1. If file /u01/app/oracle/oradata/orcl/bank01.dbf was unintentionally
+renamed or moved, restore it
+
+Automated Repair Options
+========================
+Option Repair Description
+------ ------------------
+1      Restore and recover datafile 6; Recover multiple corrupt blocks
+       in datafile 7
+  Strategy: The repair includes complete media recovery with no data loss
+  Repair script: /u01/app/oracle/diag/rdbms/orcl/orcl/hm/reco_184824511.hm
+        \end{lstlisting}
+        Zuerst wird eine Liste der erkannten Fehler angezeigt, bevor dann eine Analyse durchgeführt wird, um automatische Reparaturmaßnahmen zu finden. Diese werden dann in einem Reparaturskript zusammengefasst, dessen Name ganz unten im Bericht angezeigt wird.
+        \begin{lstlisting}[caption={Das Reparaturskript},label=admin1540,language=rman]
+Strategy: The repair includes complete media recovery with no data loss
+Repair script: /u01/app/oracle/diag/rdbms/orcl/orcl/hm/reco_184824511.hm
+        \end{lstlisting}
+        \begin{merke}
+          RMAN versucht immer seine Reparaturskripte zu konsolidieren, was bedeutet, dass möglichst viele Fehler mit möglichst wenigen Reparaturschritten behoben werden sollen. In manchen Fällen ist dies jedoch nicht möglich, weshalb RMAN dann eine Meldung anzeigt, dass aktuell einige Fehler nicht behoben werden können.
+        \end{merke}
+        \languagerman{ADVISE FAILURE} zeigt aber nicht nur automatische Reparaturmaßnahmen an, sondern wo immer es sich anbietet auch Manuelle. Diese werden in \enquote{optionale} und \enquote{zwingend notwendige} Maßnahmen unterteilt.
+
+        \beispiel{admin1539} zeigt für Datendatei Nummer 6 einen optionalen Schritt an. Sollte die Datei nur aus Versehen umbenannt oder verschoben worden sein, kann dieser Schritt manuell rückgängig gemacht werden. Eine solche Vorgehensweise ist unter Umständen viel zeit- und ressourcensparender als ein Restore \& Recovery der Datendatei.
+
+        Mandatory manual options werden immer dann angezeigt, wenn keine
+        automatischen Reparaturschritte erzeugt werden können. Dies könnte
+        z. B. dann der Fall sein, wenn ein Archive Log fehlt, dass für das
+        Recovery einer Datendatei benötigt wird.
+        \begin{lstlisting}[caption={Mandatory manual options},label=admin1541,language=rman]
+RMAN> ADVISE FAILURE;
+
+List of Database Failures
+=========================
+
+Failure ID Priority Status    Time Detected Summary
+---------- -------- --------- ------------- -------
+42         HIGH     &OPEN&      01-NOV-13     One or more non-system
+datafiles are missing
+1141       HIGH     &OPEN&      01-NOV-13     Datafile 7:
+'/u01/app/oracle/oradata/orcl/bank02.dbf' contains one or more corrupt blocks
+
+analyzing automatic repair options; this may take some time
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_SBT_TAPE_1
+        \end{lstlisting}
+\clearpage
+        \begin{lstlisting}[language=rman]
+analyzing automatic repair options complete
+
+Mandatory Manual Actions
+========================
+1. If file /u01/app/oracle/oradata/orcl/bank01.dbf was unintentionally
+   renamed or moved, restore it
+2. If you have an export of tablespace BANK, then drop and re-create
+   the tablespace and import the data.
+3. No backup of block 232 in file 7 was found. Drop and re-create the
+   associated object (if possible), or use the DBMS_REPAIR package to
+   repair the block corruption
+4. No backup of block 233 in file 7 was found. Drop and re-create the
+   associated object (if possible), or use the DBMS_REPAIR package to
+  repair the block corruption
+5. No backup of block 234 in file 7 was found. Drop and re-create the
+   associated object (if possible), or use the DBMS_REPAIR package to
+   repair the block corruption
+6. No backup of block 235 in file 7 was found. Drop and re-create the
+   associated object (if possible), or use the DBMS_REPAIR package to
+   repair the block corruption
+7. Contact Oracle Support Services if the preceding recommendations
+   cannot be used, or if they do not fix the failures selected for repair
+
+Optional Manual Actions
+=======================
+no manual actions available
+
+Automated Repair Options
+========================
+no automatic repair options available
+        \end{lstlisting}
+      \subsection{Die Reparatur - REPAIR FAILURE}
+        Der \enquote{Dritte im Bunde} ist \languagerman{REPAIR FAILURE}. Dieses
+        Kommando benutzt das von \languagerman{ADVISE FAILURE} erstellte
+        Reparaturskript, um die festgestellten Fehler zu beheben. Vor der
+        eigentlichen Reparatur kann mit Hilfe von \languagerman{REPAIR FAILURE
+        PREVIEW} zuerst das komplette Repairscript angzeigt werden.
+\clearpage
+        \begin{lstlisting}[caption={Eine Vorschau auf das Repairscript},label=admin1542,language=rman]
+RMAN> REPAIR FAILURE PREVIEW;
+
+Strategy: The repair includes complete media recovery with no data loss
+Repair script: /u01/app/oracle/diag/rdbms/orcl/orcl/hm/reco_1758777565.hm
+
+contents of repair script:
+   # restore and recover datafile
+   sql 'alter database datafile 6 offline';
+   restore datafile 6;
+   recover datafile 6;
+   sql 'alter database datafile 6 online';
+   # block media recovery for multiple blocks
+   recover datafile 7 block 232 to 235;
+        \end{lstlisting}
+        Bevor der Befehl \languagerman{REPAIR FAILURE} ausgeführt wird, sollte immer zuerst eine Endkontrolle des Reparaturskripts erfolgen.
+        \begin{lstlisting}[caption={Die Fehler reparieren},label=admin1543,language=rman]
+RMAN> REPAIR FAILURE;
+
+Strategy: The repair includes complete media recovery with no data loss
+Repair script: /u01/app/oracle/diag/rdbms/orcl/orcl/hm/reco_1758777565.hm
+
+contents of repair script:
+   # restore and recover datafile
+   sql 'alter database datafile 6 offline';
+   restore datafile 6;
+   recover datafile 6;
+   sql 'alter database datafile 6 online';
+   # block media recovery for multiple blocks
+   recover datafile 7 block 232 to 235;
+
+Do you really want to execute the above repair (enter YES or NO)? YES
+executing repair script
+        \end{lstlisting}
+\clearpage
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        \begin{literaturinternet}
+          \item \cite{REFRN10029}
+          \item \cite{REFRN10030}
+          \item \cite{REFRN10268}
+          \item \cite{REFRN10295}
+          \item \cite{REFRN10061}
+          \item \cite{REFRN10089}
+          \item \cite{REFRN10086}
+        \end{literaturinternet}
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{REFRN30047}
+          \item \cite{REFRN30048}
+          \item \cite{REFRN30049}
+          \item \cite{sthref3281}
+          \item \cite{REFRN30052}
+          \item \cite{REFRN30196}
+          \item \cite{sthref3785}
+        \end{literaturinternet}
+\clearpage

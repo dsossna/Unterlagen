@@ -1,7 +1,6 @@
   \chapter{Auditing}
-    \setcounter{page}{1}\kapitelnummer{chapter}
-    \minitoc
-\newpage
+    \chaptertoc{}
+    \cleardoubleevenpage
       Auditing ist das \"Uberwachen und Aufzeichnen von ausgew\"ahlten Aktionen,
       die innerhalb der Datenbank stattfinden. Es kann auf Einzelnen oder auf
       einer Kombination von Faktoren (z. B. Nutzername, Anwendung, Anmeldezeit,
@@ -191,7 +190,7 @@
 USE [master]
 GO
 
-CREATE SERVER AUDIT [Serverüberwachungen]
+CREATE SERVER AUDIT [Server\"uberwachungen]
 TO FILE 
 ( FILEPATH = N'D:\audit\mssqlserver',
   MAXSIZE = 10 MB,

@@ -1,5 +1,17 @@
 \input{../main}
 
+% Biblatex custom styles
+\input{../config/biblatex_custom_styles}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Biblatex definitionen
+\addbibresource{../bibliographie/bibliography.bib}
+
+\defbibheading{tsqlreference}{\section*{Transact SQL Reference}}
+\defbibheading{sqlserveradmin}{\section*{SQL Server Administration}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
 % KOMAScript guide, p. 66 (3.7 Dokumenttitel)
 % Define all neccessary attributes of the title page
     \subtitle{Microsoft SQL Server 2017}
@@ -19,8 +31,13 @@
     \input{../sql/sql}
     \input{admin/dbadmin}
     \backmatter
-	\appendix
-	\part{Appendix}
-\printbibliography[heading=tsqlreference,keyword=TSQLReference]
-\printbibliography[heading=sqlserveradmin,keyword=SQLServerAdmin]
+    \appendix
+    %  \input{../bibliographie/thebibliography}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      \part{Appendix}
+      
+      \chapter*{Microsoft SQL Server}
+        \printbibliography[heading=tsqlreference,keyword=TSQLReference]
+        \printbibliography[heading=sqlserveradmin,keyword=SQLServerAdmin]
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}

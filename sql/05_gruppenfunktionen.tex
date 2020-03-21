@@ -237,7 +237,8 @@ GROUP BY Bankfiliale_ID;
         \end{center}
         Das nächste Beispiel erläutert den Zusammenhang zwischen \languageorasql{AVG} und NULL-Werten. Im Versuch soll die durchschnittliche Provision, die ein Mitarbeiter erhält, berechnet werden. Wichtig für diesen Versuch ist, dass nur ein Teil der Mitarbeiter eine Provision erhält.
         \begin{lstlisting}[language=oracle_sql,caption={AVG und NULL-Werte in Oracle},label=sql05_09]
-SELECT COUNT(Provision) AS Anzahl, ROUND(AVG(Provision), 2) AS "AVG",
+SELECT SUM(Provision),
+       COUNT(Provision) AS Anzahl, ROUND(AVG(Provision), 2) AS "AVG",
        COUNT(NVL(Provision, 0)) AS "Anzahl NVL",
        AVG(NVL(Provision, 0)) AS "AVG NVL"
 FROM   Mitarbeiter;

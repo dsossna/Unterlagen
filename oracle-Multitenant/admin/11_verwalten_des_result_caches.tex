@@ -1,0 +1,303 @@
+\chapter{Verwalten des Result Caches}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    Zusammen mit der Version 11g seiner Datenbank hat Oracle ein neues Feature
+    auf den Markt gebracht, dass unter dem Namen Result Cache firmiert. Es
+    handelt sich dabei um eine SGA-Komponente, die im Shared Pool angesiedelt
+    ist. Ihre Aufgabe ist es, die Arbeit mit häufig wiederkehrenden
+    SQL-Statements bzw. PL/SQL-Funktionen zu beschleunigen, in dem die
+    Ergebnisse von SQL-Abfragen zwischengespeichert und direkt von dort wieder
+    ausgeliefert werden. Der Result Cache unterscheidet sich vom Library Cache,
+    da er keine Ausführungspläne sondern ganze Result Sets (Ergebniszeilen)
+    puffert.
+
+    \begin{merke}
+      Um dieses Feature sinnvoll nutzen zu können, muss der Datenbankserver über eine große Menge Arbeitsspeicher verfügen.
+    \end{merke}
+    \section{Bestandteile des Result Caches}
+      \subsection{SQL Query Result Cache}
+        Der SQL Query Result Cache ist eine der beiden serverseitigen Komponenten, die den Result Cache bilden. Seine Aufgabe ist die sessionübergreifende Zwischenspeicherung von SQL-Result Sets. Mit seiner Hilfe reduziert sich die Ausführungszeit, eines wiederholten SQL-Statements, meist auf den Bruchteil einer Sekunde. Ändert sich jedoch etwas an den Basistabellen der Abfrage, wird das im Cache gespeicherte Result Set automatisch invalidiert und das Ergebnis muss neu berechnet werden.
+        \begin{merke}
+          Optimal einsetzbar ist der SQL Query Result Cache nur bei Tabellen mit geringer Volatilität\footnote{volatilität = Änderungshäufigkeit}.
+        \end{merke}
+
+        Einmal konfiguriert, steht der SQL Query Result Cache allen Anwendungen transparent zur Verfügung. Das heißt, dass sich durch seine Nutzung nichts an den SQL-Statements der Anwendungen ändert.
+      \subsection{Der PL/SQL Function Cache}
+        Der PL/SQL-Funktion Cache ist der Bruder des SQL Query Result Caches. Er speichert Ausführungsergebnisse von PL/SQL-Funktionen. Damit eine Funktion diesen Cache nutzt, muss sie in ihrer Definition die Klausel \languageplsql{RESULT_CACHE RELIES_ON (tabellenliste)} enthalten.
+    \section{Arbeiten mit dem Result Cache}
+      \subsection{Aktivieren des Result Caches}
+        Es existieren insgesamt 4 Initialisierungsparameter, zur
+        Konfiguration des Result Caches.
+        \begin{lstlisting}[caption={Die Result Cache Parameter},label=admin700,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a30 
+SQL> SELECT name, issys_modifiable
+  2  FROM   v$system_parameter
+  3  WHERE  LOWER(name) LIKE 'result%';
+
+NAME                           ISSYS_MOD
+------------------------------ ---------
+result_cache_mode              &IMMEDIATE&
+result_cache_max_size          &IMMEDIATE&
+result_cache_max_result        &IMMEDIATE&
+result_cache_remote_expiration &IMMEDIATE&
+        \end{lstlisting}
+        Aktiviert wird der Result Cache durch das Setzen des Parameters \parameter{result\_cache\_max\_size}, auf einen Wert größer 0.
+        \begin{lstlisting}[caption={Den Result Cache aktivieren},label=admin701,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col value format a10
+SQL> col name format a30
+SQL> SELECT name, value
+  2  FROM   v$system_parameter
+  3  WHERE  LOWER(name) LIKE 'result_cache_max_size';
+
+NAME                           VALUE
+------------------------------ ----------
+result_cache_max_size          2097152
+
+SQL> ALTER SYSTEM
+  2  SET result_cache_max_size = 300M;
+
+System altered.
+        \end{lstlisting}
+        Um nun zu prüfen, ob der Result Cache tatsächlich aktiviert wurde, kann die Funktion \identifier{status()} aus dem PL/SQL-Paket \identifier{dbms\_result\_cache} ausgeführt werden.
+
+        \begin{lstlisting}[caption={Welchen Status hat der Result Cache?},label=admin702,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col status format a10
+SQL> SELECT DBMS_RESULT_CACHE.STATUS() AS status
+  2  FROM   dual;
+
+STATUS
+----------
+ENABLED
+        \end{lstlisting}
+        Der \parameter{result\_cache\_max\_size} Parameter beeinflußt die Größe des Result Caches. Hat er den Wert 0, ist der Result Cache deaktiviert. Wird das Automatic Memory Management genutzt (Parameter \parameter{memory\_target}), aktiviert Oracle den Result Cache automatisch und es werden bis zu 25 \% von \parameter{memory\_target} für ihn reserviert. Ist der Parameter \parameter{sga\_target} in Benutzung, wird Oracle bis zu 0,5 \% von \parameter{sga\_target} reservieren. Wird der Shared Pool direkt durch \parameter{shared\_pool\_size} dimensioniert, allokiert Oracle bis zu 1 \% von \parameter{shared\_pool\_size} für den Result Cache.
+
+        Insgesamt werden aber nie mehr als 75 \% des Shared Pools für den Result Cache freigegeben.
+      \subsection{Konfigurieren des Result Caches}
+        \subsubsection{Result\_Cache\_Mode}
+          Neben \parameter{result\_cache\_max\_size} existieren noch drei weitere Parameter, die zur Konfiguration des Result Caches dienen. \parameter{result\_cache\_mode} legt fest, ob der Optimizer automatisch versuchen soll, alle Result Sets im Cache zu speichern (Force) oder ob dies bei jedem Statement einzeln festgelegt werden muss (Manual). Der Standardwert für diesen Parameter ist \enquote{manual}.
+
+          Um ein Result Set manuell im Result Cache abzulegen, muss der Result Cache Hint \languageorasql{/*+ result_cache */}, im SQL-Statement angegeben werden.
+          \begin{lstlisting}[caption={Den Result Cache manuell benutzen},label=admin703,language=oracle_sql,alsolanguage=sqlplus]
+SQL> set autotrace traceonly explain
+SQL> SELECT /*+ result_cache */ vorname, nachname
+  2  FROM   bank.mitarbeiter;
+
+Execution Plan
+----------------------------------------------------------
+Plan hash value: 414804864
+--------------------------------------------------------------------------------
+|Id| Operation     | Name                     |Rows|Bytes|Cost(%CPU)|Time      |
+--------------------------------------------------------------------------------
+|0 |&SELECT& STATEMENT |                          |100 |1500 |   3   (0)| 00:00:01|
+|1 |&\textcolor{red}{RESULT CACHE}&      |cy4n5s0cg4tbpabs63n3u2k5sa|    |     |          |         |
+|2 |&TABLE ACCESS FULL&  | MITARBEITER              |100 |1500 |   3   (0)| 00:00:01|
+--------------------------------------------------------------------------------
+
+Result Cache Information (identified by operation id):
+------------------------------------------------------
+
+   1 - &column&-count=2; dependencies=(BANK.MITARBEITER);
+   name="&SELECT& /*+ result_cache */ vorname, nachname
+&FROM&   bank.mitarbeiter"
+          \end{lstlisting}
+          Dass das Result Set des Statements, aus \beispiel{admin703}, tatsächlich im SQL Query Result Cache gespeichert wurde, ist aus der zweiten Zeile des Ausführungsplanes ersichtlich. Die Angabe: \enquote{RESULT CACHE cy4n5s0cg4tbpabs63n3u2k5sa} zeigt an, dass unter der ID \enquote{cy4n5s0cg4tbpabs63n3u2k5sa}, ein Statement im Result Cache abgelegt wurde. Mit Hilfe dieser ID kann in der View \identifier{v\$result\_cache\_objects} nach dem dazugehörenden SQL-Statement gesucht werden.
+          \begin{lstlisting}[caption={Objekte im Result Cache suchen},label=admin704,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a35
+SQL> col namespace format a9
+SQL> col cache_id format a40
+SQL> set linesize 100
+SQL> SELECT type, name, namespace, row_count, cache_id
+  2  FROM   v$result_cache_objects
+  3  WHERE  cache_id = 'cy4n5s0cg4tbpabs63n3u2k5sa';
+
+&TYPE&       NAME                                NAMESPACE  ROW_COUNT
+---------- ----------------------------------- --------- ----------
+CACHE_ID
+----------------------------------------
+Result     &SELECT& /*+ result_cache */ vorname, SQL              100
+            nachname
+           &FROM&   bank.mitarbeiter
+cy4n5s0cg4tbpabs63n3u2k5sa
+          \end{lstlisting}
+          Soll der Query Optimizer versuchen alle SQL Result Sets im Result Cache abzulegen, muss der Parameter \parameter{result\_cache\_mode} auf den Wert \enquote{force} eingestellt werden. Ein solches Vorgehen dürfte jedoch in nur ganz wenigen Fällen sinnvoll sein.
+        \subsubsection{Result\_Cache\_Max\_Result}
+          Mit \parameter{result\_cache\_max\_result} wird die maximale
+          Größe eines Result Sets, prozentual von
+          \parameter{result\_cache\_max\_size} festgelegt. Statements deren
+          Result Sets mehr Speicherplatz benötigen, als 
+          \parameter{result\_cache\_max\_result} freigibt, werden nicht im
+          Result Cache gespeichert.
+
+          Mit \languageorasql{result_cache_max_result = 5} wurde festgelegt,
+          dass ein einzelnes Result Set nicht mehr als 5 \% der
+          Gesamtgröße des Result Caches (hier 5 \% von 300M = 15M)
+          verwenden darf. Der Ausführungsplan aus \beispiel{admin705} zeigt,
+          dass das Statement 268 MB Arbeitsspeicher benötigen würde. Daher
+          wird es nicht im Result Cache aufgenommen.
+\clearpage
+          \begin{lstlisting}[caption={Maximalgröße von Objekten im Result Cache},label=admin705,language=oracle_sql,alsolanguage=sqlplus]
+SQL> ALTER SYSTEM
+  2  SET result_cache_max_result = 5;
+
+SQL> set autotrace traceonly explain
+SQL> SELECT *
+  2  FROM   bank.mitarbeiter a, bank.mitarbeiter b, bank.mitarbeiter c;
+
+Execution Plan
+----------------------------------------------------------
+Plan hash value: 2203449472
+
+--------------------------------------------------------------------------------
+|Id| Operation             | Name        |Rows  |Bytes | Cost (%CPU)| Time     |
+--------------------------------------------------------------------------------
+|0 | &SELECT& STATEMENT      |             | 1000K|  268M| 13707   (1)| 00:02:45 |
+|1 |  MERGE &JOIN& CARTESIAN |             | 1000K|  268M| 13707   (1)| 00:02:45 |
+|2 |   MERGE &JOIN& CARTESIAN|             |10000 | 1835K|   140   (0)| 00:00:02 |
+|3 |    &TABLE ACCESS FULL&    | MITARBEITER |  100 | 9400 |     3   (0)| 00:00:01 |
+|4 |    BUFFER SORT       |             |  100 | 9400 |   137   (0)| 00:00:02 |
+|5 |     &TABLE ACCESS FULL&   | MITARBEITER |  100 | 9400 |     1   (0)| 00:00:01 |
+|6 |   BUFFER SORT        |             |  100 | 9400 | 13705   (1)| 00:02:45 |
+|7 |    &TABLE ACCESS FULL&    | MITARBEITER |  100 | 9400 |     1   (0)| 00:00:01 |
+--------------------------------------------------------------------------------
+
+          \end{lstlisting}
+        \subsubsection{DBMS\_RESULT\_CACHE}
+          Das PL/SQL-Paket \identifier{dbms\_result\_cache} enthält eine Reihe von Funktionen zur Administration des Result Caches.
+          \begin{itemize}
+            \item \identifier{flush()}: Löscht den kompletten Inhalt des Result Caches
+            \item \identifier{status()}: Zeigt den Status (enabled/disabled) des Result Caches an
+            \item \identifier{memory\_report()}: Zeigt einen Nutzungsbericht zum Result Cache an
+          \end{itemize}
+      \subsection{Einschränkungen bei der Nutzung des Result Caches}
+        Ob der Result Cache für das Result Set eines SQL-Statements genutzt werden kann, ist von verschiedenen Faktoren abhängig. Er kann nicht genutzt werden wenn:
+        \begin{itemize}
+          \item die Abfrage Tabellen des Data Dictionary oder temporäre Tabellen enthält,
+          \item eine Sequenz im SQL-Statement genutzt wird,
+          \item nicht deterministische SQL- oder PL/SQL-Funktionen genutzt werden.
+        \end{itemize}
+        \begin{merke}
+          Der Begriff \enquote{deterministisch} bedeutet, dass das Ergebnis
+          einer Funktion, bei gleichbleibenden Eingabeparamtern,
+          unveränderlich ist. Beispielsweise ist das Ergebnis von
+          \languageorasql{SQRT(9)} immer 3, da die Quadratwurzel von 9
+          unveränderlich ist. Das Ergebnis der Funktion
+         \languageorasql{SYSTIMESTAMP}  ändert sich jedoch mit jeder Nanosekunde. Daher gilt sie als nichtdeterministisch.
+        \end{merke}
+      \subsection{Monitoring des SQL Query Result Caches}
+        Für die Überwachung des Result Caches gibt es zwei Quellen:
+        \begin{itemize}
+          \item Die View \identifier{v\$result\_cache\_statistics}
+          \item Die Funktion \identifier{dbms\_result\_cache.memory\_report()}
+        \end{itemize}
+        Die View \identifier{v\$result\_cache\_statistics} zeigt eine Kurzform der Ausgabe der Funktion \identifier{dbms\_result\_cache.memory\_report()}.
+        \begin{lstlisting}[caption={\identifier{v\$result\_cache\_statistics}},label=admin706,language=oracle_sql]
+SQL> SELECT *
+  2  FROM   v$result_cache_statistics;
+
+        ID NAME                           VALUE
+---------- ------------------------------ ----------
+         1 Block Size (Bytes)             1024
+         2 Block Count Maximum            307200
+         3 Block Count Current            1952
+         4 Result Size Maximum (Blocks)   15360
+         5 Create Count Success           4
+         6 Create Count Failure           0
+         7 Find Count                     0
+         8 Invalidation Count             0
+         9 Delete Count Invalid           1
+        10 Delete Count Valid             0
+        11 Hash Chain Length              1
+        \end{lstlisting}
+        Das Ergebnis aus \beispiel{admin706} sagt aus, dass der Result Cache aus
+        1 KB großen Blöcken besteht (Block Size (Bytes)) und das er 307200
+        Blöcke umfasst (Block Count Maximum). Von diesen 307200 Blöcken sind
+        derzeit 1952 allokiert (Block Count Current). Ein Statement darf maximal
+        15360 Blöcke umfassen (Result Size Maximum (Blocks)). Der Wert
+        \enquote{Create Count Success} sagt aus, dass sich aktuell 4 Statements
+        im Cache befinden. Einen etwas ausführlicheren Überblick bekommt
+        man, wenn man die PL/SQL-Funktion
+        \identifier{dbms\_result\_cache.memory\_report()} ausführt.
+\clearpage
+        \begin{lstlisting}[caption={Der Result Cache Report - \identifier{dbms\_result\_cache.memory\_report()}},label=admin707,language=oracle_sql,alsolanguage=sqlplus]
+SQL> set serveroutput on
+SQL> exec DBMS_RESULT_CACHE.MEMORY_REPORT();
+R e s u l t   C a c h e   M e m o r y   R e p o r t
+[Parameters]
+Block Size          = 1K bytes
+Maximum Cache Size  = 300M bytes (300K blocks)
+Maximum Result Size = 15M bytes (15K blocks)
+[Memory]
+Total Memory = 2194328 bytes [0.872% of the Shared Pool]
+... Fixed Memory = 10696 bytes [0.004% of the Shared Pool]
+... Dynamic Memory = 2183632 bytes [0.868% of the Shared Pool]
+....... Overhead = 184784 bytes
+....... Cache Memory = 1952K bytes (1952 blocks)
+........... Unused Memory = 715 blocks
+........... Used Memory = 1237 blocks
+............... Dependencies = 1 blocks (1 count)
+............... Results = 1236 blocks
+................... SQL     = 2 blocks (1 count)
+................... Invalid = 1234 blocks (2 count)
+
+PL/SQL procedure successfully completed.
+        \end{lstlisting}
+        \begin{center}
+          \begin{small}
+            \label{memoryreportstatistic}
+            \tablecaption{\identifier{Memory\_Report} und \identifier{v\$result\_cache\_statistics} im Vergleich}
+            \tablefirsthead{%
+              \hline
+              \multicolumn{1}{|c}{\textbf{\identifier{v\$result\_cache\_statistics}}}&
+              \multicolumn{1}{|c|}{\textbf{\identifier{Memory\_Report}}} \\
+              \hline
+            }
+            \tablehead{%
+              \hline
+              \multicolumn{1}{|c}{\textbf{\identifier{v\$result\_cache\_statistics}}}&
+              \multicolumn{1}{|c|}{\textbf{\identifier{Memory\_Report}}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \begin{supertabular}[h]{|p{6.5cm}|p{8.5cm}|}
+              \texttt{Block Size (Bytes) 1024} & \texttt{Block Size = 1K bytes} \\
+              \hline
+              \texttt{Block Count Maximum 307200} & \texttt{Maximum Cache Size  = 300M bytes (300K blocks)} \\
+              \hline
+              \multirow{3}{*}{\texttt{Block Count Current 1952}} & \texttt{Cache Memory = 1952K bytes (1952 blocks)} \\
+              & \texttt{Unused Memory = 715 blocks} \\
+              & \texttt{Used Memory = 1237 blocks} \\
+              \hline
+              \texttt{Result Size Maximum (Blocks) 15360} & \texttt{Maximum Result Size = 15M bytes (15K blocks)} \\
+              \hline
+              \multirow{3}{*}{\texttt{Create Count Success 4}} & \texttt{Dependencies = 1 blocks (1 count)} \\
+              & \texttt{SQL = 2 blocks (1 count)} \\
+              & \texttt{Invalid = 1234 blocks (2 count)} \\
+              \hline
+              \texttt{Delete Count Invalid 1} & N. a.\\
+            \end{supertabular}
+          \end{small}
+        \end{center}
+        \tabelle{memoryreportstatistic} zeigt, dass im Bericht aus
+        \beispiel{admin707} die gleichen Werte wiederzufinden sind, wie in der
+        View  \identifier{v\$result\_cache\_statistics}.
+\clearpage
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        \begin{literaturinternet}
+          \item \cite{REFRN10285}
+          \item \cite{REFRN10256}
+          \item \cite{REFRN10202}
+          \item \cite{REFRN10298}
+          \item \cite{REFRN10272}
+          \item \cite{REFRN10270}
+          \item \cite{REFRN10294}
+        \end{literaturinternet}
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{REFRN30438}
+          \item \cite{REFRN30439}
+        \end{literaturinternet}
+\clearpage

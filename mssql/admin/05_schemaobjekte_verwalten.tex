@@ -841,14 +841,14 @@ GO
           Index erfasst.
           
           Ein Benutzer führt eine Abfrage mit dem Prädikat:
-          \languagemssql{WHERE plz = 90411 AND ort = 'Nürnberg'} durch. In
+          \languagemssql{WHERE plz = 90411 AND ort = 'N\"urnberg'} durch. In
           diesem Fall kommt der Index zur bestmöglichen Anwendung, da die
           Spaltenreihenfolge in der \WHERE-Klausel und die im Index die gleiche
           ist.
           
           Der gleiche Benutzer führ nun erneut eine Abfrage aus und ändert dabei
           das Prädikat folgendermaßen:
-          \languagemssql{WHERE ort = 'Nürnberg'  AND plz = 90411} durch. Auch
+          \languagemssql{WHERE ort = 'N\"urnberg'  AND plz = 90411} durch. Auch
           hier kann der Index genutzt werden, da jedoch die Spaltenreihenfolge
           in der \WHERE-Klausel eine andere ist, als im Index ist die
           Performance nicht so hoch, wie im ersten Beispiel.
@@ -861,7 +861,7 @@ GO
           sehr selten nach dem Ort fragen.
           
           Im vierten und letzten Beispiel gibt der Nutzer folgendes Prädikat an:
-          \languagemssql{WHERE ort = 'Nürnberg'}. In diesem Fall kann der Index
+          \languagemssql{WHERE ort = 'N\"urnberg'}. In diesem Fall kann der Index
           nicht zum Einsatz gebracht werden, da die Sortierung/Gruppierung im
           Index die Spalte \identifier{ort} von der Spalte \identifier{plz}
           abhängig macht.

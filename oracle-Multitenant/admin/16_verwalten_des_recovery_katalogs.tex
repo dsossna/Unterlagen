@@ -1,0 +1,241 @@
+\chapter{Verwalten des Recovery Katalogs}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Einrichten eines Recovery Katalogs}
+    \label{createrecoverycatalog}
+      Das Einrichten eines Recovery Katalogs umfasst vier Schritte:
+      \begin{itemize}
+        \item Erstellen/Konfigurieren der Datenbank, die den Recovery Katalog aufnimmt
+        \item Schaffen einer Netzwerkverbindung (TNS) zwischen der Zieldatenbank und der Recovery Katalog Datenbank.
+        \item Den Eigentümer des Recovery Katalogs erstellen
+        \item Den Recovery Katalog erstellen
+      \end{itemize}
+      Bevor der Katalog genutzt werden kann, muss noch die Zieldatenbank registriert werden.
+      \subsection{Erstellen der Katalogdatenbank}
+        Für die Planung des Recovery Katalogs ist es wichtig zu wissen, wie viel Speicherplatz zur Verfügung gestellt werden muss. Dies ist davon abhängig, wie viele Datenbanken durch den Katalog verwaltet werden oder wie groß die Anzahl der Archive Logs und der Backupdateien einer jeden Datenbank ist. Als drittes werden auch noch RMAN stored Scripts im Recovery Katalog gespeichert, für die ebenfalls geringe Platzreserven benötigt werden.
+
+        \begin{merke}
+          Laut Oracle sind ca. $15 MB * Anzahl\ reg\ DB = Wachstum/Jahr$ ein guter Ansatz.
+        \end{merke}
+
+        Der typische Speicherplatzverbrauch für einen Katalog teilt sich wie folgt auf:
+        \begin{center}
+          \tablecaption{Speicherplatzbedarf einer Katalogdatenbank}
+          \tablefirsthead{%
+          \hline
+          \multicolumn{1}{|c}{\textbf{Art des Speicherplatzes}} &
+          \multicolumn{1}{|c|}{\textbf{Verbrauch/Jahr}} \\
+          \hline
+          }
+          \tablehead{%
+          \hline
+          \multicolumn{1}{|c}{\textbf{Art des Speicherplatzes}} &
+          \multicolumn{1}{|c|}{\textbf{Verbrauch/Jahr}} \\
+          \hline
+          }
+          \tabletail{%
+            \hline
+          }
+          \begin{supertabular}[h]{|l|c|c|c|p{7cm}|}
+          System-Tablespace & 90 MB \\
+          \hline
+          Temp-Tablespace & 5 MB \\
+          \hline
+          Undo-Tablespace & 5 MB \\
+          \hline
+          Recovery Katalog Tablespace & 15 MB pro registrierter Datenbank \\
+          \hline
+          Online Redo Logs & 10 MB pro Member (3 Gruppen mit je 2 Membern) \\
+          \end{supertabular}
+        \end{center}
+\clearpage
+      \subsection{Die TNS-Netzwerkverbindung erstellen}
+        Um eine Netzwerkverbindung mittles TNS zwischen der Zieldatenbank und dem Recovery Katalog zu ermöglichen, sollte das Local Naming oder das Directory Naming genutzt werden. Im Folgenden wird eine Beispielkonfiguration für das Local Naming gezeigt.
+
+        Es werden folgende Annahmen getroffen:
+        \begin{itemize}
+          \item Der Rechner auf dem sich der Recovery Katalog befindet benutzt TCP/IP.
+          \item Der Name des Rechners, der den Recovery Katalog enthält ist: FEA11-119CAT.
+          \item Der Listener dieses Rechners läuft auf Port 1521.
+          \item Der Servicename der Katalogdatenbank ist: CATDB.
+        \end{itemize}
+        Die Datei \oscommand{tnsnames.ora} der Zieldatenbank sollte folgenden Abschnitt beinhalten:
+        \begin{lstlisting}[caption={Der Net Service Name der CATDB},label=admin1200,language=configfile]
+CATDB =
+  (DESCRIPTION=
+    (ADDRESS_LIST=
+     (ADDRESS= (PROTOCOL=tcp)(HOST=FEA11-119CAT)(PORT=1521))
+    )
+  (CONNECT_DATA=
+    (SERVICE_NAME=CATDB)))
+        \end{lstlisting}
+      \subsection{Den Katalogeigentümer erstellen}
+        Ist die Katalogdatenbank erst einmal erstellt und die TNS-Netzwerkverbindung geschaffen, kann der dritte Schritt, das Erstellen des Katalogeigentümers vorgenommen werden.
+        \begin{enumerate}
+          \item Als Nutzer sys mit der Datenbank verbinden.
+            \begin{lstlisting}[caption={Mit der Katalogdatenbank verbinden},label=admin1201,language=terminal]
+[oracle@FEA11-119SRV ~]$ sqlplus sys/oracle@CATDB as sysdba
+            \end{lstlisting}
+          \item Erstellen des Katalogtablespaces
+            \begin{lstlisting}[caption={Den Katalogtablespace erstellen},label=admin1202,language=oracle_sql]
+SQL> CREATE TABLESPACE catts
+  2  DATAFILE '/u02/oradata/catdb/catts01.dbf' SIZE 15 M
+  3  AUTOEXTEND ON MAXSIZE 30 M;
+            \end{lstlisting}
+\clearpage
+          \item Erstellen des Katalogeigentümers.
+            \begin{lstlisting}[caption={Den Katalogeigentümer erstellen},label=admin1203,language=oracle_sql]
+SQL> CREATE USER catowner
+  2  IDENTIFIED BY catpass
+  3  DEFAULT TABLESPACE catts
+  4  QUOTA unlimited ON catts;
+            \end{lstlisting}
+          \item Dem Katalogeigentümer die Rolle \privileg{recovery\_catalog\_owner} geben.
+            \begin{lstlisting}[caption={Die Rolle \privileg{recovery\_catalog\_owner} übergeben},label=admin1204,language=oracle_sql]
+SQL> GRANT create session, recovery_catalog_owner TO catowner;
+            \end{lstlisting}
+        \end{enumerate}
+        \begin{merke}
+          Damit ein Nutzer Eigentümer des Recovery Katalogschemas sein kann, muss er zwingend die Rolle \privileg{recovery\_catalog\_owner} besitzen.
+        \end{merke}
+
+      \subsection{Den Recovery Katalog erstellen}
+        Das Erstellen des Kataloges geschieht im RMAN.
+        \begin{enumerate}
+          \item RMAN starten und mit der Katalogdatenbank verbinden
+            \begin{lstlisting}[caption={Mit der Katalogdatenbank verbinden},label=admin1205,language=rman,language=terminal]
+[oracle@FEA11-119SRV ~]$ rman catalog catowner/catpass@CATDB
+            \end{lstlisting}
+          \item Den Katalog erstellen
+            \begin{lstlisting}[caption={Katalog erstellen},label=admin1206,language=rman]
+RMAN> CREATE CATALOG;
+            \end{lstlisting}
+        \end{enumerate}
+        Das Kommando \languagerman{CREATE CATALOG} erstellt den Recovery Katalog im Default Tablespace des Katalogeigentümers. Wahlweise kann dieses Kommando auch um die \languageorasql{TABLESPACE}-Klausel erweitert werden.
+      \subsection{Registrieren einer Datenbank}
+        Der letzte Schritt, bevor eine Datenbank mit dem Recovery Katalog
+        genutzt werden kann, ist die Datenbank zu registrieren.
+\clearpage
+        \begin{enumerate}
+          \item Bei  Zieldatenbank und  Recovery Katalog anmelden
+            \begin{lstlisting}[caption={Mit Ziel- und Katalogdatenbank verbinden},label=admin1207,language=terminal]
+[oracle@FEA11-119SRV ~]$ rman target / catalog catowner/catpass@CATDB
+            \end{lstlisting}
+          \item Die Zieldatenbank in den Mount-Status versetzen
+          \item Registrieren der Zieldatenbank
+            \begin{lstlisting}[caption={Zieldatenbank registrieren},label=admin1208,language=rman]
+RMAN> REGISTER DATABASE;
+            \end{lstlisting}
+        \end{enumerate}
+        Während dieses Vorgangs erstellt RMAN Zeilen in den Katalogtabellen, die alle notwendigen Informationen aus der Kontrolldatei der Zieldatenbank enthalten. So wird der Recovery Katalog mit der Zieldatenbank synchronisiert. Um zu überprüfen, ob die Synchronisation erfolgreich war, kann das Kommando \languagerman{REPORT SCHEMA} genutzt werden.
+            \begin{lstlisting}[caption={Schemainformationen anzeigen},label=admin1209,language=rman]
+RMAN> REPORT SCHEMA;
+
+File Size(MB)   Tablespace       RB segs Datafile Name
+---- ---------- ---------------- ------- -------------------
+1        307200 SYSTEM             NO    /u02/oradata/ORCL/system01.dbf
+2        303500 SYSAUX             NO    /u02/oradata/ORCL/sysaux01.dbf
+3         20480 UNDOTBS            YES   /u02/oradata/ORCL/undotbs01.dbf
+4         10240 USERS              NO    /u02/oradata/ORCL/users01.dbf
+5         10240 EXAMPLE            NO    /u02/oradata/ORCL/example01.dbf
+            \end{lstlisting}
+   \section{Datenbanken verwalten}
+      \subsection{Eine weitere Datenbank registrieren}
+        Es können mehrere Zieldatenbank in einem Recovery Katalog verwaltet werden, wenn sie unterschiedliche Datenbank-IDs aufweisen. Beim Vorgang des Duplizierens einer neuen Datenbank, mit dem RMAN-Kommando \languagerman{DUPLICATE} oder bei der Erstellung mit Hilfe des SQL-Statements \languageorasql{CREATE DATABASE}, wird automatisch eine neue DBID generiert. Lediglich bei Datenbankkopien, die auf anderem Wege erstellt wurden, kann es zu Problemen kommen. Hierzu muss zuerst mit dem RMAN-Kommando \languagerman{DBNEWID} eine neue DatenbankID erstellt werden.
+        \begin{merke}
+          Eine Datenbank kann auch in mehreren Recovery Katalogen registriert werden.
+        \end{merke}
+\clearpage
+      \subsection{Aufheben einer Datenbankregistrierung}
+        Zum Aufheben einer Datenbankregistrierung im Recovery Katalog gibt es das Kommando \languagerman{UNREGISTER DATABASE}. Dabei werden alle Einträge zu einer Datenbank aus dem Katalog gelöscht.
+        \begin{merke}
+          Informationen die zwar im Recovery Katalog gespeichert waren, aber nicht in der Kontroldatei (\parameter{control\_file\_record\_keep\_time}) gespeichert sind, gehen bei diesem Vorgang verloren.
+        \end{merke}
+        Die Registrierung einer Datenbank wird wie folgt aufgehoben:
+
+        \begin{enumerate}
+          \item RMAN starten und eine Verbindung zur betreffenden Zieldatenbank und dem Recovery Katalog herstellen.
+            \begin{lstlisting}[caption={Starten des RMAN},label=admin1210,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target / catalog catowner/catpass@CATDB
+            \end{lstlisting}
+            Es ist nicht zwingend notwendig, sich bei der Zieldatenbank anzumelden. Sind jedoch mehrere Datenbanken im Recovery Katalog registriert, muss die Zieldatenbank durch ihre DBID identifiziert werden.
+          \item Auflisten aller Backup Sets und Image Copies der Zieldatenbank. Dies sollte aus Sicherheitsgründen erfolgen, damit Backups wieder katalogisiert werden können.
+            \begin{lstlisting}[caption={Backup Sets und Image Copies auflisten},label=admin1211,language=rman]
+RMAN> LIST BACKUP SUMMARY;
+RMAN> LIST COPY;
+            \end{lstlisting}
+          \item Soll die Datenbank dauerhaft aus dem Recovery Katalog gelöscht werden, müssen auch alle Backups der Zieldatenbank gelöscht werden.
+            \begin{lstlisting}[caption={Löschen aller Backups},label=admin1212,language=rman]
+RMAN> DELETE BACKUP DEVICE TYPE sbt;
+RMAN> DELETE BACKUP DEVICE TYPE DISK;
+RMAN> DELETE COPY;
+            \end{lstlisting}
+            \begin{merke}
+              Dieser Schritt darf nur dann ausgeführt werden, wenn auch die Zieldatenbank selbst gelöscht werden soll!!!
+            \end{merke}
+\clearpage
+          \item Aufheben der Datenbankregistrierung
+            \begin{lstlisting}[caption={Aufheben der Datenbankregistrierung},label=admin1213,language=rman]
+RMAN> UNREGISTER DATABASE;
+            \end{lstlisting}
+        \end{enumerate}
+        Wird eine Datenbankregistrierung aufgehoben, ohne dass eine Verbindung zur Zieldatenbank möglich ist, muss Schritt 4 wie folgt verändert werden.
+        \begin{lstlisting}[caption={Aufheben der Datenbankregistrierung ohne Verbindung zur Zieldatenbank},label=admin1214,language=rman]
+RMAN> RUN {
+2>      SET DBID=93457265485;
+3>      UNREGISTER DATABASE;
+4>    }
+        \end{lstlisting}
+    \section{Synchronisation des Recovery Katalogs}
+      Wenn RMAN eine Synchronisation des Recovery Katalogs durchführt, vergleicht er den Inhalt der Kontrolldatei der Zieldatenbank, mit dem Inhalt des Recovery Katalogs und gleicht beide einander an. RMAN führt dabei folgende Schritte durch:
+      \begin{enumerate}
+        \item Erstellen eines Snapshot Controlfiles
+        \item Snapshot Controlfile und Recovery Katalog vergleichen
+        \item Angleichen von Snapshot Controlfile und Recovery Katalog
+      \end{enumerate}
+      RMAN führt automatisch die Synchronisation des Recovery Katalogs durch. Dies geschieht in verschiedenen Situationen, wie z. B. bei Ausführung des \languagerman{BACKUP}-Kommandos. Die Synchronisation kann jedoch auch im Bedarfsfall manuell durchgeführt werden. Dies geschieht mit dem \languagerman{RESYNC CATALOG}-Kommando.
+      \subsection{Vollständige und teilweise Resynchronisation}
+        Die Synchronisation des Recovery Katalogs kann vollständig oder nur teilweise erfolgen. In einer teilweisen Resynchronisation liest RMAN die Kontrolldatei der Zieldatenbank und wertet diese nach neuen Backups, neuen Archive Logs und der Redo Log Historie aus. Es werden keine Schemadaten der Zieldatenbank synchronisiert. Diese werden nur bei einer vollständigen Synchronisation abgeglichen.
+      \subsection{Wann sollte manuell synchronisiert werden?}
+        Da RMAN die Synchronisation des Recovery Katalogs automatisch durchführt, ist ein manuelles Synchronisieren meist nicht notwendig. Es gibt jedoch einige Ausnahmesituationen, die im Folgenden beschrieben werden.
+        \begin{merke}
+          Grundsatz: Manuelle Synchronisation ist immer dann notwendig, wenn über einen längeren Zeitraum keine Verbindung zwischen dem Katalog und der Zieldatenbank bestanden hat.
+        \end{merke}
+        \subsubsection{Resynchronisation wenn der Recovery Katalog nicht verfügbar war}
+          Es kann vorkommen, das Backup oder Recovery Arbeiten notwendig sind, ohne dass der Recovery Katalog verfügbar ist. In so einem Fall kann keine automatische Synchronisation erfolgen.
+        \subsubsection{Resynchronisation bei unregelmäßigen Backups}
+          Folgendes Beispiel:
+          \begin{itemize}
+            \item Die Zieldatenbank läuft im Archive Logs Modus.
+            \item Die Datenbank wird in unregelmäßigen Abständen gesichert.
+            \item Zwischen den einzelnen Backups wird eine hohe Anzahl Redo Log Switches erzeugt.
+          \end{itemize}
+          Bezugnehmend auf das obige Beispiel, kann es sinnvoll sein, den Recovery Katalog manuell zu synchronisieren, da er nicht automatisch bei jedem Redo Log Switch aktualisiert wird. Informationen über Log Switches werden nur im Controlfile der Zieldatenbank gesichert. Wie aktuell der Recovery Katalog gehalten wird, hängt dann davon ab, wie oft er manuell synchronisiert wird.
+        \subsubsection{Resynchronisation nach einer Änderung der Datenbankstruktur}
+          Wie schon im vorhergehenden Fall, wird der Recovery Katalog auch bei
+          einer Struk\-tur\-än\-der\-ung der Datenbank nicht automatisch
+          resynchronisiert. Nach einer Strukturänderung an der Datenbank
+          sollte wie folgt vorgegangen werden:
+\clearpage
+          \begin{enumerate}
+            \item RMAN starten und eine Verbindung zur betreffenden Zieldatenbank und dem Recovery Katalog herstellen.
+              \begin{lstlisting}[caption={Starten des RMAN},label=admin1215,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target / catalog catowner/catpass@CATDB
+              \end{lstlisting}
+            \item Resynchronisieren des Recovery Katalogs
+              \begin{lstlisting}[caption={Resynchronisieren des Recovery Katalogs},label=admin1216,language=rman]
+RMAN> RESYNC CATALOG;
+              \end{lstlisting}
+          \end{enumerate}
+      \subsection{CONTROL\_FILE\_RECORD\_KEEP\_TIME}
+        Der Initialisierungsparameter
+        \parameter{control\_file\_record\_keep\_time} legt fest, wie lange die
+        Einträge des RMAN Repositories in der Kontrolldatei der Zieldatenbank
+        erhalten bleiben. Überschreitet ein Eintrag diesen Wert, so wird er
+        aus der Kontrolldatei gelöscht. Deshalb sollte darauf geachtet werden,
+        dass die Synchronisationsvorgänge innerhalb der angegebenen Zeitspanne
+        bleiben. Das heißt, dass der Wert für den
+        Initialisierungsparameter \parameter{control\_file\_record\_keep\_time}
+        so gewählt werden sollte, dass das RMAN Repository ohne Verlust in den
+        Recovery Katalog synchronisiert werden kann.

@@ -1,0 +1,644 @@
+\chapter{Oracle Flashback}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Die Oracle Flashback Technologie}
+      Die Oracle Flashback Technologie stellt Möglichkeiten bereit,
+      \enquote{in die Vergangenheit} von Daten zu sehen, ohne ein Recovery
+      durchführen zu müssen. Die meisten der Oracle Flash\-back Features
+      arbeiten auf der Ebene logischer Backups:
+      \begin{itemize}
+        \item \textbf{Oracle Flashback Query}: Diese Technologie ermöglicht es, Daten einer Tabelle zu einem definierten Zeitpunkt zu sehen. Damit ist es möglich, fehlerhafte \languageorasql{UPDATE}- oder \languageorasql{DELETE}-Operationen rückgängig zu machen.
+        \item \textbf{Oracle Flashback Version Query}: Mit diesem Feature können alle Versionen einer Tabellenzeile innerhalb eines spezifizierten Zeitintervalls betrachtet werden. Es werden nicht nur die Nutzdaten, sondern auch Metadaten (Startzeit, Endzeit und TransaktionsID der Transaktion) angezeigt. Damit ist die Möglichkeit gegeben, sowohl Datenverlust zu beheben, als auch Auditing zu betreiben.
+        \item \textbf{Oracle Flashback Transaction Query}: Hiermit kann man sich alle Änderungen betrachten, die eine einzelne Transaktion oder alle Transaktionen innerhalb eines bestimmten Zeitraums durchgeführt haben.
+        \item \textbf{Oracle Flashback Transaction Backout}: Mit dieser neuen Technologie ist es möglich, bereits committete Transaktionen rückgängig zu machen.
+        \item \textbf{Oracle Flashback Table}: Dieser Mechanimus ermöglicht es, eine Tabelle online in einen Zustand zurück zuversetzen, der durch einen Zeitpunkt definiert wird.
+        \item \textbf{Oracle Flashback Drop}: Der Flashback Drop macht es möglich, die Auswirkungen eines \languageorasql{DROP TABLE}-Statements rückgängig zu machen.
+        \item \textbf{Oracle Flashback Database}: Diese Option ist die \enquote{Rewind-Taste} an der Datenbank. Die gesamte DB kann innerhalb kürzester Zeit auf einen genau definierten Stand zurückversetzt werden.
+      \end{itemize}
+      Die Features Flashback Table, Flashback Query, Flashback Transaction Query und Flash\-back Version Query basieren alle auf Undo-Daten. Der Mechanismus Flashback Drop verwendet einen Speicherbereich der \enquote{Recycle Bin} gennant wird. In diesem Speicherbereich werden gelöschte Tabellen gespeichert, bis der Speicher überläuft und Platz für neue Objekte geschaffen werden muss. Alle diese Features sind unabhängig von RMAN.
+
+      Auf einer anderen Ebene existiert das Feature \enquote{Oracle Flashback Database}. Es ist eine Alternative zum Point-In-Time-Recovery. Wenn in der Datenbank eine größere Anzahl fehlerhafter Änderungen gespeichert ist, kann Flashback Database diese Datendateien in einen früheren Zustand zurückversetzen.
+
+			Die Auswirkungen des Oracle Flashback Database Mechanismus sind denen eines Point-In-Time-Recovery sehr ähnlich, jedoch funktioniert der Flashback Mechanismus deutlich schneller als ein Recovery, da das Restore der Datendateien wegfällt und nur wenige Redo Logs für das Flashback benötigt werden.
+
+      Flashback Database benutzt \enquote{Flashback logs} und zusätzlich die archivierten Redo Logs, um frühere Versionen eines Datenblocks wieder herzustellen. Zur Speicherung von Flashback Logs muss eine \enquote{Fast Recovery Area} erstellt werden. Flashback logging ist standardmässig deaktiviert.
+
+      Flashback Database ist in den RMAN integriert. Er kann sich automatisch aus den vorhandenen Backups die benötigten archivierten Redo Logs und Flashback Logs holen, um das Flashback durchzuführen. Auch eine manuelle Nutzung von Flashback Database mit SQL*Plus ist möglich.
+    \section{Oracle Flashback Query}
+      Flashback Query macht es möglich, einen in der Vergangenheit liegenden Stand einer Tabelle abzufragen. Wenn beispielsweise um 12:30 festgestellt wird, dass aus der Tabelle \identifier{mitarbeiter} der Angestellte \enquote{Wolf} versehentlich gelöscht wurde, er aber um 09:30 Uhr noch existierte, kann der Stand der Tabelle \identifier{mitarbeiter} von 09:30 abgefragt werden.
+
+      Das folgende Beispiel zeigt eine Flashback Query auf der Tabelle \identifier{mitarbeiter} mit Hilfe der \languageorasql{AS OF}-Klausel:
+      \begin{lstlisting}[caption={Flashback Query mit AS OF TIMESTAMP},label=admin1700,language=oracle_sql]
+SQL> SELECT Mitarbeiter_ID, Vorname, Nachname
+  2  FROM   mitarbeiter
+  3  WHERE  Nachname LIKE 'Wolf'
+  4    AND  Mitarbeiter_ID = 98;
+
+no rows selected.
+
+SQL> SELECT Mitarbeiter_ID, Vorname, Nachname
+  2  FROM   mitarbeiter AS OF TIMESTAMP
+  3         TO_TIMESTAMP('03.11.2013 09:30:00', 'DD.MM.YYYY HH24:MI:SS')
+  4  WHERE  Nachname LIKE 'Wolf'
+  5    AND  Mitarbeiter_ID = 98;
+
+MITARBEITER_ID VORNAME                        NACHNAME
+-------------- ------------------------------ ---------------------------
+            98 Louis                          Wolf
+      \end{lstlisting}
+      In diesem Beispiel wird die \languageorasql{AS OF}-Klausel zusammen mit einem Zeitpunkt benutzt. Es sind aber noch andere Angaben, wie z. B. Restore Points und SCNs möglich.
+      \begin{merke}
+        Die \languageorasql{AS OF}-Klausel kann an jedes beliebige \languageorasql{SELECT}-Statement angehängt werden.
+      \end{merke}
+      \begin{literaturinternet}
+        \item \cite{ADFNS01003}
+      \end{literaturinternet}
+    \section{Oracle Flashback Version Query}
+      Mit der Oracle Flashback Version Query können verschiedene Versionen einer oder mehrerer Tabellenzeilen angezeigt werden. Diese Technologie eignet sich hervorragend, um Änderungen an einer Tabellenzeile mitzuverfolgen. In \beispiel{admin1701} werden die Kontobewegungen am Konto 447 zurückverfolgt.
+      \begin{lstlisting}[caption={Verschiedene Versionen einer Zeile mit Flashback Version Query},label=admin1701,language=oracle_sql]
+SQL> SELECT Konto_ID, Guthaben
+  2  FROM   bank.girokonto VERSIONS BETWEEN TIMESTAMP
+  3         TO_TIMESTAMP('03.11.2013 10:55:00', 'DD.MM.YYYY HH:MI:SS')
+  4    AND  TO_TIMESTAMP('03.11.2013 11:10:40', 'DD.MM.YYYY HH:MI:SS')
+  5  WHERE  Konto_ID = 447;
+
+  KONTO_ID   GUTHABEN
+---------- ----------
+       447     1231,4
+       447     1182,5
+      \end{lstlisting}
+      Die Klausel \languageorasql{VERSIONS BETWEEN} macht aus einer normalen Abfrage eine Flashback Version Query. Das Schlüsselwort \languageorasql{TIMESTAMP} kann, genau wie bei der \languageorasql{AS OF}-Klausel, durch das Schlüsselwort \languageorasql{SCN} ersetzt werden.
+
+      Bei einer Flashback Version Query können mit Hilfe von Pseudospalten noch weitere Informationen, über eine Zeile abgefragt werden. \tabelle{flashtable1} zeigt die Pseudospalten, die bei einer Flashback Version Query zur Verfügung stehen.
+      \begin{center}
+        \tablecaption{Pseudospalten bei der Flashback Version Query}
+        \tablefirsthead{%
+          \hline
+          \multicolumn{1}{|c|}{\textbf{Pseudospalte}} &
+          \multicolumn{1}{|c|}{\textbf{Beschreibung}}
+          \\
+          \hline
+        }
+        \tablehead{%
+        }
+        \tabletail{%
+          \hline
+        }
+        \begin{supertabular}[h]{|p{5cm}|p{9,5cm}|}
+          \label{flashtable1}
+          \raggedright VERSIONS\_STARTSCN VERSIONS\_STARTTIME & \footnotesize Diese beiden Spalten zeigen die SCN oder den Zeitpunkt, an dem der erste Datenblock der betreffenden Zeile durch eine DML-Operation verändert wurde. Diese Information kann für das Wiederherstellen einer Zeile mit Hilfe einer Flashback Query benutzt werden. \\
+          \hline
+          \raggedright VERSIONS\_ENDSCN VERSIONS\_ENDTIME & \footnotesize Zeigt die SCN oder den Zeitpunkt, an dem die noch aktuelle Zeile durch die neue Version vollständig ersetzt worden ist. \\
+          \hline
+          VERSIONS\_XID & \footnotesize Idenifiziert die Transaktion, die die Zeile verändert hat \\
+          \hline
+          VERSIONS\_OPERATION & \footnotesize Zeigt die Art der DML-Operation an, die auf der Zeile ausgeführt wurde (I für  INSERT, U für UPDATE und D für DELETE)\\
+        \end{supertabular}
+      \end{center}
+      \begin{lstlisting}[caption={Informationsgewinnung mit Flashback Version Query},label=admin1702,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col VERSIONS_STARTTIME format a18 
+SQL> col VERSIONS_ENDTIME format a18
+
+SQL> SELECT Konto_ID, Guthaben, VERSIONS_STARTTIME, VERSIONS_ENDTIME,
+  2         VERSIONS_XID, VERSIONS_OPERATION
+  2  FROM   bank.girokonto VERSIONS BETWEEN TIMESTAMP
+  3         TO_TIMESTAMP('03.11.2013 10:55:00', 'DD.MM.YYYY HH:MI:SS')
+  4    AND  TO_TIMESTAMP('03.11.2013 11:10:40', 'DD.MM.YYYY HH:MI:SS')
+  5  WHERE  Konto_ID = 447;
+
+  KONTO_ID   GUTHABEN VERSIONS_STARTTIME VERSIONS_ENDTIME   VERSIONS_XID     V
+---------- ---------- ------------------ ------------------ ---------------- -
+       447     1231,4 03.11.13 11:09:52                     0900190059040000 U
+       447     1182,5                    03.11.13 11:09:52
+      \end{lstlisting}
+      \begin{literaturinternet}
+        \item \cite{ADFNS01004}
+      \end{literaturinternet}
+    \section{Oracle Flashback Transaction}
+      Während mit Flashback Query die Vergangenheit einer Tabellenzeile und mit Flashback Version Query die Bearbeitungshistorie einer Zeile angezeigt werden kann, ermöglicht das Flashback Transaction Feature:
+        \begin{itemize}
+          \item zu sehen, was eine spezifische Transaktion an einer Tabellenzeile gemacht hat.
+          \item Bestehende Transaktionen wieder rückgängig zu machen.
+        \end{itemize}
+      \subsection{Flashback Transaction Query}
+        \subsubsection{Voraussetzungen}
+          Flashback Transaction Query basiert, im Gegensatz zu Flashback Query und Flashback Version Query nicht nur auf den Undo Daten, sondern auch auf Redo Records (Archive Logs). Damit diese Technologie einwandfrei funktionieren kann, muss das Supplemental Logging aktiviert werden. Ohne Supplemental Logging kann Flashback Transaction Query nicht funktionieren.
+\clearpage
+        \subsubsection{Supplemental Logging}
+          Supplemental Logging sorgt dafür, dass bei DML-Operationen zusätzliche Informationen in den Redo Logs festgehalten werden. Normalerweise wird bei einem \languageorasql{UPDATE} auf eine Zeile nur deren RowID als identifizierendes Merkmal festgehalten. Bei aktiviertem Supplemental Logging werden alle Spalten aufgezeichnet, die zur Identifikation einer Tabellenzeile benutzt wurden. \beispiel{admin1703} zeigt ein \languageorasql{UPDATE}-Statement auf die Tabelle \identifier{girokonto}.
+          \begin{lstlisting}[caption={Supplemental Logging - Demo Schritt 1},label=admin1703,language=oracle_sql]
+SQL> UPDATE girokonto
+  2  SET    Guthaben = 1256.37
+  3  WHERE  Konto_ID = 447;
+
+SQL> COMMIT;
+          \end{lstlisting}
+          Ohne das Supplemental Logging wird zu dieser Transaktion nur das aufgezeichnet, was in \beispiel{admin1704} gezeigt wird.
+          \begin{lstlisting}[caption={Supplemental Logging - Demo Schritt 2 },label=admin1704,language=oracle_sql]
+update "BANK"."GIROKONTO"
+  set
+    "GUTHABEN" = 1256,37
+  where
+    "GUTHABEN" = 1231,40 and
+    ROWID = 'AAASWaAAHAAAADUACG'
+          \end{lstlisting}
+          Mit eingeschaltetem Supplemental Logging wird zusätzlich zu diesen Informationen noch die Primärschlüsselspalte festgehalten, die zur Identifizierung der Tabellenzeile benötigt wird.
+          \begin{lstlisting}[caption={Supplemental Logging - Demo Schritt 3},label=admin1705,language=oracle_sql]
+update "BANK"."GIROKONTO"
+  set
+    "GUTHABEN" = 1256,37
+  where
+    "KONTO_ID" = 447 and
+    "GUTHABEN" = 1231,40 and
+    ROWID = 'AAASWaAAHAAAADUACG'
+          \end{lstlisting}
+        \subsubsection{Supplemental Logging aktivieren}
+          \begin{lstlisting}[caption={Supplemental Logging},label=admin1706,language=oracle_sql]
+SQL> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+SQL> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (PRIMARY KEY) COLUMNS;
+SQL> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (FOREIGN KEY) COLUMNS;
+          \end{lstlisting}
+          Das erste Kommando aktiviert das \enquote{Minimal supplemental logging}. Dies ist die Grundlage für die beiden anderen Varianten. Mit dem zweiten Befehl wird das Supplemental Logging für Primary Key values aktiviert. Dies ist zwingend erforderlich, um Flashback Transaction nutzen zu können.
+
+          Zeile drei enthält einen Befehl, der das Supplemental Logging für Foreign Keys values aktiviert. Dieser ist nicht in allen Fällen notwendig und sollte auch nur mit Bedacht genutzt werden, da das Supplemental Logging für Foreign Key die Redo Logs immens aufblähen kann.
+        \subsubsection{Funktionsweise}
+          Oracle Flashback Transaction Query erlaubt es zu sehen, was eine spezifische Transaktion an einer Tabellenzeile gemacht hat. Realisiert wird dieses Feature mit Hilfe der Data Dictionary View \identifier{flashback\_transaction\_query}.
+
+          Um zu erfahren, welche Transaktionen Veränderungen an der Tabelle \identifier{girokonto} vorgenommen haben, muss nur die Tabelle \identifier{flashback\_transaction\_query} abgefragt werden.
+
+          Das Interessante an diesem Feature ist, dass zu jedem SQL-Statement ein Undo-SQL-Statement generiert wird. Mit dessen Hilfe kann die bereits bestehende Änderung rückgängig gemacht werden.
+          \begin{lstlisting}[caption={Die Tabelle \identifier{flashback\_transaction\_query}},label=admin1707,language=oracle_sql,alsolanguage=sqlplus,emph={[9]RAW,NUMBER,DATE,VARCHAR2},emphstyle={[9]\color{black}}]
+SQL> desc flashback_transaction_query
+ Name                                      Null?    Type
+ ----------------------------------------- -------- ----------------------
+ XID                                                RAW(8)
+ START_SCN                                          NUMBER
+ START_TIMESTAMP                                    DATE
+ COMMIT_SCN                                         NUMBER
+ COMMIT_TIMESTAMP                                   DATE
+ LOGON_USER                                         VARCHAR2(30)
+ UNDO_CHANGE#                                       NUMBER
+ OPERATION                                          VARCHAR2(32)
+ TABLE_NAME                                         VARCHAR2(256)
+ TABLE_OWNER                                        VARCHAR2(32)
+ ROW_ID                                             VARCHAR2(19)
+ UNDO_SQL                                           VARCHAR2(4000)
+          \end{lstlisting}
+\clearpage
+          \begin{lstlisting}[caption={Informationsgewinnung mit Flashback Transaction Query},label=admin1708,language=oracle_sql,alsolanguage=sqlplus]
+col logon_user format a10
+col undo_sql format a50
+
+SQL> SELECT xid, start_timestamp, commit_scn, logon_user
+  2         undo_sql
+  3  FROM   flashback_transaction_query
+  4  WHERE  LOWER(table_name) LIKE 'girokonto';
+
+XID              START_TIMESTAMP     COMMIT_SCN LOGON_USER
+---------------- ------------------- ---------- ----------
+UNDO_SQL
+--------------------------------------------------
+0A00130036030000 03.11.2013 14:13:09    2278483 BANK
+update "BANK"."GIROKONTO" set "GUTHABEN" = '1231,40'
+1' where ROWID = 'AAASWaAAHAAAADUACG';
+
+          \end{lstlisting}
+
+          \begin{literaturinternet}
+            \item \cite{ADFNS01005}
+          \end{literaturinternet}
+      \subsection{Flashback Transaction Backout}
+        Flashback Transaction Backout ist eine Weiterentwicklung der Flashback Transaction Query. Mit Flashback Transaction Backout können Transaktionen rückgängig gemacht werden, ähnlich wie mit Flashback Transaction Query. Der Unterschied zwischen beiden ist, dass Flashback Transaction Backout in Form einer PL/SQL-Prozedur existiert, die Abhängigkeiten zwischen Transaktionen erkennt.
+        \subsubsection{Abhängigkeiten zwischen Transaktionen}
+          Die größte Gefahr beim Zurückrollen bereits bestätigter Transaktionen ist, dass zwei Transaktionen von einander abhängig sein können. Beim Rückgängigmachen einer Transaktion kann eine Zweite in Mitleidenschaft gezogen werden. Es muss in jedem Falle geprüft werden, ob das Ergebnis noch korrekte Daten wiedergibt.
+
+          Eine Transaktion B kann von einer Transaktion A auf drei
+          unterschiedlichen Wegen abhängig sein:
+\clearpage
+          \begin{itemize}
+            \item \textbf{Write-After-Write}: Bei einer solchen Abhängigkeit fügt Transaktion A eine Zeile in eine Tabelle ein, die später von Transaktion B geändert wird.
+              \begin{lstlisting}[caption={Eine Write-After-Write Abhängigkeit},label=admin1709,language=oracle_sql]
+-- Transaktion A
+SQL> UPDATE TABLE girokonto
+  2  SET    Guthaben = 1256.80
+  3  WHERE  Konto_ID = 447;
+SQL> COMMIT;
+
+-- Transaktion B
+SQL> UPDATE TABLE girokonto
+  2  SET    Guthaben = 1481.16
+  3  WHERE  Konto_ID = 447;
+SQL> COMMIT;
+              \end{lstlisting}
+            \item \textbf{Primary Key Abhängigkeit}: Transaktion A löscht eine Zeile aus einer Tabelle. Der Wert des Primärschlüssels dieser Zeile war \enquote{n}. Anschließend fügt Transaktion B eine Zeile in die Tabelle ein. Der Wert des Primärschlüssels der neuen Zeile ist ebenfalls \enquote{n}. Beide Zeilen haben somit den gleichen Wert als Primärschlüssel.
+              \begin{lstlisting}[caption={Eine Primary Key Abhängigkeit},label=admin1710,language=oracle_sql]
+-- Transaktion A
+SQL> DELETE girokonto
+  2  WHERE  Konto_ID = &\textcolor{red}{447}&;
+SQL> COMMIT;
+-- Transaktion B
+SQL> INSERT INTO girokonto
+  2  VALUES (&\textcolor{red}{447}&, 10.5, 1256.37, 10, 15000);
+SQL> COMMIT;
+              \end{lstlisting}
+            \item \textbf{Foreign Key Abhängigkeit}: Transaktion A erstellt eine Zeile in Tabelle A. Transaktion B erstellt eine von Tabelle A abhängige Zeile in Tabelle B.
+
+            \beispiel{admin1711} zeigt, dass die in Tabelle \identifier{girokonto} erstellte Zeile,  durch ein Foreign Key Constraint zwischen den beiden Tabellen \identifier{konto} und \identifier{girokonto}, von der Tabelle \identifier{konto} abhängig ist.
+            \begin{lstlisting}[caption={Eine Foreign Key Abhängigkeit},label=admin1711,language=oracle_sql]
+-- Transaktion A
+SQL> INSERT INTO Konto
+  2  VALUES (&\textcolor{red}{666}&, 'DE2355880228095276211', NULL);
+
+SQL> COMMIT;
+-- Transaktion B
+SQL> INSERT INTO Girokonto
+  2  VALUES (&\textcolor{red}{666}&, 10.5, 2400, 10, 15000);
+
+SQL> COMMIT;
+              \end{lstlisting}
+          \end{itemize}
+          Flashback Transaction Backout kann alle drei Abhängigkeiten erkennen und den Nutzer mit einer Fehlermeldung warnen, bevor eine Transaktion rückgängig gemacht wird.
+
+          Die einzige Angabe, die benötigt wird, um eine Transaktion zurückzurollen, ist die XID der betroffenen Transaktion. Diese kann mit Flashback Version Query oder Flashback Transaction Query ermittelt werden.
+          \begin{lstlisting}[caption={Die XID einer Transaktion ermitteln},label=admin1712,language=oracle_sql]
+SQL> SELECT xid, start_timestamp, logon_user
+  2  FROM   flashback_transaction_query
+  3  WHERE  LOWER(table_name) LIKE 'girokonto';
+
+XID              START_TIMESTAMP     LOGON_USER
+---------------- ------------------- ----------
+02000D0056040000 03.11.2013 14:20:10 BANK
+04000D0048030000 03.11.2013 14:00:59 BANK
+05001400F6040000 03.11.2013 13:41:55 BANK
+05000000F6040000 03.11.2013 13:20:49 BANK
+0600020049040000 03.11.2013 14:05:25 BANK
+0800020049040000 03.11.2013 14:00:41 BANK
+0800210048040000 03.11.2013 13:21:22 BANK
+090020005B040000 03.11.2013 11:09:52 SYS
+0900190059040000 03.11.2013 10:56:50 SYS
+0A00130036030000 03.11.2013 14:13:09 BANK
+
+10 rows selected.
+          \end{lstlisting}
+          Flashback Transaction Backout kann eine oder mehrere Transaktionen gleichzeitig zurückrollen. \beispiel{admin1713} zeigt die Anwendung der Prozedur \identifier{transaction\_backout}.
+          \begin{lstlisting}[caption={Eine bestätigte Transaktion zurückrollen},label=admin1713,language=plsql]
+SQL> BEGIN
+  2  DBMS_FLASHBACK.TRANSACTION_BACKOUT (
+  3    numberofxids => 1,
+  4    xids         => xid_array('02000D0056040000'),
+  5    options      => DBMS_FLASHBACK.NOCASCADE
+  6  );
+  7  END;
+  8  /
+          \end{lstlisting}
+          Die Prozedur \identifier{transaction\_backout} wird in \beispiel{admin1713} mit drei Parametern aufgerufen:
+          \begin{itemize}
+            \item \textbf{numberofxids}: Die Anzahl der Transaktionen die zurückgerollt werden sollen.
+            \item \textbf{xids}: Ein Array mit den XIDs aller zurückzurollenden Transaktionen
+            \item \textbf{options}: Optionen die das Verhalten von \identifier{transaction\_backout} steuern.
+          \end{itemize}
+\clearpage
+          Es gibt folgende Optionen:
+          \begin{itemize}
+            \item \textbf{NOCASCADE}: Der Vorgang wird beim Auftreten der ersten Abhängigkeit sofort abgebrochen.
+            \item \textbf{NOCASCADE\_FORCE}: Trotz Abhängigkeiten wird die Transaktion rückgängig gemacht. Sollte dabei kein Constraint verletzt werden, kann der Vorgang erfolgreich abgeschlossen werden.
+            \item \textbf{NONCONFLICT\_ONLY}: Es werden nur die Transaktionen zurückgerollt, die keine Abhängigkeiten aufweisen. Die anderen bleiben bestehen. Dies löst kein Problem mit der Datenbankkonsistenz aus, jedoch muss sehr genau geprüft werden, ob das Ergebnis den eigenen Vorstellungen entspricht.
+            \item \textbf{CASCADE}: Mit dieser Option werden alle betroffenen Transaktion der Reihe nach zuürckgerollt.
+          \end{itemize}
+        \subsubsection{Einschränkungen}
+          Flashback Transaction Backout hat folgende Einschränkungen:
+          \begin{itemize}
+            \item DDL Operationen können nicht rückgängig gemacht werden.
+            \item Transaktionen mit LOB Typen (CLOB, BLOB, BFILE, NCLOB) können nicht rückgängig gemacht werden.
+            \item Die Undo Segmente im Undo Tablespace müssen groß genug sein.
+          \end{itemize}
+
+          \begin{literaturinternet}
+            \item \cite{dflashbhtm}
+            \item \cite{ADFNS01009}
+          \end{literaturinternet}
+    \section{Oracle Flashback Table}
+      Oracle Flashback Table ermöglicht es dem DBA eine Tabelle, ohne kompliziertes Recovery, in einen durch einen Zeitpunkt oder eine SCN bestimmten Zustand zurückzuversetzen. Flashback Table ersetzt dadurch meist ein wesentlich komplizierteres Point-In-Time Recovery.
+
+      Folgende Voraussetzungen müssen für den Einsatz von Flashback Table geschaffen werden:
+\clearpage
+      \begin{itemize}
+        \item Einschalten von \textit{Row Movement} für die betreffenden Tabellen.
+        \begin{lstlisting}[caption={Einschalten von Row Movement},label=admin1714,language=oracle_sql]
+SQL> ALTER TABLE mitarbeiter ENABLE ROW MOVEMENT
+        \end{lstlisting}
+        \item Der Nutzer muss das Systemprivileg \privileg{flashback any table} haben.
+        \item Der Nutzer muss die Objektprivilegien \privileg{select}, \privileg{insert}, \privileg{delete} und \privileg{alter} auf die betreffenden Tabellen haben.
+        \item Es müssen genügend Undo-Informationen verfügbar sein.
+      \end{itemize}
+      Die beiden folgenden Beispiele zeigen, wie die Tabelle \identifier{mitarbeiter}, mit Hilfe einer SCN bzw. eines Zeitstempels in einen vergangenen Zustand zurückversetzt wird.
+      \begin{lstlisting}[caption={Flashback Table mit SCN},label=admin1715,language=oracle_sql]
+SQL> FLASHBACK TABLE mitarbeiter TO SCN 1000;
+      \end{lstlisting}
+      \begin{lstlisting}[caption={Flashback Table mit Zeitstempel},label=admin1716,language=oracle_sql]
+SQL> FLASHBACK TABLE mitarbeiter TO TIMESTAMP
+  2            TO_TIMESTAMP('03.11.2013 16:43:25', 'DD.MM.YYYY HH:MI:SS');
+      \end{lstlisting}
+    \section{Oracle Flashback Drop}
+      Mit Hilfe von Flashback Drop kann das Löschen einer Tabelle rückgängig gemacht werden. Flashback Drop ist schneller als jede Form von Point-In-Time Recovery, denn seit Oracle 10g wird eine Tabelle beim Löschen nicht mehr sofort entfernt, sondern:
+      \begin{enumerate}
+        \item Die Tabelle wird umbenannt und erhält einen Recycle Bin Namen, wie zum Beispiel  \languageorasql{BIN$6kkdfoAiGljgQGRkFBQQiQ==$0}.
+        \item Sie wird in einen Speicherbereich verschoben, der sich \enquote{Recycle Bin} nennt.
+      \end{enumerate}
+      Der Flashback Drop macht diese beiden Schritte wieder rückgängig.
+      \subsection{Der Recycle Bin}
+        Der Recycle Bin ist ein logischer Kontainer für Tabellen und deren abhängige Objekte. Wird eine Tabelle gelöscht, speichert die Datenbank diese dann mit all ihren abhängigen Objekten im Recycle Bin, so dass die Tabelle später wiederhergestellt werden kann.
+        \subsubsection{Funktionsweise des Recycle Bin}
+          Tabellen erhalten einen neuen Namen und werden solange im Recycle Bin gespeichert, bis dieser bereinigt wird. Die Namensgebung im Recycle Bin folgt diesem Schema:
+
+          \verb+BIN$globalUID$version+
+
+          \enquote{globalUID} steht dabei für eine Zeichenkette aus 24 Zeichen, die in der ganzen Datenbank eindeutig ist. \enquote{version} ist die Versionsnummer (laufende Nummer) der Tabelle. Die Namen im Recycle Bin sind immer 30 Zeichen lang.
+
+          Die Bereinigung des Recycle Bin geschieht automatisch, kann aber auch manuell durchgeführt werden. Der Recycle Bin wird in den folgenden Situationen automatisch bereinigt:
+          \begin{itemize}
+            \item wenn der Tablespace, in dem sich das betreffende Objekt befindet keinen freien Speicher mehr hat und wachsen müsste und
+            \item wenn die Quota, die der Besitzer des Objekts auf den Tablespace hat, in dem sich das Objekt befindet, ausgereizt ist
+          \end{itemize}
+          Die Objekte werden dann nach dem First-In-First-Out Prinzip endgültig gelöscht.
+
+          Soll der Recycle Bin manuell entleert werden, muss das SQL-Kommando \languageorasql{PURGE} verwendet werden. Es wird auf Objekte angewandt, die sich bereits im Recycle Bin befinden. Für seine Ausführung kann der Objektname oder auch der Recycle Bin Name genutzt werden.
+          \begin{lstlisting}[caption={Das Kommando \languageorasql{PURGE}},label=admin1717,language=oracle_sql]
+-- Tabellen entfernen
+SQL> PURGE TABLE mitarbeiter;
+
+-- Oder
+SQL> PURGE TABLE "BIN$6kkdfoAiGljgQGRkFBQQiQ==$0";
+
+-- Indizes entfernen
+SQL> PURGE INDEX "BIN$4fkefoBjGljgQGRkFBQQiQ==$0";
+
+-- Tablespaces entfernen
+SQL> PURGE TABLESPACE example;
+          \end{lstlisting}
+          Will ein Nutzer alle Objekte, die er gelöscht hat, aus dem Recycle Bin entfernen, kann er dies mit dem folgenden Kommando tun:
+          \begin{lstlisting}[caption={Das Kommando \languageorasql{PURGE RECYCLEBIN}},label=admin1718,language=oracle_sql]
+SQL> PURGE RECYCLEBIN;
+          \end{lstlisting}
+          Für den DBA gibt es zusätzlich das Kommando \languageorasql{PURGE DBA\_RECYCLEBIN}, mit dem alle Objekte aus dem Recycle Bin, unabhängig von deren Besitzer, gelöscht werden.
+          \begin{lstlisting}[caption={Das Kommando \languageorasql{PURGE DBA_RECYCLEBIN}},label=admin1719,language=oracle_sql]
+SQL> PURGE DBA_RECYCLEBIN;
+          \end{lstlisting}
+          Um eine Tabelle so zu löschen, das sie erst gar nicht in den Recycle Bin verschoben wird, kann das \languageorasql{DROP TABLE}-Statement um das Schlüsselwort \languageorasql{PURGE} erweitert werden.
+          \begin{lstlisting}[caption={\languageorasql{DROP TABLE PURGE}},label=admin1720,language=oracle_sql]
+SQL> DROP TABLE employees PURGE;
+          \end{lstlisting}
+        \subsubsection{Privilegien für die Nutzung von Flashback Drop}
+          Für Flashback Drop und Purge Operationen gelten die folgenden Regeln:
+          \begin{itemize}
+            \item Ein Nutzer, der das \privileg{drop}-Privileg auf eine Tabelle hat, kann diese Löschen und somit im Recycle Bin platzieren.
+            \item Will ein Nutzer eine Flashback Drop-Operation ausführen, benötigt er das \privileg{drop}-Privileg für das betreffende Objekt.
+            \item Soll das Objekt endgültig mit \languageorasql{PURGE} entfernt werden, benötigt der Nutzer dazu ebenfalls nur das \privileg{drop}-Privileg für das betreffende Objekt.
+          \end{itemize}
+        \subsubsection{Den Inhalt des Recycle Bin anzeigen}
+          Um sich den Inhalt des Recycle Bin anzeigen zu lassen, können entweder die beiden Views \identifier{user\_recyclebin}, \identifier{dba\_recyclebin} oder das SQL*Plus-Kommando \languagesqlplus{show recyclebin} verwendet werden. Die Ausgabe des \languagesqlplus{show recyclebin}-Kommandos sieht so aus:
+          \begin{lstlisting}[caption={\languagesqlplus{show recyclebin}},label=admin1721,language=oracle_sql,emph={[9]RECYCLEBIN,TYPE,TIME,DROP,TABLE},emphstyle={[9]\color{black}}]
+ORIGINAL NAME RECYCLEBIN NAME                  TYPE   DROP TIME
+------------- -------------------------------- ----- -------------------
+MITARBEITER   BIN$6kkdfoAiGljgQGRkFBQQiQ==$0   TABLE 2013-03-11 17:16:59
+          \end{lstlisting}
+          Zusätzlich zu \identifier{user\_recyclebin} und \identifier{dba\_recyclebin}, können die Data Dictionary Views \identifier{user\_tables}, \identifier{all\_tables}, \identifier{dba\_tables}, \identifier{user\_indexes}, \identifier{all\_indexes} und \identifier{dba\_indexes} darüber Auskunft geben, welche Objekte gelöscht wurden. In allen diesen Views existiert eine Spalte \identifier{dropped}. Wurde ein Objekt gelöscht, taucht es nach wie vor in diesen Views auf, nur die Spalte \identifier{dropped} wird auf YES gesetzt.
+\clearpage
+        \subsubsection{Den Recycle Bin ein- und ausschalten}
+          Standardmäßig ist der Recycle Bin eingeschaltet. Über den Initialisierungsparameter \parameter{recyclebin} kann er ein- und ausgeschaltet werden. Der Parameter nimmt die beiden Werte \enquote{ON} und \enquote{OFF} entgegen. \parameter{recyclebin} kann sowohl Sessionweit mit \languageorasql{ALTER SESSION} als auch Systemweit mit \languageorasql{ALTER SYSTEM} geändert werden.
+          \begin{lstlisting}[caption={\languageorasql{Den Recycle Bin ausschalten}},label=admin1722,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET recyclebin=off;
+          \end{lstlisting}
+          Die Auswirkungen der Änderung werden erst nach einer Neuanmeldung für die Nutzer spürbar.
+        \subsubsection{Regeln und Einschränkungen für die Nutzung des Recycle Bin}
+          \begin{itemize}
+            \item Die Flashback Drop-Funktionalität ist nur für Objekte in einem Nicht-System und lokal verwalteten Tablespace verfügbar.
+            \item Es kann nicht bestimmt werden, wie lange sich ein Objekt im Recycle Bin befinden soll.
+            \item Abfragen auf Objekte im Recycle Bin sind erlaubt, DML und DDL Operationen aber nicht.
+            \item Flashback Queries auf Objekte im Recycle Bin können nur mit deren Recycle-Bin-Namen ausgeführt werden.
+            \item Wird eine Tabelle in den Recycle Bin verschoben, werden automatisch alle von ihr abhängigen Objekte mit verschoben.
+            \item Fremdschlüssel gehen beim Verschieben eines Objekts in den Recycle Bin verloren und werden beim Wiederherstellen des Objekts nicht wiederhergestellt.
+          \end{itemize}
+      \subsection{Einen Flashback Drop ausführen}
+        Ein Flashback Drop kann sowohl mit dem Originalnamen, als auch mit dem Recycle Bin Namen des Objekts ausgeführt werden. Das folgende Beispiel zeigt diese beiden Möglichkeiten für die Tabelle \identifier{mitarbeiter}.
+\clearpage
+        \begin{lstlisting}[caption={Ausführen eines Flashback Drop},label=admin1723,language=oracle_sql]
+SQL> DROP TABLE mitarbeiter;
+
+SQL> FLASHBACK TABLE mitarbeiter TO BEFORE DROP;
+
+SQL> FLASHBACK TABLE "BIN$gk3lsj/3akk5hg3j2lkl5j3d==$0" TO BEFORE DROP;
+        \end{lstlisting}
+        Ein im Recycle Bin befindliches Objekt kann bei seiner Wiederherstellung direkt umbenannt werden. Hierzu wird das \languageorasql{FLASHBACK TABLE ... TO BEFORE DROP}-Statement um die Klausel \languageorasql{RENAME TO} wie folgt erweitert:
+        \begin{lstlisting}[caption={Ausführen eines Flashback Drop mit gleichzeitiger Umbenennung},label=admin1724,language=oracle_sql]
+SQL> FLASHBACK TABLE mitarbeiter TO BEFORE DROP
+  2  RENAME TO bank.angestellte;
+
+SQL> FLASHBACK TABLE "BIN$gk3lsj/3akk5hg3j2lkl5j3d==$0" TO BEFORE DROP
+  2  RENAME TO bank.angestellte;
+        \end{lstlisting}
+    \section{Oracle Total Recall}
+      Immer mehr Unternehmen haben das Problem, dass eine immer größer werdende Datenflut für sehr lange Zeit vorgehalten werden muss. Teils geschieht dies aufgrund von gesetzlichen Vorgaben (z. B. 10 Jahre im Bereich Gewerbesteuer), teils ist dies notwendig, um Projekte bis in ihre Anfänge zurückverfolgen zu können.
+
+      Je größer die Datenmengen, desto höher sind auch die Anforderungen an die Datenbank, Abfragen performant bearbeiten zu können. Um diesem Problem wirkungsvoll entgegentreten zu können, hat Oracle, in der Version 11g R2 seiner Datenbank, die Option \enquote{Total Recall} eingeführt. Diese Option enthält das Feature \enquote{Flashback Data Archive}, mit dessen Hilfe historische Daten außerhalb der Datenbank gelagert werden können, aber mittels Flashback Query im direkten Zugriff der Anwendung bleiben.
+      \subsection{Flashback Data Archive (FBDA)- Architektur}
+        FBDA ist eine optionale und für Anwendungen völlig transparente Technologie. Es speichert Daten in \enquote{Historientabellen}, die in eigenen Tablespaces angelegt werden. Um Speicheplatz zu sparen und die Performance von Abfragen zu erhöhen, sind Historientabellen partitioniert und komprimiert.
+\clearpage
+        Befüllt werden die Historientabellen durch einen neuen Hintergrundprozess, den \enquote{FBDA} - Flashback Data Archiver. Dieser Prozess erwacht in bestimmten Zeitabständen und durchforstet den Undo Tablespace nach Beforeimages, die archiviert werden müssen. Seine \enquote{Schlafenszeit} justiert der FBDA automatisch nach dem Transaktionsaufkommen (Standardzeitinterval = 5 Minuten).
+        \bild{Flashback Data Archive - Architektur}{fbda_architecture}{1}
+        \begin{merke}
+          Nur die beiden DML-Befehl \languageorasql{UPDATE} und \languageorasql{DELETE} beeinflußen das Flashback Data Archive, da \languageorasql{INSERT}-Kommandos keine Beforeimages erzeugen!
+        \end{merke}
+        \bild{DML und Flashback Data Archive}{fbda_dml}{1}
+      \subsection{Flashback Data Archive administrieren}
+        \subsubsection{Voraussetzungen}
+          Um Flashback Data Archive einrichten zu können, müssen die folgenden Voraussetzungen gegeben sein:
+          \begin{itemize}
+            \item Der Tablespace für das Flashback Data Archive muss Automatic Segment Space Management nutzen
+            \item Das Automatic Undo Management muss aktiviert sein.
+          \end{itemize}
+        \subsubsection{Privilegien}
+          Es gibt drei Privilegien, welche im Zusammenhang mit der Arbeit mit Flashback Data Archive stehen:
+          \begin{itemize}
+            \item \privileg{flashback archive administer}: Erlaubt das Erstellen und Verwalten von FBDAs.
+            \item \privileg{flashback archive}: Ermöglicht das Einschalten FBDA für eine Tabelle.
+            \item \privileg{sysdba}: Beinhaltet \privileg{flashback archive administer} und \privileg{flashback archive}
+          \end{itemize}
+        \subsubsection{Archive erstellen}
+          Das Erstellen eines Archives geschieht mit dem Kommando \languageorasql{CREATE FLASHBACK ARCHIVE}. Für die Archive sollte ein eigenständiger Tablespace erstellt werden.
+          \begin{lstlisting}[caption={Ein Flashback Data Archive anlegen},label=admin1725,language=oracle_sql]
+SQL> CREATE FLASHBACK ARCHIVE fbda_bank_1
+  2  TABLESPACE bank
+  3  QUOTA      10G
+  4  RETENTION  5 YEAR;
+          \end{lstlisting}
+          Die Klausel \languageorasql{TABLESPACE bank} legt fest, dass das Archiv \identifier{fbda\_bank\_1} für den Tablespace \identifier{bank} angelegt wird. Mit \languageorasql{QUOTA 10G} wird die Speicherplatzquota für das Archiv angegeben. Diese wirkt sich genauso aus, wie die \languageorasql{MAXSIZE}-Klausel bei Tablespaces. Mit \languageorasql{RETENTION 5 YEAR} wird die Verweildauer der Daten im FBDA bestimmt. Daten die älter sind, als die angegebene Retention werden automatisch aus dem Archiv entfernt.
+          \begin{merke}
+            Wird die \languageorasql{QUOTA}-Klausel nicht angegeben gilt automatisch \languageorasql{QUOTA unlimited}!
+          \end{merke}
+          Beim Anlegen eines FBDA ist es möglich, mit Hilfe des Schlüsselwortes \languageorasql{DEFAULT} ein Standard Flashback Data Archive zu erzeugen. Wann dies von Nutzen ist, wird in \ref{enablefbda} erläutert.
+          \begin{lstlisting}[caption={Ein Default Flashback Data Archive anlegen},label=admin1726,language=oracle_sql]
+SQL> CREATE FLASHBACK ARCHIVE DEFAULT fbda_bank_def
+  2  TABLESPACE archive
+  3  QUOTA      10G
+  4  RETENTION  5 YEAR;
+          \end{lstlisting}
+          Das ein Flashback Data Archive angelegt wurde, kann mittels der Data Dictionary View \identifier{dba\_flashback\_archive} geprüft werden.
+          \begin{lstlisting}[caption={\identifier{dba\_flashback\_archive} abfragen},label=admin1727,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col flashback_archive_name format a30 
+SQL> SELECT flashback_archive_name, retention_in_days, status
+  2  FROM   dba_flashback_archive
+
+FLASHBACK_ARCHIVE_NAME         RETENTION_IN_DAYS STATUS
+------------------------------ ----------------- -------
+FBDA_BANK_1                                 1825
+FBDA_BANK_DEF                               1825 DEFAULT
+          \end{lstlisting}
+        \subsubsection{Flashback Data Archive aktivieren}
+        \label{enablefbda}
+          Das Aktivieren von FBDA erfolgt auf Tabellenebene.
+          \begin{lstlisting}[caption={Flashback Data Archive aktivieren},label=admin1728,language=oracle_sql]
+SQL> ALTER TABLE bank.buchung
+  2  FLASHBACK ARCHIVE fbda_bank_1;
+          \end{lstlisting}
+          Die Tabelle \identifier{buchung} ist nun mit dem Flashback Data Archive \identifier{fbda\_bank\_1} verknüpft. Für sie wird eine Historientabelle im Archiv angelegt.
+          \begin{lstlisting}[caption={Wo ist die Historientabelle?},label=admin1729,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col table_name format a20
+SQL> col flashback_archive_name format a20
+SQL> col archive_table_name format a20
+
+SQL> SELECT table_name, flashback_archive_name, archive_table_name, status
+  2  FROM   dba_flashback_archive_tables;
+
+TABLE_NAME           FLASHBACK_ARCHIVE_NA ARCHIVE_TABLE_NAME   STATUS
+-------------------- -------------------- -------------------- --------
+BUCHUNG              FBDA_BANK_1          SYS_FBA_HIST_75155   ENABLED
+          \end{lstlisting}
+          Die View \identifier{dba\_flashback\_archive\_tables} enthält für jede Tabelle, für die FBDA aktiviert wurde, einen Eintrag. Die Historientabelle für \identifier{bank.buchung} wurde automatisch, unter dem Namen \identifier{SYS\_FBA\_HIST\_75155} angelegt.
+          \begin{merke}
+            Die Historientabelle wird erst dann erzeugt, wenn der FBDA-Hintergrundprozess anfängt, seine Arbeit zu machen!
+          \end{merke}
+          Die interne Struktur der Historientabelle sieht so aus:
+          \begin{lstlisting}[caption={Die Struktur der Historientabelle},label=admin1730,emph={[9]VARCHAR2,NUMBER,RAW,DATE},emphstyle={[9]\color{black}},language=oracle_sql,alsolanguage=sqlplus]
+SQL> desc archive.SYS_FBA_HIST_75155
+ Name                                      Null?    Type
+ ----------------------------------------- -------- -----------------------
+ RID                                                VARCHAR2(4000)
+ STARTSCN                                           NUMBER
+ ENDSCN                                             NUMBER
+ XID                                                RAW(8)
+ OPERATION                                          VARCHAR2(1)
+ BUCHUNGS_ID                                        NUMBER
+ BETRAG                                             NUMBER(12,2)
+ BUCHUNGSDATUM                                      DATE
+ KONTO_ID                                           NUMBER
+ TRANSAKTIONS_ID                                    NUMBER
+          \end{lstlisting}
+          Zusätzlich zu den Spalten der Tabelle \identifier{buchung} werden noch weitere Spalten für Metadaten mitgeführt.
+
+          In \beispiel{admin1726} wird Flashback Data Archive, unter Angabe eines Archivs aktiviert. Die Archivangabe kann aber auch entfallen.
+          \begin{lstlisting}[caption={Flashback Data Archive mit einem Default Archive aktivieren},label=admin1731,language=oracle_sql]
+SQL> ALTER TABLE bank.buchung
+  2  FLASHBACK ARCHIVE;
+          \end{lstlisting}
+          Das Statement in \beispiel{admin1731} aktiviert Flashback Data Archive für die Tabelle \identifier{buchung}, wenn vorher ein Default Flashback Data Archive angelegt wurde. Existiert kein Default Archive, schlägt dieses Statement fehl.
+          \begin{lstlisting}[caption={Welche Archive wurden benutzt?},label=admin1732,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col table_name format a20
+SQL> col flashback_archive_name format a20
+SQL> col archive_table_name format a20
+
+SQL> SELECT table_name, flashback_archive_name, archive_table_name, status
+  2  FROM   dba_flashback_archive_tables;
+
+TABLE_NAME           FLASHBACK_ARCHIVE_NA ARCHIVE_TABLE_NAME   STATUS
+-------------------- -------------------- -------------------- --------
+BUCHUNG              FBDA_BANK_DEF        SYS_FBA_HIST_75155   ENABLED
+          \end{lstlisting}
+\clearpage
+        \subsubsection{Abfragen des Flashback Archives}
+          Die Benutzung der Flashback Archive geschieht mit Hilfe der \languageorasql{AS OF}- und \languageorasql{VERSIONS BETWEEN}-Klauseln.
+          \begin{lstlisting}[caption={Flashback Data Archive mit einem Default Archive aktivieren},label=admin1733,language=oracle_sql]
+SQL> SELECT *
+  2  FROM   buchung AS OF TIMESTAMP
+  3         TO_TIMESTAMP('03.11.2010 09:30:00', 'DD.MM.YYYY HH24:MI:SS')
+          \end{lstlisting}
+          Sofern das Flashback Archive bereits lange genug existiert, werden die Daten so angezeigt, wie sie zum 03.11.2010, um 09:30 vorlagen.
+        \subsubsection{Flashback Archive bearbeiten}
+          Flashback Archive können im laufenden Betrieb verändert werden. Folgende Veränderungen sind möglich:
+          \begin{itemize}
+            \item Verändern der Größe
+            \item Ein Archive zum Standardarchiv machen
+            \item Verändern des Parameters \languageorasql{RETENTION}
+            \item Historische Daten löschen
+          \end{itemize}
+          Die Größe eines Archives kann auf zwei Arten geändert werden. Die Quota an einem Tablespace kann erhöht oder ein weiterer Tablespace hinzugefügt werden.
+          \begin{lstlisting}[caption={Die Quota eines Archives auf 20GB erhöhen},label=admin1734,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_def
+  2  MODIFY TABLESPACE archive QUOTA 20G;
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Dem Archiv einen weiteren Tablespace hinzufügen},label=admin1735,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_def
+  2  ADD TABLESPACE archive2 QUOTA 10G;
+          \end{lstlisting}
+          Verkleinert wird ein Archiv, in dem ihm ein Tablespace entzogen oder die Quotas verringert werden.
+          \begin{lstlisting}[caption={Einen Tablespace aus dem Archiv entfernen},label=admin1736,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_def
+  2  REMOVE TABLESPACE archive2;
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Die Quota eines Tablespaces verringern},label=admin1737,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_def
+  2  ADD TABLESPACE archive2 QUOTA 5G;
+          \end{lstlisting}
+          \begin{merke}
+            Das Entfernen eines Tablespaces aus einem Archiv funktioniert nur, wenn der Speicherplatz im betroffenen Tablespace noch nicht belegt ist.
+          \end{merke}
+          Mit Hilfe der \languageorasql{SET DEFAULT}-Klausel kann ein Archiv zum Standardarchiv gemacht werden.
+          \begin{lstlisting}[caption={Ein Archiv zum Standardarchiv machen},label=admin1738,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_1
+  2  SET DEFAULT;
+          \end{lstlisting}
+          Um die Retention eines Archives zu verändern, wird die \languageorasql{MODIFY RETENTION}-Klausel verwendet.
+          \begin{lstlisting}[caption={Die Vorhaltedauer eines Archives verändern},label=admin1739,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_1
+  2  MODIFY RETENTION 3 YEAR;
+          \end{lstlisting}
+        \subsubsection{Archive manuell bereinigen}
+          Oracle bereinigt den Inhalt der Flashback Archives automatisch. Dennoch hat der Administrator die Möglichkeit, den Inhalt manuell zu löschen.
+          \begin{lstlisting}[caption={Den gesamten Inhalt eines Archives löschen},label=admin1740,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_1
+  2  PURGE ALL;
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Alle Einträge löschen, die älter als ein Jahr und sechs Monate sind},label=admin1741,language=oracle_sql]
+SQL> ALTER FLASHBACK ARCHIVE fbda_bank_1
+  2  PURGE BEFORE TIMESTAMP (SYSTIMESTAMP - INTERVAL '1-6' YEAR TO MONTH);
+          \end{lstlisting}
+        \subsubsection{Flashback Data Archive deaktivieren}
+          Flashback Data Archive kann jeder Zeit für eine Tabelle deaktiviert werden.
+          \begin{merke}
+            Beim Deaktivieren von Flashback Archive wird die Historientabelle gelöscht!
+          \end{merke}
+          \begin{lstlisting}[caption={Flashback Data Archive deaktivieren},label=admin1742,language=oracle_sql]
+SQL> ALTER TABLE bank.buchung
+  2  NO FLASHBACK ARCHIVE;
+          \end{lstlisting}
+        \subsubsection{Flashback Archive löschen}
+          Beim Löschen eines Flashback Archives wird die Historientabelle gelöscht, der Tablespace, in dem sie lag, bleibt erhalten.
+          \begin{lstlisting}[caption={Flashback Data Archive deaktivieren},label=admin1743,language=oracle_sql]
+SQL> DROP FLASHBACK ARCHIVE fbda_bank_1;
+          \end{lstlisting}
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        \begin{literaturinternet}
+          \item \cite{REFRN10264}
+        \end{literaturinternet}
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{ADFNS01005}
+          \item \cite{REFRN23342}
+          \item \cite{sthref2545}
+          \item \cite{sthref2202}
+          \item \cite{REFRN23719}
+          \item \cite{sthref2010}
+        \end{literaturinternet}

@@ -1,0 +1,25 @@
+    \item Konfigurieren Sie Ihre Namensauflösung so, dass Sie auf die Datenbank Ihres Banknachbarn zugreifen können. Verwenden Sie die folgenden Einstellungen zur Konfiguration der Namensauflösung:
+
+    \tablefirsthead{%
+      \hline
+      \multicolumn{1}{|l}{\textbf{Objekt}} &
+      \multicolumn{1}{|l|}{\textbf{Einstellung}} \\
+      \hline
+    }
+    \tabletail{
+      \hline
+    }
+    \begin{supertabular}{|l|l|}
+      \hline
+      Net Service Name & orclneighbour\\
+      \hline
+      Protokol & TCP/IP \\
+      \hline
+      Host & IP/Hostname Ihres Nachbarn \\
+      \hline
+      Port & 1521 \\
+      \hline
+      Service-Name & SID Ihres Nachbarn \\
+      \hline
+      Verbindungstype & Datenbank-Standardwert\\
+    \end{supertabular}

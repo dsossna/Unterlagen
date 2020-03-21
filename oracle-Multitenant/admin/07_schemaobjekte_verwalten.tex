@@ -1,0 +1,851 @@
+\chapter{Schemaobjekte verwalten}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+      \section{Tabellen}
+      \subsection{Einführung}
+      Oracle kennt mehrere verschiedene Arten von Tabellen.
+      \begin{itemize}
+        \item Heap-Organized Tables (Standardtabellen)
+        \item Index-Organized Tables
+        \item Partitioned Tables
+        \item Temporary Tables
+      \end{itemize}
+        \subsubsection{Heap-Organized Tables}
+          Heap-Organized Tables sind die Basisdatenstruktur einer Oracle
+          Datenbank. Daten werden in Zeilen und Spalten abgelegt. Jede Tabelle
+          wird mit einem Namen und einer Anzahl von Spalten definiert. Jede
+          Spalte hat einen Bezeichner, einen Datentyp und eine Länge.
+
+          Bei dieser Art von Tabelle werden die Zeilen unsortiert, in der
+          Reihenfolge ihrer Erstellung abgelegt. Dies ist vergleichbar mit einem
+          \enquote{Haufen} (engl. Heap) bei dem alle Elemente einfach
+          aufeinander geworfen werden.
+          \bild{Heap-Organized Table}{heap_organized_table}{1.5}
+          \abbildung{heap_organized_table} zeigt, dass die Tabellenzeilen, hier
+          durch rote, blaue, grüne und gelbe Kästchen dargestellt, einfach
+          nacheinander abgelegt werden.
+        \subsubsection{Index-Organized-Tables}
+          In einer Index-Organized Table dagegen, werden die Daten als sortierte
+          Baumstruktur abgelegt.
+          \bild{Index-Organized-Table}{Index}{0.9}
+          Die unterste Ebene dieses Baumes, auch \enquote{Leaf Level} genannt,
+          dient zur Ablage der Daten. Die oberen Beiden können als
+          \enquote{Inhaltsverzeichnis} oder \enquote{Stichwortverzeichnis}
+          verstanden werden. Dort werden Metadaten gehalten, mit deren Hilfe,
+          die Daten in der Leaf Ebene aufgefunden werden können. Nachteilig
+          ist, dass der Baum bei jedem Änderungsvorgang gepflegt werden muss.
+          Daraus folgt, dass eine solche Tabelle besonders da geeignet ist, wo
+          hohe Lesegeschwindigkeit gefordert und ein geringes Änderungsvolumen
+          vorhanden ist.
+        \subsubsection{Partitioned Tables}
+          Wie bereits bekannt, werden Tabellen in Form von Segmenten in einer
+          Datendatei abgelegt. Wächst eine Tabelle stark an, vergrößert
+          sich folglich auch ihr Segment. Dadurch wird mit der Zeit das Arbeiten
+          mit den betroffenen Daten sehr langsam. Um bei solch großen
+          Tabellen Abhilfe zu schaffen, kann eine Tabelle in mehrere Segmente,
+          so genannte Partitionen, zerteilt werden. Dies ist 1:1 vergleichbar
+          mit einer Festplatte, die in mehrere Partitionen aufgeteilt wird.
+
+          Ein großer Vorteil der Partitionierung ist, dass sie für
+          Anwendungen völlig transparent ist. Das bedeutet, dass
+          SQL-Statements in keiner Weise geändert werden müssen. Es sieht
+          nach wie vor alles so aus, als wäre die Tabelle in \enquote{einem
+          Stück} gespeichert. Ein weiterer Vorteil ist, dass die Datenbank
+          nicht mehr die komplette Tabelle verarbeiten muss, wenn ein Nutzer nur
+          einen Teil der Daten abrufen muss (höhere
+          Verarbeitungsgeschwindigkeit, aufgrund des niedrigeren Datenvolumens).
+          Die Datenbank entscheidet selbstständig, auf welchen Partitionen
+          gearbeitet werden muss.
+          \bild{Partitionierte Tabelle}{partitioned_table}{1}
+        \subsubsection{Temporäre Tabellen}
+          Wie der Name dieser Tabellenart bereits sagt, dienen sie zur temporären Aufnahme von Daten. Ihr Vorteil besteht darin, dass sie dynamisch wachsen und schrumpfen und keinerlei Redo-Informationen erzeugen. Dadurch sind sie ideal für Daten geeignet, die nur für kurze Zeit existieren.
+      \subsection{Oracle 11g Advanced Compression}
+        Oracle 11g Advanced Compression ist die Weiterentwicklung der Oracle Basic Compression Technologie, die seit Oracle 9i im Einsatz ist. Es ist nun möglich:
+        \begin{itemize}
+          \item DIRECT-Load-Operationen,
+          \item DML-Operationen,
+          \item Unstrukturierte Daten (LOBs),
+          \item Backups und
+          \item Networktraffic
+        \end{itemize}
+        zu komprimieren.
+
+        Die unter Oracle 9i eingeführte Basic Compression ermöglichte nur die transparente Komprimierung von Daten, die mittels eines Direct Path Load Vorganges (mittels SQL*Loader) in die Datenbank geschrieben wurden. Da aber die Masse der Daten mittels SQL oder des imp-tools geladen wurden, konnte die Kompression nur sehr selten zum Einsatz gebracht werden, was ihre Akzeptanz stark verringerte.
+        \begin{merke}
+          Die Advanced Compression ist eine lizenz- und kostenpflichtige Zusatzoption für die Enterprise Edition der Datenbank!
+        \end{merke}
+        \subsubsection{Wie funktioniert die Kompression?}
+          Die Kompression von Tabellendaten erfolgt, indem mehrfach auftretende Werte eliminiert werden. Oracle speichert komprimierte Daten in einem Block als \enquote{selbst erhaltende Daten}, d. h. alles was zur Rekonstruktion der Daten benötigt wird, ist im gleichen Block gespeichert, in dem auch die Daten selbst abgelegt sind. Die Datenkompression ist transparent, was bedeutet, dass alle Features, die auf unkomprimierte Blöcke angewendet werden können, auch auf Komprimierte anwendbar sind.
+          \bild{Ein unkom\-pri\-mierter Datenblock}{uncompressed_block}{1}
+
+          Der Aufbau eines unkomprimierten Datenblockes ist bereits bekannt. Nach dem Header, der alle Metainformationen zum Block enthält, werden die Nutzdaten eingetragen.
+
+          In einem komprimierten Block kommt eine neue Struktur hinzu, die \enquote{Symbol table}, die in \abbildung{compressed_block} blau dargestellt wird. Alle Werte, die vorher im unkomprimierten Block redundant waren, werden in ihr gespeichert. Im Datenbereich werden nur noch Zeiger (dargestellt durch rote X) abgelegt, die auf die jeweiligen Werte verweisen.
+          \bild{Ein komprimierter Datenblock}{compressed_block}{1}
+          \begin{merke}
+            Zu beachten ist, dass sich die Kompression immer nur auf neue Datensätze auswirkt. Daten die schon vor dem Aktivieren der Kompression gespeichert waren, bleiben davon unberührt. Das bedeutet, dass ein Block sowohl komprimierte als auch unkomprimierte Datensätze enthalten kann.
+          \end{merke}
+        \subsubsection{Konfigurieren der Kompression}
+          Die Komprimierung für Tabellen kann auf Ebene der Tablespaces oder der, der Tabellen selbst konfiguriert werden. Wird sie auf Tablespace ebene konfiguriert, werden automatisch alle Tabellen in diesem Tablespace komprimiert.
+          \begin{lstlisting}[caption={Kompression auf Tablespace ebene aktivieren},label=admin300,language=oracle_sql]
+-- Basic Compression
+SQL> CREATE TABLESPACE data
+  2  DATAFILE '/u02/oradata/orcl/data01.dbf' SIZE 100M
+  3  DEFAULT  COMPRESS BASIC;
+
+--Advanced Compression
+SQL> CREATE BIGFILE TABLESPACE hr_data
+  2  DATAFILE '/u02/oradata/orcl/hr_data01.dbf' SIZE 500M
+  3  DEFAULT  COMPRESS FOR OLTP;
+          \end{lstlisting}
+          \begin{merke}
+            Die Advanced Compression kann in smallfile und in bigfile Tablespaces zum Einsatz kommen!
+          \end{merke}
+          Auf Tabellenebene wird die Kompression ebenfalls mit der \languageorasql{COMPRESS}-Klausel aktiviert. Dies kann schon bei der Tabellenerstellung oder auch noch im Nachhinein erfolgen.
+\clearpage
+          \begin{lstlisting}[caption={Eine Tabelle mit OLTP Compression erstellen},label=admin301,language=oracle_sql]
+SQL> CREATE TABLE buchung_hist (
+  2    Buchungs_ID         NUMBER,
+  3    Betrag              NUMBER(12, 2),
+  4    Buchungsdatum       DATE,
+  5    Konto_ID            NUMBER NOT NULL,
+  6    Transaktions_ID     NUMBER NOT NULL,
+  7    Archivierungsdatum  DATE NOT NULL,
+  8    CONSTRAINT buchung_hist_pk PRIMARY KEY (Buchungs_ID)
+  9  )
+ 10  COMPRESS FOR OLTP;
+          \end{lstlisting}
+          Die Tabelle \identifier{buchung\_hist} ist so konfiguriert, dass von Anfang an, alle Datensätze komprimiert werden. Das es sich hier um eine komprimierte Tabelle handelt, kann der View \identifier{dba\_tables} entnommen werden.
+          \begin{lstlisting}[caption={Eine Tabelle mit OLTP Compression erstellen},label=admin302,language=oracle_sql]
+SQL> SELECT table_name, compression, compress_for
+  2  FROM   dba_tables
+  3  WHERE  table_name LIKE 'BUCHUNG_HIST';
+
+TABLE_NAME                      &COMPRESS& COMPRESS_FOR
+------------------------------- -------- ------------
+BUCHUNG_HIST                    ENABLED  &OLTP&
+          \end{lstlisting}
+          Existiert die Tabelle bereits und die Kompression soll nachträglich genutzt werden, gibt es zwei Möglichkeiten:
+          \begin{itemize}
+            \item Aktivieren der Kompression (nur neue Datensätze sind betroffen)
+            \item Die gesamte Tabelle komprimieren (alte Datensätze werden ebenfalls komprimiert)
+          \end{itemize}
+          \begin{lstlisting}[caption={Nachträgliches aktivieren der OLTP Kompression},label=admin303,language=oracle_sql]
+SQL> ALTER TABLE buchung COMPRESS FOR OLTP;
+          \end{lstlisting}
+          Soll die gesamte Tabelle komprimiert werden, muss sie neu aufgebaut werden. Dies geschieht mit der \languageorasql{MOVE}-Klausel. Diese sorgt, in Verbindung mit der \languageorasql{COMPRESS}-Klausel dafür, dass die Tabelle reorganisiert/defragmentiert und komprimiert wird.
+          \begin{lstlisting}[caption={Komprimieren einer Tabelle},label=admin304,language=oracle_sql]
+SQL> ALTER TABLE buchung MOVE COMPRESS FOR OLTP;
+          \end{lstlisting}
+          \begin{merke}
+            Die Reorganisation einer Tabelle ist sehr ressourcenintensiv und sollte daher nur bei niedriger Grundlast im System durchgeführt werden.
+          \end{merke}
+          Muss die Kompression aus irgendeinem Grund wieder deaktiviert werden, geschieht dies mit der \languageorasql{NOCOMPRESS}-Klausel.
+          \begin{lstlisting}[caption={Deaktivieren der Kompression},label=admin305,language=oracle_sql]
+SQL> ALTER TABLE buchung NOCOMPRESS;
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Dekomprimieren einer Tabelle},label=admin306,language=oracle_sql]
+SQL> ALTER TABLE buchung MOVE NOCOMPRESS;
+          \end{lstlisting}
+        \subsubsection{Ein Experiment}
+          Im nachfolgenden Experiment soll gezeigt werden, wie sich die Kompression auf den Platzbedarf einer Tabelle auswirkt.
+
+          Im ersten Schritt wird die Anzahl der Datenblöcke und die Anzahl der Tabellenzeilen pro Datenblock, für die unkomprimierte Tabelle \identifier{Buchung} ermittelt.
+          \begin{lstlisting}[caption={Anzahl der Datenblöcke + durchschnittliche Anzahl der Zeilen pro Block},label=admin307,language=oracle_sql,alsolanguage=sqlplus]
+col segment_name format a20
+SQL> SELECT segment_name, blocks
+  2  FROM   dba_segments
+  3  WHERE  segment_name LIKE 'BUCHUNG';
+
+SEGMENT_NAME               BLOCKS
+---------------------- ----------
+BUCHUNG                      2176
+
+SQL> SELECT AVG(Anzahl) As Mittelwert
+  2  FROM   (SELECT  DBMS_ROWID.ROWID_BLOCK_NUMBER(rowid) AS Block_ID,
+  3                  COUNT(*) AS Anzahl
+  4          FROM    Buchung
+  5          GROUP BY DBMS_ROWID.ROWID_BLOCK_NUMBER(rowid));
+
+ MITTELWERT
+-----------
+ 405,120428
+          \end{lstlisting}
+          Gemäß der Abfrage aus \beispiel{admin307} besteht die Tabelle \identifier{Buchung} aus 2176 Datenblöcken mit durchschnittlich 405 Zeilen pro Datenblock.
+
+          Der zweite Schritt besteht darin, die Tabelle \identifier{Buchung} zu komprimieren.
+          \begin{lstlisting}[caption={Komprimieren der Tabelle \identifier{Buchung}},label=admin308,language=oracle_sql]
+SQL> ALTER TABLE buchung MOVE COMPRESS FOR OLTP;
+          \end{lstlisting}
+          Zu guter Letzt, wird nun die gleiche Statistik, wie in \beispiel{admin307} erhoben.
+          \begin{lstlisting}[caption={Anzahl der Datenblöcke + durchschnittliche Anzahl der Zeilen pro Block nach der Kompression},label=admin309,language=oracle_sql,alsolanguage=sqlplus]
+col segment_name format a20
+SQL> SELECT segment_name, blocks
+  2  FROM   dba_segments
+  3  WHERE  segment_name LIKE 'BUCHUNG';
+
+SEGMENT_NAME               BLOCKS
+---------------------- ----------
+BUCHUNG                      2048
+
+SQL> SELECT AVG(Anzahl) AS Mittelwert
+  2  FROM   (SELECT  DBMS_ROWID.ROWID_BLOCK_NUMBER(rowid) AS Block_ID,
+  3                  COUNT(*) AS Anzahl
+  4          FROM    Buchung
+  5          GROUP BY DBMS_ROWID.ROWID_BLOCK_NUMBER(rowid));
+
+ MITTELWERT
+-----------
+ 445,672228
+          \end{lstlisting}
+          Die neue Statistik beweist es. Durch die Kompression besteht die Tabelle \identifier{Buchung} aus ca. 6 \% weniger Datenblöcken und es werden im arithmetischen Mittel 10 \% mehr Tabellenzeilen pro Datenblock gespeichert.
+          \begin{merke}
+            Durch die Nutzung von komprimierten Tabellen wird der Platzbedarf an Arbeitsspeicher und Speicher auf dem Datenträger reduziert. Daraus resultiert oft eine bessere Performance für Leseoperationen, die Kosten für Schreiboperationen steigen aber.
+          \end{merke}
+      \subsection{Tabellen reorganisieren}
+        Eine Tabelle wird reorganisiert, indem sie in ein neues Segment verschoben wird. Dies kann auf zwei unterschiedliche Arten geschehen:
+        \begin{itemize}
+          \item Die Tabelle wird in ein neues Segment, im gleichen Tablespace, verschoben.
+          \item Die Tabelle wird in ein neues Segment, in einem anderen Tablespace, verschoben.
+        \end{itemize}
+        Hierzu einige Beispiele:
+        \begin{lstlisting}[caption={Reorganisieren der Tabelle \identifier{Buchung}},label=admin310,language=oracle_sql]
+SQL> ALTER TABLE buchung MOVE;
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Verschieben einer Tabelle in einen anderen Tablespace},label=admin311,language=oracle_sql]
+SQL> ALTER TABLE buchung MOVE
+  2  TABLESPACE users;
+        \end{lstlisting}
+        Das Verschieben einer Tabelle hat zur Konsequenz, dass die RowIDs aller Tabellenzeilen verändert werden. Daraus resultiert:
+        \begin{itemize}
+          \item Das alle Indizes, die auf der Tabelle liegen, ungültig werden und neu erstellt oder reorganisiert werden müssen.
+          \item Während des Verschiebevorganges sind keine DML-Operationen auf der Tabelle mög\-lich.
+          \item Es werden alle Statistiken für das automatische Performance Tuning ungültig und müssen neu gesammelt werden.
+        \end{itemize}
+        Dies zeigt, dass das Verschieben einer Tabelle eine sehr teure Angelegenheit ist und gut überlegt sein sollte.
+      \subsection{Informationen über Tabellen sammeln}
+        \begin{literaturinternet}
+          \item \cite{ADMIN015}
+        \end{literaturinternet}
+    \section{Indizes}
+      Indizes sind optionale Strukturen, die mit einer Tabelle verbunden sind. Sie werden benutzt, um die Geschwindigkeit von Abfragen zu erhöhen. Dies geschieht, indem sie die Anzahl der Datenträgerzugriffe pro Abfrage verringern.
+
+      Es können beliebig viele Indizes zu einer Tabelle erstellt werden, solange sich die Spaltenkombinationen für die Indizes unterscheiden. Dabei kann eine Spalte in mehreren Kombinationen vorkommen und ein Index kann sich über mehrere Spalten erstrecken.
+
+      Oracle stellt die unterschiedlichsten Arten von Indizes bereit:
+      \begin{itemize}
+        \item \textbf{B-Baum} Index: Die meist genutzte Variante (Standard)
+        \item \textbf{Reverse key} Index: Werden hauptsächlich im Oracle Real Application Cluster genutzt
+        \item \textbf{Bitmap} Index: Sehr kompakte Variante, die am besten auf Spalten mit sehr wenigen Werten funktioniert
+        \item \textbf{Function-based} Index: Enthalten den berechneten Ergebniswert einer Funktion
+      \end{itemize}
+\clearpage
+      Indizes sind logisch und physisch unabhängig von den Daten in der Tabelle, an die sie angehängt sind. Deshalb benötigen Sie ihren eigenen Speicherplatz auf dem Datenträger. Ein Index kann erstellt und gelöscht werden, ohne das dadurch Tabellen oder andere Speicherstrukturen beeinflusst werden. Ihre Verwaltung geschieht automatisch durch die Datenbank, wenn DML-Operationen auf ihren Basistabellen stattfinden. Auch Anwendungen werden durch das Löschen eines Index nicht beeinträchtigt, nur der Zugriff auf die Nutzdaten kann  langsamer werden.
+      \subsection{Bäume in der Informatik}
+        Bäume stellen in der Informatik eine wichtige hierarchische Datenstruktur dar, die für unterschiedlichste Zwecke genutzt werden kann. Das bekannteste Beispiel für Bäume sind die \enquote{Verzeichnisbäume} eines Dateisystems.
+        \begin{center}
+          \scalebox{1}{
+            \begin{tikzpicture}[->, >=stealth',level/.style={sibling distance = 3cm/#1, level distance = 1.5cm}]
+              \node[arn_root] {/}
+                child {node[arn_first] {etc}
+                  child {node [arn_second] {httpd}}
+                  child {node [arn_second] {mail}}
+                }
+                child {node [arn_first] {home}
+                  child {node [arn_second] {bin}}
+                }
+                child {node [arn_first] {var}
+                  child{node[arn_second] {run}}
+                }
+                child {node[arn_first] {usr}
+                  child{node[arn_second]{bin}}
+                  child{node[arn_second]{share}}
+                };
+            \end{tikzpicture}
+          }
+        \end{center}
+        Die Abbildung zeigt den Unix-Verzeichnisbaum, anhand dessen einige Merkmale eines Baumes erkennbar sind.
+        \begin{itemize}
+          \item Jedes Element eines Baumes wird als \enquote{Knoten} bezeichnet.
+          \item Die Verbindungslinien/Pfeile zwischen den Knoten sind \enquote{Kanten}.
+          \item Ein Knoten, der keinen Vorgänger hat, wird als \enquote{Wurzel} bezeichnet (im Diagramm rot).
+          \item Alle Knoten ohne Nachfolger sind \enquote{Blätter} bzw. \enquote{Leafs} (im Diagramm grün)
+          \item Knoten, die sowohl einen Vorgänger als auch einen Nachfolger, besitzen sind \enquote{Zweige} oder \enquote{Branches} (im Diagramm blau).
+        \end{itemize}
+        \subsubsection{Wichtige Eigenschaften von Bäumen am Beispiel des Binärbaumes}
+          Es gibt diverse Arten von Bäumen in der Informatik (z. B. Binärbaum, B-Baum, B$^+$-Baum oder B$^*$-Baum, uvm.). Die einfachste Form ist der Binärbaum. Daher wird dieser hier dazu benutzt werden, um die wichtigsten Grundlagen für das Verständnis von Bäumen zu legen.
+
+          Der im Folgenden abgebildete Binärbaum dient als Grundlage für alle weiteren Erläuterungen.
+          \begin{center}
+            \scalebox{0.8}{
+              \begin{tikzpicture}[->, >=stealth',level/.style={sibling distance = 8cm/#1, level distance = 1.5cm}]
+                \node[arn_root] {24}
+                  child{node[arn_first] {17}
+                    child{node[arn_second] {15}
+                      child{node[arn_third] {13}}
+                      child{node[arn_third] {16}}
+                    }
+                    child{node[arn_second] {21}
+                      child{node[arn_third] {19}}
+                      child{node[arn_third] {23}}
+                    }
+                  }
+                  child {node [arn_first] {30}
+                    child {node [arn_second] {28}
+                      child{node[arn_third] {26}}
+                      child{node[arn_third] {29}}
+                    }
+                    child {node [arn_second] {34}
+                      child{node[arn_third] {31}}
+                      child{node[arn_third] {38}}
+                    }
+                  };
+              \end{tikzpicture}
+            }
+          \end{center}
+          Wichtige Eigenschaften eines Baumes sind:
+          \begin{itemize}
+            \item \textbf{Tiefe}: Die Tiefe eines Knotens ist sein Abstand zur Wurzel (Anzahl der Kanten zwischen ihm und der Wurzel).
+            \item \textbf{Ebene/Level}: Die Menge aller Knoten der gleichen Tiefe wird als Ebene bzw. Level bezeichnet.
+            \item \textbf{Baumhöhe}: Die Höhe eines Baumes wird durch die maximale Tiefe, die ein Knoten erreichen kann, bestimmt.
+            \item \textbf{Vollständigkeit}: Ein Baum gilt als vollständig, wenn alle Ebenen, bis auf die Unterste, komplett gefüllt sind. Die unterste Ebene muss von links nach rechts gefüllt sein.
+          \end{itemize}
+          Daraus ergibt sich, für den Binärbaum, folgendes:
+          \begin{itemize}
+            \item Die blauen Knoten bilden eine Ebene mit der Tiefe 1.
+            \item Die grünen Knoten bilden eine Ebene mit der Tiefe 2.
+            \item Die gelben Knoten bilden eine Ebene mit der Tiefe 3.
+            \item Die Höhe des Baumes ist mit dem Wert 3 anzugeben. Dabei werden alle Ebenen, außer der Wurzel gezählt.
+            \item Der Baum ist vollständig, da die blaue Ebene mit zwei Knoten und die grüne Ebene mit vier Knoten voll besetzt ist.
+            \item Bäume wachsen in der Informatik von oben nach unten.
+          \end{itemize}
+          Die folgende Abbildung zeigt einen unvollständigen Binärbaum.
+          \begin{center}
+            \scalebox{0.8}{
+              \begin{tikzpicture}[->, >=stealth',level/.style={sibling distance = 8cm/#1, level distance = 1.5cm}]
+                \node[arn_root] {24}
+                  child{node[arn_first] {17}
+                    child{node[arn_second] {15}
+                      child{node[arn_third] {13}}
+                      child{node[arn_third] {16}}
+                    }
+                    child{node[arn_second] {21}
+                      child{node[arn_third] {19}}
+                      child{node[arn_third] {23}}
+                    }
+                  }
+                  child {node [arn_first] {30}
+                    child {node [arn_second] {28}}
+                  };
+              \end{tikzpicture}
+            }
+          \end{center}
+          In der zweiten Ebene (grün) fehlt ein Element. Sie ist nicht mehr voll besetzt, was bedeutet, dass der Baum unvollständig ist.
+        \subsubsection{Elemente und Höhe des Binärbaumes}
+          Um die Anzahl der Elemente eines beliebigen vollständigen Binärbaumes zu berechnen, müssen verschiedene Informationen bekannt sein:
+          \begin{itemize}
+            \item In einem Binärbaum hat jeder Knoten höchstens zwei Nachfolger.
+            \item Die Höhe des Baumes ist für die Berechnung notwendig.
+            \item Die Ebenen werden nummeriert, beginnend mit dem Wert 0 bei der Wurzel.
+          \end{itemize}
+          Mit Hilfe dieser Informationen kann nun die maximale Anzahl der Elemente des Baumes (hier mit dem Buchstaben $n$ bezeichnet) berechnet werden:
+          \begin{center}
+            $ n = 2^0 + 2^1 + 2^2 + 2^3$ \\
+            $ n = 15$
+          \end{center}
+          Der Wert 2 in dieser Formel rührt daher, dass jeder Knoten höchstens zwei Nachfolger haben kann. Die Exponenten 0, 1, 2 und 3 sind die Nummern der Ebenen. Berechnet man die einzelnen Zweierpotenzen ergibt sich:
+          \begin{center}
+          $ n= 1 + 2 + 4 + 8$
+          \end{center}
+          Die Wurzelebene hat genau ein Element. Die zweite Ebene hat höchstens zwei, die dritte Ebene höchstens 4 und die Blatt ebene höchstens 8 Elemente. Diese Formel lässt sich auf folgende Schreibweise verkürzen: $n = 2^{h + 1} - 1$. Denn es gilt:
+          \begin{center}
+          $ 2^{h+1}-1 = (2^0 + 2^1 + 2^2 + \dots + 2^h) - 1$
+          \end{center}
+          Der Buchstabe $h$ steht für die Höhe des Baumes.
+
+          Dieses Rechenbeispiel zeigt, dass die Höhe des Baumes und die Anzahl der Elemente in einer direkten Beziehung zu einander stehen. Daraus folgt, wenn die Anzahl der Elemente des Binärbaumes bekannt ist, kann die Höhe des Baumes errechnet werden. Dies geschieht durch Umstellen der Formel: $n = 2^{h + 1} - 1$.
+          \begin{align}
+            &2^{h + 1} - 1 &&= n            &&| + 1\\
+            &2^{h + 1}     &&= n + 1        &&| log_2\\
+            &h + 1         &&= log_2(n + 1) &&| - 1\\
+            &h             &&= log_2(n + 1) - 1 && = log_2(n) abgerundet
+          \end{align}
+          Das $log_2(n + 1) - 1 = log_2(n) abgerundet$ gilt lässt sich beweisen:
+          \begin{align}
+            &n                 &&= 15 \\
+            &log_2(15 + 1) - 1 &&= 3 \\
+            &log_2(15)         &&= 3.91 (Abrunden!)
+          \end{align}
+          \begin{merke}
+            Mit Hilfe der Formel $log_2(n)$ kann die Höhe eines Binärbaumes
+            berechnet werden. Dabei ist zu beachten, dass das Ergebnis immer auf
+            die ganze Zahl \textbf{abgerundet} werden muss.
+          \end{merke}
+          Zur Wiederholung: Die Höhe eines Baumes wird durch die maximale
+          Tiefe, die ein Knoten erreichen kann, bestimmt. Die Tiefe eines
+          Knotens ist sein Abstand von der Wurzel (Anzahl der Kanten zwischen
+          ihm und der Wurzel).
+
+          Die Zahl 3 aus dem vorangegangenen Beispiel gibt somit die Anzahl der
+          Kanten zwischen dem Wurzelknoten und einem Blattknoten an. Damit ist
+          aber noch nicht die Frage geklärt: \enquote{Wie viele Knoten
+          müssen maximal gelesen werden, um ein bestimmtes Objekt
+          aufzufinden?}. Die Antwort lautet: Die maximale Anzahl der
+          Lesezugriffe ist die Höhe des Baumes + 1.
+
+          Dies kann am Beispiel des Knotens mit der Nummer \enquote{19}
+          nachgewiesen werden. Um diesen Knoten aufzufinden, müssen die Knoten
+          \enquote{24}, \enquote{17} und \enquote{21} gelesen werden.
+          Anschließend noch die \enquote{19} selbst. Dies sind vier
+          Zugriffe. Die Höhe des Baumes wird mit $h = log_2(n) = 3.91$
+          berechnet, was abgerundet $3$ ergibt. Für die Anzahl der
+          Lesezugriffe muss die Zahl $3.91$ aufgerundet werden, was den Wert $4$
+          ergibt.
+        \subsubsection{Bäume als Hilfsmittel zur Suche von Datensätzen}
+          Um demonstrieren zu können, welch wichtige Rolle Bäume beim
+          Auffinden von Datensätzen spielen, wird zu aller erst eine Tabelle
+          benötigt. Dies soll hier die Tabelle \identifier{Kunde} aus dem
+          Schema \identifier{bank} sein. Sie umfasst insgesamt 561 Zeilen.
+
+          Um nun einen bestimmten Datensatz zu finden, gibt es zwei
+          unterschiedliche Verfahren:
+          \begin{itemize}
+            \item \textbf{Full Table Scan}: Das zeilenweise Durchsuchen der
+            Tabelle, bis zum Auffinden des richtigen Datensatzes wird als Full
+            Table Scan bezeichnet.
+            \item \textbf{Index Scan}: Bei einem Index Scan wird der
+            Suchbaum/Index nach dem gewünschten Datensatz durchsucht.
+          \end{itemize}
+          Diese beiden Methoden unterscheiden sich wesentlich in der Anzahl der
+          Lesevorgänge, die zum Auffinden eines Datensatzes benötigt werden.
+          Beim Full Table Scan gilt die Formel: $x = \frac{n}{2}$, wobei $x$ die
+          Anzahl der Lesevorgänge und $n$ die Anzahl der Datensätze darstellt.
+          Für die Tabelle \identifier{Kunde} bedeutet dies konkret: $x =
+          \frac{561}{2} \rightarrow x \approx 280$. Es werden also ca. 280
+          Lesevorgänge benötigt, um in der Tabelle \identifier{Kunde} einen
+          ganz bestimmten Datensatz zu finden.
+
+          Anders sieht dies bei der Nutzung eines Suchbaumes aus. Wie zuvor
+          beschrieben, wird in einem Binärbaum die Anzahl der Lesevorgänge
+          mit der Formel: $log_2(n)$ angegeben, wobei $n$ die Anzahl der
+          Datensätze darstellt. Bezogen auf die Tabelle \identifier{Kunde}
+          bedeutet dies: $x = log_2(561) \rightarrow log_2(561) = 9.13
+          \rightarrow x \approx 10$. Mit Hilfe eines Suchbaumes würden also
+          nur durchschnittlich 10 Zugriffe, statt der 280 benötigt. Dies
+          stellt eine Kostenreduzierung von ca. 96 \% dar.
+          \begin{merke}
+            In modernen Datenbanken kommen keine Binärbäume, sondern
+            B*-Bäume zum Einsatz! Der Binärbaum wurde hier nur als einfaches
+            Beispiel gewählt.
+          \end{merke}
+      \subsection{B*-Baum Indizes}
+        \subsubsection{Aufbau und Funktionsweise}
+          B*-Bäume (gesprochen B-Stern Baum) sind eine vielfach
+          weiterentwickelte Variante der Binärbäume. Urheber dieser Baumart
+          ist Donald Ervin Knuth\footnote{Donal Ervin Knuth: US-Amerikanischer
+          Informatiker und Professor an der Stanford University. Autor der
+          Buchserie: \enquote{The Art of Computer Programming} und Erfinder des
+          Textsatzsystems \enquote{\TeX}}. Einer der wesentlichsten Unterschiede
+          zu den Binärbäumen ist, dass in einem B*-Baum ein Knoten beliebig
+          viele Nachfolger haben kann, nicht mehr nur Zwei. Das bedeutet, dass
+          die Kosten für die Suche eines Datensatzes noch weiter reduziert
+          werden, da der Baum sehr viel breiter und damit flacher wird.
+
+          B*-Baum Indizes sind die häufigste Index-Variante in einer
+          Datenbank. Sie bestehen aus einer Reihe von Oracle-Blöcken und
+          enthalten die indizierten Werte in sortierter Reihenfolge. Jedem Wert
+          muss dabei ein Schlüssel zugeordnet werden, mit dessen Hilfe der
+          Wert gefunden werden kann.
+
+				 Wird beispielsweise die Spalte \identifier{Name} der Tabelle
+				 \identifier{Bank} indiziert, legt Oracle die RowID als Wert und den Namen
+				 der jeweiligen Bank als Schlüssel ab. Da mittels der RowID eine
+				 Tabellenzeile direkt aus einer Datendatei gelesen werden kann, bedeutet
+				 dies, dass nach dem Auffinden des Schlüsselwertes direkt die gewünschte
+				 Zeile gelesen wird.
+          \begin{merke}
+            Die RowID stellt in einem B*-Baum-Index das Hilfsmittel zum
+            Auffinden der Tabellenzeilen dar. Die indizierten Tabellenspalten
+            werden als Schlüssel benutzt.
+          \end{merke}
+          \abbildung{b_tree} zeigt beispielhaft, wie ein B*-Baum Index aussehen könnte.
+          \bild{Ein B*-Baum Index}{b_tree}{1.2}
+          Der Rootnode und die Branchnodes enthalten die Schlüsselwerte, in
+          der Form: von - bis und die Adresse des dazugehörigen Indexblockes.
+          Zum Beispiel bedeutet 0 -7 0, dass die Schlüsselwerte null bis
+          sieben im Branchnode Nummer null zu finden sind. Die erste Zeile in
+          den Branchnodes ist die Indexblocknummer (0, 1 und 2).
+
+          In den Leafnodes stehen dann die indizierten Schlüsselwerte und die
+          jeweilige RowID. Alle Leafnodes sind untereinander verbunden, so dass
+          ein direkter Wechsel von einem Leafnode in den nächsten stattfinden
+          kann, ohne dabei über den zuständigen Branchnode gehen zu
+          müssen.
+        \subsubsection{B*-Tree Indizes erstellen}
+          B*-Tree Indizes werden in Oracle mit dem Kommando \languageorasql{CREATE INDEX} erstellt.
+          \begin{lstlisting}[caption={Einen B*-Tree Index erstellen},label=admin312,language=oracle_sql]
+SQL> CREATE INDEX idx_transactions
+  2  ON bank.buchung(buchungs_ID, transaktions_ID)
+  3  TABLESPACE bank;
+          \end{lstlisting}
+          Das SQL-Statement aus \beispiel{admin312} erstellt den Index
+          \identifier{idx\_transactions} auf den beiden Spalten
+          \identifier{buchungs\_ID} und \identifier{transaktions\_ID}. Die
+          \languageorasql{TABLESPACE}-Klausel ist optional und beeinflusst wo
+          der Index abgelegt wird.
+          \begin{merke}
+            Ein Index der auf eine Kombination von zwei oder mehr Spalten gelegt
+            wird, wird als \enquote{Composite Index} bezeichnet.
+          \end{merke}
+          Um sich den soeben erstellten Index näher betrachten zu können,
+          stellt Oracle die View \identifier{dba\_indexes} bereit.
+          \begin{lstlisting}[caption={Der Index unter der Lupe - Die View
+          dba\_indexes},label=admin313,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col index_name format  a20
+SQL> col index_type format  a10
+SQL> col uniqueness format  a10
+SQL> col blevel format      99
+SQL> col leaf_blocks format 9999999
+SQL> SELECT index_name, index_type, blevel, leaf_blocks, uniqueness
+  2  FROM   dba_indexes
+  3  WHERE  index_name LIKE 'IDX_TRANSACTIONS';
+
+INDEX_NAME       INDEX_TYPE  BLEVEL LEAF_BLOCKS UNIQUENES
+---------------- ----------- ------ ----------- ---------
+IDX_TRANSACTIONS  &NORMAL&           2        1325 NONUNIQUE
+          \end{lstlisting}
+          Die Spalte \identifier{index\_type} gibt Auskunft darüber, welche Art von Index erstellt wurde. Die Angabe \enquote{normal} besagt, dass es sich um einen B*-Tree Index handelt. Aus den Spalten \identifier{blevel} (B*-Tree-Level) und \identifier{leaf\_blocks} geht hervor, das der Baum eine Höhe von 2 hat und 1325 Leafnodes besitzt.
+
+          Die interessanteste Spalte, dürfte die Spalte \identifier{uniqueness} sein. Sie zeigt den Wert \enquote{nonunique}, der besagt, dass die Werte im Index nicht eindeutig sind. Da ein B*-Tree nur mit eindeutigen Schlüsselwerten funktionieren kann, muss Oracle an dieser Stelle einen Trick anwenden.
+
+          Der Trick besteht darin, die RowID als zusätzliche Indexspalte mit abzulegen. Das heißt, obwohl der Index auf nur zwei Spalten gelegt wurde, wird intern die RowID als dritte Indexspalte geführt. Dadurch werden zum einen alle Einträge eindeutig und können zum anderen nach der RowID sortiert werden.
+
+          Bei einem Unique Index ist ein solcher Trick nicht nötig. Hier werden nur die Schlüsselspalten gespeichert. Die RowID wird als eigenständiges Attribut zu den Schlüsselspalten abgelegt.
+          \begin{merke}
+            Letztlich ist der einzige Unterschied zwischen einem Unique Index und einen Nonunique Index das interne Format, in dem die Daten abgespeichert werden.
+          \end{merke}
+          Um einen Unique Index zu erstellen, muss dem \languageorasql{CREATE INDEX}-Kommando noch das Schlüsselwort \languageorasql{UNIQUE} hinzugefügt werden.
+          \begin{lstlisting}[caption={Einen B*-Tree Index erstellen},label=admin314,language=oracle_sql]
+SQL> CREATE UNIQUE INDEX idx_sozversnr
+  2  ON bank.mitarbeiter(sozversnr)
+  3  TABLESPACE bank;
+          \end{lstlisting}
+          Eine Abfrage auf \identifier{dba\_indexes} beweist, dass dieser Index Unique ist.
+          \begin{lstlisting}[caption={Ein Unique Index unter der Lupe - Die View dba\_indexes - 2},label=admin315,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col index_name format  a20
+SQL> col index_type format  a10
+SQL> col uniqueness format  a10
+SQL> col blevel format      99
+SQL> col leaf_blocks format 999999
+SQL> SELECT index_name, index_type, blevel, uniqueness
+  2  FROM   dba_indexes
+  3  WHERE  index_name LIKE 'IDX_SOZVERSNR';
+
+INDEX_NAME       INDEX_TYPE  BLEVEL UNIQUENES
+---------------- ----------- ------ ---------
+IDX_SOZVERSNR     &NORMAL&           0  &UNIQUE&
+          \end{lstlisting}
+        \subsubsection{Einen Index für ein Constraint erstellen}
+          Primary Key und Unique Constraints benötigen einen eigenen Unique Index, um arbeitsfähig zu sein. Dieser Index wird, beim Anlegen des Constraints, automatisch mit erstellt. Der DBA hat jedoch die Möglichkeit, einen Index selbst anzulegen und diesen mit dem Constraint zu verbinden. Dies ist beispielsweise dann sehr nützlich, wenn der Index, getrennt von der Tabelle, in einem anderen Tablespace liegen soll.
+          \begin{lstlisting}[caption={Ein Unique Constraint mit einem Index verbinden},label=admin316,language=oracle_sql]
+SQL> ALTER TABLE bank.mitarbeiter
+  2  ADD CONSTRAINT sozversnr_uk UNIQUE (sozversnr)
+  3  USING INDEX IDX_SOZVERSNR;
+          \end{lstlisting}
+          Der Quellcode aus den Zeilen eins und zwei ist bereits bekannt. Es wird der Tabelle \identifier{mitarbeiter} ein Unique-Constraint, auf der Spalte \identifier{sozversnr}, hinzugefügt. Die \languageorasql{USING INDEX}-Klausel in Zeile drei, ist nun dafür verantwortlich, dass das Constraint \identifier{sozversnr\_uk} mit dem Unique Index \identifier{idx\_sozversnr} verbunden wird.
+
+          Mit Hilfe dieser Klausel kann ein Index aber auch direkt, zusammen mit dem Constraint angelegt werden.
+\clearpage
+          \begin{lstlisting}[caption={Ein Unique Constraint zusammen mit einem Index erstellen},label=admin317,language=oracle_sql]
+SQL> ALTER TABLE bank.bank
+  2  ADD CONSTRAINT bank_name_uk UNIQUE (name)
+  3  USING INDEX (
+  4    CREATE UNIQUE INDEX bank.bank_name_uk
+  5    ON bank.bank(name));
+          \end{lstlisting}
+          Das die beiden Constraints tatsächlich mit den gewünschten Indizes verbunden sind, kann mittels der View \identifier{dba\_constraints} geprüft werden.
+          \begin{lstlisting}[caption={Die View \identifier{dba\_constraints}},label=admin318,language=oracle_sql]
+SQL> SELECT constraint_name, constraint_type, index_name
+  2  FROM   dba_constraints
+  3  WHERE  constraint_name IN ('SOZVERSNR_UK', 'BANK_NAME_UK');
+
+CONSTRAINT_NAME                C INDEX_NAME
+------------------------------ - ------------------------------
+SOZVERSNR_UK                   U IDX_SOZVERSNR
+BANK_NAME_UK                   U IDX_BANK
+          \end{lstlisting}
+        \subsubsection{Index Clustering Factor}
+          Der Index Clustering Factor ist ein Wert, der Auskunft darüber gibt, wie viele Leseoperationen benötigt werden, um die gesuchten Tabellenzeilen zu holen. Im Idealfall zeigen alle RowIDs eines Index-Leafnodes auf genau einen Tabellen block. Dies hätte einen Index Clustering Factor von 1 zur Folge. Im schlechtesten Fall, zeigt jede RowID eines Index-Leafnodes auf einen anderen Tabellen block. Dies würde dann mit einem sehr hohen Index Clustering Factor ausgedrückt werden.
+          \begin{merke}
+            Je höher der Index Clustering Factor, desto schlechter ist die Ausnutzung des Indizes möglich.
+          \end{merke}
+					In \abbildung{index_clustering_factor_height} ist, anhand der ersten beiden Indexblöcke, ein hoher Index Clustering Factor dargestellt. Nahezu jede RowID zeigt auf einen anderen Tabellen block. Sollten in diesem Zustand die vier Banken aus Index block Nummer 2 (zweiter von links) geholt werden, müsste Oracle vier Tabellenblöcke lesen, obwohl alle vier Zeilen auch in einem einzigen gespeichert werden könnten. Der Leseaufwand ist also viermal so hoch, wie nötig.
+\clearpage
+					\bild{Ein hoher Index Clustering Factor}{index_clustering_factor_height}{1.6}
+
+          In \abbildung{index_clustering_factor_low} wird nun ein niedriger Clustering Factor gezeigt. Die ersten drei Indexblöcke benötigen jeweils nur einen Tabellen block, für alle Tabellenzeilen. Dies ist der theoretische Idealfall.
+
+          \bild{Ein sehr niedriger Index Clustering Factor}{index_clustering_factor_low}{1.6}
+
+          Der Clustering Factor kann mit Hilfe der View
+          \identifier{dba\_indexes} abgefragt werden.
+          \begin{lstlisting}[caption={Den Index Clustering Factor anzeigen},label=admin319,language=oracle_sql]
+SQL> SELECT index_name, clustering_factor
+  2  FROM   dba_indexes
+  3  WHERE  owner LIKE 'BANK';
+
+INDEX_NAME                     CLUSTERING_FACTOR
+------------------------------ -----------------
+BANK_PK                                        1
+BANKFILIALE_PK                                 1
+BANKKUNDE_PK                                   1
+BUCHUNGS_PK                                 7857
+DEPOT_PK                                       1
+					\end{lstlisting}
+\clearpage
+\begin{lstlisting}[language=oracle_sql]
+EIGENKUNDEN_PK                               337
+EIGENKUNDEKONTO_PK                           832
+EIGENKUNDEMITARBEITER_PK                       1
+FREMDKUNDEN_PK                                 1
+FREMDKUNDEKONTO_PK                             1
+GIROKONTO_PK                                   2
+
+INDEX_NAME                     CLUSTERING_FACTOR
+------------------------------ -----------------
+KONTO_PK                                      11
+KUNDEN_PK                                      4
+MITARBEITER_PK                                 2
+SPARBUCH_PK                                    1
+\end{lstlisting}
+          \beispiel{admin319} zeigt das drei der 15 Indizes aus dem \identifier{bank}-Schema einen sehr hohen Clustering Factor haben (\identifier{buchungs\_pk}, \identifier{eigenkunden\_pk} und \identifier{eigenkundekonto\_pk}). Diese drei Indizes sollten neu aufgebaut werden, um den Clustering Factor zu verringern.
+      \subsection{Reverse Key Indizes}
+        Reverse Key Indizes sind eine Subvariante der B*-Tree Indizes. Ihre Besonderheit ist, dass sie die Bytes der Indexschlüsselspalten in umgekehrter Reihenfolge speichern. Durch das Speichern der Bytes in umgekehrter Reihenfolge wird erreicht, dass bei Einfügevorgängen die neuen Werte über den gesamten Index verteilt werden. Dadurch wird verhindert, das viele Serverprozesse gleichzeitig auf ein und den selben Index block zugreifen, was bei einem normalen B*-Tree Index der Fall wäre.
+
+        Das folgende Beispiel soll die Funktionsweise, die Vorteile, aber auch die Nachteile von Reverse Key Indizes erläutern.
+
+        Für die Tabelle \identifier{Buchung} wird auf der Spalte \identifier{Buchungs\_ID} ein neuer Reverse Key Index angelegt. Der bestehende B*-Tree Index wurde vorher gelöscht.
+        \begin{lstlisting}[caption={Einen Reverse Key Index anlegen},label=admin320,language=oracle_sql]
+SQL> CREATE UNIQUE INDEX IDX_Buchung
+  2  ON Buchung(Buchungs_ID)
+  3  REVERSE;
+        \end{lstlisting}
+        \begin{merke}
+          Das Schlüsselwort \languageorasql{REVERSE}, in Zeile 3, macht aus einem normalen B*-Tree Index einen Reverse Key Index.
+        \end{merke}
+\clearpage
+        Nun werden 100 neue Datensätze, mit den Buchungs-IDs 469197 bis 469297 in die Tabelle eingefügt. Da es sich bei den Buchungs-IDs um fortlaufende Werte handelt, werden alle in den gleichen Index block eingefügt. Dieses Verhalten kann kritisch sein, wenn sehr viele Nutzer gleichzeitig Datensätze in eine Tabelle einfügen. Es entsteht eine große Konzentration von Schreibzugriffen auf einen Index block, was dazu führen kann, dass die Nutzer auf einander warten müssen.
+
+        Um ein solches Warten zu verhindern, \enquote{dreht Oracle die Werte einfach um}. Das bedeutet, aus 469197 wird 791964 und aus 469198 wird 891964, usw. Somit werden Werte produziert, die nicht mehr fortlaufend sind und in unterschiedliche Indexblöcke eingetragen werden.
+
+        Der Vorteil ist, eine höhere Geschwindigkeit bei Schreibzugriffen, da die Nutzer nicht auf einander warten müssen. Der Nachteil ist ein extrem hoher Index Clustering Factor, da keine Synchronisation zwischen Index block und Tabellen block erreicht werden kann.
+      \subsection{Bitmap Indizes}
+        Bitmap Indizes unterscheiden sich von B*-Tree und Reverse Key Indizes dahingehend, dass sie nicht als Baumstruktur, sondern als Bitmap angelegt werden. Ein solcher Index ist immer dann sinnvoll, wenn eine Tabellenspalte eine niedrige Kardinalität hat (wenig unterschiedliche Werte, z. B. \enquote{M} für männlich und \enquote{W} für weiblich) und nur wenige Änderungen an der Tabelle vorgenommen werden.
+
+        Eine Tabellenspalte, die diese Kriterien erfüllt, befindet sich in der Tabelle \identifier{eigenkunde}. Es handelt sich um die Spalte \identifier{staatsangehoerigkeit}. Sie  kennt nur vier Werte: \enquote{Belgisch}, \enquote{Türkisch}, \enquote{Dänisch} und \enquote{Deutsch}.
+
+        Um Suchvorgänge auf dieser Spalte zu beschleunigen, wird ein Bitmap Index angelegt.
+        \begin{lstlisting}[caption={Einen Bitmap Index anlegen},label=admin321,language=oracle_sql]
+SQL> CREATE BITMAP INDEX idx_bm_staatsangehoerigkeit
+  2  ON eigenkunde(staatsangehoerigkeit);
+        \end{lstlisting}
+        Die View \identifier{dba\_indexes} zeigt, dass es sich bei \identifier{idx\_bm\_staatsangehoerigkeit} tatsächlich um einen Bitmap Index handelt.
+        \begin{lstlisting}[caption={Die Eigenschaften eines Bitmap Indexes},label=admin322,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col index_name format a30
+SQL> col index_type format a15
+SQL> SELECT index_name, index_type, blevel, leaf_blocks
+  2  FROM   dba_indexes
+  3  WHERE  index_name LIKE 'IDX_BM_STAATS%'
+
+INDEX_NAME                     INDEX_TYPE          BLEVEL LEAF_BLOCKS
+------------------------------ --------------- ---------- -----------
+IDX_BM_STAATSANGEHOERIGKEIT    &BITMAP&                   0           1
+        \end{lstlisting}
+        Die Angabe \identifier{leaf\_blocks} = 1 sagt aus, dass der Bitmap Index aktuell aus nur einem Index block besteht.
+        \begin{merke}
+          Auch bei Bitmap Indizes werden die Indexblöcke als Leaf blocks bezeichnet!
+        \end{merke}
+        Nützlich wird dieser Index, wenn z. B. eine Anfrage nach allen
+        belgischen Kunden gestellt wird. In diesem Fall benutzt Oracle den
+        erstellten Bitmap Index.
+        \bild{Benutzung eines Bitmap Index}{use_of_bitmap_index}{0.8}
+        \abbildung{use_of_bitmap_index} zeigt die schematische Darstellung eines Bitmap Index. Für jeden Wert der Spalte \identifier{staatsangehoerigkeit} wird eine Bitmap erstellt, die von links nach rechts gelesen werden muss. Jedes Bit stellt eine Tabellenzeile dar. Eine 0 bedeutet, dass in dieser Zeile der betreffende Wert nicht steht. Laut \abbildung{use_of_bitmap_index} steht also in Zeile 1 der Wert \enquote{Dänisch} (eine 1 hinter dänisch). In der zweiten Spalte ist ein türkischer Staatsbürger erfasst und in Spalte drei ein Belgier. Oracle kann so sehr schnell und effizient die gewünschten Zeilen heraussuchen.
+      \subsection{Visibility und Usability}
+        \subsubsection{Visibility}
+          Seit Oracle 11g ist es möglich einen Index als sichtbar bzw. unsichtbar zu deklarieren. Sichtbare Indizes werden:
+          \begin{itemize}
+            \item vom SQL-Optimizer bei der Erstellung von Ausführungsplänen berücksichtigt,
+            \item bei allen DML-Operationen mit gepflegt.
+          \end{itemize}
+          Dies gibt dem Admin die Möglichkeit, die Auswirkung eines Indizes auf einen Ausführungsplan zu testen, indem er ihn mit \languageorasql{ALTER INDEX} sichtbar bzw. unsichtbar macht.
+          \begin{lstlisting}[caption={Einen Index unsichtbar werden lassen},label=admin323,language=oracle_sql]
+SQL> ALTER INDEX IDX_SOZVERSNR INVISIBLE;
+          \end{lstlisting}
+
+          \begin{lstlisting}[caption={Und so wird er wieder sichtbar},label=admin324,language=oracle_sql]
+SQL> ALTER INDEX IDX_SOZVERSNR VISIBLE;
+          \end{lstlisting}
+          Die View \identifier{dba\_indexes} hilft dem Admin dabei, zu überprüfen, ob ein Index sichtbar oder unsichtbar ist.
+          \begin{lstlisting}[caption={Ist der Index sichtbar oder unsichtbar?},label=admin325,language=oracle_sql]
+SQL> SELECT index_name, visibility
+  2  FROM   dba_indexes
+  3  WHERE  index_name LIKE 'IDX_SOZVERSNR'
+
+INDEX_NAME                     VISIBILITY
+------------------------------ ----------
+IDX_SOZVERSNR                  &VISIBLE&
+          \end{lstlisting}
+          Das folgende Beispiel zeigt, was passiert, wenn der Admin einen Index unsichtbar werden lässt.
+
+          Während der Index \identifier{idx\_sozversnr} sichtbar ist, wird die folgende Abfrage ausgeführt.
+          \begin{lstlisting}[caption={Abfrage mit sichtbarem Index},label=admin326,language=oracle_sql]
+SQL> SELECT vorname, nachname
+  2  FROM   bank.mitarbeiter
+  3  WHERE  sozversNr IN ('5679B983-694-22FA34D','17211682-BA6-D9C0B30');
+          \end{lstlisting}
+          Das Ergebnis besteht aus zwei Zeilen. Mit Hilfe des \languagesqlplus{set autotrace traceonly}-Kommandos kann der Ausführungsplan, für dieses Statement, angezeigt werden.
+          \begin{lstlisting}[caption={Ausfürungsplan für die Abfrage mit sichtbarem Index},label=admin327,language=oracle_sql,alsolanguage=sqlplus]
+SQL> set autotrace traceonly
+SQL> SELECT vorname, nachname
+  2  FROM   Mitarbeiter
+  3  WHERE  sozversNr IN ('5679B983-694-22FA34D','17211682-BA6-D9C0B30');
+
+Execution Plan
+----------------------------------------------------------
+Plan hash value: 2743979585
+
+--------------------------------------------------------------------------------
+|Id| Operation                   |Name         |Rows|Bytes|Cost (%CPU)| Time   |
+--------------------------------------------------------------------------------
+|0 |&SELECT& STATEMENT              |             |  2 |  72 |    2   (0)|00:00:01|
+|1 | INLIST ITERATOR             |             |    |     |           |        |
+|2 |  &\textbf{\textcolor{red}{TABLE ACCESS BY INDEX ROWID}}&     |MITARBEITER  |  2 |  72 |    2   (0)|00:00:01|
+|3 |   &\textbf{\textcolor{red}{INDEX UNIQUE SCAN}}&            |IDX_SOZVERSNR|  2 |     |    1   (0)|00:00:01|
+--------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   3 - access("SOZVERSNR"='17211682-BA6-D9C0B30' &OR&
+              "SOZVERSNR"='5679B983-694-22FA34D')
+          \end{lstlisting}
+\clearpage
+          \begin{lstlisting}[caption={Und so wird er wieder sichtbar -
+          Fortsetzung},language=terminal]
+Statistics
+----------------------------------------------------------
+          1  recursive calls
+          0  db block gets
+          &\textbf{\textcolor{red}{4}}&  &\textbf{\textcolor{red}{consistent gets}}&
+          0  physical reads
+          0  redo size
+        666  bytes sent via SQL*Net to client
+        524  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          2  rows processed
+          \end{lstlisting}
+          Interessant am Ausführungsplan aus \beispiel{admin327} sind die rot markierten Stellen. Die Angaben \enquote{TABLE ACCESS BY INDEX ROWID} und \enquote{INDEX UNIQUE SCAN} zeigen, dass der Index \identifier{idx\_sozversnr}, für die Suche der gewünschten Ergebniszeilen benutzt wurde. Die Angabe \enquote{4 consistent gets} sagt aus, dass für die Suche nur vier Lesevorgänge benötigt wurden.
+
+          Nun wird der Index unsichtbar geschaltet und die Abfrage erneut ausgeführt.
+          \begin{lstlisting}[caption={Der Index wird unsichtbar und das Statement wird wiederholt},label=admin328,language=oracle_sql]
+SQL> ALTER INDEX IDX_SOZVERSNR INVISIBLE;
+SQL> SELECT vorname, nachname
+  2  FROM   Mitarbeiter
+  3  WHERE  sozversNr IN ('5679B983-694-22FA34D','17211682-BA6-D9C0B30');
+
+Execution Plan
+----------------------------------------------------------
+Plan hash value: 414804864
+
+---------------------------------------------------------------------
+|Id| Operation        |Name       |Rows|Bytes|Cost (%CPU)| Time     |
+---------------------------------------------------------------------
+| 0|&SELECT& STATEMENT   |           |  2 |  72 |    3   (0)| 00:00:01 |
+| 1| &\textbf{\textcolor{red}{TABLE ACCESS FULL}}&   |MITARBEITER|  2 |  72 |    3   (0)| 00:00:01 |
+---------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("SOZVERSNR"='17211682-BA6-D9C0B30' OR
+              "SOZVERSNR"='5679B983-694-22FA34D')
+          \end{lstlisting}
+\clearpage
+          \begin{lstlisting}[caption={Der Index wird unsichtbar und das
+          Statement wird wiederholt - Fortsetzung},language=terminal]
+Statistics
+----------------------------------------------------------
+        238  recursive calls
+          0  db block gets
+          &\textbf{\textcolor{red}{56}}&  &\textbf{\textcolor{red}{consistent gets}}&
+          0  physical reads
+          0  redo size
+        666  bytes sent via SQL*Net to client
+        524  bytes received via SQL*Net from client
+          2  SQL*Net roundtrips to/from client
+          6  sorts (memory)
+          0  sorts (disk)
+          2  rows processed
+          \end{lstlisting}
+          Der Ausführungsplan aus \beispiel{admin328} beweist, dass der unsichtbare Index nicht mehr benutzt wird. Als Suchmethode wurde ein \enquote{Full Table Scan} genutzt, für den 56 Lesevorgänge benötigt wurden.
+
+          Um die Anzeige von Ausführungsplänen wieder zu deaktivieren, muss in SQL*Plus das Kommando \languagesqlplus{set autotrace off} eingegeben werden.
+        \subsubsection{Usability}
+          Es ist möglich, einen Index in Oracle nicht nur unsichtbar, sondern auch unbenutzbar werden zu lassen. Der Unterschied ist, dass der unsichtbare Index durch DML-Statements mit gepflegt wird, während der Unbenutzbare nicht gepflegt wird. Beide werden bei der Ausführung von \languageorasql{SELECT}-Anfragen nicht berücksichtigt.
+
+          Ein Index kann durch den Administrator oder die Datenbank selbst als unbenutzbar markiert werden. Häufig werden Indizes als unbenutzbar markiert, um große Data-Load Vorgänge zu beschleunigen.
+          \begin{lstlisting}[caption={Einen Index als unbenutzbar markieren},label=admin329,language=oracle_sql]
+SQL> ALTER INDEX IDX_SOZVERSNR UNUSABLE;
+          \end{lstlisting}
+          Um zu überprüfen, in welchem Zustand sich ein Index befindet, kann wiederum die View \identifier{dba\_indexes} herangezogen werden.
+          \begin{lstlisting}[caption={Prüfen, ob ein Index nutzbar ist},label=admin330,language=oracle_sql]
+SQL> SELECT index_name, visibility, status
+  2  FROM   dba_indexes
+  3  WHERE  index_name LIKE 'IDX_SOZVERSNR'
+
+INDEX_NAME                     VISIBILIT STATUS
+------------------------------ --------- --------
+IDX_SOZVERSNR                  &INVISIBLE&    &UNUSABLE&
+          \end{lstlisting}
+          Die Spalte \identifier{status} zeigt, dass sich der Index in einem unbenutzbaren Zustand befindet. Dieser Zustand kann auf zwei Arten korrigiert werden:
+          \begin{itemize}
+            \item Den Index löschen und neu aufbauen
+            \item Den Index reparieren (Index rebuild)
+          \end{itemize}
+          Den Index zu löschen und neu aufzubauen, würde bedeuten, dass evtl. Constraints (Unique oder Primary Key) mitgelöscht und neu erstellt werden müssten. Außerdem müsste der Admin die genauen Parameter des Indexes kennen, um ihn korrekt neu zu erstellen.
+
+          Bei der Methode \enquote{Index rebuild} wird der noch vorhandene, aber unbenutzbare Index, mit den gespeicherten Parametern neu aufgebaut und Constraints bleiben erhalten.
+          \begin{lstlisting}[caption={Einen Index reparieren},label=admin331,language=oracle_sql]
+SQL> ALTER INDEX IDX_SOZVERSNR REBUILD ONLINE;
+          \end{lstlisting}
+          Mit der Angabe \languageorasql{REBUILD ONLINE} wird der Index aufgebaut und die Tabelle bleibt für SQL-Abfragen offen. Eine erneute Abfrage der View \identifier{dba\_indexes} zeigt, dass der Index wieder benutzbar ist.
+          \begin{lstlisting}[caption={Der Index ist wieder benutzbar},label=admin332,language=oracle_sql]
+SQL> SELECT index_name, visibility, status
+  2  FROM   dba_indexes
+  3  WHERE  index_name LIKE 'IDX_SOZVERSNR';
+
+INDEX_NAME                     VISIBILIT STATUS
+------------------------------ --------- --------
+IDX_SOZVERSNR                  &INVISIBLE&    VALID
+          \end{lstlisting}
+      \subsection{Indizes löschen}
+        Beim Löschen eines Indizes werden alle durch den Index belegten Extents frei und können wieder verwendet werden.
+				
+        Wie ein Index gelöscht werden kann, hängt davon ab, wie er angelegt wurde. Ein Index der explizit angelegt wurde, kann durch das Kommando \languageorasql{DROP INDEX} gelöscht werden. Bei einem Index der mit einem Primary Key oder Unique Constraint mit erstellt wurde, muss das Constraint deaktiviert oder gelöscht werden, bevor der Index mit \languageorasql{DROP INDEX} gelöscht werden kann.
+        \begin{lstlisting}[caption={Einen Index Löschen},label=admin333,language=oracle_sql]
+DROP INDEX idx_sozversnr;
+        \end{lstlisting}
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        In diesem Kapitel wurden keine Initialisierungsparameter angesprochen!
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{sthref2545}
+          \item \cite{sthref2528}
+          \item \cite{sthref2202}
+          \item \cite{sthref2191}
+        \end{literaturinternet}
+\clearpage

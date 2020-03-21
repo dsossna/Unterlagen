@@ -1,0 +1,932 @@
+\chapter{Backups mit dem RMAN}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Backups anfertigen}
+      Backups werden im RMAN mit dem Kommando \languagerman{BACKUP}
+      durchgeführt. Dabei sind  unterschiedliche Arten von Backups, wie z. B.
+      Hot- oder Coldbackups, Full oder Incremental Backups möglich.
+      \subsection{Hot- oder Coldbackup}
+        Ob ein Backup ein Hot- oder ein Coldbackup wird, hängt vom Status der Datenbank ab. Ist die Datenbank geöffnet, wird das Backups als Hotbackup (inkonsistentes Backup) bezeichnet. Ist die Datenbank im Mount-Status, ist es ein Coldbackup (konsistentes Backup). Die beiden folgenden Beispiele zeigen, wie Hot- bzw. Coldbackups durchgeführt werden können.
+        \begin{lstlisting}[caption={Ein Coldbackup durchführen},label=admin1300,language=rman,alsolanguage=sqlplus]
+RMAN> shutdown immediate
+
+RMAN> startup mount
+
+RMAN> BACKUP database;
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Ein Hotbackup durchführen},label=admin1301,language=rman,emph={[9]ALTER,OPEN,DATABASE},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> SQL 'ALTER DATABASE OPEN';
+
+RMAN> BACKUP database;
+          \end{lstlisting}
+      \subsection{Das BACKUP-Kommando}
+        Das \languagerman{BACKUP}-Kommando verwendet die vorkonfigurierten Einstellungen und Standardeinstellungen des RMAN. Soll jedoch von diesen Einstellungen abgewichen werden, kann dies durch die Angabe von Parametern geschehen.
+        \subsubsection{Das Backup-Ausgabegerät festlegen}
+          Das \languagerman{BACKUP}-Kommando kennt die Klausel \languagerman{DEVICE TYPE}. Sie gibt an, ob das Backup auf einen Datenträger oder einem SBT-Gerät gespeichert werden soll. In den beiden folgenden Beispielen wird die \languagerman{SHOW}-Anweisung dazu benutzt, um die aktuelle Channel-Einstellung vor dem Backup anzuzeigen.
+\clearpage
+          \begin{lstlisting}[caption={Ein Backup to Disk},label=admin1302,language=rman]
+RMAN> SHOW CHANNEL;
+
+RMAN configuration parameters for database with db_unique_name ORCL are:
+RMAN configuration has no stored or default parameters
+
+RMAN> BACKUP DEVICE TYPE disk database;
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Ein Backup to Tape},label=admin1303,language=rman]
+RMAN> SHOW CHANNEL;
+
+using target database control file instead of recovery catalog
+RMAN configuration parameters for database with db_unique_name ORCL are:
+CONFIGURE CHANNEL DEVICE TYPE 'SBT_TAPE'
+PARMS  'SBT_LIBRARY=oracle.disksbt,ENV=(BACKUP_DIR=/u04)';
+
+RMAN> BACKUP DEVICE TYPE sbt database;
+          \end{lstlisting}
+        \subsubsection{Image Copy oder Backup Set?}
+          Um ein Backup als Image Copy anzufertigen gibt es die \languagerman{AS COPY}-Klausel. Image Copies können nur auf Disk-, aber nicht auf SBT-Geräte gespeichert werden.
+          \begin{lstlisting}[caption={Eine Image Copy der Datenbank erstellen},label=admin1304,language=rman]
+RMAN> BACKUP AS COPY database;
+          \end{lstlisting}
+          Das Gegenstück zur \languagerman{AS COPY}-Klausel ist die \languagerman{AS BACKUPSET}-Klausel.
+          \begin{lstlisting}[caption={Ein Backup Set der Datenbank erstellen},label=admin1305,language=rman]
+RMAN> BACKUP AS BACKUPSET database;
+        \end{lstlisting}
+        \subsubsection{Kompression verwenden}
+          RMAN ist in der Lage Backup Sets zu komprimieren, um Speicherplatz zu sparen. Das Erstellen komprimierter Backup Sets benötigt jedoch mehr Zeit als die Erstellung normaler Backup Sets.
+          \begin{merke}
+            Kompression kann für Image Copies nicht angewendet werden.
+          \end{merke}
+          \begin{lstlisting}[caption={Ein komprimiertes Backup Set der Datenbank erstellen},label=admin1306,language=rman]
+RMAN> BACKUP AS COMPRESSED BACKUPSET database;
+          \end{lstlisting}
+        \subsubsection{Den Speicherort des Backups angeben}
+          Mit Hilfe der \languagerman{FORMAT}-Klausel des \languagerman{BACKUP}-Kommandos kann angegeben werden, wo das Backup gespeichert werden soll. Standardmäßig werden Backups in der Fast Recovery Area gespeichert.
+          \begin{lstlisting}[caption={Den Speicherort des Backups ändern},label=admin1307,language=rman]
+RMAN> BACKUP database FORMAT = '/u04/backup/%d_%D-%M-%Y_%t_%s_%p.bkp';
+          \end{lstlisting}
+          Der folgenden Literaturhinweis erläutert die Bedeutung der einzelnen Platzhalter.
+          \begin{literaturinternet}
+            \item \cite[formatSpec]{formatSpec}.
+          \end{literaturinternet}
+      \subsubsection{Backups mit Tags versehen}
+          RMAN hängt an jedes Backup einen kurzen Kommentar an, der als \enquote{Tag}\footnote{tag = engl. Schild} bezeichnet wird und zur besseren Identifizierung dient. Um manuell ein Tag an ein Backup anzuhängen, gibt es die \languagerman{TAG}-Klausel im \languagerman{BACKUP}-Kommando.
+          \begin{lstlisting}[caption={Ein Backup mit manuellem Tag versehen},label=admin1308,language=rman]
+RMAN> BACKUP database TAG = 'Full-Backup 28.10.13';
+          \end{lstlisting}
+      \subsection{Full-Backups}
+        Unter einem Full-Backup (Vollsicherung) wird die vollständige Sicherung
+        \begin{itemize}
+          \item einer Datendatei,
+          \item eines Tablespaces,
+          \item oder einer Datenbank verstanden.
+        \end{itemize}
+        Das Gegenstück zur Vollsicherung ist die inkrementelle Sicherung.
+        \subsubsection{Backup einer Datenbank}
+          \beispiel{admin1309} zeigt die einfachste Variante eines kompletten Backups einer Datenbank.
+          \begin{lstlisting}[caption={Backup einer ganzen Datenbank},label=admin1309,language=rman,emph={[9]ALTER,SYSTEM,ARCHIVE,LOG,CURRENT},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> BACKUP database;
+RMAN> SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';
+          \end{lstlisting}
+          Das Kommando \languagerman{BACKUP database} fertigt das Backup der Datenbank an. Im zweiten Schritt werden mit dem Kommando \languageorasql{ALTER SYSTEM ARCHIVE LOG CURRENT} die aktiven Redo Logs gewechselt (Log Switch) und archiviert. Somit wird sichergestellt, dass alle für das Recovery mit diesem Backup benötigten Redo Logs archiviert wurden. Wird dieses Backup als Hotbackup durchgeführt, sollten anschliessend noch die Archive Logs gesichert werden.
+        \subsubsection{Backups einzelner Tablespaces}
+          Um ein Backup eines oderer mehrerer Tablespaces durchzuführen, gibt es das Kommando \languagerman{BACKUP tablespace}. Im folgenden Beispiel werden die beiden Tablespaces \identifier{users} und \identifier{bank} auf ein SBT-Gerät gesichert.
+          \begin{lstlisting}[caption={Backup eines Tablespace},label=admin1310,language=rman,emph={[9]ALTER,SYSTEM,ARCHIVE,LOG,CURRENT},emphstyle={[9]\color{magenta}\bfseries}]
+RMAN> BACKUP DEVICE TYPE sbt tablespace users, bank;
+RMAN> SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';
+          \end{lstlisting}
+        \subsubsection{Backups einzelner Datendateien}
+          Um einzelne Datendateien sichern zu können, gibt es das Kommando \languagerman{BACKUP datafile}. Wenn beispielsweise die Datendateien mit den Nummern 1, 2 und 4 gesichert werden sollen, könnte dies wie folgt geschehen:
+          \begin{lstlisting}[caption={Backup einzelner Datendateien},label=admin1311,language=rman]
+RMAN> BACKUP datafile 1, 2, 4;
+          \end{lstlisting}
+          \begin{merke}
+            Ist das Controlfile Autobackup aktiviert, wird anschliessend an dieses Backup, automatisch ein Backup Set mit der aktuellen Kontrolldatei und der Serverparameterdatei angelegt. Ist das Controlfile Autobackup deaktiviert, werden die aktuelle Kontrolldatei und die Serverparameterdatei automatisch in das Backupset der Datendateien integriert, da Tablespace Nummer 1 gesichert wurde.
+          \end{merke}
+          Um die Nummern der Datendateien herauszufinden kann die View \identifier{dba\_data\_files} wie folgt benutzt werden:
+          \begin{lstlisting}[caption={Herausfinden der Datendateinummern},label=admin1312,language=oracle_sql]
+SQL> SELECT   file_id, file_name, tablespace_name
+  2  FROM     dba_data_files
+  3  ORDER BY tablespace_name, file_id;
+          \end{lstlisting}
+      \subsection{Inkrementelle Backups}
+        Führt der RMAN ein inkrementelles Backup durch, sichert er nur die Datenblöcke, die sich seit einem bestimmten Backup, welches als Referenz angegeben wurde, geändert haben. Inkrementelle Backups können sowohl von ganzen Datenbanken als auch von Tablespaces und Datendateien durchgeführt werden.
+
+        Es gibt verschiedene Begründungen, warum inkrementelle Backups in eine Backup-Stra\-te\-gie mit einbezogen werden sollten:
+        \begin{itemize}
+          \item Reduzieren des Zeitaufwands für tägliche Backups
+          \item Netzwerkbandbreite durch kleinere Datenmengen einsparen
+        \end{itemize}
+        \subsubsection{Wie funktionieren inkrementelle Backups?}
+          Jeder Datenblock in einer Oracle Datenbank führt in seinem Header eine System Change Number (SCN). Dies ist immer die SCN, die während der letzten Veränderung am Datenblock aktuell war. Während eines inkrementellen Backups liest RMAN die SCN jedes Datenblocks und vergleicht diese mit der SCN des Referenzbackups. Ist die SCN im Datenblock größer, als die SCN im Referenzbackup, wird der Datenblock gesichert.
+
+          Inkrementelle Backups können als Level 0 oder als Level 1 Backups angelegt werden. Ein Level 0 Backup sichert alle Datenblöcke genau wie ein normales Full-Backup. Der einzige Unterschied ist, dass ein normales Full-Backup nicht in eine inkrementelle Backup-Strategie integriert werden kann.
+
+          Für Level 1 Backups gibt es zwei verschiedene Arten:
+          \begin{itemize}
+            \item \textbf{Inkrementelles Backup}: Es werden alle Datenblöcke gesichert, die sich seit dem letzten Level 1 oder Level 0 Backup geändert haben.
+            \item \textbf{Kumulatives Backup}: Es werden alle Datenblöcke gesichert, die sich seit dem letzten Level 0 Backup geändert haben.
+          \end{itemize}
+           Inkrementelle Backups sparen Speicherplatz und Zeit während des Backupvorgangs, da unter Umständen weniger Datenblöcke gesichert werden müssen, als bei einem kumulativen Backup.
+
+          Der Vorteil der kumulativen Backups liegt darin, das die Recovery-Zeit geringer ist, als bei den Inkrementellen. Bei inkrementellen Backups müssen alle Backups, seit dem letzten Level 0 Backup in der richtigen Reihenfolge wiederhergestellt werden. Bei kumulativen Backups muss nur das aktuellste Backup seit dem letzten Level 0 Backup aufgespielt werden.
+        \subsubsection{Level 0 Backups durchführen}
+          Die Grundlage einer jeden inkrementellen Backupstrategie sind Level 0 Backups. Egal welche Art von Level 1 Backups gemacht wird, die Art und Weise wie Level 0 Backups erstellt werden, bleibt davon unberührt. \beispiel{admin1313} zeigt verschiedene Varianten eines Level 0 Backups.
+          \begin{lstlisting}[caption={Inkrementelles Level 0 Backup},label=admin1313,language=rman]
+-- Level 0 Backup der Datenbank
+RMAN> BACKUP INCREMENTAL LEVEL 0 database;
+-- Level 0 Backup eines Tablespaces
+RMAN> BACKUP INCREMENTAL LEVEL 0 tablespace bank;
+-- Level 0 Backup einer Datendatei
+RMAN> BACKUP INCREMENTAL LEVEL 0 datafile 1;
+          \end{lstlisting}
+        \subsubsection{Level 1 Backups durchführen}
+          Zur Durchführung eines Level 1 Backups wird lediglich die Klausel \languagerman{LEVEL 0} durch \languagerman{LEVEL 1} ersetzt. Hierbei handelt es sich dann um ein inkrementelles Backup.
+          \begin{lstlisting}[caption={Inkrementelles Level 1 Backup der Datenbank},label=admin1314,language=rman]
+RMAN> BACKUP INCREMENTAL LEVEL 1 database;
+          \end{lstlisting}
+          \abbildung{differentiel_backup} zeigt ein Beispiel, in dem an jedem Sonntag ein inkrementelles Level 0 Backup durchgeführt wird. Dieses dient dann als Referenzbackup für das Level 1 Backup, welches am darauf folgenden Montag erstellt wird. Das Level 1 Backup vom Montag gilt dann wiederum als Referenzbackup für das Level 1 Backup am Dienstag, bis am nächsten Sonntag wieder ein Level 0 Backup erstellt wird und die Kette von vorne beginnt.
+
+          \bild{Eine inkrementelle Backup\-strategie}{differentiel_backup}{1}
+
+        \subsubsection{Kumulative Backups durchführen}
+          Um kumulative Backups durchzuführen, muss zusätzlich zur \languagerman{INCREMENTAL LEVEL N}-Klausel noch das Schlüsselwort \languagerman{CUMULATIVE} angegeben werden.
+          \bild{Eine kumulative Backup\-strategie}{cumulative_backup}{1}
+          \begin{lstlisting}[caption={Kumulatives Level 1 Backup der Datenbank},label=admin1315,language=rman]
+RMAN> BACKUP INCREMENTAL LEVEL 1 CUMULATIVE database;
+          \end{lstlisting}
+      \subsection{Backups der Archive Logs durchführen}
+        \label{backupderarchivelogsdurchfuehren}
+        \subsubsection{Separate Sicherung der Archive Logs}
+          Archive Logs sind der Schlüssel zu einer erfolgreichen Backup und Recoverystrategie, weshalb sie regelmässig gesichert werden sollten. Ähnlich wie Kontrolldateien können Archive Logs als eigenes Backup Set gesichert oder in einem anderen Backup Set mitgesichert werden. Um ein manuelles Backup der Archive Logs durchzuführen gibt es die \languagerman{ARCHIVELOG-ALL}-Klausel des \languagerman{BACKUP}-Kommandos.
+          \begin{lstlisting}[caption={Manuelles Backup aller Archive Logs},label=admin1316,language=rman]
+RMAN> BACKUP archivelog ALL;
+          \end{lstlisting}
+          Anders als bei den Datendateien, muss bei der Sicherung der Archive Logs immer angegeben werden, welche Archive Logs zu sichern sind. In \beispiel{admin1316} wird das Schlüsselwort \languagerman{ALL} benutzt, um alle Archive Logs zu sichern. Es gibt jedoch noch andere Möglichkeiten, um die Menge der zu sichernden Archive Logs einzuschränken.
+          \begin{lstlisting}[caption={Alle Archive Logs ab Sequenz Nummer 4711 sichern},label=admin1317,language=rman]
+RMAN> BACKUP archivelog
+2>    FROM SEQUENCE 4711;
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Alle Archive Logs bis Sequenz Nummer 4711 sichern},label=admin1318,language=rman]
+RMAN> BACKUP archivelog
+2>    UNTIL SEQUENCE 4711;
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Alle Archive Logs zwischen Sequenz Nummer 666 und 4711 sichern},label=admin1319,language=rman]
+RMAN> BACKUP archivelog
+2>    SEQUENCE BETWEEN 666 AND 4711;
+          \end{lstlisting}
+          Wie in \ref{administeringarchivelogs} bereits erwähnt, sollte aus Sicherheitsgründen die Archivierung der Log Dateien immer an mehreren Speicherorten erfolgen. Wenn nun mehrere identische Kopien einer Archive Log Datei existieren, wird der RMAN immer nur die erste verfügbare Kopie sichern. Archive Logs gelten als identische wenn folgende Attribute gleich sind:
+          \begin{itemize}
+            \item die Datenbank ID (DBID),
+            \item die Log Thread Number (Laufende Nummer des LGWr-Prozesses, nur in RAC-Umgebungen relevant)
+            \item die Log Sequence Number
+            \item die Reset Logs SCN
+          \end{itemize}
+        \subsubsection{Archive Logs mitsichern}
+          Eine andere Variante ist die Archive Logs beim Backup der Datenbank oder eines Teils der Datenbank mitzusichern. Dies geschieht durch die Klausel \languagerman{PLUS archivelog}, die dem \languagerman{BACKUP}-Kommando angehängt werden kann.
+          \begin{lstlisting}[caption={Manuelles Backup des Archive Logs},label=admin1320,language=rman]
+RMAN> BACKUP database PLUS archivelog;
+        \end{lstlisting}
+        Nach dem Absetzen dieses Kommandos führt der RMAN folgende Schritte durch:
+        \begin{enumerate}
+          \item Es wird ein Log Switch herbeigeführt.
+          \item RMAN führt das Kommando \languagerman{BACKUP archivelog ALL} aus.
+          \item Das Backup der Datenbank wird angelegt.
+          \item Es wird erneut ein Log Switch herbeigeführt
+          \item Das Kommando \languagerman{BACKUP archivelog ALL} wird ein zweites mal ausgeführt.
+        \end{enumerate}
+        Damit wird sichergestellt, das alle Archive Logs, die vor und während des Backups entstanden sind mitgesichert werden.
+        \subsubsection{Gesicherte Archive Logs automatisch löschen}
+          RMAN bietet die Möglichkeit, Archive Logs automatisch, nach ihrer Sicherung zu löschen. Dies erspart ein manuelles Eingreifen des Administrators. Um die Archive Logs automatisch zu löschen, muss eine der beiden Klauseln \languagerman{DELETE INPUT} oder \languagerman{DELETE ALL INPUT} an das \languagerman{BACKUP ARCHIVELOG}-Kommando angeängt werden. Der Unterschied zwischen diesen Klauseln liegt darin, welche Archive Logs gelöscht werden:
+          \begin{itemize}
+            \item \languagerman{DELETE INPUT}: Es werden nur die Kopien einer Archive Log Datei gelöscht, die vom RMAN zur Sicherung benutzt wurden. Alle anderen Kopien bleiben erhalten.
+            \item \languagerman{DELETE ALL INPUT}: Es werden alle Kopien einer Archive Log Datei gelöscht, auch die, welche nicht zur Sicherung benutzt wurden.
+          \end{itemize}
+          \bild{Auto\-matisches löschen der Archive Logs}{delete_input_and_delete_all_input}{1.5}
+          \beispiel{admin1321} zeigt die Anwendung der \languagerman{DELETE ALL INPUT}-Klausel.
+          \begin{lstlisting}[caption={Manuelles Backup und gleichzeitiges Löschen der Archive Logs},label=admin1321,language=rman]
+RMAN> BACKUP archivelog ALL
+2>    DELETE ALL INPUT;
+          \end{lstlisting}
+    \subsection{Backups der Fast Recovery Area anfertigen}
+      \label{FRABackups}
+      In verschiedenen Fällen kann es sinnvoll sein, den Inhalt der Fast
+      Recovery Area auf Band zu sichern. Eine einfache Vorgehensweise beim
+      Sichern der Fast Recovery Area könnte sein:
+\clearpage
+      \begin{enumerate}
+        \item Festlegen einer passenden Backup Retention Policy
+        \item Backup der Datenbank durchführen
+        \item Sichern der Fast Recovery Area auf Band
+        \item Obsolete Backups der Fast Recovery Area von den Bändern löschen
+        \item Obsolete Datenbankbackups aus der Fast Recovery Area löschen
+      \end{enumerate}
+
+      \begin{lstlisting}[caption={Sichern der Fast Recovery Area},label=admin1322,language=rman]
+RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
+
+RMAN> RUN {
+2>      ALLOCATE CHANNEL c_disk
+3>      DEVICE TYPE disk;
+4>      ALLOCATE CHANNEL c_sbt
+5>      DEVICE TYPE sbt
+6>      PARMS  'SBT_LIBRARY=oracle.disksbt,ENV=(BACKUP_DIR=/u04)';
+7>
+8>      BACKUP CHANNEL c_disk database;
+9>      BACKUP CHANNEL c_sbt  recovery area;
+10>    }
+RMAN> DELETE obsolete;
+      \end{lstlisting}
+      \begin{merke}
+        Der Inhalt der Fast Recovery Area kann mittels \languagerman{BACKUP RECOVERY AREA} auf SBT gesichert werden. Eine Sicherung auf Festplatte ist nicht möglich.
+      \end{merke}
+      \subsection{Manuelle Kontrolldatei-Backups}
+        \subsubsection{Backup mit dem RMAN}
+          RMAN benutzt ein \enquote{Snapshot Controfile}, um konsistente Backups der Kontrolldatei anzufertigen. Ist das Controlfile Autobackup-Feature des RMAN aktiviert, macht RMAN automatisch Backups der Kontrolldatei und der Serverparameterdatei nach jedem Backup und jeder Strukturänderung der Datenbank. Ist dieses Feature nicht aktiviert, sollten regelmässig manuelle Backups der Kontrolldatei erfolgen. Dies kann auf unterschiedliche Arten geschehen:
+        \begin{itemize}
+          \item Durch das RMAN-Kommando \languagerman{BACKUP current controlfile}
+          \item In dem eine Kopie der Kontrolldatei in das aktuelle Backup aufgenommen wird
+          \item Durch das Sichern von Datendatei Nummer 1, da dabei die Kontrolldatei immer automatisch mitgesichert wird. Dies geschieht zum Beispiel im Rahmen eines Daten\-bank-Backups.
+        \end{itemize}
+        Damit die Kontrolldatei bei einem beliebigen Backup mitgesichert werden
+        kann, gibt es die Klausel \languagerman{INCLUDE current controlfile}.
+        \begin{lstlisting}[caption={Kontrolldatei in ein Backup mit einschließen},label=admin1323,language=rman]
+RMAN> BACKUP tablespace bank
+2>    INCLUDE current controlfile;
+        \end{lstlisting}
+        \subsubsection{Backup to Trace}
+          Oracle stellt eine zweite Variante zur Sicherung des Controlfiles zur Verfügung: Das Backup to Trace. Hierbei wird keine Binär-Kopie, sondern ein SQL-Skript erstellt, mit dessen Hilfe die Kontrolldatei neu kreiert werden kann. Erzeugt wird dieses Skript mit Hilfe des SQL-Kommandos \languageorasql{ALTER DATABASE BACKUP}.
+        \begin{lstlisting}[caption={Kontrolldatei in ein Backup mit einschließen},label=admin1324,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  BACKUP CONTROLFILE TO TRACE
+  3  AS '/home/oracle/control.bkp';
+        \end{lstlisting}
+        Und so sieht es aus:
+        \begin{lstlisting}[caption={Das \languageorasql{CREATE CONTROLFILE}-Skript},label=admin1325,language=oracle_sql]
+startup nomount
+CREATE CONTROLFILE REUSE DATABASE "ORCL" NORESETLOGS  ARCHIVELOG
+    MAXLOGFILES 16
+    MAXLOGMEMBERS 3
+    MAXDATAFILES 100
+    MAXINSTANCES 8
+    MAXLOGHISTORY 292
+LOGFILE
+  GROUP 1 '/u01/app/oracle/oradata/orcl/redo01.log'  SIZE 50M BLOCKSIZE 512,
+  GROUP 2 '/u01/app/oracle/oradata/orcl/redo02.log'  SIZE 50M BLOCKSIZE 512,
+  GROUP 3 '/u01/app/oracle/oradata/orcl/redo03a.log'  SIZE 50M BLOCKSIZE 512,
+  GROUP 4 '/u01/app/oracle/oradata/orcl/redo04a.log'  SIZE 50M BLOCKSIZE 512,
+  GROUP 5 (
+    '/u01/app/oracle/oradata/orcl/redo05a.log',
+    '/u02/oradata/orcl/redo05b.log'
+  ) SIZE 50M BLOCKSIZE 512
+
+DATAFILE
+  '/u01/app/oracle/oradata/orcl/system01.dbf',
+  '/u01/app/oracle/oradata/orcl/sysaux01.dbf',
+  '/u01/app/oracle/oradata/orcl/undotbs01.dbf',
+  '/u01/app/oracle/oradata/orcl/users01.dbf',
+  '/u01/app/oracle/oradata/orcl/example01.dbf',
+  '/u01/app/oracle/oradata/orcl/bank01.dbf'
+CHARACTER SET WE8MSWIN1252;
+          \end{lstlisting}
+          \beispiel{admin1325} zeigt nur einen Ausschnitt aus dem \languageorasql{CREATE CONTROLFILE}-Skript.
+
+          Interessant ist ein solches Skript immer dann, wenn Probleme mit der Datenbank auftreten, die sich auf dem \enquote{offiziellen} Weg nicht lösen lassen. Dies ist unter anderem dann der Fall, wenn alle Dateien der Current Redo Log Group beschädigt sind.
+      \subsection{Backup des SPFile}
+        Das SPFile wird in verschiedenen Situationen automatisch mitgesichert (siehe \ref{controlfileautobackup}). Um ein manuelles Backup des SPFile durchzuführen gibt es das folgende Kommando:
+        \begin{lstlisting}[caption={Manuelles Backup des SPFile},label=admin1326,language=rman]
+RMAN> BACKUP spfile;
+          \end{lstlisting}
+      \subsection{Backupduplexing konfigurieren}
+        Es ist möglich RMAN so zu konfigurieren, dass von jedem Backuppiece mehrere identische Kopien angefertigt werden. Dieses Features ist als \enquote{duplexing} bekannt und bezieht sich nur auf Backup Sets, nicht aber auf Image Copies.
+        \begin{lstlisting}[caption={Konfigurieren des Backupduplexing},label=admin1327,language=rman]
+RMAN> CONFIGURE DATAFILE BACKUP COPIES
+2>    FOR DEVICE TYPE disk TO 2;
+RMAN> CONFIGURE ARCHIVELOG BACKUP COPIES
+2>    FOR DEVICE TYPE sbt TO 2;
+
+RMAN> BACKUP database PLUS ARCHIVELOG
+2>    FORMAT '/u02/backups/%U', '/u03/backups/%U';
+        \end{lstlisting}
+        \beispiel{admin1327} zeigt, wie sowohl für Datendateien, als auch für Archive Log Dateien, das Backup Duplexing auf den Wert zwei konfiguriert wird. RMAN erstellt zwei identische Kopien der Datendateien und verteilt diese auf die beiden Speicherorte \oscommand{/u02/backups} und \oscommand{/u03/backups}. Ein solcher Formatstring kann mit Hilfe eines der Kommandos \languagerman{BACKUP}, \languagerman{CONFIGURE CHANNEL} oder \languagerman{ALLOCATE CHANNEL} angegeben werden.
+        \begin{merke}
+          Zu beachten ist dabei, dass das Backup Duplexing nicht zusammen mit der Fast Recovery Area funktioniert. Dies wird durch die folgende Fehlermeldung angezeigt:
+          \begin{verbatim}
+ORA-19806: cannot make duplex backups in recovery area.
+          \end{verbatim}
+          Aus diesem Grund muss immer ein Format-String verwendet werden, der die Duplexkopien ausserhalb der Fast Recovery Area speichert. Es können maximal 4 identische Kopien eines Backups erzeugt werden.
+        \end{merke}
+    \section{Backups verwalten}
+      \subsection{Backups katalogisieren}
+        In bestimmten Situationen kann es notwendig sein, dass Image Copies, Backupsets oder Archive Logs im RMAN Repository oder im RMAN Katalog neu erfasst werden müssen. Ein solcher Fall tritt ein, wenn:
+        \begin{itemize}
+          \item Kopien von Datendateien ohne Zuhilfenahme des RMAN angefertigt wurden. Diese können dann als Datafile Copies im Repository/Katalog registriert werden.
+          \item Backup Pieces ohne RMAN auf dem Datenträger verschoben wurden.
+          \item Backup Pieces aus dem Repository gelöscht wurden, die Dateien selbst aber noch existieren und wiederverwendet werden sollen.
+          \item die Kontrolldatei verloren geht und kein Recovery Katalog genutzt wird.
+          \end{itemize}
+        \begin{lstlisting}[caption={Backup Pieces katalogisieren},label=admin1328,language=rman]
+RMAN> CATALOG BACKUPPIECE  '/u03/backup/backup_820.bkp',
+2>                         '/u04/backup/backup_821.bkp';
+        \end{lstlisting}
+        In \beispiel{admin1328} wird RMAN versuchen beide Backup Pieces zu katalogisieren. Er wird seine Arbeit auch dann fortsetzen, wenn eines der beiden Pieces defekt ist. Es wird dann nur das Funktionsfähige ins Repository aufgenommen. Soll ein aus mehreren Pieces bestehendes Backup Set katalogisiert werden, gelingt dies nur, wenn alle Pieces fehlerfrei sind.
+        \begin{lstlisting}[caption={Datendatei-Kopien katalogisieren},label=admin1329,language=rman]
+RMAN> CATALOG DATAFILECOPY '/u03/backup/bank01.dbf';
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Archive Logs katalogisieren},label=admin1330,language=rman]
+RMAN> CATALOG ARCHIVELOG   '/u03/backup/archive1_731.dbf',
+2>                         '/u03/backup/archive1_732.dbf';
+        \end{lstlisting}
+        Es ist möglich, den Inhalt eines gesamten Verzeichnisses, in einem Arbeitsschritt zu katalogisieren.
+        \begin{lstlisting}[caption={Verzeichnisinhalt katalogisieren},label=admin1331,language=rman]
+RMAN> CATALOG START WITH '/disk1/backups/';
+        \end{lstlisting}
+        Bei dieser Art des Katalogisierens, muss beachtet werden, dass es sich bei der Angabe von \oscommand{/disk1/backups/} nicht um einen Verzeichnisnamen handelt, sondern nur um ein Prefix. Wird \oscommand{/disk1/backups} angegeben, werden alle Verzeichnisse, die mit dieser Zeichenkette beginnen, z. B. \oscommand{/disk1/backupsets} oder \oscommand{/disk1/backups-jahr-2013} ebenfalls katalogisiert. Dies kann dazu führen, dass unbeabsichtigt  Dateien in den Recovery Katalog aufgenommen werden.
+
+        \begin{merke}
+          Um solche Probleme zu vermeiden, sollte das Prefix immer mit einem / abgeschlossen werden, also z. B. \oscommand{/disk1/backups/}.
+        \end{merke}
+      \subsection{Backup-Crosschecks durchführen}
+        Ein Crosscheck vergleicht den Recovery Katalog mit dem Inhalt des Dateisystems, um Unterschiede festzustellen. Wenn z. B. ein Nutzer ein Backup Set mit Betriebssystemmitteln von der Festplatte löscht, existiert trotzdem noch der Eintrag für dieses Backup Set im Recovery Katalog. Mit Hilfe des \languagerman{CROSSCHECK}-Kommandos können solche Inkonsistenzen bereinigt werden.
+        Nach einem Crosscheck bekommt jeder Eintrag im RMAN einen Status:
+        \begin{itemize}
+          \item \textbf{EXPIRED}: Das Backup ist nicht auf dem Dateisystem verfügbar.
+          \item \textbf{AVAILABLE}: Das Backup ist verfügbar und darf genutzt werden.
+          \item \textbf{UNAVAILABLE}: Das Backup ist verfügbar, darf aber nicht durch den RMAN genutzt werden.
+        \end{itemize}
+        \begin{merke}
+          Der Status expired sollte nicht mit dem Status obsolete verwechselt werden.
+        \end{merke}
+        Die Ergebnisse eines Crosschecks können direkt im RMAN, mit Hilfe des \languagerman{LIST}-Kommandos oder in SQL*PLUS, mit Hilfe der View \identifier{v\$backup\_files} betrachtet werden. Während eines Crosschecks werden keine Dateien von der Festplatte und auch keine RMAN-Einträge gelöscht. Lediglich der Status eines Eintrags wird verändert. Um Backups zu löschen, muss das \languagerman{DELETE}-Kommando des RMAN verwendet werden (siehe \ref{deletingbackups}).
+        Einfache Beispiele für die Nutzung des \languagerman{CROSSCHECK}-Kommandos könnten so aussehen:
+        \begin{lstlisting}[caption={\languagerman{CROSSCHECK} aller Backups},label=admin1332,language=rman]
+RMAN> CROSSCHECK backup;
+        \end{lstlisting}
+        Bei der Angabe von \languagerman{BACKUP} werden alle Arten von Backups
+        überprüft. Es gibt verschieden Möglichkeiten, um die Menge der zu
+        überprüfenden Backups einzuschränken.
+\clearpage
+        \begin{lstlisting}[caption={\languagerman{CROSSCHECK} auf Backup Sets beschränken},label=admin1333,language=rman]
+RMAN> CROSSCHECK backupset;
+
+RMAN> CROSSCHECK backupset 666, 815, 4711;
+
+RMAN> CROSSCHECK backupset TAG = 'nightly_backup';
+        \end{lstlisting}
+        Das erste Kommando prüft alle vorhandenen Backup Sets. Das zweite nur die Backup Sets mit den IDs 666, 815 und 4711. Das dritte \languagerman{CROSSCHECK}-Kommando checkt nur das Backup Piece mit dem Tag \enquote{nightly\_backup}.
+        \begin{lstlisting}[caption={Nur Datafile Copies checken},label=admin1334,language=rman]
+RMAN> CROSSCHECK datafilecopy ALL;
+
+RMAN> CROSSCHECK datafilecopy 113, 114, 115;
+        \end{lstlisting}
+        Wird der Crosscheck auf Datafilecopies, Archive Logs oder Controlfilecopies angewendet, muss in jedem Fall die Menge der zu prüfenden Dateien angegeben werden.
+        \begin{lstlisting}[caption={Alle Arten von Copies (Datafilecopy, Archive Logs, Controlfilecopy) checken},label=admin1335,language=rman]
+RMAN> CROSSCHECK copy;
+        \end{lstlisting}
+      \subsection{Manuelle Statusänderungen an Backups}
+        Mit Hilfe des \languagerman{CHANGE}-Kommandos kann der Status eines Backups manuell auf \enquote{available} oder \enquote{unavailable} gesetzt werden. Da der RMAN sich selbst die für eine Wiederherstellung notwendigen Backups sucht, ist es immer dann sinnvoll, ein Backup Set als \enquote{unavailable} zu markieren, wenn der RMAN es nicht für das Restore benutzen darf.
+        \begin{merke}
+          Zu beachten ist, dass Dateien die sich in der Fast Recovery Area befinden, nicht als \textit{unavailable} markiert werden können.
+        \end{merke}
+        \begin{lstlisting}[caption=Manuelle Statusänderung eines Backup Sets auf unavailable,label=admin1336,language=rman]
+RMAN> CHANGE BACKUPSET 12 UNAVAILABLE;
+        \end{lstlisting}
+        \begin{lstlisting}[caption=Das Backup Set wieder verfügbar machen,label=admin1337,language=rman]
+RMAN> CHANGE BACKUPSET 12 AVAILABLE;
+        \end{lstlisting}
+        \begin{merke}
+          Manuelle Statusänderungen sind auch für Datafilecopies, Controlfilecopies und alle anderen Arten von Backups möglich.
+        \end{merke}
+      \subsection{Backups löschen}
+        \label{deletingbackups}
+        \subsubsection{Bestimmte Backups löschen}
+          In regelmäßigen Abständen ist es notwendig, Backups zu löschen und Platz für Neue zu schaffen. Diese Arbeit sollte immer mit dem RMAN-Kommando \languagerman{DELETE} verrichtet werden, da nicht nur die Dateien gelöscht, sondern auch das RMAN Repository gepflegt werden muss. Es bedient sich grundsätzlich der gleichen Syntax, wie der \languagerman{CROSSCHECK}-Befehl.
+          \begin{lstlisting}[caption=Alle vorhandenen Backups löschen,label=admin1338,language=rman]
+RMAN> DELETE backup;
+          \end{lstlisting}
+          \begin{lstlisting}[caption=Nur Backup Sets löschen,label=admin1339,language=rman]
+RMAN> DELETE backupset;
+
+RMAN> DELETE backupset 666, 815, 4711;
+          \end{lstlisting}
+          \languagerman{DELETE backupset} löscht alle Backup Sets, während durch die Angabe von Backup Set IDs nur bestimmte Backup Sets gelöscht werden.
+          \begin{lstlisting}[caption=Archive Logs löschen,label=admin1340,language=rman]
+RMAN> DELETE ARCHIVELOG ALL;
+
+RMAN> DELETE ARCHIVELOG
+2>    UNTIL SEQUENCE = 200;
+          \end{lstlisting}
+          \begin{merke}
+            Gerade beim Löschen von Archive Logs ist größte Vorsicht geboten!
+          \end{merke}
+          RMAN fragt vor dem Löschen jeder Datei nach. Diese Nachfrage kann durch die Angabe von \languagerman{DELETE NOPROMPT} unterbunden werden.
+        \subsubsection{Obsolete Backups löschen}
+          Die Backup Retention Policy legt fest, welche Backups für ein Recovery benötigt werden und welche nicht (siehe \ref{backupretentionpolicy}). Verstößt ein Backup gegen die Retention Policy, wird es als \enquote{obsolete} markiert. Obsolete Backups können mittels \languagerman{DELETE}-Befehl gelöscht werden.
+          \begin{lstlisting}[caption=Obsolete Backups löschen,label=admin1341,language=rman]
+RMAN> DELETE obsolete;
+          \end{lstlisting}
+        \subsubsection{Expired-Backups löschen}
+          Wird ein Crosscheck ausgeführt, um den Inhalt des Recovery Katalogs
+          mit dem Dateisystem zu vergleichen, werden Backups die zwar noch im
+          Katalog eingetragen sind, aber auf dem Dateisystem nicht mehr
+          existieren auf den Status \textit{expired} gesetzt. Mit dem Kommando
+          \languagerman{DELETE EXPIRED} können solche Einträge anschliessend
+          entfernt werden. Sollte die zu dem Eintrag gehörende Datei noch
+          existieren, wird sie ebenfalls gelöscht.
+
+          Folgender Vorgang löscht alle als \textit{expired} markierten
+          Backups:
+          \begin{enumerate}
+            \item Durchführen eines Crosschecks.
+              \begin{lstlisting}[caption={CROSSCHECK durchführen},label=admin1342,language=rman]
+CROSSCHECK backup;
+              \end{lstlisting}
+            \item Löschen der als \textit{expired} markierten Backups.
+              \begin{lstlisting}[caption={Löschen der Backups},label=admin1343,language=rman]
+DELETE EXPIRED backup;
+              \end{lstlisting}
+          \end{enumerate}
+      \section{Block Change Tracking}
+        Das \enquote{Block Change Tracking}-Feature des RMAN erhöht die Performance inkrementeller Backups dadurch, dass Informationen über geänderte Blöcke in einem \enquote{Trackingfile} gespeichert werden. Wenn RMAN das Trackingfile benutzt, entfällt das Durchsuchen der Datenbank nach geänderten Blöcken.
+
+        Das erste Level 0 Backup, nach dem Einschalten des Block Change Tracking, zieht noch keinen Nutzen daraus, da das Trackingfile noch nicht den aktuellen Stand in der Datenbank wiedergeben kann. Aber bereits das nächste Level 1 Backup, kann die Informationen im Trackingfile nutzen.
+
+        \begin{merke}
+          Durch die Nutzung von Block Change Tracking ändert sich nichts an den Backup- oder Recovery-Kommandos.
+        \end{merke}
+
+        Standardmäßig ist das Block Change Tracking deaktiviert, da es geringe Performanceeinbussen, im normalen Betrieb der Datenbank mit sich bringt. Der Performancegewinn bei der Durchführung inkrementeller Backups, mit großen Datenmengen, ist jedoch sehr hoch.
+
+        Das Trackingfile kann an einem beliebigen Ort auf dem Datenträger gespeichert werden. Oracle empfiehlt es in der Fast Recovery Area (Standardspeicherort) abzulegen.
+
+        \begin{merke}
+          Im Trackingfile werden für bis zu acht inkrementelle Backups (ein Level 0 plus sieben Level 1) die Trackinginformationen gespeichert. Sobald ein weiteres Level 1 Backup angelegt wird, werden die Informationen zum ersten Backup (Level 0) überschrieben.
+        \end{merke}
+        Um dieses Feature zu aktivieren, muss ein Trackingfile angegeben werden. Dies kann nur geschehen, wenn die Datenbank geöffnet oder in der Mount-Phase ist.
+        \begin{lstlisting}[caption={Block Change Tracking
+        aktivieren},label=admin1344,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  ENABLE BLOCK CHANGE TRACKING
+  3  USING FILE '/u02/rman_change_track.f' REUSE;
+        \end{lstlisting}
+        Die \languageorasql{USING FILE}-Klausel gibt den Pfad und den Dateinamen des Tracking\-files an. Das Schlüs\-sel\-wort \languageorasql{REUSE} sorgt dafür, dass eine evtl. bereits bestehende Datei überschrieben wird.
+
+        Verwenden Sie die Klausel \languageorasql{DISABLE BLOCK CHANGE TRACKING}, um das Block Change Tracking zu deaktivieren.
+        \begin{lstlisting}[caption={Block Change Tracking deaktivieren},label=admin1345,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DISABLE BLOCK CHANGE TRACKING;
+        \end{lstlisting}
+        Mit Hilfe der View \identifier{v\$block\_change\_tracking} kann man ersehen, ob das Block Change Tracking aktiviert ist. Sie enthält eine Spalte \identifier{status}, die den Zustand des Block Change Trackings angibt.
+        \begin{lstlisting}[caption={Den Status des Block Change Trackings überprüfen},label=admin1346,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col status format a8 
+SQL> col filename format a30
+SQL> col bytes format 999,999.00
+SQL> SELECT *
+  2  FROM v$block_change_tracking;
+
+STATUS   FILENAME                             BYTES
+-------- ------------------------------ -----------
+DISABLED
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{BRADV89537}
+        \end{literaturinternet}
+    \section{Das Kommando LIST}
+      Das Kommando \languagerman{LIST} benutzt das RMAN Repository, um
+      verschiedene Informationen über Backups und Archive Logs anzuzeigen. Es
+      ist nur dann funktionsfähig, wenn eine Verbindung zur Zieldatenbank
+      besteht.
+      \subsection{Auflistungen gruppieren}
+        \languagerman{LIST} kann Backups auf zwei Arten anzeigen:
+        \begin{itemize}
+          \item Gruppiert nach Backup: Zu jedem Backup werden die zugehörigen Dateien angezeigt.
+          \item Gruppiert nach Datei: Zu jeder Datei wird das betreffende Backup angezeigt.
+        \end{itemize}
+        \subsubsection{Nach Backup gruppieren}
+          \begin{lstlisting}[caption={\languagerman{LIST} - Alle Backups, gruppiert nach Backup anzeigen},label=admin1347, language=rman]
+RMAN> LIST backup;
+
+using target database control file instead of recovery catalog
+
+List of Backup Sets
+===================
+
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+1       Full    591.36M    &DISK&        00:01:00     24-OCT-13
+        BP Key: 1   Status: &AVAILABLE&  Compressed: NO  Tag: TAG20131024T141243
+        Piece Name: /u05/fast_recovery_area/ORCL/backupset/201...
+  List of Datafiles in backup &set& 1
+  File LV Type Ckp &SCN&    Ckp Time  Name
+  ---- -- ---- ---------- --------- ----
+  1       Full 2054849    24-OCT-13 /u01/app/oracle/oradata/orcl/system01.dbf
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+2       Full    9.36M      &DISK&        00:00:04     24-OCT-13
+        BP Key: 2   Status: &AVAILABLE&  Compressed: NO  Tag: TAG20131024T141243
+        Piece Name: /u05/fast_recovery_area/ORCL/backupset/201...
+  &SPFILE& Included: Modification time: 23-OCT-13
+  &SPFILE& db_unique_name: ORCL
+  Control File Included: Ckp &SCN&: 2054873      Ckp time: 24-OCT-13
+          \end{lstlisting}
+          \begin{lstlisting}[caption={\languagerman{LIST} - Bestimmte Backup Sets, gruppiert nach Backup anzeigen},label=admin1348,language=rman]
+RMAN> LIST backupset 666, 815, 4711;
+          \end{lstlisting}
+        \subsubsection{Nach Datei gruppieren}
+          Um in umgekehrter Folge zu Gruppieren, muss dem
+          \languagerman{LIST}-Kommando der Zusatz \languagerman{BY FILE}
+          mitgegeben werden.
+
+          \begin{lstlisting}[caption={\languagerman{LIST} - Backups, gruppiert nach Backup Datei anzeigen},label=admin1349,language=rman]
+RMAN> LIST backup BY FILE;
+
+
+List of Datafile Backups
+========================
+
+File Key     TY LV S Ckp &SCN&    Ckp Time  #Pieces #Copies Compressed Tag
+---- ------- -  -- - ---------- --------- ------- ------- ---------- ---
+1    1       B  F  A 2054849    24-OCT-13 1       1       NO         TAG2013...
+2    7       B  F  A 2076573    27-OCT-13 1       1       NO         TAG2013...
+6    5       B  F  A 2062383    25-OCT-13 1       1       NO         TAG2013...
+     3       B  F  A 2054959    24-OCT-13 1       1       NO         TAG2013...
+7    3       B  F  A 2054959    24-OCT-13 1       1       NO         TAG2013...
+
+List of Control File Backups
+============================
+
+CF Ckp &SCN& Ckp Time  BS Key  S #Pieces #Copies Compressed Tag
+---------- --------- ------- - ------- ------- ---------- ---
+2076573    27-OCT-13 8       A 1       1       NO         TAG20131028T093159
+2062392    25-OCT-13 6       A 1       1       NO         TAG20131025T112454
+2054967    24-OCT-13 4       A 1       1       NO         TAG20131024T141608
+2054873    24-OCT-13 2       A 1       1       NO         TAG20131024T141243
+List of &SPFILE& Backups
+======================
+
+Modification Time BS Key  S #Pieces #Copies Compressed Tag
+----------------- ------- - ------- ------- ---------- ---
+27-OCT-13         8       A 1       1       NO         TAG20131028T093159
+23-OCT-13         6       A 1       1       NO         TAG20131025T112454
+23-OCT-13         4       A 1       1       NO         TAG20131024T141608
+23-OCT-13         2       A 1       1       NO         TAG20131024T141243
+          \end{lstlisting}
+        \subsubsection{Anzeigen einer Zusammenfassung}
+          Mit \languagerman{LIST ... SUMMARY} kann für jeden beliebigen Backuptyp eine Zusammenfassung angezeigt werden. Diese enthält nur noch die wesentlichsten Informationen, in geraffter Form.
+\clearpage
+          \begin{lstlisting}[caption={Anzeigen einer Zusammenfassung},label=admin1350,language=rman]
+RMAN> LIST backup SUMMARY;
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time #Pieces #Copies Compressed Tag
+------- -- -- - ----------- --------------- ------- ------- ---------- ---
+1       B  F  A &DISK&        24-OCT-13       1       1       NO        TAG2013...
+2       B  F  A &DISK&        24-OCT-13       1       1       NO        TAG2013...
+3       B  F  A &DISK&        24-OCT-13       1       1       NO        TAG2013...
+4       B  F  A &DISK&        24-OCT-13       1       1       NO        TAG2013...
+5       B  F  A SBT_TAPE    25-OCT-13       1       1       NO        TAG2013...
+6       B  F  A SBT_TAPE    25-OCT-13       1       1       NO        TAG2013...
+7       B  F  A &DISK&        28-OCT-13       1       1       NO        TAG2013...
+8       B  F  A &DISK&        28-OCT-13       1       1       NO        TAG2013...
+          \end{lstlisting}
+      \subsection{Auflisten der Expired Backups}
+        Es ist möglich sich solche Backups anzeigen zu lassen, die im Repository als \enquote{expired} markiert sind.
+          \begin{lstlisting}[caption={Expired Backups auflisten},label=admin1351,language=rman]
+RMAN> LIST expired backup;
+
+List of change, crosscheck, and delete Backup Sets
+===================
+BS Key  Size       Device Type Elapsed Time Completion Time
+------- ---------- ----------- ------------ ---------------
+7       136M       disk        00:00:20     04-NOV-12
+        BP Key: 7   Status: available  Compressed: NO  Tag: TAG2012...
+        Piece Name: /u05/fast_recovery_area/backup/2003_11_04/...
+  List of Archived Logs in backup set 7
+  Thrd Seq     Low scn    Low Time  Next scn   Next Time
+  ---- ------- ---------- --------- ---------- ---------
+  1    1       173832     21-OCT-12 174750     21-OCT-03
+  1    2       174750     21-OCT-12 174755     21-OCT-03
+  1    3       174755     21-OCT-12 174758     21-OCT-03
+
+  1    37      533321     01-NOV-12 575472     03-NOV-03
+  1    38      575472     03-NOV-12 617944     04-NOV-03
+  1    39      617944     04-NOV-12 631495     04-NOV-03
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+8       Full    2M         disk        00:00:01     04-NOV-12
+        BP Key: 8   Status: available  Compressed: NO  Tag: TAG2012...
+        Piece Name: /u05/fast_recovery_area/c-774627068-20121104-01
+  Controlfile Included: Ckp scn: 631510       Ckp time: 04-NOV-12
+  spfile Included: Modification time: 21-OCT-12
+          \end{lstlisting}
+      \subsection{Ausgewählte Backups anzeigen}
+        Anbei noch einige Beispiele, die zeigen, wie verschiedenste Backups zur Auflistung ausgewählt werden können.
+        \begin{lstlisting}[caption={Auflistungen eingrenzen},label=admin1352,language=rman]
+# Nur Full-Backups der Datenbank anzeigen
+RMAN> LIST backup OF database;
+
+# Image Copies einer bestimmten Datendatei anzeigen
+RMAN> LIST copy OF datafile '/u02/oradata/ORCL/system01.dbf';
+
+# Ein bestimmtes Backup Set anzeigen
+RMAN> LIST backupset 213;
+
+# Ein Backup Set nach seinem Tag aussuchen
+RMAN> LIST backupset TAG 'weekly_full_db_backup';
+
+# Alle Image Copies einer Datendatei, die auf einem sbt-Ger&ä&t liegen anzeigen
+RMAN> LIST copy OF datafile '/u02/oradata/ORCL/system01.dbf'
+2>    DEVICE TYPE sbt;
+
+# Alle Backups anzeigen, die in einem bestimmten Verzeichnis liegen
+RMAN> LIST backup LIKE '/tmp/%';
+
+# Image Copies anzeigen, die in einem bestimmten Zeitraum fertiggestellt wurden
+RMAN> LIST copy OF datafile 2 COMPLETED BETWEEN '10-DEC-2002' AND '17-DEC-2002';
+
+# Alle Archive Logs, die mindestens zweimal auf Band gesichert wurden anzeigen
+RMAN> LIST archivelog ALL BACKED UP 2 TIMES TO DEVICE TYPE sbt;
+
+# Auflisten eines bestimmten Backupsets nach Tag
+RMAN> LIST backupset TAG 'weekly_full_db_backup';
+          \end{lstlisting}
+    \section{Das Kommando REPORT}
+      Das \languagerman{REPORT}-Kommando analysiert das RMAN Repository der Zieldatenbank, um Antworten auf verschiedene Fragen zu liefern.
+      \subsection{Welche Dateien wurden noch nicht gesichert?}
+        Erfüllt eine Datendatei die aktuelle Backup Retention Policy nicht, weil noch nicht genügende Backups vorliegen, bzw. das älteste Backup noch nicht alt genug ist, um das Recovery Window zu gewährleisten, kann dies mit dem Kommando \languagerman{REPORT NEED BACKUP} ermittelt werden.
+        \begin{lstlisting}[caption={Wer verstößt gegen die Retention Policy?},label=admin1353,language=rman]
+RMAN> REPORT NEED BACKUP;
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to redundancy 1
+Report of files with less than 1 redundant backups
+File #bkps Name
+---- ----- -----------------------------------------------------
+3    0     /u01/app/oracle/oradata/orcl/undotbs01.dbf
+4    0     /u01/app/oracle/oradata/orcl/users01.dbf
+5    0     /u01/app/oracle/oradata/orcl/example01.dbf
+        \end{lstlisting}
+        Die Ausgabe aus \beispiel{admin1353} zeigt an, dass bei einer redundanzbasierenden Retention Policy mit dem Wert 1, noch insgesamt 3 Datendateien gesichert werden müssen, ehe die konfigurierte Policy eingehalten wird.
+
+        Es ist auch möglich, mit der \languagerman{NEED BACKUP}-Klausel eine andere Retention Policy zu unterstellen. Soll zum Beispiel geprüft werden, welche Datendateien noch gesichert werden müssten, wenn eine redundanzbasierende Retention Policy mit dem Wert 2 Gültigkeit hätte, wird die \languagerman{NEED BACKUP}-Klausel wie folgt ergänzt:
+        \begin{lstlisting}[caption={Datenbankdateien die gesichert werden müssen},label=admin1354,language=rman]
+RMAN> REPORT NEED BACKUP REDUNDANCY 2;
+
+Report of files with less than 2 redundant backups
+File #bkps Name
+---- ----- -----------------------------------------------------
+1    1     /u01/app/oracle/oradata/orcl/system01.dbf
+2    1     /u01/app/oracle/oradata/orcl/sysaux01.dbf
+3    0     /u01/app/oracle/oradata/orcl/undotbs01.dbf
+4    0     /u01/app/oracle/oradata/orcl/users01.dbf
+5    0     /u01/app/oracle/oradata/orcl/example01.dbf
+7    1     /u01/app/oracle/oradata/orcl/bank01.dbf
+        \end{lstlisting}
+        Der gleiche Vorgang ist auch für eine Zeitfensterbasierende Retention Policy möglich.
+        \begin{lstlisting}[caption={Datenbankdateien die gesichert werden müssen},label=admin1355,language=rman]
+RMAN> REPORT NEED BACKUP RECOVERY WINDOW OF 3 DAYS;
+
+Report of files that must be backed up to satisfy 3 days recovery window
+File Days  Name
+---- ----- -----------------------------------------------------
+1    4     /u01/app/oracle/oradata/orcl/system01.dbf
+3    1535  /u01/app/oracle/oradata/orcl/undotbs01.dbf
+4    1535  /u01/app/oracle/oradata/orcl/users01.dbf
+5    67    /u01/app/oracle/oradata/orcl/example01.dbf
+7    4     /u01/app/oracle/oradata/orcl/bank01.dbf
+        \end{lstlisting}
+        Die Spalte \identifier{Tage} gibt an, wie viele Archive Log Informationen, in Tagen gerechnet, eine Datendatei benötigt, um vollständig wiederhergestellt werden zu können.
+      \subsection{Nicht wiederherstellbare Datendateien aufspüren}
+        Nicht rekonstruierbare Operationen (unrecoverable operations) sind
+        Schreibvorgänge in Datendateien, die unter Umgehung der SGA
+        stattfinden. Dabei werden Informationen direkt in Datendateien
+        geschrieben, ohne vorher durch den Database Buffer Cache geschleust zu
+        werden. Ein solcher Schreibvorgang wird als \enquote{Direct Load}
+        bezeichnet und hat den Vorteil, dass er sehr viel schneller ist, als ein
+        normaler Schreibvorgang. Der Nachteil an einer solchen Vorgehensweise
+        ist jedoch, dass keine Redo-Informationen erzeugt werden.
+
+        Daraus resultiert, dass eine so behandelte Datendatei im Falle eines
+        Crashes auch nicht mit Hilfe der Archive Logs wiederhergestellt werden
+        kann. Die Empfehlung seitens Oracle ist deshalb, eine solche Datei
+        umgehend in einem Backup zu sichern.
+        \begin{lstlisting}[caption={Datenbankdateien die nicht rekonstruierbare Operationen enthalten aufspüren},label=admin1356,language=rman]
+RMAN> REPORT UNRECOVERABLE;
+
+Report of files that need backup due to unrecoverable operations
+File Type of Backup Required Name
+---- ----------------------- -----------------------------------
+5    full                    /u01/app/oracle/oradata/orcl/example01.dbf
+        \end{lstlisting}
+      \subsection{Nicht mehr benötigte Backups}
+        Wenn eine ausreichende Anzahl Backups vorhanden ist, um die geltende
+        Retention Policy zu erfüllen, werden alle Backups, die nicht mehr
+        benötigt werden, als \enquote{obsolete} markiert. Eine Auflistung der
+        obsoleten Backups kann mit \languagerman{REPORT OBSOLETE} angezeigt werden.
+        \begin{lstlisting}[caption={Backups die nicht mehr benötigt werden anzeigen},label=admin1357,language=rman]
+RMAN> REPORT obsolete;
+
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to redundancy 1
+Report of obsolete backups and copies
+Type                 Key    Completion Time    Filename/Handle
+-------------------- ------ ------------------ --------------------
+Backup Set           2      24-OCT-13
+  Backup Piece       2      24-OCT-13          /u05/fast_recovery_area/ORCL/b...
+Backup Set           4      24-OCT-13
+  Backup Piece       4      24-OCT-13          /u05/fast_recovery_area/ORCL/...
+        \end{lstlisting}
+        Auch hierbei kann wieder eine veränderte Retention Policy unterstellt werden, so wie es auch bei der \languagerman{NEED BACKUP}-Klausel möglich ist.
+        \begin{lstlisting}[caption={Backups die nicht mehr benötigt werden anzeigen},label=admin1358,language=rman]
+RMAN> REPORT obsolete RECOVERY WINDOW OF 3 DAYS;
+
+Report of obsolete backups and copies
+Type                 Key    Completion Time    Filename/Handle
+-------------------- ------ ------------------ --------------------
+Backup Set           2      24-OCT-13
+  Backup Piece       2      24-OCT-13          /u05/fast_recovery_area/ORCL/b...
+Backup Set           4      24-OCT-13
+  Backup Piece       4      24-OCT-13          /u05/fast_recovery_area/ORCL/a...
+        \end{lstlisting}
+    \section{Erarbeiten von Backup und Recovery Strategien}
+      \subsection{Redundancy Sets}
+        Das Set der Dateien, das dazu benötigt wird, um eine Datenbank im Fehlerfall zu Recovern wird als \enquote{Redundancy Set} bezeichnet. Ein solches Set sollte folgende Dateien enthalten:
+        \begin{itemize}
+          \item Das letzte Backup der Kontrolldatei und aller Datendateien
+          \item Alle Archive Logs, die nach dem letzten Vollbackup entstanden sind
+          \item Multiplexing Duplikate von Kontrolldateien und Redo Log Dateien
+          \item Kopien von Konfigurationsdateien (SPFile, tnsnames.ora, listener.ora)
+        \end{itemize}
+        Aus Sicherheitsgründen ist es wichtig, das Redundancy Set nicht auf dem gleichen Datenträger aufzubewahrt, wie die Zieldatenbank selbst. Dies wird am Einfachsten dadurch erreicht, das eine Fast Recovery Area auf einem von der Datenbank getrennten Datenträger eingerichtet wird. Unabhängig davon sollten folgende Empfehlungen beachtet werden:
+        \begin{itemize}
+          \item Kontroll- und Redo Log Dateien sollten auf Datenbankebene verteilt werden (Multiplexing).
+          \item Wird die Datenbank im Archive Log Modus betrieben, sollten die Archive an unterschiedliche Stellen verteilt werden.
+          \item Für die Speicherung der Datendateien sollte Mirroring auf Betriebssystem- oder Hardwareebene genutzt werden.
+          \item Es sollte immer mindestens eine Kopie des Redundancy Sets verfügbar sein. Wird das Redundancy Set auf einem Band gespeichert, sollten aufgrund der hohen Ausfallwahrscheinlichkeit eines Bands immer mindestens zwei Kopien des Redundancy Sets vorhanden sein.
+        \end{itemize}
+        Die Nutzung einer Fast Recovery Area ist nicht  verpflichtend, wird
+        jedoch seitens Oracle empfohlen.
+      \subsection{Planen einer Backupstrategie}
+        Eine Backupstrategie legt fest, welche Teile der Datenbank gesichert werden müssen, welche Tools dafür herangezogen werden und wie die Datenbank möglichst robust konfiguriert werden kann, um Backup und Recovery Operationen zu erleichtern. Die Entwicklung einer Backupstrategie ist auch nicht zu letzt eine Frage des Budgets, da hochwertige Backupsysteme meist sehr kostspielig sind.
+        \subsubsection{Archive Log oder Noarchive Log Modus}
+          Die Datenbank kann in zwei verschiedenen Modi betrieben werden: Archivelog und Noarchivelog. Der Archivelog Modus erweitert die Möglichkeiten des DBA bei einem Recovery wesentlich, hat jedoch auch Nachteile, wie z. B. einen höheren Speicherplatzverbrauch. Im Folgenden werden die Vor- und Nachteile dieser beiden Modi gegenübergestellt. So kann eine Entscheidung getroffen werden, welcher Modus der Richtige für den Betrieb der Datenbank ist.
+
+          Die Datenbank im Noarchivelog Modus zu betreiben, hat folgende Auswirkungen:
+          \begin{itemize}
+            \item Es können keine Online-Backups gemacht werden. Die Datenbank muss vor einem Backup heruntergefahren werden.
+            \item Erweiterte Recovery Techniken, wie z. B. Point-In-Time Recovery oder Flashback Database können nicht genutzt werden.
+          \end{itemize}
+          Im Gegensatz dazu, hat der Betrieb der Datenbank im Archivelog Modus diese Auswirkungen:
+          \begin{itemize}
+            \item Die gesamte Breite der Recovery Techniken steht dem Administrator zur Verfügung.
+            \item Zusätzlicher Speicherplatz für die Speicherung der Archive Logs wird benötigt.
+            \item Die Archive Logs müssen verwaltet werden (Bereitstellung von Speicherorten, Sicherung auf Band, usw.)
+            \item Durch die Archivierung entsteht ein Performance Overhead.
+          \end{itemize}
+        \subsubsection{Festlegen der Backupfrequenz}
+          Abhängig von der Häufigkeit, mit der eine Datenbank geändert wird, sollte auch die Backupfrequenz bestimmt werden. Sie richtet sich nach den folgenden Gesichtspunkten:
+          \begin{itemize}
+            \item Wie häufig werden Schemaobjekte gelöscht und neu angelegt?
+            \item Wie häufig werden Tabellenzeilen bearbeitet (eingefügt, gelöscht, geändert)?
+            \item Wie häufig wird die Struktur der Datenbank geändert?
+          \end{itemize}
+          Von den Antworten auf diese Fragen, den vorhandenen Mitteln und der maximalen Down-Time, welche die Datenbank aufweisen darf, hängt ab, wie häufig ein Backup der Datenbank erfolgen muss. Bei strukturellen Änderungen der Datenbank sollte grundsätzlich immer vorher und nachher ein Backup erfolgen.
+
+          Wenn die Änderungshäufigkeit für bestimmte Objekte sehr hoch ist und im Rest der Datenbank eher niedrig, kann auch ein partielles Backup der Datenbank in Frage kommen, so dass häufig geänderte Objekte auch häufiger gesichert werden, als andere.
+        \subsubsection{Wartungsfenster}
+          Die Planung einer Backupstrategie hängt nicht zuletzt von evtl. vorhanden Wartungsfenstern ab.
+          \begin{merke}
+            Als Wartungsfenster wird ein Zeitraum bezeichnet, innerhalb dessen die Datenbank zu Wartungszwecken heruntergefahren werden kann.
+          \end{merke}
+          Da jede Datenbank einen bestimmten Verfügbarkeitsgrad haben muss, also zu bestimmten Zeiten arbeitsbereit sein soll, werden die Möglichkeiten für Wartungsfenster automatisch eingeschränkt.
+        \subsubsection{Maximale Down-Time}
+          \begin{merke}
+            Als Down-Time wird der Zeitraum bezeichnet, in dem die Datenbank aufgrund eines Ausfalls nicht mehr verfügbar ist. Hier gilt es möglichst realistische Schätzungen, evtl. auch basierend auf Erfahrungswerten, zu machen, wie lange ein schnellst mögliches Recovery der Datenbank dauert und wie lange die Datenbank somit nicht verfügbar sein wird. Die max. Down-Time sollte so gering wie möglich gehalten werden.
+          \end{merke}
+
+          Da eine Backupstrategie die Basis für jede Recoverystrategie darstellt, muss die max. Down-Time nicht erst beim Erstellen der Recoverystrategie(n) berücksichtig werden, sondern bereits hier.
+          \abbildung{backupstrategie} zeigt eine mögliche Vorgehensweise bei der Planung einer Backupstrategie.
+          \bild{Planung einer Backupstrategie}{backupstrategie}{0.45}
+\clearpage
+      \subsection{RMAN-Skripte benutzen}
+        RMAN stellt die Möglichkeit bereit, Skripte für ständig wiederkehrende Aufgaben zu benutzen. Dabei handelt es sich um einfache Textdateien, die auf jeder Betriebssystemplattform erstellt und genutzt werden können. Aus diesem Grund stellen RMAN-Skripte das ideale Hilfsmittel zur Implementierung einer Backupstrategie dar.
+        \subsubsection{RMAN mit Skript-Datei starten}
+          \begin{lstlisting}[caption={Aufrund eines RMAN-Skripts},label=admin1359,language=rman]
+[oracle@FEA11-119SRV ~]$ rman target / cmdfile backup_sunday_full.cmd
+          \end{lstlisting}
+          \begin{merke}
+            Die Dateiendung \oscommand{.cmd} wurde willkürlich gewählt.
+          \end{merke}
+          Nach der Ausführung aller Kommandos im Skript, wird RMAN automatisch beendet. Um die Ausgaben des RMAN-Skripts sehen zu können, kann zusätzlich eine Logdatei Angegeben werden.
+          \begin{lstlisting}[caption={RMAN-Skript mit Log-Datei benutzen},label=admin1360,language=terminal]
+[oracle@FEA11-119SRV ~]$ rman target / cmdfile backup_sunday_full.cmd \
+> log backup_sunday_full.log
+          \end{lstlisting}
+        \subsubsection{Skript-Dateien in RMAN starten}
+          RMAN-Skripte können auch innerhalb von RMAN aufgerufen werden:
+          \begin{lstlisting}[caption={Ein Skript-Datei in RMAN aufrufen},label=admin1361,language=rman]
+RMAN> @backup_sunday_full.cmd
+        \end{lstlisting}
+          Wurden die Kommandos im RMAN-Skript ausgeführt, zeigt RMAN die Meldung \enquote{**end-of-file**} und wird nicht beendet.
+        \subsubsection{Syntax Check}
+          RMAN bietet die Möglichkeit, einen Syntax-Check an Skript-Dateien durchzuführen. Dies geschieht mit Hilfe des Parameters \oscommand{CHECKSYNTAX}. Wird RMAN mit diesem Parameter aufgerufen, werden alle Kommandos nur getestet und nicht ausgeführt. Ist ein Kommando fehlerhaft, wird die RMAN-Fehlermeldung \enquote{RMAN-00558} ausgegeben.
+          \begin{lstlisting}[caption={Ein RMAN-Skript auf korrekte Syntax überprüfen},label=admin1362,language=rman]
+[oracle@FEA11-119SRV ~]$ rman checksyntax cmdfile backup_sunday_full.cmd
+
+Recovery Manager: Release 11.2.0.1.0 - Production on Sun Oct 27 08:51:42 2013
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+RMAN> BACKUP database;
+The cmdfile has no syntax errors
+Recovery Manager complete.
+          \end{lstlisting}
+      \subsection{Planen einer Recoverystrategie}
+        Die Fehler, die in einer Datenbank entstehen können, decken die
+        gesamte Skala von Nutzer\-fehlern, über Blockfehler in Datendateien
+        bis hin zu Medienfehlern ab. Wie schnell ein Fehler behoben
+        werden kann, hängt im Wesentlichen von der Recoverystrategie ab.
+
+        Vor der Erstellung einer Recoverystrategie sollten folgende Fragen beantwortet werden:
+        \begin{itemize}
+          \item Wie soll auf den Ausfall eines gesamten Speichermediums reagiert werden?
+          \item Wie kann ein logischer Fehler, der durch eine Anwendung erzeugt wurde, aufgespürt und behoben werden?
+            \begin{itemize}
+              \item Welche Auswirkungen entstehen dabei auf zwischenzeitlich durchgeführte Updates?
+              \item Wie kann ein erneutes Auftreten des gleichen Fehlers verhindert werden?
+            \end{itemize}
+          \item Wie soll reagiert werden, wenn das Alert.log File einen oder mehrere defekte Datenblöcke in den Datendateien anzeigt und wie können diese Blöcke repariert werden?
+          \item Welches Disaster Recovery ist im Falle der Zerstörung des kompletten Datenbankservers notwendig und wie lange würde ein solches Recovery dauern?
+          \item Kann eine andere Person, die Datenbank Recovern, falls der DBA abwesend ist?
+        \end{itemize}
+        Wurden Antworten auf diese Fragen gefunden, kann geklärt werden, welche Techniken beim Recovery zum Einsatz kommen sollen. Hier stehen zur Verfügung:
+        \begin{itemize}
+          \item User Managed Backup and Recovery
+          \item Der Recovery Manager
+          \item Oracle Flashback Database
+          \item Block Media Recovery
+        \end{itemize}
+        Dies sind jedoch nur einige wenige Überlegungen, die bei der Planung einer Recoverystrategie gemacht werden sollten. Zusätzlich kommt es immer auf Hardware, Personal und Budget an.
+    \section{Ein Backupszenario}
+      \label{backupszenarios}
+      \subsection{Backupstrategie bei hohem Änderungsvolumen}
+        In diesem Szenario wird eine Datenbank beschrieben, für die eine wöchentliche Sicherung eingerichtet werden soll. Das Änderungsvolumen dieser Datenbank, innerhalb einer Woche, ist hoch. Da in einem solchen Szenario selbst inkrementelle Backups sehr gro\ss\ werden können, wird hier ein wöchentliches Full-Backup mit zusätzlicher Sicherung der Archive Logs und einer Zeitfensterbasierten Retention Policy empfohlen.
+
+        Die Strategie setzt sich aus den folgenden einzelnen Elementen zusammen:
+        \begin{itemize}
+          \item Die Redo Logs werden mit Hilfe der Fast Recovery Area gesichert.
+          \item Wöchentlich wird ein Full-Backup der Datenbank in die Fast Recovery Area gesichert.
+          \item Täglich werden alle Backupdateien (einschließlich der Archive Logs), die sich in der Fast Recovery Area befinden auf ein SBT-Gerät gesichert. Obsolete Backups werden vom SBT gelöscht.
+        \end{itemize}
+        Wird für die Backupstrategie eine Recovery Window basierte Retention Policy verwendet, ist sichergestellt, dass alle Backups, solange sie benötigt werden, vorrätig sind.
+        \subsubsection{Vorbereitungen}
+          Vorbereitend für diese Backupstrategie muss eine Fast Recovery Area mit der richtigen Größe erstellt werden. Diese kann nach folgender Formel berechnet werden:
+
+          \begin{small}
+            Speicherplatzbedarf = (Größe eines Full-Backups) + (Größe aller Archive Logs für Y+1 Tage)
+          \end{small}
+
+          Die Variable $Y$ steht in dieser Formel für die Anzahl der Tage, die zwischen den Sicherungen der Fast Recovery Area vergehen. In diesem Szenario erfolgt eine tägliche Sicherung, d. h. es gilt $Y=1$. Wichtig ist ebenfalls, dass die Fast Recovery Area als Speicherort für die Redo Logs angegeben wird.
+
+          Zur Umsetzung dieser Strategie werden zwei verschiedene RMAN-Skripte benutzt. Eines für das wöchentliche Full-Backup und eines für die täglichen Backups der Fast Recovery Area. Das wöchentliche Skript wird jeden Sonntag ausgeführt. Das tägliche Skript wird sechs Tage die Woche ausgeführt.
+\clearpage
+        \subsubsection{Das wöchentliche Skript}
+          \begin{lstlisting}[caption={Das wöchentliche Skript},label=admin1363,language=rman]
+
+RMAN> RUN {
+2>      ALLOCATE CHANNEL c1 DEVICE TYPE disk;
+3>      ALLOCATE CHANNEL c2 DEVICE TYPE sbt
+4>      PARMS 'SBT_LIBRARY=oracle.disksbt,ENV=(BACKUP_DIR=/u04)';
+5>
+6>      BACKUP AS COMPRESSED BACKUPSET database
+7>      CHANNEL c1;
+8>
+9>      BACKUP recovery area
+10>      CHANNEL c2;
+11>
+12>     DELETE obsolete DEVICE TYPE sbt;
+13>   }
+          \end{lstlisting}
+        \subsubsection{Das tägliche Skript}
+          \begin{lstlisting}[caption={Das tägliche Skript},label=admin1364,language=rman]
+RMAN> RUN {
+3>      ALLOCATE CHANNEL c2 DEVICE TYPE sbt
+4>      PARMS 'SBT_LIBRARY=oracle.disksbt,ENV=(BACKUP_DIR=/u04)';
+5>
+5>      BACKUP recovery area
+6>      CHANNEL c2;
+7>
+8>      DELETE obsolete DEVICE TYPE sbt;
+9>    }
+          \end{lstlisting}
+          Da täglich die gesamte Fast Recovery Area gesichert wird, kann der RMAN, Dateien aus der Recovery Area löschen, sobald dies notwendig ist. Zwischen den einzelnen Backups ist es schwierig zu sagen, welche Dateien noch in der Fast Recovery Area sind.
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{REFRN30022}
+          \item \cite{REFRN30030}
+        \end{literaturinternet}
+\clearpage

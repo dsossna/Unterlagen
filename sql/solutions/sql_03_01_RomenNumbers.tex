@@ -1,0 +1,184 @@
+\clearpage
+    \section{Konvertierungsfunktion f\"ur R\"omische Zahlen}
+      \begin{enumerate}
+        \item Deise beiden Funktionen wandeln Arabische Zahlen in R\"omische und umgekehrt um.
+        \begin{mssql}[\FALSE]
+        \end{mssql}
+  \begin{lstlisting}[language=ms_sql,caption={Die Fehlermeldung in SQL Server},label=sql05_04]
+  IF OBJECT_ID('dbo.ToRomanNumerals') is NOT NULL
+      drop function dbo.ToRomanNumerals
+ go
+ CREATE FUNCTION dbo.ToRomanNumerals (@Number INT)
+  /**
+ summary:   >
+ This is a simple routine for converting a decimal integer into a roman numeral.
+ Author: Phil Factor
+ Revision: 1.2
+ date: 3rd Feb 2014
+ Why: converted to run on SQL Server 2008-12
+ example:
+      - code: Select dbo.ToRomanNumerals(187)
+      - code: Select dbo.ToRomanNumerals(2011)
+ returns:   >
+ The Mediaeval-style 'roman' numeral as a string.
+ **/   
+ RETURNS NVARCHAR(100)
+ AS
+ BEGIN
+  IF @Number<0
+     BEGIN
+     RETURN 'De romanorum non numero negative'
+     end                          
+   IF @Number> 200000
+     BEGIN
+     RETURN 'O Juppiter, magnus numerus'
+     end                          
+   DECLARE @RomanNumeral AS NVARCHAR(100)
+   DECLARE @RomanSystem TABLE (symbol NVARCHAR(20) 
+                                   COLLATE SQL_Latin1_General_Cp437_BIN ,
+                               DecimalValue INT PRIMARY key)
+    INSERT  INTO @RomanSystem (symbol, DecimalValue)
+     VALUES('I', 1),
+           ('IV', 4),
+           ('V', 5),
+           ('IX', 9),
+           ('X', 10),
+           ('XL', 40),
+           ('L', 50),
+           ('XC', 90),
+           ('C', 100),
+           ('CD', 400),
+           ('D', 500),
+           ('CM', 900),
+           ('M', 1000),
+           (N'|ↄↄ', 5000),
+           (N'cc|ↄↄ', 10000),
+           (N'|ↄↄↄ', 50000),
+           (N'ccc|ↄↄↄ', 100000),
+           (N'ccc|ↄↄↄↄↄↄ', 150000)
+  
+   WHILE @Number > 0
+     SELECT  @RomanNumeral = COALESCE(@RomanNumeral, '') + symbol,
+             @Number = @Number - DecimalValue
+     FROM    @RomanSystem
+     WHERE   DecimalValue = (SELECT  MAX(DecimalValue)
+                             FROM    @RomanSystem
+                             WHERE   DecimalValue <= @number)
+   RETURN COALESCE(@RomanNumeral,'nulla')
+ END
+ go
+  
+ /* and we do our unit tests. */
+ if NOT dbo.ToRomanNumerals(87) = 'LXXXVII'
+   RAISERROR ('failed first test',16,1)
+ if NOT dbo.ToRomanNumerals(99) = 'XCIX'
+   RAISERROR ('failed second test',16,1) 
+ if NOT dbo.ToRomanNumerals(0) = 'nulla'
+   RAISERROR ('failed third test',16,1)   
+ if NOT dbo.ToRomanNumerals(300000) = 'O Juppiter, magnus numerus'
+   RAISERROR ('failed fourth test',16,1)   
+ if NOT dbo.ToRomanNumerals(2725) = 'MMDCCXXV'
+   RAISERROR ('failed fifth test',16,1)   
+ if NOT dbo.ToRomanNumerals(949) = 'CMXLIX'
+   RAISERROR ('failed Sixth test',16,1)   
+ if NOT dbo.ToRomanNumerals(154321) = N'ccc|ↄↄↄↄↄↄMMMMCCCXXI'
+   RAISERROR ('failed Seventh test',16,1)   
+ GO
+  
+  
+ IF OBJECT_ID('dbo.FromRomanNumerals') is NOT NULL
+   drop function dbo.FromRomanNumerals
+ go
+ CREATE FUNCTION dbo.FromRomanNumerals (@RomanNumeral NVarchar(100))
+  /**
+ summary:   >
+ This is a simple routine for converting  roman numeral into an integer
+ Author: Phil Factor
+ Revision: 1.2
+ date: 2nd Feb 2014
+ Why: converted to run on SQL Server 2008-12
+ example:
+      - code: Select dbo.FromRomanNumerals('CXVII')
+      - code: Select dbo.FromRomanNumerals('')
+ returns:   >
+ The Integer.
+ **/   
+ RETURNS int
+ AS
+ BEGIN
+   DECLARE @RomanSystem TABLE (symbol NVARCHAR(20)  
+                                   COLLATE SQL_Latin1_General_Cp437_BIN,
+                               DecimalValue INT PRIMARY key)
+   DECLARE @Numeral INT
+   DECLARE @Rowcount int
+   DECLARE @InString int
+   SELECT  @inString=LEN(@RomanNumeral),@rowcount=100
+ IF @RomanNumeral='nulla' return 0
+   INSERT  INTO @RomanSystem (symbol, DecimalValue)
+     VALUES('I', 1),
+           ('IV', 4),
+           ('V', 5),
+           ('IX', 9),
+           ('X', 10),
+           ('XL', 40),
+           ('L', 50),
+           ('XC', 90),
+           ('C', 100),
+           ('CD', 400),
+           ('D', 500),
+           ('CM', 900),
+           ('M', 1000),
+           (N'|ↄↄ', 5000),
+           (N'cc|ↄↄ', 10000),
+           (N'|ↄↄↄ', 50000),
+           (N'ccc|ↄↄↄ', 100000),
+           (N'ccc|ↄↄↄↄↄↄ', 150000)
+  
+ WHILE @instring>0 AND @RowCount>0
+     BEGIN
+     SELECT TOP 1 @Numeral=COALESCE(@Numeral,0)+ DecimalValue,
+                 @InString=@Instring-LEN(symbol) FROM
+     @RomanSystem  
+     Where RIGHT(@RomanNumeral,@InString) LIKE symbol+'%'
+           COLLATE SQL_Latin1_General_CP850_Bin
+     AND @Instring-LEN(symbol)>=0
+     ORDER BY DecimalValue DESC
+     SELECT @Rowcount=@@Rowcount
+     end
+  RETURN CASE WHEN @RowCount=0 THEN NULL ELSE @Numeral END
+ END
+ go
+ /* and we do our unit tests. */
+ if NOT dbo.FromRomanNumerals ('LXXXVII')=87
+   RAISERROR ('failed first test',16,1)
+ if NOT dbo.FromRomanNumerals('XCIX') = 99
+   RAISERROR ('failed second test',16,1) 
+ if NOT dbo.FromRomanNumerals('nulla') = 0
+   RAISERROR ('failed third test',16,1)   
+ if NOT dbo.FromRomanNumerals('MMDCCXXV')= 2725
+   RAISERROR ('failed fourth test',16,1)   
+ if NOT dbo.FromRomanNumerals('CMXLIX') = 949
+ RAISERROR ('failed fifth test',16,1) 
+  
+  
+ DECLARE @Start DATETIME
+ SELECT @Start=GETDATE()
+ DECLARE @ii INT
+ SELECT @ii=1
+ WHILE @ii<200000
+  BEGIN
+  IF dbo.FromRomanNumerals (dbo.ToRomanNumerals(@ii)) <> @ii
+    BEGIN
+    RAISERROR ('failed iteration test at %d test',16,1,@ii)
+    SELECT dbo.ToRomanNumerals(@ii)
+    SELECT dbo.FromRomanNumerals(dbo.ToRomanNumerals(@ii))
+    BREAK
+    end
+  SELECT @ii=@ii+1  
+  end   
+  SELECT 'That took '
+         + CONVERT(VARCHAR(10),DATEDIFF(ms,@start,GETDATE()))         + ' Ms'
+
+\end{lstlisting}
+\end{enumerate}
+\clearpage

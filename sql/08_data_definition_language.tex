@@ -225,7 +225,7 @@ FROM   Aktie;
           Wird das gleiche Experiment in MS SQL Server durchgeführt, zeigt sich das die Spalte \identifier{Herkunft} nicht automatisch aufgefüllt wird.
           \begin{lstlisting}[language=ms_sql,caption={Tabellenspalte mit Standardwert hinzufügen in SQL Server},label=sql08_10]
 ALTER TABLE Aktie
-ADD Herkunft VARCHAR(25) DEFAULT 'Deutschland';
+ADD DEFAULT 'Deutschland' for Herkunft;
 
 SELECT *
 FROM   Aktie;

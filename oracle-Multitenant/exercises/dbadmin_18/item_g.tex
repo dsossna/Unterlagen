@@ -1,0 +1,9 @@
+    \item Führen Sie ein Recovery bei Verlust einer Systemdatendatei durch.
+      \begin{enumerate}
+        \item Starten Sie das Skript \oscommand{lab\_delete\_system\_datafile.sql}. Es löscht die Datendatei Ihres \identifier{system}-Tablespaces oder Ihres \identifier{undo}-Tablespaces.
+          \begin{lstlisting}[language=terminal]
+SQL> @/home/oracle/labs/lab_delete_system_datafile.sql
+          \end{lstlisting}
+        \item Prüfen Sie welche Datendatei defekt ist.
+        \item Ergreifen Sie geeignete Maßnahmen, um die defekte Datendatei wieder herzustellen.
+      \end{enumerate}

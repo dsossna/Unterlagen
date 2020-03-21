@@ -1,0 +1,267 @@
+\chapter{Erstellen einer Oracle Datenbank}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+      \section{Überlegungen vor der Erstellung}
+      Eine Oracle Datenbank kann auf zwei verschiedene Arten erstellt werden:
+      \begin{itemize}
+        \item \textbf{Database Configuration Assistant (DBCA)}: Der DBCA kann während der Installation durch den OUI oder später von Hand gestartet werden. Er stellt ein grafisches Interface für die Erstellung von Datenbanken zur Verfügung.
+        \item \textbf{CREATE DATABASE}: Das SQL-Kommando \languageorasql{CREATE DATABASE} bietet die Möglichkeit zur manuellen Erstellung einer Datenbank. Wird eine Datenbank auf diesem Weg erstellt, anstatt mit dem DBCA, müssen zusätzliche Schritte ausgeführt werden, bis die Datenbank voll funktionsfähig ist.
+      \end{itemize}
+      Bevor aber eine dieser beiden Möglichkeiten genutzt werden kann, muss zuerst einiges an Vorarbeit geleistet werden. Die folgenden Überlegungen sollen dabei helfen, eine Oracle Datenbank planvoll zu erstellen.
+      \subsection{Kapazitätenplanung}
+        Für jedes Datenbankobjekt, wie z. B. eine Tabelle, kann anhand der verwendeten Datentypen, der Spaltenanzahl und der geschätzten maximal Anzahl Zeilen eine durchschnittliche Größe berechnet werden. Um den Speicherbedarf einer Datenbank realistisch einschätzen zu können sollte dies für jedes Objekt geschehen. Folgendes Beispiel verdeutlicht die Kapazitätsplanung einer einzelnen Tabelle.
+          \begin{verbatim}
+Tabelle: tblKunden
+Spalten:
+  1.)    KundenID   NUMBER(4)           3 Byte
+  2.)    Name       VARCHAR2(30)       30 Byte
+  3.)    Vorname    VARCHAR2(25)       25 Byte
+  4.)    Strasse    VARCHAR2(50)       50 Byte
+  5.)    PLZ        VARCHAR2(5)         5 Byte
+  6.)    Ort        VARCHAR2(30)       30 Byte
+Voraussichtliche Anzahl Zeilen   : 300
+          \end{verbatim}
+          Die Gesamtgröße der Tabelle \identifier{tblKunden} wird somit wie folgt berechnet:
+
+          \centerline{$300*(3+30+25+50+5+30)=42.900$ Byte}
+
+      \subsection{Planen des physischen Datenbanklayouts}
+        Unter dem physischen Layout einer Oracle Datenbank versteht man die Aufteilung der selben in einzelne Dateien und die Verteilung dieser Dateien auf verschiedene Datenträger. Der Einsatz von Mirroring- und Striping-Mechanismen wird ebenfalls zum physischen Datenbanklayout gezählt. Eine vernünftige Planung kann sich entscheidend auf Performance und Ausfallsicherheit der Datenbank auswirken.
+        \subsubsection{Oracle Managed Files (OMF) und Automatic Storage Management (ASM)}
+          OMF und ASM sind zwei Mechanismen, die den Administrator bei der Verwaltung einer Datenbank unterstützen sollen. Beide sind aber nicht zwingend notwendig für den Betrieb.
+        \subsubsection{Auswählen des globalen Datenbanknamens}
+          Der globale Datenbankname ist der Name der Datenbank, der sie eindeutig identifiziert, z. B. \enquote{ORCL}.
+        \subsubsection{Initialisierungsparameter}
+          Die Initialisierungsparameter beeinflussen das Verhalten einer Oracle-Instanz. Eine ungünstige Konfiguration kann sich negativ auf die Performance der Datenbank auswirken.
+        \subsubsection{Der Datenbankzeichensatz}
+          Je nach dem welcher Zeichensatz für die Datenbank ausgewählt wurde kann diese verschiedene Sprachen darstellen und andere nicht. Dieser Punkt gewinnt im multinationalen Betrieb eine erhöhte Bedeutung. Für die Auswahl des richtigen Datenbankzeichensatzes sind die folgenden Punkte entscheidend:
+          \begin{itemize}
+            \item Welche Sprachen sollen in der Datenbank dargestellt werden (jetzt und in Zukunft)?
+            \item Ist der Zeichensatz im verwendeten Betriebssystem verfügbar?
+            \item Welchen Zeichensatz nutzen die Clients?
+          \end{itemize}
+
+          \begin{literaturinternet}
+            \item \cite{NLSPG002}
+          \end{literaturinternet}
+
+        \subsubsection{Auswählen der korrekten Zeitzone(n)}
+          Die gewählte Zeitzone ist dann entscheidend, wenn Clients in unterschiedlichen Zeitzonen stehen. Sie ist dafür zuständig, eine korrekte Umrechnung der Datum/Uhrzeit-Angaben des Clients in die Zeitzone des Servers sicherzustellen.
+
+          \begin{literaturinternet}
+            \item \cite{i1006705}
+          \end{literaturinternet}
+
+        \subsubsection{Festlegen der Oracle Datenblockgröße}
+          Die Standard Oracle Blockgröße beträgt 8 Kb. Abhängig vom verwendeten Dateisystem und dem Verwendungszweck der Datenbank muss dieser Wert angepasst werden, um die Datenbank performant zu machen.
+        \subsubsection{Abschätzen der passenden Größe für den Sysaux-Tablespace}
+          Der \identifier{Sysaux}-Tablespace wird automatisch bei der Datenbankerstellung generiert. Er beinhaltet Nutzdaten für verschiedene Oracle Features wie z. B. Oracle Text, Ultra Search, Log Miner, Oracle Spatial und andere. Erstellt wird dieser Tablespace abhängig von den gewählten Oracle Features, in der richtigen Größe. Der Administrator muss sich darum kümmern, dass dieser Tablespace auf einem Datenträger mit genügend freiem Speicher erstellt wird.
+        \subsubsection{Einplanen von Standardtablespaces für Nutzer}
+          Wenn Nutzer neue Datenbankobjekte anlegen, werden diese im \enquote{Defaulttablespace} des jeweiligen Nutzers abgelegt. Wurde einem Nutzer kein Defaulttablespace zugewiesen oder existiert kein Tablespace, außer dem \identifier{Sysaux}-Tablespace, wird automatisch dieser verwendet. SYSTEM stellt jedoch das Herzstück einer Oracle Datenbank dar und sollte deshalb niemals als Defaulttablespace dienen.
+    \section{Der Database Configuration Assistant (DBCA)}
+      Der DBCA stellt ein grafisches Werkzeug dar, mit dessen Hilfe folgende Tätigkeiten durchgeführt werden können:
+      \begin{itemize}
+        \item Eine Datenbank erstellen
+        \item Konfigurieren einer Datenbank
+        \item Datenbanken löschen
+        \item Datenbanktemplates erstellen und verwalten
+      \end{itemize}
+      Gestartet wird der DBCA unter Windows mit Hilfe des Startmenüs. Unter Linux muss, in einem Terminalfenster, der gesamte Pfad zur Datei \oscommand{dbca}, also \oscommand{\$ORACLE\_HOME/bin/dbca} angegeben werden. Dies kann jedoch nur dann funktionieren, wenn bereits die Umgebungsvariable \oscommand{\$ORACLE\_HOME} gesetzt wurde. Andernfalls muss der Pfad manuell angegeben werden: \oscommand{/u01/app/oracle/product/11.2.0/<SID>/bin/dbca} (<SID> stellt hier einen Platzhalter für die SID der Datenbank dar.). Wie gewohnt, wird der Nutzer zu aller erstbegrüßt.
+
+      \bild{Willkommen im DBCA}{dbca_welcome}{3}
+
+      Nach einem Klick auf den Button \enquote{Weiter} muss zuerst die gewünschte Tätigkeit ausgewählt werden.
+
+      \bild{Schritt 1 - Vorgänge}{dbca_step_1}{3}
+      \subsection{Eine Datenbank mit dem DBCA erstellen}
+        \label{db_mit_dbca_erstellen}
+        Für die Erstellung einer Datenbank bietet der DBCA zwei Varianten:
+        \begin{itemize}
+          \item Erstellen einer benutzerdefinierten Datenbank
+          \item Erstellen einer Datenbank mittels einer Vorlage
+        \end{itemize}
+        Die erste Option erlaubt es, eine Datenbank komplett selbst zu
+        gestalten, jedoch mit dem Nachteil, dass hier sehr viel Arbeit zu
+        leisten ist. Die Erstellung einer Datenbank aus einer Vorlage hingegen
+        bietet nahezu genauso viele Möglichkeiten, entlastet aber den
+        Ersteller deutlich.
+        \subsubsection{Schritt 2 - Datenbankvorlagen}
+        \bild{Schritt 2 - Datenbankvorlagen}{dbca_step_2}{2.5}
+          Standardmäßig werden zwei Vorlagen durch den DBCA angeboten:
+          \begin{itemize}
+            \item Allgemeiner Gebrauch oder Transaktionsverarbeitung
+            \item Data Warehouse
+          \end{itemize}
+          Diese beiden unterscheiden sich hauptsächlich in den gespeicherten Initialisierungsparametern, mit denen die fertige Datenbank gestartet wird. Welche der beiden Vorlagen genutzt wird hängt davon ab, welchen Einsatzzweck die Datenbank haben soll.
+
+          Ein Datawarehouse, auch als Decision Support System bezeichnet, ist eine Datenbank, die oft eine sehr große Datenmenge hält und durch aufwendige SQL-Anfragen analysiert wird. Das heißt, dass für eine solche Datenbank eine Optimierung der Lesevorgänge im Vordergrund steht. Schreibvorgänge haben hier lediglich eine untergeordnete Rolle, da sie selten erfolgen und meist große Datenmengen am Stück, in die Datenbank importiert werden.
+
+          In einer OLTP - Oline Transaction Processing - Datenbank ist das Verhältnis zwischen Lese- und Schreibzugriffen ganz anders. Daraus folgt, dass die Datenbank für beide Vorgänge so optimal wie möglich eingestellt werden sollte (Kompromisslösung).
+
+          Ein Klick auf den Button \enquote{Details zeigen\dots} zeigt die Einstellungen der Vorlagen.
+
+          \bild{Schritt 2 - Vorlagen-Details}{dbca_step_2_template_details}{3}
+        \subsubsection{Schritt 3 - Datenbank-ID}
+          Nach einem Klick auf \enquote{Weiter} muss in Schritt 3 der Datenbank ein Name gegeben werden. Zu diesem Thema gibt es jedoch einiges zu sagen.
+
+          Eine Oracle-Datenbank hat, ähnlich wie ein Mensch, einen Vornamen und einen Nachnamen. Korrekt ausgedrückt hat eine Oracle-Datenbank einen Datenbanknamen und eine Datenbankdomäne. Der Datenbankname kann maximal acht Zeichen umfassen und sollte dafür genutzt werden, um den Einsatzzweck der Datenbank wieder zu spiegeln. Datenbanknamen wie \identifier{ORCL} oder \identifier{ORA11G} sind maximal in Trainingsumgebungen sinnvoll. In einer Produktivumgebung sollten Namen wie \identifier{dss} für ein Decision Support System oder \identifier{pers} für eine Personalverwaltung genutzt werden. Evtl. ist es auch nützlich, dem Datenbanknamen eine Versionsnummer anzuhängen, um im Falle einer Migration die alte und die neue Datenbank am Namen unterscheiden zu können.
+
+          Die Datenbankdomäne ist der zweite Namensbestandteil. Sie kann dazu genutzt werden, um dem Datenbanknamen zusätzliche Informationen hinzuzufügen. Wenn beispielsweise zu einer produktiven Datenbank ein Testsystem hinzugefügt werden soll, könnten die Domänen \identifier{prod.oracle.local} und \identifier{test.oracle.local} dazu genutzt werden, um beide Systeme zu unterscheiden. Fügt man beide Informationen zusammen, den Datenbanknamen und die Datenbankdomäne, so erhält man den \enquote{Globalen Datenbanknamen}.
+
+          \begin{merke}
+            Der Globale Datenbankname besteht aus dem Datenbanknamen und der Datenbankdomäne. Er wird im Format \oscommand{db\_name.db\_domain} angegeben.
+          \end{merke}
+          In der Welt der Oracle-Datenbanken hat jedoch nicht nur die Datenbank einen Namen, sondern auch die zu ihr gehörende Instanz. Der Instanzname wird im Betriebssystem, in einer Umgebungsvariablen namens \identifier{ORACLE\_SID} hinterlegt. Die Abkürzung SID (gesprochen S-ID) steht für System Identifier. Welche Länge die SID haben darf ist Betriebssystemspezifisch, jedoch sind auf nahezu allen Platformen acht Zeichen ohne Probleme möglich. Da die Instanz keine Domäne als Ergänzung hat, kann hier eine Unterscheidung, z. B. zwischen Test- und Produktivsystem nur im Instanznamen selbst erfolgen, beispielsweise \enquote{ppers} oder \enquote{tpers}.
+
+          \begin{merke}
+            Der Instanznamen muss nicht gleich dem Datenbanknamen sein. Es empfiehlt sich jedoch beide Namen gleich zu wählen, um Datenbank und Instanz zusammen finden zu können.
+          \end{merke}
+          \bild{Schritt 3 - Datenbank-ID}{dbca_step_3}{3}
+        \subsubsection{Schritt 4 - Verwaltungsoptionen}
+          Dieser Schritt gliedert sich in zwei Registerkarten. Auf dem Register \enquote{Enterprise Manager} kann gewählt werden, wie die Datenbank verwaltet werden soll.
+          \begin{itemize}
+            \item \textbf{Enterprise Manager Grid Control}: Grid Control ist eine zentrale Verwaltungskonsole für verschiedenste Oracle-Produkte, wie z. B. die Datenbank oder den Application Server. Sie kann für die Verwaltung beliebig vieler Systeme genutzt werden.
+            \item \textbf{Enterprise Manager Database Control}: Hierbei handelt es sich um eine lokale Verwaltungskonsole für nur eine Datenbank.
+            \item \textbf{Kein Enterprise Manager}: Es ist nicht zwingend notwendig für die Verwaltung einer Oracle-Datenbank den Enterprise Manager einzusetzen. Soll lediglich SQL*Plus genutzt werden oder sind Produkte von Drittanbietern im Einsatz, kann der Enterprise Manager einfach weggelassen werden.
+          \end{itemize}
+          \bild{Schritt 4 - Verwaltungs\-optionen}{dbca_step_4}{2.7}
+
+          \begin{merke}
+            Die Option \enquote{Enterprise Manager konfigurieren} kann seit Oracle 11g erst genutzt werden, wenn ein Listener (Siehe \enquote{Konfigurieren der Oracle Netzwerkumgebung}) konfiguriert und eine Datenbank erstellt wurde.
+          \end{merke}
+          Die Registerkarte \enquote{Automatische Wartungs-Tasks} bietet dem Administrator die Möglichkeit, automatische Wartungs-Tasks der Datenbank zu aktivieren. Dabei handelt es sich um Jobs, wie das Sammeln von Performance-Statistiken oder das Generieren von Berichten.
+          \bild{Schritt 4 - Verwaltungs\-optionen}{dbca_step_4_automatic_maintenance_tasks}{3}
+        \subsubsection{Schritt 5 - Datenbank-ID-Daten}
+          In Schritt 5 müssen Passwörter für die beiden Datenbankbenutzer \identifier{SYS} und \identifier{SYSTEM} festgelegt werden. Der Nutzer \identifier{SYS} ist ein Account mit uneingeschränkten Rechten. Er ist von zentraler Bedeutung in einer Oracle-Datenbank. Diese Tatsache sollte sich in der Komplexität seines Passwortes reflektieren.
+
+          Das Benutzerkonto \identifier{SYSTEM} hat ebenfalls administrative Berechtigungen, ist jedoch stärker eingeschränkt, als \identifier{SYS}. Für diesen Nutzer sollte ebenso ein sicheres Passwort gewählt werden, da er das Recht hat, den gesamten Datenbankinhalt zu exportieren.
+
+          \bild{Schritt 5 - Datenbank-ID-Daten}{dbca_step_5}{2.7}
+        \subsubsection{Schritt 6 - Speicherort von Datenbankdateien}
+          Eine Oracle Datenbank besteht aus einer Vielzahl unterschiedlicher Dateien. Damit diese erstellt werden können, muss ein Speicherort vorgegeben werden. Der DBCA bietet dazu die beiden grundsätzlichen Möglichkeiten:
+          \begin{itemize}
+            \item Speichern der Dateien in einem Dateisystem
+            \item Nutzung der Oracle-Eigenen Technologie \enquote{Automatic Storage Management}
+          \end{itemize}
+          Egal welche der beiden Methoden gewählt wurde, es muss nun noch die Auswahl des genauen Speicherortes getroffen werden. Es kann der Speicherort aus der Vorlage genutzt, ein eigenes Verzeichnis für alle Dateien angegeben oder die Techonologie \enquote{Oracle Managed Files}, die an späterer Stelle noch besprochen wird, genutzt werden.
+
+          Falls keine dieser drei Möglichkeiten die richtige ist, kann am Ende des Assistenten der Speicherort einer jeden einzelnen Datei geändert werden.
+          \bild{Schritt 6 - Speicherort von Daten\-bank\-dateien}{dbca_step_6}{3}
+
+          Um herauszufinden, was hinter der Angabe \oscommand{\textbraceleft{}ORACLE\_BASE\textbraceright{}/oradata} steckt, kann der Button \enquote{Variablen für Dateispeicherort} angeklickt werden.
+          \bild{Schritt 6 - Variablen für Dateispeicherort}{dbca_step_6_file_locations}{4}
+        \subsubsection{Schritt 7 - Recovery-Konfiguration}
+          Dieser Dialog bietet zwei Optionen:
+          \begin{itemize}
+            \item \textbf{Flash Recovery-Bereich angeben}: Hierbei handelt es sich um ein von der Datenbank überwachtes Verzeichnis, welches als Puffer für Backups dient.
+            \item \textbf{Archivierung aktivieren}: Diese Option aktiviert den Archiver-Hintergrundprozess, der dafür sorgt, dass automatisch Kopien der benutzten Redo Log Dateien angelegt werden.
+          \end{itemize}
+          \bild{Schritt 7 - Recovery-Konfiguration}{dbca_step_7}{2.5}
+        \subsubsection{Schritt 8 - Datenbankinhalt}
+          Hier ist es möglich, die Datenbank mit Beispielinhalten für Test-
+          und Schulungszwecke zu füllen. Produktivsysteme sollten niemals die
+          Beispielschemata enthalten, da diese bekannt sind und eine
+          zusätzliche Angriffsfläche darstellen.
+
+          Auf der zweiten Registerkarte \enquote{Benutzerdefinierte Skripts}
+          können eigene SQL-Skripte angegeben werden, die der DBCA automatisch
+          nach Erstellung der Datenbank ausführt.
+          \bild{Schritt 8 - Daten\-bank\-inhalt}{dbca_step_8}{2.8}
+        \subsubsection{Schritt 9 - Initialisierungsparameter}
+          Dies ist der wohl umfangreichste Dialog des DBCA. Auf der
+          Registerkarte \enquote{Speicher} muss die Entscheidung getroffen
+          werden, wie der Arbeitsspeicher der Instanz verwaltet werden soll.
+          Folgende Methoden stehen zur Verfügung:
+          \begin{itemize}
+            \item \textbf{Automatic Memory Management}: Bei dieser Option wird der Instanz eine Speichermenge zugeteilt, die diese dann vollständig autark verwaltet. Es wird keine Unterscheidung in SGA und PGA gemacht. Der Standard sind 40 \% der gesamten Arbeitsspeichermenge des Servers.
+            \bild{Schritt 9 - Automatic Memory Management}{dbca_step_9_automatic_memory_management}{3}
+            \item \textbf{Automatic Shared Memory Management}: Dies ist der Vorgänger zum Automatic Memory Management. Hier werden der Instanz zwei getrennte Werte für die Speichermenge der SGA und der aggregierten PGAs gegeben. Beide Speicherbereiche werden unabhängig von einander von der Instanz verwaltet.
+            \bild{Schritt 9 - Automatic Shared Memory Management}{dbca_step_9_automatic_shared_memory_management}{0.35}
+\clearpage
+            \item \textbf{Manual Shared Memory Management}: Mit dieser Variante
+            muss für jeden Speicherpool in der SGA und für die aggregierten
+            PGAs ein eigener Wert angegeben werden. Auch wenn der DBA hier die
+            größten Einflussmöglichkeiten hat, so sollte doch eine der
+            beiden automatischen Verwaltungsoptionen genutzt werden, da diese
+            sich immer wieder den aktuellen Gegebenheiten anpassen.
+            \bild{Schritt 9 - Manual Shared Memory Management}{dbca_step_9_manual_shared_memory_management}{0.3}
+          \end{itemize}
+          Nach der Einstellung der Speicherverwaltung kann nur auf der zweiten
+          Registerkarte, mit dem Namen \enquote{Skalierung}, die Option
+          \enquote{Prozesse} geändert werden. Dieser Wert ist aus zwei
+          Gründen interessant:
+          \begin{itemize}
+            \item lizenzrechtlich: Für jeden Client muss eine
+            Cient-Access-Licence vorliegen.
+            \item Serverauslastung: Damit der Server nicht überlastet wird.
+          \end{itemize}
+          Der zweite Wert, die \enquote{Blockgröße} kann nicht geändert
+          werden, wenn die Datenbank aus einer Vorlage heraus erstellt wird. Nur
+          bei einer benutzerdefinierten DB ist dies möglich.
+          \bild{Schritt 9 - Skalierung}{dbca_step_9_scalability}{2.8}
+          Auf der dritten Registerkarte können zwei Zeichensätze für die
+          Datenbank ausgewählt werden, der Datenbankzeichensatz und der
+          länderspezifische Zeichensatz.
+
+          \begin{merke}
+            Ein Zeichensatz besteht, wie sein Name besagt, aus einer Menge von Zeichen (Buchstaben,               Ziffern, Sonderzeichen). Jedem Zeichen wird ein numerischer Code zugeordnet. Dieser wird vom Computer benötigt, um die Zeichen verarbeiten zu können.
+          \end{merke}
+          \bild{Schritt 9 - Zeichensätze}{dbca_step_9_character_sets}{2.5}
+          Der Datenbankzeichensatz wird für die folgenden Aufgaben verwendet:
+          \begin{itemize}
+            \item Speichern von Daten in den Datentypen \identifier{CHAR}, \identifier{VARCHAR2}, \identifier{CLOB} und \identifier{LONG},
+            \item Speichern von Objektbezeichnern, Spaltennamen und Variablen\-be\-zeich\-nern,
+            \item Speichern von SQL und PL/SQL-Quellcode.
+          \end{itemize}
+          Bevor der Datenbankzeichensatz ausgewählt wird, sollten die folgenden Überlegungen angestellt werden:
+          \begin{itemize}
+            \item Welche Landessprachen muss die Datenbank jetzt und in zukunft unterstützen?
+            \item Ist der gewünschte Zeichensatz auch auf dem Betriebssystem des Datenbankservers verfügbar und welche Zeichensätze nutzen die Clients?
+            \item Kommen die genutzten Anwendungen mit dem Zeichensatz zurecht?
+            \item Gibt es Performance-Probleme oder andere Einschränkungen bei der Nutzung dieses Zeichensatzes?
+          \end{itemize}
+
+          \begin{merke}
+            Der Datenbankzeichensatz kann nach der Datenbankerstellung nur unter einer Bedingung geändert werden: Der neue Zeichensatz muss eine strikte Obermenge des Aktuellen sein. Oft ist dies nicht der Fall, weshalb der Datenbankzeichensatz, auf Empfehlung von Oracle, immer \identifier{AL32UTF8} sein sollte, da dieser am umfassendsten ist.
+          \end{merke}
+          Der länderspezifische Zeichensatz dient dazu, um Unicode-Zeichen in einer Datenbank zu speichern, die keinen Unicode-Datenbankzeichensatz nutzt. Nur die Datentypen \identifier{NCHAR}, \identifier{NVARCHAR2} und \identifier{NCLOB} unterstützen diesen alternativen Zeichensatz.
+          Auf der Registerkarte \enquote{Verbindungsmodus} kann die Art und Weise gewählt werden, wie sich Clients standardmässig mit der Datenbank verbinden sollen. Die beiden Modi \enquote{Dedizierter Server} und \enquote{Shared Server} werden später im Skript noch näher erläutert.
+        \subsubsection{Schritt 10 - Datenbankspeicherung}
+          In diesem vorletzten Schritt können die Speicherorte aller Datenbankdateien geändert werden. Des Weiteren ist es möglich, verschiedene Optionen für einzelne Dateiarten zu ändern.
+          \bild{Schritt 10 - Datenbankspeicher}{dbca_step_10}{3.2}
+        \subsubsection{Schritt 11 - Optionen für das Erstellen}
+          In Schritt 11 von 11 bleibt nur die Auswahl, was mit den soeben getätigten Einstellungen geschehen soll. Soll damit eine neue Datenbank erstellt, ein neues Template kreiert oder ein SQL-Skript generiert werden. Diese Optionen sind kombinierbar.
+
+          An dieser Stelle muss der Nutzer auf den \enquote{Beenden}-Button klicken, um eine Zusammenfassung des Erstellvorgangs angezeigt zu bekommen.
+\clearpage
+          \bild{Schritt 11 - Optionen für das Erstellen}{dbca_step_11}{2.5}
+					\bild{Schritt 12 - Bestätigung}{dbca_step_12_confirmation}{2.5}
+          Nach einem Klick auf \enquote{OK} bleibt nur noch abzuwarten, bis die Datenbank fertig ist.
+          \bild{Schritt 13 - Daten\-bank\-erstellung}{dbca_step_13_database_creation}{2.7}
+\clearpage
+				\subsection{Konfigurieren einer Datenbank mit dem DBCA}
+          Der DBCA bietet die Möglichkeit, Konfigurationseinstellungen von Datenbankoptionen zu ändern. Folgende Optionen stehen zur Verfügung:
+          \begin{itemize}
+            \item Einbinden von installierten Komponenten in die Datenbank
+            \item Ändern des Verbindungsmodus
+          \end{itemize}
+          \subsubsection{Schritt 1 - Starten des DBCA}
+%             \bild{Schritt 1 - Vorgänge}{dbca_configure_step_1}{2.8}
+            Nach dem Start des DBCA muss die Option \enquote{Datenbankoptionen konfigurieren} ausgewählt werden.
+          \subsubsection{Schritt 2 - Datenbank }
+            Im zweiten Schritt wird eine Auswahl aller installierten Datenbanken geboten. Hier ist die Richtige auszuwählen.
+            \bild{Schritt 2 - Datenbank}{dbca_configure_step_2}{2.8}
+
+            Nachdem die Datenbank ausgewählt wurde, werden deren Einstellungen eingelesen.
+            \bild{Schritt 2 - Datenbank}{dbca_configure_step_2b}{2.8}
+          \subsubsection{Schritt 3 - Verwaltungsoptionen}
+            Wie unter Schritt 4 der Datenbankerstellung beschrieben kann hier der Enterprise Manager für die Datenbank konfiguriert werden.
+            \bild{Schritt 3 - Verwaltungs\-optionen}{dbca_configure_step_3}{0.375}
+          \subsubsection{Schritt 4 - Datenbankinhalt}
+            Hier können verschiedene Datenbankoptionen hinzugefügt oder entfernt werden. Dies ist nur möglich, wenn es sich um eine benutzerdefinierte Datenbank handelt.
+            \bild{Schritt 4 - Datenbankinhalt}{dbca_configure_step_4}{0.375}
+          \subsubsection{Schritt 5 - Verbindungsmodus}
+            Im letzten Schritt ist das Ändern des Verbindungsmodus möglich.
+\clearpage
+            \bild{Schritt 5 - Verbindungsmodus}{dbca_configure_step_5}{0.375}

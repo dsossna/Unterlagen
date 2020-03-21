@@ -58,8 +58,8 @@
                 Paramter und dem Dateipfad befinden. \\
                 \hline
                 \textbf{-e} & Dieser Parameter gibt den vollständigen Dateipfad
-                für das Fehler\-protokoll der SQL Server-Instanz an. Sollte
-                dieser Parameter nicht angegeben worden sein, so wird für das Fehlerprotokoll der
+                f\"ur das Fehler\-protokoll der SQL Server-Instanz an. Sollte
+                dieser Parameter nicht angegeben worden sein, so wird f\"ur das Fehlerprotokoll der
                 Standardinstanz der Dateiname \oscommand{C:\textbackslash
                 Programme\textbackslash Microsoft SQL Server\textbackslash
                 MSSQL\textbackslash Log\textbackslash Errorlog} benutzt. Bei
@@ -86,7 +86,7 @@
             \end{small}
           \end{center}
         \subsubsection{Startmodus und Recovery-Startmodus auswählen}
-          Für den SQL Server-Dienst werden drei verschiedene Startmodi
+          f\"ur den SQL Server-Dienst werden drei verschiedene Startmodi
           bereitgestellt.
           \begin{itemize}
               \item \textbf{Automatisch}: Der Dienst wird mit dem Betriebssystem
@@ -106,7 +106,7 @@
           verändern}{changing_startmode_of_sql_server}{0.33}
           Sollte der SQL Server-Dienst einmal ausfallen/abstürzen, kann über die
           Windows Dienstekonsole eine Notfallaktion geplant werden. Auf der
-          Registerkarte \enquote{Wiederherstellung} können für jeden Dienst
+          Registerkarte \enquote{Wiederherstellung} können f\"ur jeden Dienst
           Aktionen angegeben werden, die dann ausgeführt werden, wenn der Dienst
           das erste mal bzw. das zweite mal oder ein wiederholtes mal abgestürzt
           ist.
@@ -140,7 +140,7 @@
         die Verbindung zu einer benannten SQL Server-Instanz oder den
         Verbindungsaufbau mittels der DAC (Dedicated Administrator Connection).
   
-        Dieser Dienst wurde mit dem SQL Server 2005, als Ersatz für das
+        Dieser Dienst wurde mit dem SQL Server 2005, als Ersatz f\"ur das
         \enquote{SQL Server Resolution Protocol} eingeführt. Er arbeitet auf Port
         1434 und wird durch die \oscommand{.EXE}-Datei
         \oscommand{sqlbrowser.exe} zur Verfügung gestellt.
@@ -205,7 +205,7 @@
           zusätzlich zum Rechnernamen mit angegeben werden, z. B.
           \identifier{FEA11-119SRV12\$CRM}.
         \subsubsection{Authentifizierung}
-          Für die Authentifizierung stehen dem Benutzer zwei verschiedene
+          f\"ur die Authentifizierung stehen dem Benutzer zwei verschiedene
           Verfahren offen:
           \begin{itemize}
             \item \textbf{Windows-Authentifizierung}: Diese Form der
@@ -317,7 +317,7 @@
           \end{merke}
         \subsubsection{Aufbau des Projektmappen-Explorers}
           Der Projektmappen-Explorer untergliedert sich in Projektmappen. Eine
-          Projektmappen stellt einen Kontainer für Projekte dar.
+          Projektmappen stellt einen Kontainer f\"ur Projekte dar.
           Projekte können wiederum SQL-Skripte, Abfragen, Datenbankverbindungen
           oder Textdateien enthalten.
           \bild{Der Aufbau des
@@ -340,7 +340,7 @@
     \section{Die SQL Server Systemdatenbanken}
       \subsection{Die MASTER-Datenbank}
         Die Datenbank \identifier{master} ist die wichtigste, innerhalb des SQL
-        Servers. Sie ist der zentrale Speicherort für instanzweite Metadaten,
+        Servers. Sie ist der zentrale Speicherort f\"ur instanzweite Metadaten,
         wie z. B. Anmeldeinformationen oder Verbindungsserver. Seit SQL Server
         2008 werden dort nur noch Metadaten und keine Objekte mehr gespeichert.
         Systemviews beispielsweise, werden in der Resource-Datenbank
@@ -353,9 +353,9 @@
           Die \identifier{master}-Datenbank besteht aus zwei Dateien: Der
           Datendatei \oscommand{master.mdf} (5 MB), die sich in der primären
           Dateigruppe befindet und der Log-Datei \oscommand{master.ldf} (2 MB).
-          Für beide Dateien ist ein automatisches Wachstum konfiguriert.
+          f\"ur beide Dateien ist ein automatisches Wachstum konfiguriert.
         \subsubsection{Einschränkungen bei der Administration}
-          Für die \identifier{master}-Datenbank gelten verschiedene
+          f\"ur die \identifier{master}-Datenbank gelten verschiedene
           administrative Einschränkugen. Eine vollständige Liste kann dem
           Microsoft Technet entnommen werden.
           \begin{itemize}
@@ -387,15 +387,15 @@
         
         Das SQL Server Management Studio verwendet diese Informationen dann, um
         im Falle dessen, dass ein Recovery notwendig wird, dem Nutzer einen
-        Vorschlag für den Recovery-Vorgang unterbreiten zu können.
+        Vorschlag f\"ur den Recovery-Vorgang unterbreiten zu können.
         \subsubsection{Physikalische Eingeschaften}
           Die \identifier{msdb}-Datenbank besteht aus zwei Dateien: Der
           Datendatei \oscommand{MSDBData.mdf} (17 MB), in der sich die
           primäre Dateigruppe befindet und der Log-Datei
-          \oscommand{MSDBLog.ldf} (20 MB). Für beide Dateien ist ein
+          \oscommand{MSDBLog.ldf} (20 MB). f\"ur beide Dateien ist ein
           automatisches Wachstum konfiguriert.
         \subsubsection{Einschränkungen bei der Administration}
-          Für die \identifier{msdb}-Datenbank gelten eine Reihe von
+          f\"ur die \identifier{msdb}-Datenbank gelten eine Reihe von
           Einschränkugen bei der Administration. Eine vollständige Liste dieser
           Einschränkungen kann dem Microsoft Technet entnommen werden. Hier
           sollen nur die wichtigsten Einschränkungen aufgelistet werden.
@@ -407,13 +407,13 @@
             \item \cite{ms187112}
           \end{literaturinternet} 
       \subsection{Die MODEL-Datenbank}
-        Die \identifier{model}-Datenbank dient als Vorlage für die Erstellung
+        Die \identifier{model}-Datenbank dient als Vorlage f\"ur die Erstellung
         von neuen Datenbanken. Jedesmal, wenn eine Datenbank erstellt wird, wird
         zuerst die \identifier{model}-Datenbank kopiert und anschließend werden
         die vom Benutzer angegebenen Parameter/Datenbankoptionen geändert.
         \begin{merke}
           Da der SQL Server die \identifier{tempdb} bei jedem Neustart neu
-          anlegt, muss die \identifier{model}-Datenbank, die auch für die
+          anlegt, muss die \identifier{model}-Datenbank, die auch f\"ur die
           \identifier{tempdb}-Datenbank als Vorlage dient, immer vorhanden sein.
         \end{merke}
         Es ist möglich, die \identifier{model}-Datenbank an die
@@ -429,10 +429,10 @@
         \subsubsection{Physikalische Eingeschaften}
           Die \identifier{model}-Datenbank besteht aus zwei Dateien: Der
           Datendatei \oscommand{model.mdf} (5 MB) und der Log-Datei
-          \oscommand{modellog.ldf} (1 MB). Für beide Dateien ist ein
+          \oscommand{modellog.ldf} (1 MB). f\"ur beide Dateien ist ein
           automatisches Wachstum konfiguriert.
         \subsubsection{Einschränkungen bei der Administration}
-          Für die \identifier{model}-Datenbank gelten eine Reihe von
+          f\"ur die \identifier{model}-Datenbank gelten eine Reihe von
           Einschränkugen bei der Administration. Eine vollständige Liste dieser
           Einschränkungen kann dem Microsoft Technet entnommen werden. Hier
           sollen nur die wichtigsten Einschränkungen aufgelistet werden.
@@ -453,24 +453,24 @@
           \end{literaturinternet}          
       \subsection{Die TEMP-Datenbank}
         Die \identifier{tempdb}-Datenbank ist, wie ihr Name schon sagt, ein
-        Ablageort für temporäre Objekte. Sie steht allen Benutzer zur Verfügung
+        Ablageort f\"ur temporäre Objekte. Sie steht allen Benutzer zur Verfügung
         und enthält sowohl Benutzer- als auch Systemobjekte. Des Weiteren wird
-        sie seit SQL Server 2005 auch für die Versionierung von Tabellenzeilen
+        sie seit SQL Server 2005 auch f\"ur die Versionierung von Tabellenzeilen
         herangezogen. Wie bereits erwähnt, wird die
         \identifier{tempdb}-Datenbank bei jedem Neustart des SQL Server neu
         erstellt, so dass immer eine bereinigte Version von ihr zur Verfügung
         steht.
         \begin{merke}
-          Für die \identifier{tempdb}-Datenbank sind keine Sicherungsvorgänge
+          f\"ur die \identifier{tempdb}-Datenbank sind keine Sicherungsvorgänge
           zulässig, da temporäre Objekte nicht gesichert werden können.
         \end{merke}
         \subsubsection{Physikalische Eingeschaften}
           Die \identifier{tempdb}-Datenbank besteht aus zwei Dateien: Der
           Datendatei \oscommand{tempdb.mdf} (8 MB) und der Log-Datei
-          \oscommand{templog.ldf} (1 MB). Für beide Dateien ist ein
+          \oscommand{templog.ldf} (1 MB). f\"ur beide Dateien ist ein
           automatisches Wachstum konfiguriert.
         \subsubsection{Einschränkungen bei Administration und Nutzung}
-          Für die \identifier{tempdb}-Datenbank gelten eine Reihe von
+          f\"ur die \identifier{tempdb}-Datenbank gelten eine Reihe von
           Einschränkugen bei der Administration. Eine vollständige Liste dieser
           Einschränkungen kann dem Microsoft Technet entnommen werden. Hier
           sollen nur die wichtigsten Einschränkungen aufgelistet werden.
@@ -482,18 +482,18 @@
             \item Die Datenbank kann nicht gelöscht werden
             \item Die Datenbank kann nicht umbenannt werden
             \item Die primäre Dateigruppe kann nicht, wie bei einer anderen
-            Datenbank wiederhergestellt, werden. Hierfür ist ein spezielles
+            Datenbank wiederhergestellt, werden. Hierf\"ur ist ein spezielles
             Verfahren notwendig.
             \item Erstellen von verschlüsselten Objekten, da der
             Verschlüsselungsschlüssel an die Datenbank gebunden ist. Somit
             könnte nur \identifier{model} diese Objekte verwenden.
           \end{itemize}
           Jeder Benutzer kann nur die temporären Objekte benutzen, die er selbst
-          angelegt hat oder für die er vom System zusätzliche Berechtigungen
+          angelegt hat oder f\"ur die er vom System zusätzliche Berechtigungen
           erhalten hat. Es ist theoretisch sogar möglich, einem Benutzer den
           Zugriff auf die \identifier{tempdb}-Datenbank zu verweigern, was aber
           in der Praxis dazu führt, das verschiedene Standardroutinen des SQL
-          Server dann für diesen Benutzer nicht mehr funktionieren.
+          Server dann f\"ur diesen Benutzer nicht mehr funktionieren.
           \begin{literaturinternet}
             \item \cite{ms190768}
           \end{literaturinternet}          
@@ -545,8 +545,8 @@
           \end{literaturinternet}          
       \subsection{Der Integration Services Katalog - SSISDB}
         Die SQL Server Integration Services, kurz SSIS, stellen ein mächtiges
-        Werkzeug für sogenannte ETL-Prozesse - die Abkürzung ETL steht 
-        für \enquote{Extract Transform and Load} - dar. SSIS kann als eine Art
+        Werkzeug f\"ur sogenannte ETL-Prozesse - die Abkürzung ETL steht 
+        f\"ur \enquote{Extract Transform and Load} - dar. SSIS kann als eine Art
         Programmiersprache betrachtet werden. Die in SSIS erstellten Programme
         werden als \enquote{Pakete} bezeichnet und nach ihrer Erstellung auf
         alle SQL Server verteilt, wo sie zum Einsatz kommen sollen.
@@ -558,7 +558,7 @@
         SSIS-Programmen. Währen Pakete im Dateisystem abgelegt und durch eine
         Konfigurationsdatei konfiguriert wurden, werden Projekte im SSIS-Katalog
         gespeichert und auch deren Konfiguration wird dort abgelegt. Somit
-        entsteht ein zentraler Punkt für SSIS-Programme und deren Konfiguration.
+        entsteht ein zentraler Punkt f\"ur SSIS-Programme und deren Konfiguration.
         
         Weitere Vorteile der Nutzung des SSIS-Kataloges sind:
         \begin{itemize}
@@ -606,10 +606,10 @@
         Arbeitsspeicherkonsum der SQL Server Instanz beeinflußt werden. Die
         beiden Werte \enquote{Minimaler Serverarbeitsspeicher (in MB)} und
         \enquote{Maximaler Serverarbeitsspeicher (in MB)} geben an, wie viel
-        Arbeitsspeicher für die Instanz reserviert wurde bzw. wie viel sie
+        Arbeitsspeicher f\"ur die Instanz reserviert wurde bzw. wie viel sie
         höchstens verbrauchen kann.
         \begin{merke}
-          Wird für die Option \enquote{Minimaler Serverarbeitsspeicher} ein
+          Wird f\"ur die Option \enquote{Minimaler Serverarbeitsspeicher} ein
           Wert konfiguriert, bedeutet dies nicht, dass sich die Instanz von
           Anfang an so viel Arbeitsspeicher nimmt. Es handelt sich vielmehr um
           eine Zusicherung, dass die Instanz so viel Arbeitsspeicher
@@ -673,9 +673,9 @@
           Laut Microsoft sollten niemals die Prozessoraffinität und die
           E/A-Affinität auf einem Prozessor gleichzeit aktiviert sein
         \end{merke}
-        Die Option \enquote{Maximale Arbeitsthreadanzahl} ist für Systeme mit
+        Die Option \enquote{Maximale Arbeitsthreadanzahl} ist f\"ur Systeme mit
         einer sehr hohen Nutzerzahl gedacht. Wird hier ein Wert ungleich 0
-        eingestellt, kann die Anzahl der Workerthreads für die Instanz
+        eingestellt, kann die Anzahl der Workerthreads f\"ur die Instanz
         begrenzt werden, um eine Überlastung des Servers zu verhinden.
         
         Wird ein Haken bei \enquote{SQL Server-Priorität höher stufen}
@@ -720,18 +720,18 @@
         
         Wird die Option \enquote{Abfragekontrolle verwenden, um Abfragen mit
         langer Ausführungszeit zu verhinden} aktiviert, überwacht der SQL
-        Server für alle Abfragen die Berechnungsdauer ihres Ausführungsplanes.
+        Server f\"ur alle Abfragen die Berechnungsdauer ihres Ausführungsplanes.
         Übersteigt diese Dauer die hier angegebene Zeitspanne,
         wird die Berechnung abgebrochen. Besonders kostenintensive Abfragen
         werden so unterbunden.
         \begin{merke}
-          Zu beachten ist, dass hier nur die Zeitspanne für das Berechnen der
-          Ergebnismenge gilt, nicht aber der Zeitraum, der für das Anzeigen
+          Zu beachten ist, dass hier nur die Zeitspanne f\"ur das Berechnen der
+          Ergebnismenge gilt, nicht aber der Zeitraum, der f\"ur das Anzeigen
           der Ergebnismenge benötigt wird!
         \end{merke}
         
         Mit den Standardverbindungsoptionen kann festgelegt werden, welche
-        Besonderheiten für alle angemeldeten Clients gelten. Eine vollständige
+        Besonderheiten f\"ur alle angemeldeten Clients gelten. Eine vollständige
         Liste mit den Bedeutungen der einzelnen Optionen, kann in der MSDN,
         unter dem Link \parencite{ms180124}, nachgeschlagen werden.          
         \bild{Seite
@@ -742,10 +742,10 @@
         \end{literaturinternet}          
       \subsection{Datenbankeinstellungen}
         Fast alle Einstellungen auf dieser Seite werden nur selten geändert.
-        Beispielsweise wird der \enquote{Standardfüllfaktor für Indizes}, oft
-        nur für bestimmte Indizes angepasst, da der Standardwert 0 meist
+        Beispielsweise wird der \enquote{Standardfüllfaktor f\"ur Indizes}, oft
+        nur f\"ur bestimmte Indizes angepasst, da der Standardwert 0 meist
         optimal ist. Auch die Einstellungen der Gruppe \enquote{Sichern und
-        Wiederherstellen} werden so gut wie nie allgemein geändert, sondern für
+        Wiederherstellen} werden so gut wie nie allgemein geändert, sondern f\"ur
         alle Sicherungen getrennt.
         \bild{Seite
         \enquote{Datenbank\-einstellungen} der
@@ -769,7 +769,7 @@
         Datenimports getätigt werden, kann eine höhere Paketgröße die
         Importvorgänge beschleunigen. Bei normalen Lese-/Schreibzugriffen kann
         sich eine Vergrößerung der Netzwerkpakete aber auch negativ auswirken,
-        da die zu transportierenden Datenmengen viel zu klein, für die großen
+        da die zu transportierenden Datenmengen viel zu klein, f\"ur die großen
         Pakete sind.
         \begin{literaturinternet}
           \item \cite{ms189357}
@@ -800,7 +800,7 @@
         Basisparameter an. Um einen erweiterten Parameter zu sehen bzw. zu
         ändern, muss der SQL Server erst dementsprechend konfiguriert werden.
       \subsection{Ändern der Konfiguration mit sp\_configure}
-        Die allgemeine Syntax für die Anwendung der Systemprozedur
+        Die allgemeine Syntax f\"ur die Anwendung der Systemprozedur
         \identifier{sp\_configure} lautet folgendermassen:
         \begin{lstlisting}[language=ms_sql,caption={Die Syntax von
 sp\_configure},label=admin03_01]
@@ -818,7 +818,7 @@ EXEC §sp_configure§ @configname = 'backup compression default',
         indem man die Parameterbezeichner \languagemssql{@configname} und
         \languagemssql{@configvalue} nicht mit angibt.
         \begin{lstlisting}[language=ms_sql,caption={Die Kurzform der Syntax
-          für sp\_configure},label=admin03_03]
+          f\"ur sp\_configure},label=admin03_03]
 EXEC §sp_configure§ 'backup compression default', '0'
           \end{lstlisting}
         Die Tatsache, dass der SQL Server auf diese beiden Statements mit einer
@@ -832,7 +832,7 @@ Die Konfigurationsoption 'backup compression default' wurde von 1 in
 aus.
             \end{mssql}
         \end{small}
-        Für jede Konfigurationseinstellung gibt es zwei Werte:
+        f\"ur jede Konfigurationseinstellung gibt es zwei Werte:
         \begin{itemize}
             \item Den konfigurierten Wert. Dieser wird mit Hilfe von
             \identifier{sp\_configure} geändert.
@@ -1002,9 +1002,9 @@ RECONFIGURE
         Hilfe ist es möglich, interne, versionsspezifische Statusinformationen
         über den SQL Server abzufragen, um so nach Problemen zu suchen.
         
-        Die Namenskonvention für dynamsiche Verwaltungssichten und -funktionen
+        Die Namenskonvention f\"ur dynamsiche Verwaltungssichten und -funktionen
         sieht vor, dass die Bezeichner immer mit \identifier{sys.dm\_}
-        beginnen. Auch für diese Gruppe von Views werden im Verlauf dieser
+        beginnen. Auch f\"ur diese Gruppe von Views werden im Verlauf dieser
         Unterrichtsunterlage immer wieder die wichtigsten Vertreter zum
         jeweiligen Thema genannt.
         
@@ -1027,7 +1027,7 @@ RECONFIGURE
       Datenbank mindestens genauso groß sein muss, wie die der
       \identifier{model}-Datenbank. Insgesamt darf eine Datenbank unter SQL
       Server 2014 nicht kleiner als 6 MB sein (primäre Datendatei 5 MB + Log
-      Datei 1 MB). Für sekundäre Datendateien wird eine Mindestgröße von 1 MB
+      Datei 1 MB). f\"ur sekundäre Datendateien wird eine Mindestgröße von 1 MB
       angenommen, sofern der Benutzer keine Angabe macht.
       \subsection{Anlegen einer Datenbank mit dem SSMS}
         \begin{enumerate}
@@ -1042,8 +1042,8 @@ RECONFIGURE
           folgenden Eigenschaften der neuen Datenbank geändert werden:
           \begin{itemize}
             \item \textbf{Datenbankname}: Ein innerhalb der SQL Server-Instanz
-            eindeutiger Bezeichner für die neue Datenbank, der maximal 128
-            Zeichen lang sein darf. Der Datenbankname muss den Regeln für
+            eindeutiger Bezeichner f\"ur die neue Datenbank, der maximal 128
+            Zeichen lang sein darf. Der Datenbankname muss den Regeln f\"ur
             Bezeichner folgen.
             \item \textbf{Besitzer}: Eine SQL Server-Anmeldung, die als
             Besitzter der Datenbank eingetragen werden soll. Der
@@ -1053,7 +1053,7 @@ RECONFIGURE
             \item \textbf{Logischer Name}: Der logische Name Datei ist der
             Bezeichner, mit dessen Hilfe in T-SQL auf die Datei zugegriffen
             wird. Er muss innerhalb der Datenbank eindeutig sein und, wie der
-            Datenbankname auch, den Regeln für Bezeichner folgen.
+            Datenbankname auch, den Regeln f\"ur Bezeichner folgen.
             \item \textbf{Dateityp}: Gibt an, welche Art von Datei angelegt
             wird. Dies kann sein: Zeilendaten, Protokoll, Filestream.
             \item \textbf{Dateigruppe}: Der Bezeichner der Dateigruppe, zu der
@@ -1065,7 +1065,7 @@ RECONFIGURE
             TB benutzt werden. Ohne Größenangabe wird automatsich MB
             angenommen. Der maximalwert in diesem Feld ist 2.147.483.648.
             \item \textbf{Automatische Vergrößerung/Maximale Größe}:
-            Ermöglicht die Konfiguration eines automatischen Wachstums für
+            Ermöglicht die Konfiguration eines automatischen Wachstums f\"ur
             Datendateien (Wachstumsrate und Größenbeschränkung). Die
             Standardwachstumsrate beträgt bei Datendateien 1 MB und bei
             Log-Dateien 10 \% (der Prozentsatz bezieht sich immer auf die
@@ -1073,7 +1073,7 @@ RECONFIGURE
             angegebene Größe wird immer auf den nächsten, durch 64 KB
             teilbaren Wert aufgerundet. Durch die Angabe des Wertes 0 wird
             angezeigt, das kein automatisches Wachstums stattfinden darf. Wird
-            für die Größenbeschränkung kein Wert oder der Wert
+            f\"ur die Größenbeschränkung kein Wert oder der Wert
             \languagemssql{UNLIMITED} angegeben, kann die Datei solange
             wachsen, bis die physikalischen Grenzen des Datenträger, auf dem
             sie sich befindet, erreicht sind.
@@ -1083,7 +1083,7 @@ RECONFIGURE
             werden. Der angegebene Pfad muss vor dem Ausführen der
             \languagemssql{CREATE DATABASE}-Anweisung bereits vorhanden sein.
             \begin{merke}
-              Es sollte niemals ein komprimiertes Dateisystem für die Ablage von
+              Es sollte niemals ein komprimiertes Dateisystem f\"ur die Ablage von
               Daten- oder Log-Dateien genutzt werden.
             \end{merke}
           \end{itemize}
@@ -1091,7 +1091,7 @@ RECONFIGURE
           \bild{Verändern der Datenbankoptionen}{create_db_3}{0.33}
           Hier können alle Datenbankoptionen einzeln gesetzt werden. Viele
           dieser Einstellungen werden noch im weiteren Verlauf dieser
-          Unterrichtsunterlage behandelt. Für eine vollständige Liste der
+          Unterrichtsunterlage behandelt. f\"ur eine vollständige Liste der
           Datenbankoptionen beachten Sie bitte den nächsten Literaturhinweis.
           \item Wechseln Sie in das Fenster \enquote{Dateigruppen}. Auf dieser
           Seite können der Datenbank weitere Dateigruppen hinzugefügt werden.
@@ -1146,7 +1146,7 @@ ON PRIMARY (
             zusammengesetzt.
         \end{itemize}
         \begin{merke}
-          Wenn kein logischer Name für die Log-Datei angegeben wird, darf der
+          Wenn kein logischer Name f\"ur die Log-Datei angegeben wird, darf der
           Datenbankname max. 123 Zeichen Lang sein, damit das suffix
           \identifier{\_log} an den Log-Dateinamen angehängt werden kann.
         \end{merke}
@@ -1231,7 +1231,7 @@ LOG ON (
       \end{literaturinternet}
     \section{Datenbanken bearbeiten und löschen}
       \subsection{Die Datenbank demo\_grafisch}
-        In den folgenden Abschnitten und Kapiteln wird für alle weiteren
+        In den folgenden Abschnitten und Kapiteln wird f\"ur alle weiteren
         Beispiele die SQL Server-Datenbank \identifier{demo\_grafisch} benutzt.
         Sie hat folgenden Aufbau:
         \begin{center}
@@ -1343,7 +1343,7 @@ TO FILEGROUP HRM
               \item ohne Angabe des Administrators mit der Standarddateigruppe.
           \end{itemize}
           \begin{merke}
-            Alle Objekte, für die keine Dateigruppenzuordnung gemacht wird,
+            Alle Objekte, f\"ur die keine Dateigruppenzuordnung gemacht wird,
             werden automatisch in der Standarddateigruppe angelegt.
           \end{merke}
           Standardmässig wird die Dateigruppe \identifier{primary} als
@@ -1363,7 +1363,7 @@ GO
         Datenbankoptionen sind dazu da, um das Verhalten einer Datenbank zu
         steuern. Der Datenbankadministrator hat mit Hilfe dieser Optionen die
         Möglichkeit umfangreichen Einfluss auf das Verhalten der Datenbank zu
-        nehmen. Im Folgenden werde einige Beispiele für verschiedene
+        nehmen. Im Folgenden werde einige Beispiele f\"ur verschiedene
         Datenbankoptionen gegeben. Ein vollständige Liste dieser Optionen kann
         auf der MSDN eingesehen werden.
         \begin{literaturinternet}
@@ -1437,11 +1437,11 @@ SET COMPATIBILITY_LEVEL 120;
           In \beispiel{admin03_18} wird die fiktive Datenbank
           \identifier{demo\_grafisch2005}, die noch mit dem SQL Server 2005
           erstellt wurde, auf eine SQL Server 2014-Instanz migriert und der
-          Kompatibilitätsgrad wird auf 120 angehoben. Dadurch werden für diese
+          Kompatibilitätsgrad wird auf 120 angehoben. Dadurch werden f\"ur diese
           Datenbank alle SQL Server 2014-Features aktiviert.          
       \subsection{Vergrößern und schrumpfen einer Datenbank}
         \subsubsection{Automatisches Wachstum und manuelles Vergrößern}
-          Das automatische Wachstum für eine Datendatei wird, wie bereits
+          Das automatische Wachstum f\"ur eine Datendatei wird, wie bereits
           demonstriert, über die beiden Dateieigenschaften
           \identifier{filegrowth} und \identifier{maxsize} kontrolliert. Um eine
           Datendatei manuell zu vergrößern muss deren Eigenschaft
@@ -1476,13 +1476,13 @@ MODIFY FILE (
           \end{merke}
         \subsubsection{Schrumpfen einzelner Datendateien}
           SQL Server bietet auch die Möglichkeit nur einzelne Daten- und
-          Protokolldateien zu schrumpfen. Der hierfür zuständige Assistent wird,
+          Protokolldateien zu schrumpfen. Der hierf\"ur zuständige Assistent wird,
           genau wie beim Schrumpfen der Datenbank auch, über das Kontextmenü der Datenbank
           erreicht (\identifier{tasks}, \identifier{verkleinern},
           \identifier{datendatei}).
           \bild{Der Assistenten zum Schrum\-pfen einzelner
           Datendateien}{shrink_datafile}{0.33}
-          Für den Vorgang des Schrumpfens stehen drei verschiedene Optionen zur
+          f\"ur den Vorgang des Schrumpfens stehen drei verschiedene Optionen zur
           Verfügung:
           \begin{itemize}
               \item \textbf{Nicht verwendeten Speicherplatz freigeben}: Es wird
@@ -1521,7 +1521,7 @@ MODIFY FILE (
           Instanz gelöscht. Einzig ein Sicherungsverlauf in der
           \identifier{msdb}-Datenbank kann übrig bleiben. Das Trennen der
           Datenbank von ihrer Instanz geschieht mit der Stored Procedure
-          \identifier{sp\_detach\_db}, die für Ihre Arbeit nur den Datenbanknamen
+          \identifier{sp\_detach\_db}, die f\"ur Ihre Arbeit nur den Datenbanknamen
           als Parameter benötigt.
           
           Um eine Datenbank trennen zu können, müssen die folgenden
@@ -1555,7 +1555,7 @@ GO
               anzuhängende Datenbank bestehen darf.
               \item Das SQL-Kommando \languagemssql{CREATE DATABASE ... FOR
               ATTACH} existiert seit SQL Server 2008 und stellt nun die von
-              Microsoft empfohlene Methode zum Anfügen von Datenbanken dar. Für
+              Microsoft empfohlene Methode zum Anfügen von Datenbanken dar. f\"ur
               diese Kommando existieren keinerlei Einschränkungen bezüglich der
               Datenbankgröße oder der Anzahl der Datendateien einer Datenbank.
           \end{itemize}
@@ -1588,7 +1588,7 @@ GO
             Um eine Datenbank anfügen zu können, müssen alle \oscommand{.mdf}-
             und \oscommand{.ndf}-Dateien verfügbar sein!
           \end{merke}
-          Für schreibgeschützte Datenbanken gilt eine Besonderheit: Da die
+          f\"ur schreibgeschützte Datenbanken gilt eine Besonderheit: Da die
           \oscommand{.mdf}-Datendatei nicht geändert werden kann, kann auch
           keine Log-Datei neu erstellt werden. In so einem Fall muss zwingend
           die bestehende Log-Datei mit angegeben werden.
@@ -1624,7 +1624,7 @@ GO
           Beispiel der \identifier{msdb}-Datenbank.
           \begin{enumerate}
               \item Führen Sie ein \languagemssql{ALTER DATABASE ... MODIFY
-              FILE}-Kommando für alle Daten- und Log-Dateien der
+              FILE}-Kommando f\"ur alle Daten- und Log-Dateien der
               \identifier{msdb}-Datenbank durch und geben Sie dabei den neuen
               Pfad der Dateien an.
               \item Stop Sie die SQL Server-Instanz
@@ -1646,7 +1646,7 @@ WHERE  database_id = DB_ID('msdb')
           \end{enumerate}
         \subsubsection{Verschieben der Master-Datenbank}
           Die Technik zum Verschieben der \identifier{master}-Datenbank ähnelt
-          dem Verschiebevorgang für alle anderen Systemdatenbanken sehr. Der
+          dem Verschiebevorgang f\"ur alle anderen Systemdatenbanken sehr. Der
           wesentliche Unterschied besteht darin, dass nach dem Herunterfahren
           des SQL Server-Dienstes der Startparameter \oscommand{-d} geändert
           werden muss, so dass dieser den neuen Speicherort der Datenbank
@@ -1688,7 +1688,7 @@ DROP DATABASE demo_sql
 GO 
           \end{lstlisting}
           Lediglich der Datenbankname ist zum Löschen der Datenbank notwendig. Der
-          Status einer Datenbank (offline, fehlerverdächtig, \ldots) ist für das
+          Status einer Datenbank (offline, fehlerverdächtig, \ldots) ist f\"ur das
           Löschen nicht von Bedeutung. Soll eine einmal gelöschte Datenbank wieder
           an den Server angefügt werden, kann dies nur mittels eines Backups
           geschehen.
@@ -1716,12 +1716,12 @@ GO
     \section{Der DBCC - Database Console Commands}
       Hinter der Abkürzung DBCC - Database Console Commands - verbergen sich
       eine ganze Reihe von Befehlen zu unterschiedlichesten Zwecken.
-      Ursprünglich waren diese Kommandos für die Softwaretesting Teams von
+      Ursprünglich waren diese Kommandos f\"ur die Softwaretesting Teams von
       Microsoft geschaffen worden. Mit ihrer Hilfe sollte es möglich
       werden, Aufgaben wie Informationsgewinnung, Debbuging und Testing auf
       einfache und schnelle Art und Weise zu erledigen. Nach und nach wuchs
       der Vorrat an DBCC-Kommandos und einige wurden sogar dokumentiert und
-      für die Nutzung durch SQL Server-Administratoren freigegeben. Viele
+      f\"ur die Nutzung durch SQL Server-Administratoren freigegeben. Viele
       DBCC-Befehl sind aber auch heute noch undokumentiert und somit nur der
       Benutzung durch das Supportpersonal von Microsoft vorbehalten.
       \begin{merke}
@@ -1753,7 +1753,7 @@ GO
           \languagemssql{?DBCC? CHECKDB}, nur dass die Auswirkungen auf eine
           Dateigruppe begrenzt bleiben.
           \item \languagemssql{CHECKTABLE}: Wie \languagemssql{?DBCC?
-          CHECKDB}, aber nur für die angegebene Tabelle.
+          CHECKDB}, aber nur f\"ur die angegebene Tabelle.
           \item \languagemssql{CHECKCONSTRAINTS}: Überprüft die
           Funktionsfähigkeit eines bestimmten oder aller Constraints auf
           einer Tabelle.
@@ -1822,7 +1822,7 @@ DBCC CHECKDB
   
   Von CHECKDB wurden 0 Zuordnungsfehler und 0 Konsistenzfehler 
   in der demo_grafisch-Datenbank gefunden.
-  Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen
+  Die DBCC-Ausf\"uhrung wurde abgeschlossen. Falls DBCC Fehlermeldungen
   ausgegeben hat, wenden Sie sich an den Systemadministrator.
           \end{lstlisting}         
           \begin{lstlisting}[language=ms_sql,caption={Konsistenzprüfung einer
@@ -1832,29 +1832,29 @@ DBCC CHECKDB
   
   ?DBCC? CHECKDB ('demo_grafisch')
   
-  DBCC-Ergebnis für 'demo_grafisch'.
+  DBCC-Ergebnis fuer 'demo_grafisch'.
   Service Broker-Meldung 9675, Status 1: Analysierte Nachrichtentypen: 14.
-  Service Broker-Meldung 9676, Status 1: Analysierte Dienstverträge: 6.
+  Service Broker-Meldung 9676, Status 1: Analysierte Dienstvertraege: 6.
   Service Broker-Meldung 9667, Status 1: Analysierte Dienste: 3.
   Service Broker-Meldung 9668, Status 1: Analysierte Dienstwarteschlangen: 3.
   Service Broker-Meldung 9669, Status 1: Analysierte Konversationsendpunkte: 0.
   Service Broker-Meldung 9674, Status 1: Analysierte Konversationsgruppen: 0.
   Service Broker-Meldung 9670, Status 1: Analysierte Remotedienstbindungen: 0.
-  Service Broker-Meldung 9605, Status 1: Analysierte Konversationsprioritäten:0.
-  DBCC-Ergebnis für 'sys.sysrscols'.
-  Es sind 1086 Zeilen auf 14 Seiten für das sys.sysrscols-Objekt vorhanden.
-  DBCC-Ergebnis für 'sys.sysrowsets'.
-  Es sind 146 Zeilen auf 3 Seiten für das sys.sysrowsets-Objekt vorhanden.
-  DBCC-Ergebnis für 'sys.sysclones'.
-  Es sind 0 Zeilen auf 0 Seiten für das sys.sysclones-Objekt vorhanden.
-  DBCC-Ergebnis für 'sys.sysallocunits'.
-  Es sind 169 Zeilen auf 2 Seiten für das sys.sysallocunits-Objekt vorhanden.
+  Service Broker-Meldung 9605, Status 1: Analysierte Konversationspriorit\"aten:0.
+  DBCC-Ergebnis f\"ur 'sys.sysrscols'.
+  Es sind 1086 Zeilen auf 14 Seiten f\"ur das sys.sysrscols-Objekt vorhanden.
+  DBCC-Ergebnis f\"ur 'sys.sysrowsets'.
+  Es sind 146 Zeilen auf 3 Seiten f\"ur das sys.sysrowsets-Objekt vorhanden.
+  DBCC-Ergebnis f\"ur 'sys.sysclones'.
+  Es sind 0 Zeilen auf 0 Seiten f\"ur das sys.sysclones-Objekt vorhanden.
+  DBCC-Ergebnis f\"ur 'sys.sysallocunits'.
+  Es sind 169 Zeilen auf 2 Seiten f\"ur das sys.sysallocunits-Objekt vorhanden.
   
-  Ergebnis gekürzt!!!
+  Ergebnis gek\"urzt!!!
   
   Von CHECKDB wurden 0 Zuordnungsfehler und 0 Konsistenzfehler 
   in der demo_grafisch-Datenbank gefunden.
-  Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen
+  Die DBCC-Ausf\"uhrung wurde abgeschlossen. Falls DBCC Fehlermeldungen
   ausgegeben hat, wenden Sie sich an den Systemadministrator.
           \end{lstlisting}
           Zur Ausführung von \languagemssql{CHECKDB} wird ein interner Database
@@ -1903,17 +1903,17 @@ GO
 
 ?DBCC? CHECKFILEGROUP ('CRM')
 
-DBCC-Ergebnis für 'demo_grafisch'.
-DBCC-Ergebnis für 'sys.sysrscols'.
-Es sind 1086 Zeilen auf 14 Seiten für das sys.sysrscols-Objekt vorhanden.
-DBCC-Ergebnis für 'sys.sysrowsets'.
-Es sind 146 Zeilen auf 3 Seiten für das sys.sysrowsets-Objekt vorhanden.
+DBCC-Ergebnis f\"ur 'demo_grafisch'.
+DBCC-Ergebnis f\"ur 'sys.sysrscols'.
+Es sind 1086 Zeilen auf 14 Seiten f\"ur das sys.sysrscols-Objekt vorhanden.
+DBCC-Ergebnis f\"ur 'sys.sysrowsets'.
+Es sind 146 Zeilen auf 3 Seiten f\"ur das sys.sysrowsets-Objekt vorhanden.
 
-Ergebnis gekürzt!!!
+Ergebnis gek\"urzt!!!
 
 Von CHECKFILEGROUP wurden 0 Zuordnungsfehler und 0 Konsistenzfehler
 in der demo_grafisch-Datenbank gefunden.
-Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen 
+Die DBCC-Ausf\"uhrung wurde abgeschlossen. Falls DBCC Fehlermeldungen 
 ausgegeben hat, wenden Sie sich an den Systemadministrator.
         \end{lstlisting}
         \subsubsection{Einzelne Tabellen überprüfen}
@@ -1928,9 +1928,9 @@ GO
 
 ?DBCC? CHECKTABLE ('demo_table')
 
-DBCC-Ergebnis für 'demo_grafisch.demo_table'.
-Es sind 99 Zeilen auf 2 Seiten für das demo_table-Objekt vorhanden.
-Die DBCC-Ausführung wurde abgeschlossen. Falls DBCC Fehlermeldungen 
+DBCC-Ergebnis f\"ur 'demo_grafisch.demo_table'.
+Es sind 99 Zeilen auf 2 Seiten f\"ur das demo_table-Objekt vorhanden.
+Die DBCC-Ausf\"uhrung wurde abgeschlossen. Falls DBCC Fehlermeldungen 
 ausgegeben hat, wenden Sie sich an den Systemadministrator.
           \end{lstlisting}         
           \begin{literaturinternet}
@@ -2026,7 +2026,7 @@ USE [master] GO
           anders. Dort gibt \languagemssql{target\_percent} die Endgröße des
           Transaktionsprotokolls an und nicht die Menge an freiem Speicher nach
           dem Verkleinern. Besitzt die Datenbank mehr als nur eine Protokolldatei,
-          wird für jede einzelne Protokolldatei deren Zielgröße berechnet, damit
+          wird f\"ur jede einzelne Protokolldatei deren Zielgröße berechnet, damit
           das Protokoll insgesamt auf die von \languagemssql{target\_percent}
           definierte Größe kommt.
           \begin{merke}
@@ -2053,7 +2053,7 @@ USE [master] GO
               \item Mit \languagemssql{SHRINKFILE} kann die Mindestgröße einer
               Datendatei verringert werden.
           \end{itemize}
-          Die Syntax für \languagemssql{SHRINKFILE} lautet:
+          Die Syntax f\"ur \languagemssql{SHRINKFILE} lautet:
           \begin{lstlisting}[language=ebnf, caption={Die Syntax zu
           SHRINKFILE}, label=admin03_36]
 DBCC §SHRINKFILE§
@@ -2171,7 +2171,7 @@ dbcc CHECKDB
         }
     ]
 
-Die DBCC-Ausführung wurde abgeschlossen. 
+Die DBCC-Ausf\"uhrung wurde abgeschlossen. 
 Falls DBCC Fehlermeldungen ausgegeben hat, wenden Sie sich 
 an den Systemadministrator.
           \end{lstlisting}          

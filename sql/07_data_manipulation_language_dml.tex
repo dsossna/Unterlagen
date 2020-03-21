@@ -1,6 +1,10 @@
   \chapter{Data Manipulation Language (DML)}
   \chaptertoc{}
   \cleardoubleevenpage
+  \begin{merke}
+    Im Gegensatz zu Oracle SQL wird bei MS SQL keine implizite Transaktion gestartet
+    bei DMML Statements. Dies muss bei MS SQL explizit mit "SET IMPLICIT TRANSACTION" eingeschaltet werden.
+  \end{merke}
       In den vergangenen Kapiteln wurde bisher nur der Teil von SQL beschrieben,
       der als sog. \enquote{Query language} bezeichnet wird. Hier wird jetzt
       gezeigt, wie vorhandene Daten manipuliert werden können. Der dafür

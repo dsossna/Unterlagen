@@ -1,0 +1,36 @@
+\section{Lösungen - Konfigurieren des Recovery Manager}
+  \begin{enumerate}
+    \item Konfigurieren Sie die unten angegebenen Werte für die beiden Umgebungsvariablen \identifier{nls\_lang} und \identifier{nls\_date\_format}.
+      \begin{itemize}
+        \item \oscommand{NLS\_LANG=GERMAN\_GERMANY}
+        \item \oscommand{NLS\_DATE\_FORMAT=\enquote{dd.mm.yyyy hh24:mi:ss}}
+      \end{itemize}
+      \begin{lstlisting}[language=terminal]
+[oracle@FEA11-119SRV ~]$ export NLS_LANG=german_germany
+[oracle@FEA11-119SRV ~]$ export NLS_DATE_FORMAT="dd.mm.yyyy hh24:mi:ss"
+      \end{lstlisting}
+    \item Geben Sie eine Liste aller RMAN-Einstellungen aus und speichern Sie diese in eine Datei.
+      \begin{lstlisting}[language=rman]
+RMAN> SPOOL LOG TO '/home/oracle/rman.cfg';
+RMAN> SHOW ALL;
+RMAN> SPOOL LOG OFF;
+      \end{lstlisting}
+    \item Konfigurieren Sie im RMAN das automatische Backup von Kontrolldatei und SPFile.
+      \begin{lstlisting}[language=rman]
+RMAN> CONFIGURE CONTROLFILE AUTOBACKUP ON;
+      \end{lstlisting}
+    \item Konfigurieren Sie die Retention Policy auf ein Zeitfenster von 7 Tagen.
+      \begin{lstlisting}[language=rman]
+RMAN> CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+      \end{lstlisting}
+    \item Legen Sie als Standardbackuptyp komprimierte Backup Sets fest.
+      \begin{lstlisting}[language=rman]
+RMAN> CONFIGURE DEVICE TYPE DISK
+2>    PARALLELISM 1
+3>    BACKUP TYPE TO COMPRESSED BACKUPSET;
+      \end{lstlisting}
+    \item Setzen Sie nur die Retention Policy auf ihren Standardwert zurück.
+      \begin{lstlisting}[language=rman]
+RMAN> CONFIGURE RETENTION POLICY CLEAR;
+      \end{lstlisting}
+  \end{enumerate}

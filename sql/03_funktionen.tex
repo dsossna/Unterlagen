@@ -234,10 +234,10 @@ WHERE  Konto_ID = 1281;
           \begin{merke}
             Das Ergebnis einer solchen Operation wird als \enquote{Teilzeichenkette} oder \enquote{Substring} bezeichnet, wobei \enquote{Substring} die geläufigere Variante darstellt.
           \end{merke}
-          \beispiel{sql03_05} zeigt die Anwendung der Funktion \languageorasql{SUBSTR}, um die IBAN eines Kontos in ihre Bestandteile zu zerlegen.
+          \beispiel{sql03_05} zeigt die Anwendung der Funktion \languageorasql{SUBSTR}, um die IBAN eines Kontos in ihre Bestandteile zu zerlegen. Hier kann für den dritten wert der Funktion auch eine andere Funktion mit angegeben werden.
           \begin{lstlisting}[language=oracle_sql,caption={Die Anwendung der Funktion \languageorasql{SUBSTR}},label=sql03_05]
 SELECT SUBSTR(IBAN, 1, 2) AS Laenderkuerzel, SUBSTR(IBAN, 5 , 8) AS BLZ,
-       SUBSTR(IBAN, 14) AS KtoNr
+       SUBSTR(IBAN, 13, LEN(IBAN)) AS KtoNr
 FROM   Konto
 WHERE  Konto_ID = 1281;
           \end{lstlisting}
@@ -676,7 +676,7 @@ FROM   dual;
               FLOOR & FLOOR & Gibt immer die größte ganze Zahl aus, die
               kleiner oder gleich n ist (Ganzzahliges Abrunden). \\
               \hline
-              LOG & n. a. & Berechnet den Logarithmus der Zahl x zur Basis n. \\
+              LOG & LOG 10 & Berechnet den Logarithmus der Zahl x zur Basis n. MS-SQL nur zur Basis 10 \\
               \hline
               MOD & \% & Gibt den Rest einer ganzzahligen Division zurück. \\
               \hline
@@ -742,8 +742,7 @@ FROM   dual;
         \begin{lstlisting}[language=ms_sql,caption={Rundungsfunktionen in MS SQL},label=sql03_16]
 SELECT SQRT(3) AS "Wurzel 3", CEILING(SQRT(3)) AS "Aufrunden",
        FLOOR(SQRT(3)) AS "Abrunden",
-       ROUND(SQRT(3), 2) AS "Kaufm. runden"
-FROM   dual;
+       ROUND(SQRT(3), 2) AS "Kaufm. runden";
         \end{lstlisting}
         \begin{center}
           \begin{small}
@@ -839,8 +838,7 @@ FROM   dual;
 SELECT 9 % 2 AS Modulo, POWER(10, 2) AS Power,
        LOG10(1000) AS Log, SQRT(16) AS Quadratwurzel,
        SQRT(27) / SQRT(3) AS "3. Wurzel von 27",
-       LOG10(8) / LOG10(5) AS "Log 8 Basis 5"
-FROM   dual;
+       LOG10(8) / LOG10(5) AS "Log 8 Basis 5";
         \end{lstlisting}
         \begin{center}
           \begin{small}
@@ -929,10 +927,11 @@ FROM   dual;
           \item Fraktale (Nachkommastellen) sind Stunden, Minuten und Sekunden, z. B. $\frac{1}{24}=0,041666$ ist eine Stunde oder $\frac{\frac{1}{24}}{60}=0,000694444$ ist eine Minute
           \item Es darf nur addiert oder subtrahiert werden, alle anderen Rechenoperationen sind verboten.
         \end{itemize}
-        Einige Beispiele hierzu:
+        Einige Beispiele hierzu: So oder in Kommandozeile SQLPLUS !
+      
         \begin{lstlisting}[language=oracle_sql,caption={Einfache Datumsarithmetik in Oracle},label=sql03_19]
-SELECT SYSDATE AS "Datum/Uhrzeit", SYSDATE + 2 AS "2 Tage",
-       SYSDATE - 3 / 24 AS "3 Stunden"
+SELECT to_char (SYSDATE,'DD.MM.yyyyhh24:mm:ss) AS "Datum/Uhrzeit", SYSDATE + 2 AS "2 Tage",
+       to_char (SYSDATE - 3 / 24,'DD.MM.yyyyhh24:mm:ss) AS "3 Stunden"
 FROM   dual;
         \end{lstlisting}
         \begin{center}
@@ -1212,7 +1211,7 @@ SELECT GETDATE(),
           Mit Hilfe der Funktionen \languagemssql{DATEPART} und \languagemssql{DATENAME} können Teile eines Datums, als Zeichenkette extrahiert werden.
           \begin{lstlisting}[language=ms_sql,caption={\languagemssql{DATEPART} und \languagemssql{DATENAME} in SQL Server},label=sql03_24]
 SELECT GETDATE(), DATEPART(YEAR, GETDATE()),
-       DATEPART(MONTH, GETDATE()) AS "DATEPART"
+       DATEPART(MONTH, GETDATE()) AS "DATEPART",
        DATENAME(MONTH, GETDATE()) AS "DATENAME";
           \end{lstlisting}
           \begin{center}

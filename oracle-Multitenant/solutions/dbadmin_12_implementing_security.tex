@@ -1,0 +1,149 @@
+\section{Lösungen - Implementing Security}
+  \begin{enumerate}
+    \input{exercises/dbadmin_12/item_a}
+    \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> ALTER SYSTEM
+  2  SET audit_trail=xml, extended SCOPE=spfile;
+
+System altered.
+
+SQL> shutdown immediate
+SQL> startup
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_b}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> AUDIT UPDATE, INSERT ON bank.mitarbeiter
+  2  BY SESSION
+  3  WHENEVER SUCCESSFUL;
+
+Audit succeeded.
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_c}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT object_name, ins, upd
+  2  FROM   dba_obj_audit_opts;
+
+OBJECT_NAME                    INS UPD
+------------------------------ --- ---
+MITARBEITER                    S/- S/-
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_d}
+    \input{exercises/dbadmin_12/item_e}
+    \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col db_user format a10
+SQL> col sql_text format a50
+SQL> set linesize 100
+SQL> SELECT db_user,
+  2         TO_CHAR(extended_timestamp, 'DD.MM.YYYY HH24:MI:SS') AS time,
+  3         sql_text
+  4  FROM   dba_common_audit_trail
+  5  WHERE  object_schema LIKE 'BANK'
+    \end{lstlisting}
+\clearpage
+    \begin{lstlisting}[language=terminal]
+DB_USER    TIME                SQL_TEXT
+---------- ------------------- -------------------------------------------
+T_JONES    21.10.2013 17:08:39 UPDATE bank.mitarbeiter
+                               SET    gehalt = gehalt * 10
+
+D_HARRY    21.10.2013 17:08:40 UPDATE bank.mitarbeiter
+                               SET    provision = provision * 1.1
+
+T_JONES    21.10.2013 17:09:11 UPDATE bank.mitarbeiter
+                               SET    gehalt = gehalt * 10
+
+D_HARRY    21.10.2013 17:09:11 UPDATE bank.mitarbeiter
+                               SET    provision = provision * 1.1
+
+T_JONES    21.10.2013 17:09:58 UPDATE bank.mitarbeiter
+                               SET    gehalt = gehalt * 10
+
+D_HARRY    21.10.2013 17:09:58 UPDATE bank.mitarbeiter
+                               SET    provision = provision * 1.1
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_f}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> NOAUDIT ALL ON bank.mitarbeiter;
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_g}
+    \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> ALTER SYSTEM
+  2  SET audit_trail=db, extended 
+  3  SCOPE=spfile;
+
+System altered.
+
+SQL> shutdown immediate
+SQL> startup
+SQL> AUDIT connect
+  2  WHENEVER SUCCESSFUL;
+
+Audit succeeded.
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_h}
+\clearpage
+    \input{exercises/dbadmin_12/item_i}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT   username, userhost,
+  2           TO_CHAR(extended_timestamp, 'DD.MM.YYYY HH24:MI:SS') AS TIME
+  3  FROM     dba_audit_session
+  4* ORDER BY timestamp;
+
+USERNAME   USERHOST                  &TIME&
+---------- ------------------------- -------------------
+HR         FEA11-119SRV.oracle.com   22.10.2013 07:38:25
+HR         FEA11-119SRV.oracle.com   22.10.2013 07:38:28
+SH         FEA11-119SRV.oracle.com   22.10.2013 07:38:28
+SH         FEA11-119SRV.oracle.com   22.10.2013 07:38:32
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_j}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET   audit_trail=none
+  3  SCOPE=spfile;
+    \end{lstlisting}
+    \input{exercises/dbadmin_12/item_k}
+    \begin{lstlisting}[language=configfile]
+#sqlnet.ora
+ENCRYPTION_WALLET_LOCATION =
+  (SOURCE =
+    (METHOD = FILE)
+    (METHOD_DATA =
+      (DIRECTORY = /u01/app/oracle/product/11.2.0/orcl/network/admin)
+    )
+  )
+    \end{lstlisting}
+    \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM SET ENCRYPTION KEY
+  2  IDENTIFIED BY "P@ssw0rd";
+
+SQL> ALTER SYSTEM
+  2  SET ENCRYPTION WALLET OPEN
+  3  IDENTIFIED BY "P@ssw0rd";
+    \end{lstlisting}
+\clearpage
+    \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col tablespace_name format a10
+SQL> col file_name format a45
+SQL> col mbytes format 9999
+SQL> col autoextensible format a3
+
+SQL> set linesize 100
+SQL> SELECT tablespace_name, file_name, bytes / POWER(1024, 2) AS mbytes,
+  2         autoextensible
+  3  FROM   dba_data_files
+  4  WHERE  tablespace_name LIKE 'BANK';
+
+&TABLESPACE&    FILE_NAME                                         MBYTES AUT
+---------- -------------------------------------------------- ------ ---
+BANK       /u01/app/oracle/oradata/orcl/bank01.dbf               100 NO
+BANK       /u01/app/oracle/oradata/orcl/bank02.dbf               100 NO
+
+SQL> CREATE TABLESPACE bank_encrypted
+  2  DATAFILE '/u01/app/oracle/oradata/orcl/bank_encrypted01.dbf' SIZE 100M,
+              '/u01/app/oracle/oradata/orcl/bank_encrypted02.dbf' SIZE 100M
+  3  ENCRYPTION USING 'AES256'
+  4  DEFAULT STORAGE(ENCRYPT);
+    \end{lstlisting}
+\end{enumerate}
+\clearpage

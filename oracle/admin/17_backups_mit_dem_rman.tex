@@ -90,7 +90,7 @@ RMAN> SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';
           \end{lstlisting}
           Das Kommando \languagerman{BACKUP database} fertigt das Backup der Datenbank an. Im zweiten Schritt werden mit dem Kommando \languageorasql{ALTER SYSTEM ARCHIVE LOG CURRENT} die aktiven Redo Logs gewechselt (Log Switch) und archiviert. Somit wird sichergestellt, dass alle für das Recovery mit diesem Backup benötigten Redo Logs archiviert wurden. Wird dieses Backup als Hotbackup durchgeführt, sollten anschliessend noch die Archive Logs gesichert werden.
         \subsubsection{Backups einzelner Tablespaces}
-          Um ein Backup eines oderer mehrerer Tablespaces durchzuführen, gibt es das Kommando \languagerman{BACKUP tablespace}. Im folgenden Beispiel werden die beiden Tablespaces \identifier{users} und \identifier{bank} auf ein SBT-Gerät gesichert.
+          Um ein Backup eines oder mehrerer Tablespaces durchzuführen, gibt es das Kommando \languagerman{BACKUP tablespace}. Im folgenden Beispiel werden die beiden Tablespaces \identifier{users} und \identifier{bank} auf ein SBT-Gerät gesichert.
           \begin{lstlisting}[caption={Backup eines Tablespace},label=admin1310,language=rman,emph={[9]ALTER,SYSTEM,ARCHIVE,LOG,CURRENT},emphstyle={[9]\color{magenta}\bfseries}]
 RMAN> BACKUP DEVICE TYPE sbt tablespace users, bank;
 RMAN> SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';

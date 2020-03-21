@@ -1,0 +1,671 @@
+\chapter{Datenbank Storage-Strukturen verwalten}
+\chaptertoc{}
+\cleardoubleevenpage
+
+      Die Hauptaufgabe einer Datenbank ist es, große Datenmengen effizient
+      zu verwalten und diese dem Nutzer über eine einheitliche Schnittstelle
+      zur Verfügung zu stellen. Dieses Ziel wird von Oracle dadurch erreicht,
+      dass der Datenzugriff und die Datenverwaltung in einem mehrschichtigen
+      System gekapselt sind. Als Vorlage für dieses System dient die
+      ANSI-SPARC-Architekur.
+      \bild{Die ANSI-SPARC Architektur}{ansi_sparc_model}{1.7}
+      Diese Architektur beschreibt, dass Benutzer mittels eines
+      vereinheitlichten Zugriffsmechanismusses (hier die Sprache SQL) auf eine
+      konzeptionelle Ebene zugreifen (hier dargestellt durch Tabellen), wobei
+      die Daten physikalisch in Dateien, auf einem Dateisystem abgelegt werden.
+
+      Für den Benutzter bedeutet das, dass er Tabellen sieht, obwohl in den Dateien tatsächlich nur \enquote{Bits und Bytes} existieren, keine Spur von Tabellen. Die Tabellen dienen nur als Darstellungsmittel für den Menschen, zur leichteren Verarbeitung der Daten.
+
+      Der Vorteil dieses Modelles ist, dass sich beide Ebenen, die konzeptionelle und die interne Ebene, getrennt von einander verändern können, ohne den jeweils anderen zu beeinflussen. Diesen Vorteil, der durch die Gliederung in drei Ebenen zustande kommt, hat Oracle sich zu Nutze gemacht und seine Storage-Struktur ebenfalls auf einer mehrschichtigen Architektur aufgebaut.
+
+      Die Oracle-Storage-Struktur gliedert sich in zwei Ebenen, die logische und die physikalische. Während die physikalische mit Dateien, Blöcken und Dateisystemen zu tun hat, beschreibt die logische den internen Aufbau der Datendateien.
+
+      Unter der physikalen Storage-Struktur versteht man den Zusammenhang zwischen Dateisystem, Betriebssystemblöcken und Dateien. Der physikalische Aufbau einer Datei wird durch das Dateisystem gestaltet. Im Regelfall besteht eine Datei aus mehreren \enquote{Betriebssystemblöcken}, der kleinsten Speichereinheit, die ein Dateisystem verwalten kann.
+      \bild{Die physi\-ka\-li\-sche Storage-Struktur}{oracle_storage_structure_1}{1.5}
+      \begin{merke}
+        Die eigentliche Dateiablage geschieht im Dateisystem. Welche Mechanismen, Buffer und Caches hier genutzt werden und welche Effekte dadurch zum Tragen kommen, ist für die Datenbank selbst unwesentlich. Sie kümmert sich nur um die interne Struktur der Datendateien. Der Datenbankadministrator jedoch sollte auch über das benutzte Dateisystem Bescheid wissen, da es durch Fehler in diesem Bereich zu Performance\-einbußen und sogar zu Datenverlust kommen kann!
+      \end{merke}
+      Die logische Storage-Struktur ist, genau wie die konzeptionelle Ebene des ANSI-SPARC-Modells, eine Abstrahierung der physikalischen Struktur. Das  heißt, dass die Datenbank keine BS-Bl"ocke allokiert, sondern Datenblöcke, Extents und Segmente. Diese drei Größen sind der logischen Struktur zugeordnet, da sie nicht physikalisch auf dem Datenträger existieren, sondern lediglich als Verwaltungseinheiten innerhalb der Oracle-Datenbank.
+    \section{Die Komponenten der Oracle-Storage-Struktur}
+      \subsection{Datenblöcke}
+        Die kleinste Einheit in der Oracle Speicherplatz verwaltet, ist der Oracle-Block oder auch Datenblock genannt. Die Standardgröße dieser Blöcke beträgt 8 K und kann zwischen 2 K und 32 K variieren.
+        \begin{merke}
+          Die Größe eines Oracle-Blocks muss zwingend ein Vielfaches der Größe eines  Betriebssystemblocks entsprechen.
+        \end{merke}
+        Welche Blockgröße für eine Datenbank benutzt wird, muss bei der Datenbankerstellung mit Hilfe des Parameters \parameter{db\_block\_size} festgelegt werden und kann später nicht mehr verändert werden. Meist werden Werte wie 4 K oder 8 K genutzt.
+        \begin{lstlisting}[caption={Der Parameter \parameter{db\_block\_size}},label=admin100,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a30 SQL> col value format a10
+SQL> SELECT name, value
+  2  FROM   v$system_parameter
+  3  WHERE  name LIKE 'db_block_size';
+
+NAME                           VALUE
+------------------------------ ----------
+db_block_size                  8192
+        \end{lstlisting}
+        \bild{Die logische Storage-Struktur: Oracle-Blöcke}{oracle_storage_structure_2}{1.4}
+        \subsubsection{Das Format eines Oracle-Blocks}
+          Das Format eines Datenblocks ist unabhängig von seinem Inhalt. Es gibt vier Bereiche in einem Oracle-Block:
+          \begin{itemize}
+            \item Block header
+            \item Table directory
+            \item Row directory
+            \item Row data
+          \end{itemize}
+          Die drei Teile Block header, Table directory und Row directory werden unter dem Begriff \enquote{Data Block Overhead} zusammengefasst und stehen nicht für die Speicherung von Nutzdaten zur Verfügung.
+
+          Der Block Header enthält allgemeine Informationen über den Block,
+          wie z. B. die Blockadresse und die Art des Blocks. Er ist
+          durchschnittlich 48 bis 107 Byte groß. Das Table Directory ist
+          eine Auflistung aller Tabellen, die Zeilen in diesem Block besitzen
+          und das Row Directory speichert die Positionen aller Tabellenzeilen im
+          Block.
+          \bild{Format eines Oracle-Blocks}{datablock_format}{1.1}
+
+          Eine festgelegte Speichermenge wird in jedem Datenblock als Puffer für \languageorasql{UPDATE}-Operationen freigehalten. Dies ermöglicht das Wachstum bestehender Zeilen. In dem als \enquote{Row data} bezeichneten Teil eines Oracle-Blocks werden die Nutzdaten in Form von Zeilen abgelegt. Eine Tabellenzeile hat ein festgelegtes Format.
+        \subsubsection{Aufbau einer Tabellenzeile}
+          Oracle speichert jede Zeile einer Tabelle, nach Möglichkeit in einem Stück, das als \enquote{Row Piece} bezeichnet wird. Ein Row Piece setzt sich aus verschiedenen Feldern zusammen, wie sie in \abbildung{row_format} zu sehen sind.
+          \bild{Format einer Tabellenzeile}{row_format}{1.3}
+          Der Row Header ist der Verwaltungsteil einer Zeile. Hier werden Informationen gespeichert, wie z. B. die Anzahl der Spalten innerhalb der Zeile. Nach dem Header, werden in jeder Zeile deren Länge und die Nutzdaten gespeichert.
+
+          Die Anordnung der Spalten einer Tabelle ist für alle Zeilen der Tabelle gleich. Üblicherweise werden die Spalten einer Tabelle in der Reihenfolge, in der sie im \languageorasql{CREATE TABLE}-Statement angegeben wurden, gespeichert. Dies muss jedoch nicht so sein.
+        \subsubsection{Speicherung von NULL-Werten}
+          Oracle speichert einen NULL-Wert in einer Tabellenspalte, in dem es die Länge der Spalte mit dem Wert 0 angibt (benötigt 1 Byte). Enthält eine Spalte am Ende der Tabelle einen NULL-Wert, wird für diese Spalte kein Wert und keine Länge gespeichert, wodurch Speicherplatz gespart wird.
+          \begin{merke}
+            Aus diesem Grund, sollten Spalten die sehr oft einen NULL-Wert enthalten immer an das Ende einer Tabelle gestellt werden.
+          \end{merke}
+
+          \bild{Null-Werte in Zeilen}{null_werte}{0.75}
+        \subsubsection{Die RowID}
+          Die \enquote{RowID} identifiziert eine Zeile eindeutig. Sie ist die 64-Bit-Kodierung des Zeilenspeicherorts, was bedeutet, dass  sie alle Angaben enthält, die Oracle braucht, um eine Tabellenzeile in der Datenbank zu finden. Für die Kodierung werden die Zeichen A-Z, a-z, 0-9, + und / verwendet.
+\clearpage
+          Das folgende Beispiel zeigt den Aufbau einer RowID:
+
+          \languageorasql{AAAAaoAATAAABrXAAA}
+
+          \begin{itemize}
+            \item Stelle 1 - 6 \textbf{Data object number} AAAAao: Sie identifiziert das Segment (siehe \abschnitt{segments}), in dem die Zeile gespeichert ist.
+            \item Stelle 7 - 9 \textbf{Relativ datafile number} AAT: Dieser Teil der RowID kodiert die Datendatei, in der das Segment gespeichert ist.
+            \item Stelle 10 - 15 \textbf{Data block number} AAABrX: Die Data block number ist die Nummer des Datenblocks, der die Zeile enthält.
+            \item Stelle 16 - 18 \textbf{Row number} AAA: Die Nummer der Zeile.
+          \end{itemize}
+        \subsubsection{Rowchaining and Migration}
+          Grundsätzlich speichert Oracle alle Tabellenzeilen immer in einem Stück. Es gibt jedoch Situationen, in denen dies nicht geht. Ist eine Zeile z. B. von Anfang an zu groß für einen Oracle-Block oder umfasst sie mehr als 255 Spalten, so muss sie über mehrere Datenblöcke verteilt werden.
+          \begin{merke}
+            Eine Zeile die aus mehreren verketteten Row Pieces besteht wird als \enquote{Chained Row} bezeichnet.
+          \end{merke}
+          \bild{Eine verkettete Tabellenzeile}{chained_row}{1.3}
+          Ein anderes Problem ist, dass Zeilen wachsen können. Wird eine Tabellenzeile, z. B. aufgrund eines \languageorasql{UPDATE}-Statements länger, kann es vorkommen, dass sie über den Oracle-Block hinaus wächst. In so einem Fall wird die Zeile in einen neuen Block migrieren und an ihrer Originalposition verbleibt nur ein Pointer, ein Wegweiser zum neuen Speicherort. Man spricht von \enquote{Row migration}.
+          \bild{Eine migrierte Tabellenzeile}{migrated_row}{1.3}
+      \subsection{Extents}
+        Extents sind eine weitere logische Speicherverwaltungseinheit. Sie bestehen aus einer ununterbrochenen Kette von Datenblöcken. Wenn z. B. für  eine Tabelle Speicher benötigt wird, sind Extents die kleinsten Einheiten die angefordert werden.
+        \bild{Die logische Storage-Struktur: Extents}{oracle_storage_structure_3}{1.3}
+        \subsubsection{Wann werden Extents angefordert?}
+          Wird ein neues Objekt, wie z. B. eine Tabelle erstellt, wird ein erstes Extent, das sogenannte \textit{Initial Extent} angefordert. Auch wenn das Objekt zu diesem Zeitpunkt noch keine Daten enthält, wird der Speicherplatz den das Initial Extent belegt als verbraucht angezeigt. Ein weiteres Extent wird erst dann angefordert, wenn das aktuelle Extent zu 100 \% gefüllt ist.
+        \subsubsection{Wann werden Extents wieder freigegeben?}
+          Im Allgemeinen werden Extents nur dann freigegeben, wenn das Objekt, dem sie zugewiesen wurden wieder gelöscht wird. Zusätzlich hat der DBA die Möglichkeit, die Datenbank oder Teile von ihr zu Reorganisieren und somit nicht mehr benötigte Extents freizugeben.
+      \subsection{Segmente}
+        \label{segments}
+        Segmente sind das dritte Glied in der Kette der logischen Speicherstrukturen. Sie bestehen aus einer Menge von Extents und enthalten alle Daten eines Datenbankobjekts, wie z. B. einer Tabelle oder eines Indexes. Jedes Segment besteht aus mindestens einem Extent, dass bei der Erstellung des Segments angefordert wird (Initial Extent).
+
+        Seit Oracle 11g wird das Verfahren der \enquote{Deferred Segment Creation} angewandt. Dies bedeutet, dass bei der Erstellung eines Datenbankobjektes nur Metadaten in das Data Dictionary eingetragen werden und ein Segment erst beim Einfügen von Daten angelegt wird. So wird die Verschwendung von Speicherplatz vermieden, falls bei der Installation einer Anwendung viele Tabellen angelegt werden, die u. U. nie gebraucht werden.
+
+        Oracle fordert den Speicher für Segmente, Extent für Extent, an. Ist
+        das Segment komplett gefüllt, wird ein weiteres Extent angefordert. Da
+        die Extents für ein Segment nur bei Bedarf angefordert werden, sind
+        diese meist nicht in einer fortlaufenden Reihenfolge.
+        \bild{Die logische Storage-Struktur, Segmente}{oracle_storage_structure_4}{1.2}
+      \subsection{Tablespaces und Datendateien}
+        Die größte existierende, logische Datenstruktur in Oracle sind die Tablespaces. Ein Tablespace besteht physikalisch aus einer oder mehreren Datendateien.
+        \begin{itemize}
+          \item Eine Oracle Datenbank besteht aus einem oder mehreren Tablespaces, die die gesamten Daten enthalten.
+          \item Ein Tablespace besteht aus einer oder mehreren Datendateien.
+        \end{itemize}
+        \bild{Tablespaces und Datendateien}{tablespaces_and_datafiles}{1.3}
+        \subsubsection{Verwaltung der Extents im Tablespace}
+          Seit Oracle 9i gibt es zwei Möglichkeiten, wie die Verwaltung der freien Extents eines Tablespaces geschehen kann: Im Data Dictionary oder im Tablespace selbst.
+          \begin{itemize}
+            \item \textbf{Locally Managed Tablespaces}: Bei Locally Managed Tablespaces geschieht die Verwaltung der Extents direkt im Tablespace.
+            \item \textbf{Dictionary Managed Tablespaces}: Dictionary Managed Tablespaces verwalten ihre Extents im Data Dictionary
+          \end{itemize}
+          Wurde ein Tablespace als Dictionary Managed Tablespace erstellt, kann später die Verwaltung auf Locally Managed umgestellt werden. Umgekehrt jedoch nicht. Ist der \identifier{System}-Tablespace ein Locally Managed Tablespace, können keine Dictionary Managed Tablespaces in der Datenbank erstellt werden. Im Normalfall werden alle Tablespaces als Locally Managed Tablespaces angelegt (erst seit Oracle 10g).
+
+          Locally Managed Tablespaces verwalten, im Gegensatz zu Dictionary Managed Tablespaces, ihren Speicherplatz selbstständig. Dies erfolgt mit Hilfe von Bitmaps. Jede Datendatei eines Tablespaces enthält eine eigene Bitmap, um den Füllstatus ihrer Extents zu speichern.
+          \bild{Verwaltung freier Extents mittels Bitmap}{locally_managed_ts}{1}
+          \begin{merke}
+            Da die Nutzung von Dictionary Managed Tablespaces nicht mehr zeitgemäß ist und von Oracle auch nicht mehr empfohlen wird, wird diese Art der Speicherverwaltung hier nicht näher erläutert.
+          \end{merke}
+        \subsubsection{Die wichtigsten Tablespaces im Überblick}
+          Bei der Erzeugung einer Datenbank werden einige Tablespaces automatisch erstellt. Im Folgenden werden die vier Standardtablespaces einer Oracle-Datenbank erläutert.
+          \subsubsection{Der System-Tablespace}
+            Jede Oracle Datenbank enthält einen Tablespace mit dem Namen \identifier{System}. Dieser wird bei der Datenbankerstellung erzeugt und muss für den Betrieb der Datenbank immer verfügbar sein. Er enthält das Herzstück einer Oracle Datenbank, das Data Dictionary.
+          \subsubsection{Der Sysaux-Tablespace}
+            Der \identifier{Sysaux}-Tablespace stellt eine Erweiterung zum \identifier{System}-Tablespace dar. Er enthält wichtige Komponenten für einige Datenbankanwendungen wie z. B. den Enterprise Manager. Auch dieser Tablespace wird automatisch bei der Datenbankerstellung erzeugt und kann im laufenden Betrieb nicht gelöscht werden. Ist er nicht verfügbar, kann es zu unerwarteten Datenbankfehlern kommen.
+          \subsubsection{Undo-Tablespaces}
+            Undo-Tablespaces sind spezielle Tablespaces, die nur für die Aufnahme von Undo-In\-for\-ma\-tionen genutzt werden. Es können keinerlei Segmente, wie z. B. Tabellen oder Cluster in einem Undo-Tablespace erstellt werden.
+          \subsubsection{Temporäre Tablespaces}
+            Temporäre Tablespaces enthalten temporäre Segmente und werden für große Sortieroperationen benötigt, die in der PGA eines Nutzers nicht durchgeführt werden können. Auch in dieser Art von Tablespace können manuell keine Objekte angelegt werden.
+    \section{Automatic Segment Space Management (ASSM)}
+      Die Verwaltung des Speicherplatzes umfasst nicht nur die Verwaltung der freien Extents, sondern auch die der freien Oracle-Blöcke in den einzelnen Segmenten. Hierfür gibt es zwei Verfahren. Das eine arbeitet mit \enquote{Freelists} und das andere mit Bitmaps. Beim Erstellen eines Tablespaces kann die Art der Speicherverwaltung gewählt werden.
+
+      \begin{itemize}
+        \item \textbf{Automatic Segment Space Management}: Der Speicherplatz in den Segmenten wird durch eine Bitmap verwaltet.
+        \item \textbf{Manual Segment Space Management}: Der Speicherplatz in den Segmenten wird durch Freelists verwaltet.
+      \end{itemize}
+      \begin{merke}
+        Die Standardvorgabe ist immer das Automatic Segment Space Management. Oracle empfiehlt bei dieser Einstellung zu bleiben.
+      \end{merke}
+      \subsection{Die Auxiliary Map}
+        Beim Automatic Segment Space Management werden die Blöcke eines Segments unter zu Hilfenahme einer Bitmap, der \enquote{Auxiliary Map} verwaltet. Sie untergliedert sich in bis zu vier Ebenen. \abbildung{auxiliary_map} zeigt den Aufbau einer dreistufigen Auxiliary Map.
+        \subsubsection{Level 1 Bitmap-Blöcke}
+          Die Verwaltung des freien Speichers in den Oracle-Blöcken, geschieht in den Level 1 Bitmaps (L1B). Jeder L1B verwaltet mehrere Oracle-Blöcke (zwischen 16 und 1024 Blöcke). Für jeden Oracle-Block wird sein Füllgrad im L1B festgehalten.
+
+          Die folgende Abbildung zeigt einen gekürzten Ausschnitt aus einem L1B.
+\clearpage
+          \bild{Architektur des Automatic Segment Space Management}{auxiliary_map}{1.45}
+
+          \begin{lstlisting}[caption={Der Inhalt eines Level 1 Bitmap-Blocks},label=admin101,emph={[9]FULL},emphstyle={[9]\color{black}},language=terminal]
+Freeness Status:  nf1 0      nf2 1      nf3 0      nf4 3
+Extent Map Block Offset: 4294967295
+First free datablock : 2
+---------------------------------------------------------------------
+DBA Ranges :
+---------------------------------------------------------------------
+ 0x01c00029  Length: 8      Offset : 0
+ 0x01c00031  Length: 8      Offset : 8
+
+ 0:Metadata   1:FULL   2:26-50% free   3:FULL
+ 4:FULL   5:FULL   6:FULL   7:FULL
+ 8:FULL   9:FULL   10:76-100% free   11:76-100% free
+ 12:FULL   13:76-100% free   14:FULL   15:FULL
+
+          \end{lstlisting}
+          Die Zeile \enquote{Freeness Status} gibt an, wieviele Blöcke mit welchem Belegungsgrad existieren. Dabei gilt:
+          \begin{center}
+            \tablecaption{Belegungsgrad von Oracle-Blöcken}
+            \tablefirsthead{%
+              \hline
+              \multicolumn{1}{|c}{\textbf{Freeness Status}}&
+              \multicolumn{1}{|c|}{\textbf{Belegungsgrad}}
+              \\
+              \hline
+            }
+            \tablehead{%
+              \hline
+              \multicolumn{1}{|c}{\textbf{Freeness Status}}&
+              \multicolumn{1}{|c|}{\textbf{Belegungsgrad}}
+              \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \begin{supertabular}[h]{|c|l|}
+              nf1 & Belegungsgrad zwischen 0 \% und 25 \% \\
+              \hline
+              nf2 & Belegungsgrad zwischen 26 \% und 50 \%  \\
+              \hline
+              nf3 & Belegungsgrad zwischen 51 \% und 75 \%  \\
+              \hline
+              nf4 & Belegungsgrad zwischen 76 \% und 100 \% \\
+            \end{supertabular}
+          \end{center}
+          Somit existieren in \abbildung{admin101} 1 Block mit einem Füllstand von 26 \% bis 50 \% und 3 Blöcke mit einem Füllgrad zwischen 76 \% und 100~\%. Blöcke die noch leer oder zu 100 \% gefüllt sind, werden in dieser Zeile nicht berücksichtigt.
+
+          Die Zeile \enquote{First free block} gibt, bezogen auf das Segment, die Blocknummer des ersten freien Blocks an.
+
+          In den letzten vier Zeilen des Blockabbildes sind die exakten Füllgrade der einzelnen Blöcke zu sehen.
+        \subsubsection{Level 2 Bitmap-Blöcke}
+          Die Level 2 Bitmap-Blöcke stehen eine Ebene über den L1B in der hierarchischen Ordnung der Auxiliary Map. Sie enthalten die Adressen der Datenblöcke, in denen sich die L1B befinden, die sie verwalten.
+        \subsubsection{Level 3 Bitmap Blöcke}
+          Falls die Auxiliary Map stark anwachsen sollte, kann Oracle eine weitere Ebene in die Hierarchie einfügen, die Level 3 Bitmap-Blöcke. Sie stehen eine Stufe über den Level 2 Bitmap-Blöcken und enthalten demzufolge eine Liste der Blockadressen, in denen sich die Level 2 Bitmaps befinden.
+      \subsection{Freie und Belegte Blöcke - PCTFREE}
+        Ob ein Oracle-Block als frei oder als belegt gilt, hängt stark davon ab wie viel Speicher als \enquote{Puffer für wachsende Zeilen} definiert wurde. Beim Erstellen einer Tabelle kann diese Puffergröße mittels des Storageparameters \languageorasql{pctfree} definiert werden. Wie die Abkürzung \enquote{PCT} in seinem Namen sagt, nimmt er einen Prozentwert als Angabe entgegen. \beispiel{admin102} zeigt seine Anwendung.
+        \begin{lstlisting}[caption={Der Storageparameter \languageorasql{pctfree}},label=admin102,language=oracle_sql]
+SQL> CREATE TABLE bank.bankfiliale
+  2  (
+  3    bankfiliale_id                NUMBER,
+  4    strasse                       VARCHAR2(50 CHAR),
+  5    hausnummer                    VARCHAR2(15 CHAR),
+  6    plz                           CHAR(5 CHAR),
+  7    ort                           VARCHAR2(20 CHAR)
+  8  )
+  9  PCTFREE 10;
+        \end{lstlisting}
+        \languageorasql{PCTFREE} wird in \beispiel{admin102} auf 10 \% gesetzt, was bedeutet, dass 10 \% des Speichers in jedem Datenblock als Puffer für wachsende Zeilen frei bleiben.
+        \subsubsection{PCTFREE richtig setzen}
+          Welcher Wert für \languageorasql{PCTFREE} gewählt werden sollte, hängt davon ab, ob häufige Änderungen an einer Tabelle vorgenommen werden (viele \languageorasql{UPDATE}-Statements) oder ob die Tabelle lediglich mit neuen Daten befüllt wird (viele \languageorasql{INSERT}-Statements). Was aber passiert, wenn \languageorasql{PCTFREE} falsch gesetzt wurde:
+          \begin{center}
+            \begin{small}
+              \tablecaption{PCTFREE und seine Auswirkungen}
+              \tablefirsthead{%
+                \cline{2-3}
+                \multicolumn{1}{c}{\textbf{}}&
+                \multicolumn{1}{|c}{\textbf{PCTFREE zu klein}}&
+                \multicolumn{1}{|c|}{\textbf{PCTFREE zu groß}}
+                \\
+                \hline
+              }
+              \tablehead{%
+                \cline{2-3}
+                \multicolumn{1}{c}{\textbf{}}&
+                \multicolumn{1}{|c}{\textbf{PCTFREE zu klein}}&
+                \multicolumn{1}{|c|}{\textbf{PCTFREE zu groß}}
+                \\
+                \hline
+              }
+              \tabletail{
+                \hline
+              }
+              \begin{supertabular}[h]{|l|p{5cm}|p{5cm}|}
+                Viele Updates & Die Tabellenzeilen haben nicht genug Platz zum Wachsen und migrieren (Migrated Rows!) & Es wird Speicherplatz verschwendet, da mehr Puffer zur Verfügung gestellt wird, als nötig. \\
+                \hline
+                Viele Insert & Keine negativen Auswirkungen! & Es wird Speicherplatz verschwendet, da die Zeilen kaum wachsen. \\
+              \end{supertabular}
+            \end{small}
+          \end{center}
+        \subsubsection{Blöcke werden wieder frei, wenn \dots}
+          Der Parameter PCTFREE ist für die Tabelle \identifier{bankfiliale} auf den Wert 10 gesetzt. Daraus folgt, dass ein Datenblock als belegt gilt, wenn sein Füllgrad die 90 \% Marke überschreitet. Diese Marke liegt in der Sektion von 76 \% bis 100 \%. Der Block wird wieder frei, wenn er die nächste untere Sektionsgrenze unterschreitet. Sein Füllgrad muss somit unter die Marke von 51 \% fallen, um diese Bedingung zu erfüllen, da die nächste untere Sektion von 51 \% bis 75 \% reicht.
+
+          Mit dieser Vorgehensweise soll verhindert werden, das der Zustand eines Blockes in kurzen Intervallen von belegt auf frei und wieder zurück wechselt.
+      \subsection{Vor- und Nachteile von ASSM}
+        Die Verwendung von Locally Managed Tablespaces mit Automatic Segment Space Management hat folgende Vorteile gegenüber der Verwendung von Dictionary Managed Tablespaces oder Locally Managed Tablespaces mit Manual Segment Space Management:
+        \begin{itemize}
+          \item \textbf{Rekursive Speicherverwaltungsoperationen werden vermieden.}
+
+          In Dictionary Managed Tablespaces werden die Datenblöcke in Tabellen im Data Dictionary verwaltet. Dabei kann es vorkommen, dass das Anfordern eines Extents für eine Tabelle mit Nutzdaten, die Vergrößerung einer der beiden Tabellen \identifier{uet\$} oder \identifier{fet\$}, die für die Verwaltung der Extents zuständig sind, nach sich zieht.
+          \item \textbf{Änderungen an der Extent-Bitmap erzeugen keine Undoinformationen.}
+\clearpage
+          \item \textbf{Der Füllgrad der einzelnen Blöcke ist schneller verfügbar.}
+
+          Bei Automatic Segment Space Management kann der Füllgrad eines Block direkt aus der L1B entnommen werden, während beim Manual Segment Space Management der Füllgrad dem Blockheader des betreffenden Blockes entnommen werden muss.
+          \item \textbf{Die freien Blöcke müssen nicht mehr in einer bestimmten Reihenfolge genutzt werden.}
+        \end{itemize}
+    \section{Tablespaces verwalten}
+       \subsection{Das CREATE TABLESPACE-Kommando}
+        \subsubsection{Anlegen eines Tablespaces mit Standardwerten}
+          Tablespaces werden mit dem Kommando \languageorasql{CREATE TABLESPACE} angelegt. In seiner einfachsten Form benötigt dieses Kommando nur drei Angaben:
+          \begin{itemize}
+            \item den Namen des Tablespaces in der \languageorasql{TABLESPACE}-Klausel,
+            \item einen Pfad und einen Dateinamen für den Tablespace in der \languageorasql{DATAFILE}-Klausel
+            \item und eine Größe für die Datendatei in der \languageorasql{SIZE}-Klausel.
+          \end{itemize}
+          \begin{lstlisting}[caption={Das \languageorasql{CREATE TABLESPACE}-Kommando},label=admin103,language=oracle_sql]
+SQL> CREATE TABLESPACE bank
+  2  DATAFILE '/u02/oradata/orcl/bank.dbf' SIZE 50M;
+          \end{lstlisting}
+          \begin{merke}
+            In der \languageorasql{DATAFILE}-Klausel können eine oder mehrere Datendateien angegeben werden, aus denen der Tablespace bestehen wird. Mit dem Schlüsselwort \languageorasql{SIZE} wird die Größe jeder einzelnen Datendatei festgelegt.
+          \end{merke}
+          \begin{lstlisting}[caption={Ein Tablespace mit mehreren Datendateien},label=admin104,language=oracle_sql]
+SQL> CREATE TABLESPACE bank
+  2  DATAFILE '/u02/oradata/orcl/bank01.dbf' SIZE 50M,
+  3           '/u03/oradata/orcl/bank02.dbf' SIZE 200M;
+          \end{lstlisting}
+        \subsubsection{Gestaltung der Extents beeinflussen}
+          Seit Oracle 10g ist jeder Tablespace von Haus aus lokal verwaltet. Locally Managed Tablespaces können ihre Extents auf zwei unterschiedliche Arten gestalten:
+          \begin{itemize}
+            \item \textbf{wachsend}: Die Extents im Tablespace wachsen automatisch. Das erste hat eine Größe von 64 K und das zweite Extent ebenso. Ab dem dritten Extent steuert Oracle das Wachstum. Je mehr Extents angefordert werden, desto größer werden diese. Sie können Größen von 1 M, 8 M und sogar 64 M annehmen.
+            \item \textbf{gleichförmig}: Gleichförmig bedeutet, dass alle Extents mit einer einheitlichen Größe angelegt werden. \languageorasql{UNIFORM SIZE 1M} ist der Standard, falls nichts näher definiert wird.
+          \end{itemize}
+          Für beide Verfahren muss das \languageorasql{CREATE TABLESPACE}-Kommando um die \languageorasql{EXTENT MANAGEMENT LOCAL}-Klausel erweitert werden. Sollen automatisch wachsende Extents erzeugt werden, wird zusätzlich das Schlüsselwort \languageorasql{AUTOALLOCATE} benötigt.
+          \begin{lstlisting}[caption={Ein Tablespace mit automatisch wachsenden Extents},label=admin105,language=oracle_sql]
+SQL> CREATE TABLESPACE bank
+  2  DATAFILE '/u02/oradata/orcl/bank01.dbf' SIZE 50M,
+  3           '/u03/oradata/orcl/bank02.dbf' SIZE 200M
+  4  EXTENT MANAGEMENT LOCAL AUTOALLOCATE;
+          \end{lstlisting}
+          Die Angabe von \languageorasql{EXTENT MANAGEMENT LOCAL AUTOALLOCATE} ist immer dann vorteilhaft, wenn in einem Tablespace Objekte mit sehr unterschiedlichem Volumen gespeichert werden. Durch das Anwachsen der Extents wird der Verwaltungsaufwand für das Anfordern verringert, da mit zunehmender Extentgröße weniger Extents angefordert werden müssen.
+          \begin{merke}
+            \languageorasql{EXTENT MANAGEMENT LOCAL AUTOALLOCATE} ist der Standard!
+          \end{merke}
+          Uniform-Sized-Extents sind immer dann die bessere Wahl, wenn die Größe der Daten, die in die Tabelle eingefügt werden, in etwa vorausgesagt werden kann. Dies kann z. B. dann der Fall sein, wenn PDF oder DOC-Dateien in den Tabellen gespeichert werden sollen.
+          \begin{lstlisting}[caption={Uniform-Sized-Extents},label=admin106,language=oracle_sql]
+SQL> CREATE TABLESPACE bank
+  2  DATAFILE '/u02/oradata/orcl/bank01.dbf' SIZE 50M,
+  3           '/u03/oradata/orcl/bank02.dbf' SIZE 200M
+  4  EXTENT MANAGEMENT LOCAL UNIFORM SIZE 128K;
+          \end{lstlisting}
+          \beispiel{admin106} zeigt wie der Tablespace \identifier{bank} mit gleichförmigen 128 K Extents angelegt wird.
+          \begin{merke}
+            Die Standardgröße für Uniform-Sized-Extents ist 1M!
+          \end{merke}
+        \subsubsection{Bigfile Tablespaces}
+          Bigfile Tablespaces haben die Besonderheit, dass sie nur aus einer einzigen Datendatei bestehen. Somit entfällt der dreistellige Anteil der Relative File Number aus der RowID, wodurch die Datendatei bis zu $2^{32}$-Datenblöcke (ca. 4 Milliarden) haben kann. Bei einer maximalen Blockgröße von 32 K ermöglicht dies eine Kapazität von 128 TB pro Datendatei, bei einer Blockgröße von 8 K, sind es 32 TB pro Datendatei.
+
+          Da eine Oracle Datenbank bis zu 65.536 Datendateien haben darf, wird eine Datenbankgröße von bis zu 8 Exabyte möglich.
+
+          Im Vergleich dazu, kann ein Smallfile Tablespace nur bis zu $2^{22}$-Datenblöcke enthalten, was bei einer Blockgröße von 32 K nur 128 GB gesamtgröße ausmacht. Die Gesamtgröße der Datenbank, bei 65.536 Datendateien, wäre dann nur 8 Petabyte, statt 8 Exabyte.
+          \begin{merke}
+            Seit dem Bigfile Tablespaces existieren, werden \enquote{normale Tablespaces} als Smallfile Tablespaces bezeichnet.
+          \end{merke}
+          \begin{literaturinternet}
+            \item \cite{REFRN0042}
+            \item \cite{doctbtthtm}
+          \end{literaturinternet}
+
+          \beispiel{admin107} zeigt, wie ein Bigfile Tablespace angelegt wird.
+          \begin{lstlisting}[caption={Einen Bigfile Tablespace anlegen},label=admin107,language=oracle_sql]
+SQL> CREATE BIGFILE TABLESPACE big_mac_ts
+  2  DATAFILE '/u02/oradata/orcl/big_mac_ts.dbf' SIZE 100G;
+          \end{lstlisting}
+          Ob es sich bei einem Tablespace um einen Bigfile Tablespace handelt, kann mittels der Spalte \identifier{bigfile}, der View \identifier{dba\_tablespaces} ermittelt werden.
+          \begin{lstlisting}[caption={Die View \identifier{dba\_tablespaces}},label=admin108,language=oracle_sql]
+SQL> SELECT tablespace_name, bigfile
+  2  FROM   dba_tablespaces;
+
+TABLESPACE_NAME                BIG
+------------------------------ ---
+&SYSTEM&                          NO
+SYSAUX                         NO
+UNDOTBS1                       NO
+TEMP                           NO
+EXAMPLE                        NO
+BIG_MAC_TS                     YES
+          \end{lstlisting}
+          \begin{merke}
+            Ein Bigfile Tablespace wird automatisch als Locally Managed Tablespace mit Automatic Segment Space Management angelegt. Durch Dateigrößenbeschränkungen in Dateisystemen kann die Erstellung von Bigfile Tablespaces auf eine bestimmte Größe limitiert sein.
+          \end{merke}
+        \subsubsection{Temporäre Tablespaces}
+          Temporäre Tablespaces werden immer dann benötigt, wenn Sortier- oder Hashingoperationen nicht in der PGA eines Serverprozesses durchgeführt werden können, weil mehr Speicherplatz benötigt wird, als zur Verfügung steht. Ihre Funktion ist vergleichbar mit der der Windows Auslagerungsdatei.
+
+          Durch Hinzufügen des Schlüsselwortes \languageorasql{TEMPORARY} zum \languageorasql{CREATE TABLESPACE}-Statement wird ein temporärer Tablespace angelegt. Die \languageorasql{DATAFILE}-Klausel wird bei temporären Tablespaces durch die \languageorasql{TEMPFILE}-Klausel ersetzt.
+          \begin{lstlisting}[caption={Einen temporären Tablespace anlegen},label=admin109,language=oracle_sql]
+SQL> CREATE TEMPORARY TABLESPACE bank_temp
+  2  TEMPFILE '/u02/oradata/orcl/bank_temp_01.dbf' SIZE 20 M;
+          \end{lstlisting}
+          \begin{merke}
+            Temporäre Tablespaces können nur mit Uniform-Sized-Extents angelegt werden. Die \languageorasql{EXTENT MANAGEMENT LOCAL UNIFORM SIZE}-Klausel kann wahlweise dazu benutzt werden, um die Größe der Extents zu beeinflussen. Das Schlüsselwort \languageorasql{AUTOALLOCATE} darf bei temporären Tablespaces nicht verwendet werden.
+          \end{merke}
+          Ein temporärer Tablespace kann auch als Big-File Tablespace angelegt werden.
+          \begin{lstlisting}[caption={Einen temporären Big-File Tablespace anlegen},label=admin110,language=oracle_sql]
+SQL>  CREATE BIGFILE TEMPORARY TABLESPACE bank_temp
+  2   TEMPFILE '/u02/oradata/orcl/bank_temp.dbf' SIZE 20G;
+          \end{lstlisting}
+      \subsection{Das ALTER TABLESPACE-Kommando}
+        Mit Hilfe des \languageorasql{ALTER TABLESPACE}-Kommandos ist es möglich, die Definition eines Tablespaces zu verändern. Im Folgenden werden einige Anwendungsfälle für dieses Kommando gezeigt.
+        \subsubsection{Tablespaces On- und Offline setzen}
+          Ein DBA kann alle Tablespaces, mit Ausnahme des \identifier{System}-Tablespace, online (verfügbar) und offline (nicht verfügbar) setzen. Dies kann im laufenden Betrieb geschehen und ist für Wartungstätigkeiten, wie z. B. das Recovery eines einzelnen Tablespaces notwendig.
+
+          Wird ein Tablespace offline gesetzt, verbietet Oracle den Zugriff auf alle Objekte in diesem Tablespace. Laufende Transaktionen werden durch das Offlinesetzen nicht automatisch beendet, ein abschließen der Transaktion mit \languageorasql{COMMIT} ist nach wie vor möglich.
+
+          In manchen Fällen kann es vorkommen, das Oracle einen Tablespace automatisch offline setzt, z. B. wenn der Tablespace durch einen Medienfehler beschädigt wurde.
+          \begin{lstlisting}[caption={Einen Tablespace offline setzen},label=admin111,language=oracle_sql]
+SQL> ALTER TABLESPACE bank OFFLINE;
+          \end{lstlisting}
+          Ein Tablespace kann auf drei verschiedene Arten offline gesetzt werden:
+          \begin{itemize}
+            \item \textbf{OFFLINE NORMAL}: Der Tablespace wird so offline gesetzt, dass kein Recovery benötigt wird, wenn der Tablespace wieder online gesetzt werden soll. Dies funktioniert, jedoch nur dann, wenn alle Datendateien des Tablespaces fehlerfrei sind.
+            \item \textbf{OFFLINE TEMPORARY}: Mit diesem Modus können alle noch verbliebenen, fehlerfreien Datendateien eines Tablespaces konsistent offline gesetzt werden. Fehlerhafte Datendateien werden ignoriert.
+            \item \textbf{OFFLINE IMMEDIATE}: Der Tablespace wird sofort, ohne Checkpoint offline gesetzt. Beim Onlinesetzen wird in jedem Falle Recovery benötigt.
+          \end{itemize}
+          \beispiel{admin112} verdeutlicht den Unterschied zwischen \languageorasql{OFFLINE NORMAL} und \languageorasql{OFFLINE TEMPORARY}.
+          \begin{lstlisting}[caption={Der Unterschied zwischen NORMAL und TEMPORARY},label=admin112,language=oracle_sql]
+SQL> CREATE TABLESPACE defekt_ts
+  2  DATAFILE '/u02/oradata/orcl/defekt_ts_01.dbf' SIZE 5M,
+  3           '/u03/oradata/orcl/defekt_ts_02.dbf' SIZE 10M;
+
+-- Die Datei defekt_ts_01.dbf wird zerstoert!
+
+SQL> SELECT file_name, online_status
+  2  FROM   dba_data_files
+  3  WHERE  file_name LIKE 'DEFEKT_TS_01.DBF';
+
+FILE_NAME                           ONLINE_STATUS
+----------------------------------  -------------
+/u02/oradata/orcl/defekt_ts_01.dbf   &RECOVER&
+          \end{lstlisting}
+\clearpage
+          \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> ALTER TABLESPACE defekt_ts OFFLINE NORMAL;
+
+ERROR at line 1:
+ORA-01191: file 6 is already offline - cannot do a &normal& offline
+ORA-01110: data file 6: '/u02/defekt_ts_01.dbf'
+
+SQL> ALTER TABLESPACE defekt_ts OFFLINE TEMPORARY;
+
+Tablespace altered.
+          \end{lstlisting}
+          Soll der Tablespace wieder Online gehen, wird das Schlüsselwort \languageorasql{ONLINE} verwendet.
+          \begin{lstlisting}[caption={Einen Tablespace online setzen},label=admin113,language=oracle_sql]
+SQL> ALTER TABLESPACE defekt_ts ONLINE;
+          \end{lstlisting}
+        \subsubsection{Read Only Tablespaces}
+          Wird ein Tablespace mit der \languageorasql{READ ONLY}-Klausel
+          schreibgeschützt, hat das zwei Effekte:
+          \begin{itemize}
+            \item Unbeabsichtigte Änderungen an den Daten werden verhindert.
+            \item Der Oracle Recovery Manager erkennt Read Only Tablespaces. Nachdem ein solcher Tablespace einmal gesichert wurde, wird er bei allen folgenden Backups ausgelassen.
+          \end{itemize}
+          \begin{lstlisting}[caption={Einen Tablespace Read Only setzen},label=admin114,language=oracle_sql]
+SQL> ALTER TABLESPACE bank READ ONLY;
+          \end{lstlisting}
+          Um den Schreibzugriff auf den Tablespace wieder zu ermöglichen, wird die Klausel \languageorasql{READ ONLY} durch die Klausel \languageorasql{READ WRITE} ersetzt.
+          \begin{lstlisting}[caption={Einen Tablespace Read Write setzen},label=admin115,language=oracle_sql]
+SQL> ALTER TABLESPACE bank READ WRITE;
+          \end{lstlisting}
+          Zur Durchführung dieser Tätigkeiten, muss der Nutzer eines der beiden Systemprivilegien \privileg{ALTER TABLESPACE} oder \privileg{MANAGE TABLESPACE} besitzen.
+        \subsubsection{Tablespaces umbenennen}
+          Mit der \languageorasql{RENAME TO}-Klausel, des \languageorasql{ALTER TABLESPACE}-Kommandos, können Tablespaces umbenannt werden. Die Umbenennung ist sowohl für permanente, als auch für temporäre Tablespaces möglich.
+          \begin{lstlisting}[caption={Einen Tablespace umbenennen},label=admin116,language=oracle_sql]
+SQL> ALTER TABLESPACE bank RENAME TO bank_ts;
+          \end{lstlisting}
+          \begin{merke}
+            Soll ein \identifier{Undo}-Tablespace umbenannt werden, ist es unbedingt notwendig, dass zum Betrieb der Instanz ein SPFile verwendet wird.
+          \end{merke}
+        \subsubsection{Big-File Tablespaces vergrößern}
+          Ein Big-File Tablespace kann mit Hilfe der \languageorasql{RESIZE}-Klausel der \languageorasql{ALTER TABLESPACE}-An\-wei\-sung vergrößert werden. Da er nur eine Datendatei hat, wirkt sich die Änderung direkt auf diese aus.
+          \begin{lstlisting}[caption={Einen Big-File Tablespace vergrößern},label=admin117,language=oracle_sql]
+SQL> ALTER TABLESPACE big_mac_ts RESIZE 200G;
+          \end{lstlisting}
+      \subsection{Das DROP TABLESPACE-Kommando}
+          Ein Tablespace kann mitsamt seinem Inhalt gelöscht werden, wenn er nicht mehr benötigt wird. Um einen Tablespace löschen zu können, benötigt der Nutzer das \privileg{DROP TABLESPACE}-System Privileg. Vor dem Löschen sollte unbedingt ein Backup der Datenbank gemacht werden, so dass der Tablespace im Zweifelsfalle wieder hergestellt werden kann.
+
+          Ein leerer Tablespace kann einfach mit dem \languageorasql{DROP TABLESPACE}-Kommando gelöscht werden. Um Probleme oder Verzögerungen beim Löschen zu vermeiden, sollte der Tablespace immer zuerst offline gesetzt werden.
+          \begin{lstlisting}[caption={Einen leeren Tablespace löschen},label=admin118,language=oracle_sql]
+SQL> ALTER TABLESPACE big_mac_ts OFFLINE IMMEDIATE;
+SQL> DROP TABLESPACE big_mac_ts;
+          \end{lstlisting}
+          Enthält der Tablespace Segmente, muss an das \languageorasql{DROP TABLESPACE}-Kommando die Klausel \languageorasql{INCLUDING CONTENTS} angehängt werden.
+          \begin{lstlisting}[caption={Einen Tablespace mit Inhalt löschen},label=admin119,language=oracle_sql]
+SQL> CREATE TABLE empty_table
+  2  (
+  3    empty_id NUMBER
+  4  )
+  5  TABLESPACE big_mac_ts;
+
+SQL> DROP TABLESPACE big_mac_ts;
+
+ERROR at line 1:
+ORA-01549: tablespace not empty, use INCLUDING CONTENTS option
+
+SQL> DROP TABLESPACE big_mac_ts INCLUDING CONTENTS;
+
+Tablespace dropped.
+          \end{lstlisting}
+          \begin{merke}
+            Beide Male werden die Datendateien der betreffenden Tablespaces nicht mit gelöscht. Diese können entweder manuell mit Betriebssystemmitteln gelöscht werden oder es kann die \languageorasql{AND DATAFILES}-Klausel des \languageorasql{DROP TABLESPACE}-Kommandos verwendet werden.
+          \end{merke}
+          \begin{lstlisting}[caption={Einen Tablespace mit Inhalt und Datendateien löschen},label=admin120,language=oracle_sql]
+SQL> DROP TABLESPACE big_mac_ts
+  2  INCLUDING CONTENTS AND DATAFILES;
+          \end{lstlisting}
+          Enthalten die Segmente im Tablespace Fremdschlüssel-Constraints, die auf Segmente in einem anderen Tablespace verweisen, muss zusätzlich die \languageorasql{CASCADE CONSTRAINTS}-Klausel angehängt werden.
+          \begin{lstlisting}[caption={Einen Tablespace mit Inhalt, Datendateien und Constraints löschen},label=admin121,language=oracle_sql]
+SQL> DROP TABLESPACE big_mac_ts
+  2  INCLUDING CONTENTS AND DATAFILES
+  3  CASCADE CONSTRAINTS;
+          \end{lstlisting}
+    \section{Datendateien verwalten}
+      \subsection{Hinzufügen einer Datendatei zu einem Tablespace}
+        Datendateien werden mit Hilfe der \languageorasql{ADD DATAFILE}-Klausel an einen Tablespace angefügt.
+        \begin{lstlisting}[caption={Hinzufügen einer Datendatei},label=admin122,language=oracle_sql]
+SQL> ALTER TABLESPACE bank
+  2  ADD DATAFILE '/u03/oradata/orcl/bank02.dbf' SIZE 100M;
+        \end{lstlisting}
+        \begin{merke}
+          Bei einem Bigfile Tablespace kann keine weitere Datendatei hinzugefügt werden.
+        \end{merke}
+      \subsection{Das Wachstum von Datendateien kontrollieren}
+        \subsubsection{Automatisches Wachstum erlauben}
+          Eine Datendatei kann so erstellt werden, bzw. ihr Verhalten kann so geändert werden, dass sie bei Bedarf automatisch wächst. Dies hat folgende Vorteile:
+          \begin{itemize}
+            \item Der Administrator wird entlastet, da er nicht sofort eingreifen muss, wenn die Datendatei zu klein ist.
+            \item Anwendungen bleiben nicht im Betrieb stehen, weil zu wenig Platz in einem Tablespace zur Verfügung steht.
+          \end{itemize}
+          Ob für eine Datendatei das automatische Wachstum bereits aktiviert wurde, kann mit Hilfe der View \identifier{dba\_data\_files} ermittelt werden. Das folgende Beispiel zeigt die Erstellung eines Tablespaces mit einer Datendatei, für die das automatische Wachstum aktiviert wird.
+          \begin{lstlisting}[caption={Erstellen eines Tablespaces mit automatisch wachsender Datendatei},label=admin123,language=oracle_sql]
+SQL> CREATE TABLESPACE auto_growing_ts
+  2  DATAFILE '/u02/oradata/orcl/auto_growing_ts01.dbf' SIZE 100M
+  3  AUTOEXTEND ON MAXSIZE 250M;
+          \end{lstlisting}
+          In \beispiel{admin123} wird das Wachstum der Datendatei auf 250 Megabyte begrenzt. Durch die Angabe von \languageorasql{MAXSIZE UNLIMITED} ist es möglich, ein unbegrenztes Wachstum der Datendatei einzurichten.
+
+          Auch im Nachhinein kann einem Tablespace eine Datendatei hinzugefügt werden, die automatisch wächst.
+          \begin{lstlisting}[caption={Hinzufügen einer Datendatei mit automatischem Wachstum},label=admin124,language=oracle_sql]
+SQL> ALTER TABLESPACE auto_growing_ts
+  2  ADD DATAFILE '/u03/oradata/orcl/auto_growing_ts02.dbf' SIZE 100M
+  3  AUTOEXTEND ON MAXSIZE 250M;
+          \end{lstlisting}
+          Um das automatische Wachstum für eine Datendatei abzuschalten, muss die betroffene Datendatei mit dem \languageorasql{ALTER DATABASE}-Kommando angefasst werden.
+          \begin{lstlisting}[caption={Automatisches Wachstum für eine Datendatei abschalten},label=admin125,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE '/u02/oradata/orcl/auto_growing_ts02.dbf'
+  3  AUTOEXTEND OFF;
+          \end{lstlisting}
+        \subsubsection{Eine Datendatei manuell vergrößern}
+          Eine Datendatei kann mit Hilfe des \languageorasql{ALTER DATABASE}-Kommandos manuell vergrößert werden. Dadurch wird ermöglicht, einen Tablespace zu vergrößern, ohne neue Datendateien zur Datenbank hinzuzufügen. Dies ist dann vorteilhaft, wenn die Maximalanzahl an Datendateien für eine Datenbank fast erreicht ist. Das folgende Beispiel zeigt, wie die 100 M große Datendatei \identifier{bank02.dbf} auf 350 M vergrößert wird.
+          \begin{lstlisting}[caption={Eine Datendatei manuell vergrößern},label=admin126,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE '/u03/oradata/orcl/bank02.dbf'
+  3  RESIZE 350M;
+          \end{lstlisting}
+          Mit Hilfe des gleichen Statements kann eine Datendatei auch wieder verkleinert werden. Bedingung dafür ist, dass der hintere Bereich der Datendatei leer ist. Die folgende Grafik veranschaulicht dies.
+          \bild{Datendateien verkleinern}{shrink_datafiles}{1.75}
+
+          Die \abbildung{shrink_datafiles} zeigt zwei Datendateien. Die Datei \identifier{bank01.dbf} kann um 150 M reduziert werden, aber \identifier{bank02.dbf} lediglich um 70 M, da belegte Datenblöcke in ihr eine weitere Verkleinerung verhindern.
+      \subsection{Datendateien umbenennen und verschieben}
+        Datendateien können umbenannt werden, um ihren Namen oder ihren Speicherort zu ändern.
+        \begin{merke}
+          Wird eine Datendatei in Oracle umbenannt, werden nur ihre Einträge in der Kontrolldatei und im Data Dictionary geändert. Auf dem Datenträger geschieht keine Veränderung. Diese muss manuell nachgeholt werden.
+        \end{merke}
+        Um eine Datendatei umzubenennen gehen Sie wie folgt vor:
+        \begin{enumerate}
+          \item Den betreffenden Tablespace Offline setzen.
+          \begin{lstlisting}[caption={Tablespace Offline setzen},label=admin127,language=oracle_sql]
+SQL> ALTER TABLESPACE bank OFFLINE NORMAL;
+          \end{lstlisting}
+          \item Umbenennen und evtl. auch verschieben der Datendatei auf dem Datenträger.
+          \begin{lstlisting}[caption={Tablespace Offline setzen},label=admin127a,language=oracle_sql,alsolanguage=sqlplus]
+SQL> host mv /u02/oradata/orcl/bank02.dbf /u03/oradata/orcl/bank02.dbf
+          \end{lstlisting}
+          \item Die Datendatei in der Datenbank umbenennen.
+          \begin{lstlisting}[caption={Datendatei umbenennen},label=admin128,language=oracle_sql]
+SQL> ALTER TABLESPACE bank
+  2  RENAME DATAFILE '/u02/oradata/orcl/bank02.dbf'
+  3  TO              '/u03/oradata/orcl/bank02.dbf';
+          \end{lstlisting}
+        \end{enumerate}
+      \subsection{Datendateien löschen}
+        Datendateien können unter der Voraussetzung gelöscht werden, dass sie noch unbenutzt sind. Hierfür existiert die \languageorasql{DROP DATAFILE}-Klause des \languageorasql{ALTER TABLESPACE}-Kommandos. Zur Angabe der Datendatei, kann sowohl der vollständige Dateiname (Pfad + Dateiname), als auch die Dateinummer verwendet werden.
+        \begin{merke}
+          Zum Löschen einer Datendatei, muss der Tablespace online sein!
+        \end{merke}
+        \begin{lstlisting}[caption={Eine Datendatei löschen},label=admin129,language=oracle_sql]
+SQL> ALTER TABLESPACE bank ONLINE;
+SQL> ALTER TABLESPACE bank
+  2  DROP DATAFILE '/u02/oradata/orcl/bank02.dbf';
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Benutzen der Dateinummer zum löschen einer Datendatei},label=admin130,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col tablespace_name format a15
+SQL> col file_name format a50
+SQL> col file_id format 999999
+SQL> set linesize 200
+
+SQL> SELECT   tablespace_name, file_name, file_id
+  2  FROM     dba_data_files
+  3  WHERE    LOWER(tablespace_name) LIKE 'bank'
+  3  ORDER BY file_id;
+
+TABLESPACE_NAME FILE_NAME                                          FILE_ID
+--------------- -------------------------------------------------- -------
+BANK            /u02/oradata/orcl/bank01.dbf                             6
+BANK            /u03/oradata/orcl/bank02.dbf                             7
+
+SQL> ALTER TABLESPACE bank
+  2  DROP DATAFILE 6;
+        \end{lstlisting}
+    \section{Temporäre Datendateien}
+      Temporäre Tablespaces verwenden keine gewöhnlichen Datendateien, sondern Tempfiles. Diese unterscheiden sich wie folgt von permanenten Datendateien:
+      \begin{itemize}
+        \item Sie können nicht Read Only gesetzt werden
+        \item Es wird kein Recovery für Tempfiles durchgeführt
+        \item Anders als bei permanenten Datendateien hat ein Tempfile bei seiner Erstellung noch nicht seine volle Größe.
+      \end{itemize}
+      \subsection{Tempfiles on- und offline setzen}
+        Um die Tempfiles eines temporären Tablespaces offline zu setzen, wird das Schlüsselwort \languageorasql{DATAFILE} durch das Schlüsselwort \languageorasql{TEMPFILE} ersetzt. Auch für Tempfiles kann die Dateinummer verwendet werden. Diese findet man in der View \identifier{dba\_temp\_files}.
+
+        \begin{lstlisting}[caption={Ein Tempfile mit Hilfe des Dateinamens offline setzen},label=admin132,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  TEMPFILE '/u02/oradata/orcl/temp01.dbf' OFFLINE;
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Offline-/Onlinesetzen eines Tempfiles mittels der Dateinummer},label=admin133,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col tablespace_name format a15
+SQL> col file_name format a50
+SQL> col file_id format 999999
+SQL> set linesize 200
+SQL> SELECT   tablespace_name, file_name, file_id
+  2  FROM     dba_temp_files;
+
+TABLESPACE_NAME FILE_NAME                                          FILE_ID
+--------------- -------------------------------------------------- -------
+TEMP            /u02/oradata/orcl/temp01.dbf                             1
+
+SQL> ALTER DATABASE
+  2  TEMPFILE 1 OFFLINE;
+
+Database altered.
+
+SQL> ALTER DATABASE
+  2  TEMPFILE 1 ONLINE;
+
+Database altered.
+        \end{lstlisting}
+      \subsection{Tempfiles zu einem temporären Tablespace hinzufügen}
+        Beim temporären Tablespaces wird die \languageorasql{ADD DATAFILE}-Klausel durch \languageorasql{ADD TEMPFILE} ersetzt.
+        \begin{lstlisting}[caption={Hinzufügen eines Tempfiles},label=admin134,language=oracle_sql]
+SQL> ALTER TABLESPACE temp
+  2  ADD TEMPFILE '/u02/oradata/orcl/temp02.dbf' SIZE 100M;
+        \end{lstlisting}
+      \subsection{Tempfiles löschen}
+        Ein unbenutztes Tempfile wird mit der \languageorasql{DROP TEMPFILE}-Klausel des \languageorasql{ALTER TABLESPACE}-Ko\-mman\-dos gelöscht.
+        \begin{lstlisting}[caption={Löschen eines Tempfiles},label=admin135,language=oracle_sql]
+SQL> ALTER TABLESPACE temp
+  2  DROP TEMPFILE '/u02/oradata/orcl/temp02.dbf';
+        \end{lstlisting}
+        Auch bei Tempfiles kann statt dem Dateinamen, die Dateinummer genutzt werden.
+        \begin{lstlisting}[caption={Löschen eines Tempfiles mit Hilfe der Dateinummer},label=admin136,language=oracle_sql]
+SQL> ALTER TABLESPACE temp
+  2  DROP TEMPFILE 2;
+        \end{lstlisting}
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        \begin{literaturinternet}
+          \item \cite{REFRN10029}
+        \end{literaturinternet}
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{sthref1938}
+          \item \cite{sthref1988}
+          \item \cite{REFRN23076}
+          \item \cite{sthref2435}
+          \item \cite{sthref2550}
+          \item \cite{sthref2555}
+          \item \cite{sthref2563}
+          \item \cite{sthref2579}
+          \item \cite{sthref3281}
+          \item \cite{sthref3785}
+          \item \cite{sthref3790}
+        \end{literaturinternet}
+\clearpage

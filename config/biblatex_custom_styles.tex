@@ -1,0 +1,87 @@
+\newbibmacro*{subtitle+booktitle}{%
+  \iffieldsequal{booktitle}{subtitle}{
+    \clearfield{subtitle}
+  }
+  {\iffieldundef{booktitle}
+    {}
+    {\printfield{subtitle}
+     \setunit{\addcolon\space}%
+     \printfield{booktitle}
+     \setunit{\addcomma}%
+     \newunit\newblock
+    }
+  }%
+  \newunit}
+  
+\DeclareFieldFormat{chapter}{Kapitel~#1}
+\DeclareFieldFormat{edition}{Release\addcolon\space~#1\addcomma}
+\DeclareFieldFormat{url}{\newline\mkbibacro{URL}\addcolon\space\small{\url{#1}}}
+
+
+\DeclareBibliographyDriver{online}{%
+  \usebibmacro{bibindex}%
+  \usebibmacro{begentry}%
+  \usebibmacro{subtitle+booktitle}%
+  \setunit{\labelnamepunct}\newblock
+  \usebibmacro{byauthor}%
+  \newunit
+  \printfield{edition}%
+  \newunit\newblock
+  \printfield{chapter}%
+  \newunit\newblock
+  \printfield{url}%
+  \usebibmacro{finentry}}
+
+\DeclareBibliographyDriver{manual}{%
+  \usebibmacro{bibindex}%
+  \usebibmacro{begentry}%
+  \usebibmacro{title}%
+  \setunit{\labelnamepunct}\newblock
+  \usebibmacro{author/editor}%
+  \newunit
+  \printlist{language}%
+  \newunit\newblock
+  \usebibmacro{byauthor}%
+  \newunit\newblock
+  \usebibmacro{byeditor}%
+  \newunit\newblock
+  \printfield{edition}%
+  \newunit\newblock
+  \usebibmacro{series+number}%
+  \newunit\newblock
+  \printfield{type}%
+  \newunit
+  \printfield{version}%
+  \newunit
+  \printfield{note}%
+  \newunit\newblock
+  \printlist{organization}%
+  \newunit
+  \usebibmacro{publisher+location+date}%
+  \newunit\newblock
+  \usebibmacro{chapter+pages}%
+  \newunit
+  \printfield{pagetotal}%
+  \newunit\newblock
+  \iftoggle{bbx:isbn}
+    {\printfield{isbn}}
+    {}%
+  \newunit\newblock
+  \usebibmacro{doi+eprint+url}%
+  \newunit\newblock
+  \usebibmacro{addendum+pubstate}%
+  \setunit{\bibpagerefpunct}\newblock
+  \usebibmacro{pageref}%
+  \newunit\newblock
+  \iftoggle{bbx:related}
+    {\usebibmacro{related:init}%
+     \usebibmacro{related}}
+    {}%
+  \usebibmacro{finentry}}
+
+\DeclareCiteCommand{\cite}[\mkbibbrackets]
+  {\usebibmacro{prenote}}
+  {\usebibmacro{citeindex}%
+   \usebibmacro{cite}}
+  {\multicitedelim}
+  {\addcomma\space\iffieldundef{subtitle}{\printfield{title}}{\textit{\printfield{subtitle}}}}
