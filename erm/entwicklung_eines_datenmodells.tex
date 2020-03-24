@@ -2,349 +2,348 @@
 \chaptertoc{}
 \cleardoubleevenpage
 
-    In diesem Abschnitt erfolgt die Vermittlung der Kenntnisse darüber, wie man aus einer großen Menge von Informationen und Anforderungen an eine neue Datenbank eine Datenstruktur entwirft. Im Zuge der Datenmodellierung soll ein exaktes und vollständiges Modell des betrachteten Realitätsausschnitts erarbeitet werden, welches den Rahmen für die Entwicklung neuer oder die Erweiterung bestehender Anwendungssysteme bildet.
+In diesem Abschnitt erfolgt die Vermittlung der Kenntnisse darüber, wie man aus einer großen Menge von Informationen und Anforderungen an eine neue Datenbank eine Datenstruktur entwirft. Im Zuge der Datenmodellierung soll ein exaktes und vollständiges Modell des betrachteten Realitätsausschnitts erarbeitet werden, welches den Rahmen für die Entwicklung neuer oder die Erweiterung bestehender Anwendungssysteme bildet.
 
-    Als Werkzeug für die Erstellung konzeptioneller Datenmodelle wird die Entity-Relation\-ship Modellierung (ER-Modellierung), zuerst in ihrer einfachsten Art und später in einer erweiterten Fassung, verwendet. Es werden dabei alle vier Phasen des Datenmodellierungsprozesses anhand eines durchgängigen Beispiels beschrieben.
+Als Werkzeug für die Erstellung konzeptioneller Datenmodelle wird die Entity-Relation\-ship Modellierung (ER-Modellierung), zuerst in ihrer einfachsten Art und später in einer erweiterten Fassung, verwendet. Es werden dabei alle vier Phasen des Datenmodellierungsprozesses anhand eines durchgängigen Beispiels beschrieben.
 
-    Die ER-Modellierung stellt eine spezielle \enquote{Information-Engineering-Technik} dar, die zur Erstellung von Datenmodellen hoher Qualität benutzt wird. Entworfen in den 70er Jahren von Peter Pin-Shan Chen wurde sie seither vielfach erweitert und verbessert.
+Die ER-Modellierung stellt eine spezielle \enquote{Information-Engineering-Technik} dar, die zur Erstellung von Datenmodellen hoher Qualität benutzt wird. Entworfen in den 70er Jahren von Peter Pin-Shan Chen wurde sie seither vielfach erweitert und verbessert.
 
-    Ziel eines konzeptionellen Datenmodells ist es, die typmäßige Struktur der Daten in der Datenbank ohne deren Inhalt zu beschreiben. Als Beispiel aus der realen Welt wäre  die Ausstattung eines Büros mit Möbeln zu nennen. Wer später das Büro nutzt und mit welchem Inhalt die Schränke gefüllt werden, ist für die Erstellung des Modells Bedeutungslos.
+Ziel eines konzeptionellen Datenmodells ist es, die typmäßige Struktur der Daten in der Datenbank ohne deren Inhalt zu beschreiben. Als Beispiel aus der realen Welt wäre  die Ausstattung eines Büros mit Möbeln zu nennen. Wer später das Büro nutzt und mit welchem Inhalt die Schränke gefüllt werden, ist für die Erstellung des Modells Bedeutungslos.
 
-    Die Entwicklung eines Datenmodells teilt sich in die folgenden vier Phasen ein:
-    \begin{enumerate}
-      \item Klassifizierung von Objekten
-      \item Festlegung relevanter Eigenschaften
-      \item Bestimmung identifizierender Eigenschaften
-      \item Beschreibung sachlogischer Zusammenhänge zwischen den einzelnen Objekten
-    \end{enumerate}
-    \section{Die Modellierungsinformationen}
-			Die Struktur der Bundeswehr soll in einem ER-Modell dargestellt werden.
-			Es wird jedoch nur ein Ausschnitt aus der Realität betrachtet, um die
-			Übersichtlichkeit der Datenstrukturen zu gewährleisten. Im Folgenden
-			werden die dafür notwendigen Objekte festgelegt.
-        \begin{enumerate}
-          \item Die Bundeswehr besitzt zahlreiche Dienststellen an den unterschiedlichsten Standorten, welche sich untereinander über- oder untergeordnet sind. Jede Dienststelle besteht aus Dienstposten. Diese wiederum werden mit Soldaten besetzt. Jeder Soldat empfängt bei Einstieg in die Bundeswehr seine persönliche Ausrüstung und besitzt diese dann für die Dauer seines Dienstverhältnisses.
-          \item Jeder Dienststelle der Bundeswehr ist eine Dienststellennummer zugeordnet, über die diese identifiziert werden kann. Des Weiteren hat jede Dienststelle eine bestimmte Größe sowie Bezeichnung, wie z. B. Führungsunterstützungsschule der Bundeswehr.
-          \item Für die Standorte, an denen sich die Dienststellen befinden, müssen in der Datenbank Postleitzahl (PLZ), Ort, Straße und die Hausnummer hinterlegt sein. Hierbei ist zu beachten, dass sich eine Dienststelle auch an mehreren Standorten befinden kann.
-          \item Die den Dienststellen untergeordneten Dienstposten werden durch ihre Dienstposten\_ID und ein Beginn- und Enddatum charakterisiert. Als eine weitere Eigenschaft soll eine kurze Dienstpostenbeschreibung hinterlegt werden.
-          \item Jeder in der Datenbank aufgeführte Soldat soll dort mit seiner Personanlnummer, einer Personenkennziffer, sowie Vor- und Nachnamen und Dienstgrad aufgeführt werden. Weiterhin kann der Anwender auch die aktuelle Adresse, bestehend aus PLZ, Wohnort, Straße und Hausnummer, aus der Datenbank heraussuchen.
-          \item Das letzte Objekt in der Datenbank stellt die persönliche Ausrüstung des Soldaten dar. Diese besitzt eine Bezeichnung, ist aus einem bestimmten Material gefertigt und hat eine Farbe. Für eine bessere Zuordnung ist jeder Aurüstungsgegenstand mit einer Versorgungsnummer versehen.
-        \end{enumerate}
-    \section{Klassifizierung von Objekten}
-      Das im vorigen Abschnitt vorgestellte Beispiel stellt nur einen kleinen Ausschnitt aus der Realität dar. Komplexer gestaltete Datenbanken können aus weit mehr Objekten bestehen.
-      Um dabei nicht den Überblick über diese Flut von Objekten zu verlieren, werden diese in Klassen gruppiert. Diese Objektklassen enthalten dann die Objekte, die von ihrer Art her gleich sind und über die die gleichen Informationen gesammelt werden. Damit wird eine Abstraktionsebene gebildet, die es ermöglicht, von den Besonderheiten der einzelnen Objekte abzusehen und nur das typische der gebildeten Objektklassen zu berücksichtigen.
-      \subsection{Definitionen und Syntaxregeln}
-				Für die Darstellung der Objekttypen gelten folgende syntaktische
-				Regeln:
-				\begin {enumerate}
-					\item Ein Objekttyp wird durch ein Rechteck dargestellt, in dessen
-					Mitte der Objekttypname eingetragen wird.
-					\begin{center}
-						\scalebox{1}{
-							\begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-								\node[entity](e1){Soldat};
-							\end{tikzpicture}
-						}
-					\end{center}
-					\item Die Größe und Position des Rechtecks sind bedeutungslos.
-					\item Der Objekttypname steht im Singular und muss für
-					das gesamte Datenmodell eindeutig sein.
-        \end{enumerate}
-        \begin{merke}
-            \begin{itemize}
-                \item \textbf{Objekt}: Ein Objekt (engl. Entity) ist ein Exemplar von Personen, Gegenständen oder nichtmateriellen Dingen, über das Informationen gespeichert wird, z. B. der konkrete Soldat Max Mustermann.
-                \item \textbf{Objekttyp}: Ein Objekttyp (engl. Entity type) ist eine durch einen Objekttyp-namen eindeutig benannte Klasse von Objekten, über die dieselben Informationen gespeichert und die prinzipiell in gleicher Weise verarbeitet werden, wie z. B. die benannte Klasse bzw. der Objekttyp SOLDAT.
-            \end{itemize}
-        \end{merke}
-
-        Die Bildung von Objekttypen hängt entscheidend von den Anforderungen
-        des jeweils zu modellierenden Gegenstandsbereiches ab. Aus der Sicht
-        eines Großhändlers kann ein Unternehmen mit all seinen Bereichen
-        als ein einziger Objekttyp gesehen werden. Dasselbe Unternehmen dagegen
-        wird aus seiner eigenen Sicht detailliert mit seinen Bereichen,
-        Abteilungen, Mitarbeitern, Werkshallen, Fahrzeugen usw. zu modellieren
-        sein. Diese Modellierung ist ebenfalls nicht eine einmalige, in sich
-        abgeschlossene Tätigkeit, denn im Laufe der Zeit müssen Änderungen
-        der Realität auch im Modell eingearbeitet werden.
-      \subsection{Traditionelles Pendant}
-        Die Informationsverarbeitung mit Hilfe elektronischer Datenverarbeitung
-        hat hinsichtlich der Datenspeicherung nur wenig prinzipiell neue
-        Methoden entwickelt. Fast alle Konzepte, in Bezug auf das
-        Entity-Relationship-Modell, haben ihr Pendant in der traditionellen
-        Informationsspeicherung. Zum besseren Verständnis der eingeführten
-        Begriffe wird auf diese Zusammenhänge an den entsprechenden Stellen
-        hingewiesen.
-
-        So entsprechen die Objekttypen den traditionellen Karteikästen und die
-        Objekte eines Objekttyps den Karteikarten, die in einem Karteikasten
-        eingeordnet sind. In der traditionellen Arbeitsweise würde für
-        \enquote{Axel Schweiss} eine Karteikarte angelegt werden und z. B. im
-        Karteikasten \enquote{Soldat} abgelegt werden
+Die Entwicklung eines Datenmodells teilt sich in die folgenden vier Phasen ein:
+\begin{enumerate}
+    \item Klassifizierung von Objekten
+    \item Festlegung relevanter Eigenschaften
+    \item Bestimmung identifizierender Eigenschaften
+    \item Beschreibung sachlogischer Zusammenhänge zwischen den einzelnen Objekten
+\end{enumerate}
+\section{Die Modellierungsinformationen}
+Die Struktur der Bundeswehr soll in einem ER-Modell dargestellt werden.
+Es wird jedoch nur ein Ausschnitt aus der Realität betrachtet, um die
+Übersichtlichkeit der Datenstrukturen zu gewährleisten. Im Folgenden
+werden die dafür notwendigen Objekte festgelegt.
 \clearpage
-    \section{Festlegung der relevanten Eigenschaften}
-      Im ersten Schritt, der Klassifizierung von Objekten, wurden Objekte, die
-      in gleicher Art und Weise verarbeitet werden, in Objekttypen
-      zusammengefasst. Um die Verarbeitung dieser Objekte automatisiert
-      durchführen zu können, ist es Voraussetzung, dass jeder Objekttyp
-      bestimmte Angaben speichert. Diese Angaben werden für die elektronische
-      Verarbeitung entweder als Eingabeinformation oder als Ausgabeinformation
-      benötigt.
-      
-      Aus diesem Grund ist es notwendig, für jeden Objekttyp die relevanten
-      Eigenschaften der Objekte, die in ihm zusammengefasst werden, anzugeben.
-      Damit wird der durch den Objekttyp definierte Begriff auf einen Satz
-      relevanter Eigenschaften reduziert. Die Festlegung dieser Eigenschaften
-      ist aber nur bei genauer Kenntnis der Geschäfts- und
-      Verarbeitungsprozesse des Auftraggebers möglich. Ohne diese Kenntnisse
-      befindet man sich in jedem Falle im Bereich von Spekulationen.
-      \subsection{Definitionen und Syntaxregeln}
-        \begin{merke}
-          \begin{itemize}
-            \item \textbf{Eigenschaft:} Eine Eigenschaft (engl. Attribute) ist
-            die Benennung für ein relevantes Merkmal aller Objekte, die in
-            einem Objekttyp zusammengefaßt werden, z. B. Soldaten haben die
-            Eigenschaft Dienstgrad.
-            \item \textbf{Eigenschaftswert:} Ein Eigenschaftswert (engl.
-            Attribute value) ist eine spezielle Ausprägung, die eine
-            Eigenschaft für ein konkretes Objekt annimmt, z. B. der Dienstgrad
-            Hauptfeldwebel.
-          \end{itemize}
-          \end{merke}
+\begin{enumerate}
+    \item Die Bundeswehr besitzt zahlreiche Dienststellen an den unterschiedlichsten Standorten, welche sich untereinander über- oder untergeordnet sind. Jede Dienststelle besteht aus Dienstposten. Diese wiederum werden mit Soldaten besetzt. Jeder Soldat empfängt bei Einstieg in die Bundeswehr seine persönliche Ausrüstung und besitzt diese dann für die Dauer seines Dienstverhältnisses.
+    \item Jeder Dienststelle der Bundeswehr ist eine Dienststellennummer zugeordnet, über die diese identifiziert werden kann. Des Weiteren hat jede Dienststelle eine bestimmte Größe sowie Bezeichnung, wie z. B. Führungsunterstützungsschule der Bundeswehr.
+    \item Für die Standorte, an denen sich die Dienststellen befinden, müssen in der Datenbank Postleitzahl (PLZ), Ort, Straße und die Hausnummer hinterlegt sein. Hierbei ist zu beachten, dass sich eine Dienststelle auch an mehreren Standorten befinden kann.
+    \item Die den Dienststellen untergeordneten Dienstposten werden durch ihre Dienstposten\_ID und ein Beginn- und Enddatum charakterisiert. Als eine weitere Eigenschaft soll eine kurze Dienstpostenbeschreibung hinterlegt werden.
+    \item Jeder in der Datenbank aufgeführte Soldat soll dort mit seiner Personanlnummer, einer Personenkennziffer, sowie Vor- und Nachnamen und Dienstgrad aufgeführt werden. Weiterhin kann der Anwender auch die aktuelle Adresse, bestehend aus PLZ, Wohnort, Straße und Hausnummer, aus der Datenbank heraussuchen.
+    \item Das letzte Objekt in der Datenbank stellt die persönliche Ausrüstung des Soldaten dar. Diese besitzt eine Bezeichnung, ist aus einem bestimmten Material gefertigt und hat eine Farbe. Für eine bessere Zuordnung ist jeder Aurüstungsgegenstand mit einer Versorgungsnummer versehen.
+\end{enumerate}
+\section{Klassifizierung von Objekten}
+Das im vorigen Abschnitt vorgestellte Beispiel stellt nur einen kleinen Ausschnitt aus der Realität dar. Komplexer gestaltete Datenbanken können aus weit mehr Objekten bestehen.
+Um dabei nicht den Überblick über diese Flut von Objekten zu verlieren, werden diese in Klassen gruppiert. Diese Objektklassen enthalten dann die Objekte, die von ihrer Art her gleich sind und über die die gleichen Informationen gesammelt werden. Damit wird eine Abstraktionsebene gebildet, die es ermöglicht, von den Besonderheiten der einzelnen Objekte abzusehen und nur das typische der gebildeten Objektklassen zu berücksichtigen.
+\subsection{Definitionen und Syntaxregeln}
+Für die Darstellung der Objekttypen gelten folgende syntaktische
+Regeln:
+\begin {enumerate}
+\item Ein Objekttyp wird durch ein Rechteck dargestellt, in dessen
+Mitte der Objekttypname eingetragen wird.
+\begin{center}
+    \scalebox{1}{
+        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](e1){Soldat};
+        \end{tikzpicture}
+    }
+\end{center}
+\item Die Größe und Position des Rechtecks sind bedeutungslos.
+\item Der Objekttypname steht im Singular und muss für
+das gesamte Datenmodell eindeutig sein.
+\end{enumerate}
+\begin{merke}
+    \begin{itemize}
+        \item \textbf{Objekt}: Ein Objekt (engl. Entity) ist ein Exemplar von Personen, Gegenständen oder nichtmateriellen Dingen, über das Informationen gespeichert wird, z. B. der konkrete Soldat Max Mustermann.
+        \item \textbf{Objekttyp}: Ein Objekttyp (engl. Entity type) ist eine durch einen Objekttyp-namen eindeutig benannte Klasse von Objekten, über die dieselben Informationen gespeichert und die prinzipiell in gleicher Weise verarbeitet werden, wie z. B. die benannte Klasse bzw. der Objekttyp SOLDAT.
+    \end{itemize}
+\end{merke}
 
-        Für die Darstellung der Eigenschaften gelten folgende Regeln:
-        \begin {enumerate}
-          \item Die Benennung der Eigenschaft wird als Blase an den Objekttyp
-          angehängt.
+Die Bildung von Objekttypen hängt entscheidend von den Anforderungen
+des jeweils zu modellierenden Gegenstandsbereiches ab. Aus der Sicht
+eines Großhändlers kann ein Unternehmen mit all seinen Bereichen
+als ein einziger Objekttyp gesehen werden. Dasselbe Unternehmen dagegen
+wird aus seiner eigenen Sicht detailliert mit seinen Bereichen,
+Abteilungen, Mitarbeitern, Werkshallen, Fahrzeugen usw. zu modellieren
+sein. Diese Modellierung ist ebenfalls nicht eine einmalige, in sich
+abgeschlossene Tätigkeit, denn im Laufe der Zeit müssen Änderungen
+der Realität auch im Modell eingearbeitet werden.
+\subsection{Traditionelles Pendant}
+Die Informationsverarbeitung mit Hilfe elektronischer Datenverarbeitung
+hat hinsichtlich der Datenspeicherung nur wenig prinzipiell neue
+Methoden entwickelt. Fast alle Konzepte, in Bezug auf das
+Entity-Relationship-Modell, haben ihr Pendant in der traditionellen
+Informationsspeicherung. Zum besseren Verständnis der eingeführten
+Begriffe wird auf diese Zusammenhänge an den entsprechenden Stellen
+hingewiesen.
 
-          \begin{center}
-           \scalebox{1}{
-            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-              \node[entity](e1){Soldat};
-                \node[attribute](a1)[right = of e1]{Dienstgrad} edge (e1);
-            \end{tikzpicture}
-           }
-          \end{center}
-          \item Die Reihenfolge der Eigenschaften ist bedeutungslos.
-          \item Die Benennung der Eigenschaft steht im Singular und muss für
-          den Objekttyp eindeutig sein.
-        \end{enumerate}
-        Auch an dieser Stelle wird eine Abstraktion der realen Welt
-        vorgenommen, in dem statt der Eigenschaftswerte, die jedes einzelne
-        Objekt besitzt, nur die Eigenschaften der Objekttypen angegeben werden.
-        Um diesen Abstraktionsprozess korrekt durchführen zu können, bedarf
-        es der Einhaltung einiger Regeln:
-        \begin{itemize}
-          \item Es darf niemals ein Eigenschaftswert als Eigenschaftsname
-					verwendet werden (beispielsweise anstatt 02.05.1985 die Bezeichnung
-					\enquote{Geburtsdatum} oder statt \enquote{männlich} die Bezeichnung
-					\enquote{Geschlecht}).
-          \item Die Bezeichnung eines Objekttyps sollte niemals im
-					Eigenschaftsnamen auftauchen, da dieser immer nur im Kontext
-					des Objekttyps gilt (z. B. Person mit der Eigenschaft Name, nicht
-					\enquote{Personname}, sondern die Eigenschaft \enquote{Name}
-					wählen).
-          \item Bei komplexen Eigenschaften wie z. B. einer Adresse oder einer
-					PK stellt sich immer wieder die Frage, ob diese zerlegt werden
-					müssen oder ob sie als atomar \footnote{atomare Information = eine
-					einzige, nicht mehr teilbare Information} betrachtet werden. Die
-					Antwort auf diese Frage ist abhängig von den einzelnen
-					Verarbeitungsprozessen, denen diese Daten unterliegen. Muss
-					beispielsweise die Information verfügbar sein, von welchem
-					Kreiswehrersatzamt ein Soldat betreut wird, so muss  die PK in ihre
-					Bestandteile zerlegt werden. Ist diese Information irrelevant, kann
-					die PK im ganzen als atomar betrachtet werden.
-          \item Problematisch ist auch die Entscheidung, ob speicherwürdige
+So entsprechen die Objekttypen den traditionellen Karteikästen und die
+Objekte eines Objekttyps den Karteikarten, die in einem Karteikasten
+eingeordnet sind. In der traditionellen Arbeitsweise würde für
+\enquote{Axel Schweiss} eine Karteikarte angelegt werden und z. B. im
+Karteikasten \enquote{Soldat} abgelegt werden
+\section{Festlegung der relevanten Eigenschaften}
+Im ersten Schritt, der Klassifizierung von Objekten, wurden Objekte, die
+in gleicher Art und Weise verarbeitet werden, in Objekttypen
+zusammengefasst. Um die Verarbeitung dieser Objekte automatisiert
+durchführen zu können, ist es Voraussetzung, dass jeder Objekttyp
+bestimmte Angaben speichert. Diese Angaben werden für die elektronische
+Verarbeitung entweder als Eingabeinformation oder als Ausgabeinformation
+benötigt.
+
+Aus diesem Grund ist es notwendig, für jeden Objekttyp die relevanten
+Eigenschaften der Objekte, die in ihm zusammengefasst werden, anzugeben.
+Damit wird der durch den Objekttyp definierte Begriff auf einen Satz
+relevanter Eigenschaften reduziert. Die Festlegung dieser Eigenschaften
+ist aber nur bei genauer Kenntnis der Geschäfts- und
+Verarbeitungsprozesse des Auftraggebers möglich. Ohne diese Kenntnisse
+befindet man sich in jedem Falle im Bereich von Spekulationen.
+\subsection{Definitionen und Syntaxregeln}
+\begin{merke}
+    \begin{itemize}
+        \item \textbf{Eigenschaft:} Eine Eigenschaft (engl. Attribute) ist
+              die Benennung für ein relevantes Merkmal aller Objekte, die in
+              einem Objekttyp zusammengefaßt werden, z. B. Soldaten haben die
+              Eigenschaft Dienstgrad.
+        \item \textbf{Eigenschaftswert:} Ein Eigenschaftswert (engl.
+              Attribute value) ist eine spezielle Ausprägung, die eine
+              Eigenschaft für ein konkretes Objekt annimmt, z. B. der Dienstgrad
+              Hauptfeldwebel.
+    \end{itemize}
+\end{merke}
+
+Für die Darstellung der Eigenschaften gelten folgende Regeln:
+\begin {enumerate}
+\item Die Benennung der Eigenschaft wird als Blase an den Objekttyp
+angehängt.
+
+\begin{center}
+    \scalebox{1}{
+        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](e1){Soldat};
+            \node[attribute](a1)[right = of e1]{Dienstgrad} edge (e1);
+        \end{tikzpicture}
+    }
+\end{center}
+\item Die Reihenfolge der Eigenschaften ist bedeutungslos.
+\item Die Benennung der Eigenschaft steht im Singular und muss für
+den Objekttyp eindeutig sein.
+\end{enumerate}
+Auch an dieser Stelle wird eine Abstraktion der realen Welt
+vorgenommen, in dem statt der Eigenschaftswerte, die jedes einzelne
+Objekt besitzt, nur die Eigenschaften der Objekttypen angegeben werden.
+Um diesen Abstraktionsprozess korrekt durchführen zu können, bedarf
+es der Einhaltung einiger Regeln:
+\begin{itemize}
+    \item Es darf niemals ein Eigenschaftswert als Eigenschaftsname
+          verwendet werden (beispielsweise anstatt 02.05.1985 die Bezeichnung
+          \enquote{Geburtsdatum} oder statt \enquote{männlich} die Bezeichnung
+          \enquote{Geschlecht}).
+    \item Die Bezeichnung eines Objekttyps sollte niemals im
+          Eigenschaftsnamen auftauchen, da dieser immer nur im Kontext
+          des Objekttyps gilt (z. B. Person mit der Eigenschaft Name, nicht
+          \enquote{Personname}, sondern die Eigenschaft \enquote{Name}
+          wählen).
+    \item Bei komplexen Eigenschaften wie z. B. einer Adresse oder einer
+          PK stellt sich immer wieder die Frage, ob diese zerlegt werden
+          müssen oder ob sie als atomar \footnote{atomare Information = eine
+              einzige, nicht mehr teilbare Information} betrachtet werden. Die
+          Antwort auf diese Frage ist abhängig von den einzelnen
+          Verarbeitungsprozessen, denen diese Daten unterliegen. Muss
+          beispielsweise die Information verfügbar sein, von welchem
+          Kreiswehrersatzamt ein Soldat betreut wird, so muss  die PK in ihre
+          Bestandteile zerlegt werden. Ist diese Information irrelevant, kann
+          die PK im ganzen als atomar betrachtet werden.
+    \item Problematisch ist auch die Entscheidung, ob speicherwürdige
           Informationen als Eigenschaften oder als ein eigenständiger
           Objekttyp betrachtet werden sollen. Um einen eigenständigen
           Objekttyp handelt es sich immer dann, wenn er für das Unternehmen
           bedeutsame Objekte enthält, die relevante individuelle Eigenschaften
           besitzen.
-        \end{itemize}
-      \subsection{Traditionelle Datenspeicherung}
-        Die Eigenschaften eines Objekttyps A entsprechen den Feldern, die auf
-        einer Karteikarte zur Aufnahme der relevanten Informationen angelegt
-        werden. Durch die gewählten Eigenschaften wird also die einheitliche
-        Struktur aller Karteikarten eines Kastens festgelegt.
+\end{itemize}
+\subsection{Traditionelle Datenspeicherung}
+Die Eigenschaften eines Objekttyps A entsprechen den Feldern, die auf
+einer Karteikarte zur Aufnahme der relevanten Informationen angelegt
+werden. Durch die gewählten Eigenschaften wird also die einheitliche
+Struktur aller Karteikarten eines Kastens festgelegt.
 
-        Welche Eigenschaften können Sie, bezogen auf das Beispiel
-        \enquote{Bundeswehr}, den identifizierten Objekttypen zuordnen?
-        \subsubsection{Lösungsvorschlag}
-          \begin{itemize}
-            \item Objekttyp \enquote{Dienststelle}: Dienststellennummer,
-            Bezeichung
-            \item Objekttyp \enquote{Standort}: PLZ, Ort, Straße, Hausnummer
-            \item Objekttyp \enquote{Dienstposten}: Dienstposten\_ID,
-            Beginndatum, Enddatum, Dienstpostenbeschreibung
-            \item Objekttyp \enquote{Soldat}: Personalnummer, PK, Name, Vorname,
-            Dienstgrad, PLZ, Ort, Straße, Hausnummer
-            \item Objekttyp \enquote{Ausrüstung}: Versorgungsnummer, Material,
-            Farbe
-          \end{itemize}
-    \section{Festlegung der Identifizierung}
-      Ein Objekttyp stellt die Zusammenfassung mehrerer gleichartiger Objekte
-      dar. Gleichartig bedeutet, dass diese Objekte die gleichen Eigenschaften
-      aufweisen und die Verarbeitungsprozesse für all diese Objekte gleich
-      sind. Die einzelnen Objekte eines Objekttyps müssen aber voneinander
-      unterscheidbar sein. Deshalb muss festgelegt werden, auf welche Weise ein
-      Objekt innerhalb des Objekktyps identifiziert werden kann.
-
-      \subsection{Identifizierungsvarianten}
-        Für die Identifizierung eines Objekts innerhalb eines Objekttyps
-        stehen die konkreten Eigenschaftswerte des Objekts zur Verfügung.
-
-        Es werden drei Varianten zur Identifizierung von Objekten
-        unterschieden.
-        \subsubsection{Identifizierung eines Objekts durch eine einzelne
-Eigenschaft}
-          Es kann vorkommen, dass die Eigenschaftswerte einer Eigenschaft eines
-          Objekttyps eindeutig ist. D. h. jeder Eigenschaftswert dieser
-          Eigenschaft ist so geartet, dass jedes Objekt dieses Objekttyps einen
-          unterschiedlichen Wert für diese Eigenschaft hat. Durch Angabe
-          dieses Eigenschaftswertes ist dann das Objekt eindeutig identifiziert.
-
-          Beispiel: Soldaten werden i. d. R. durch ihre PK eindeutig
-          identifiziert
-
-				\subsubsection{Identifizierung eines Objekts durch eine Kombination
-mehrerer Eigenschaften}
-          In einigen Fällen ist keine der Eigenschaften eines Objekttyps
-          geeignet, alleine als identifizierende Eigenschaft zu fungieren. Um
-          dieses Problem zu lösen kann versucht werden, eine
-          \underline{minimale} Kombination von Eigenschaften eines Objekttyps
-          als Identifikationsmerkmal zu benutzen. Dies funktioniert dann, wenn
-          die Kombination der Werte der entsprechenden Eigenschaften bei jedem
-          Objekt eindeutig sind.
-
-          Beispiel: Die Kombination der beiden Attribute PLZ und Ortsbezeichnung ist eindeutig,
-					eine Eigenschaft alleine nicht.
-
-				\subsubsection{Identifizierung eines Objekts durch eine organisatorische
-Eigenschaft}
-          Sollte es dennoch vorkommen, dass weder eine einzelne Eigenschaft, noch eine
-					Kombination von Eigenschaften zur Identifikation der Objekte eines
-					Objekttyps geeignet ist, kann eine künstliche Eigenschaft
-					eingeführt werden, bei der die Eindeutigkeit durch organisatorische
-					Maßnahmen gewährleistet wird.
-
-					Ein Beispiel hierfür wäre eine Ort\_ID, die es möglich
-					macht, einen Ort eindeutig zu bestimmen ohne die Kombination aus PLZ
-					und Ortsnamen heranziehen zu müssen.
-
-          Es ist aber auch möglich, dass eine organisatorische Eigenschaft
-          gewählt wird, da abzusehen ist, dass eine identifizierende
-          Eigenschaft durch eine andere ersetzt werden soll. Die
-          Umstrukturierung der Datenbank wäre zu aufwendig und zu komplex.
-
-          Ein Beispiel aus der Praxis ist die PK und die Personalnummer eines
-          jeden Soldaten. Die Personalnummer wird in geraumer Zeit die PK
-          ersetzen. Es ist aus diesem Grund von Vorteil eine organisatorische
-          Eigenschaft, wie die Personen\_ID zu wählen, um eine
-          Umstrukturierung zu vermeiden.
-
-          Weitere Beispiele für organisatorische Eigenschaften sind die beiden Attribute Artikelnummer und LfdNr.
-
-          Die Identifizierung der Objekte eines Objekttyps mittels einer
-					\enquote{organisatorischen Eigenschaft} ist bei der automatisierten
-					Datenverarbeitung eine beliebte Vorgehensweise. Sie wird häufig
-					selbst dann angewendet, wenn natürliche identifizierende
-					Eigenschaften vorhanden sind. Meist handelt es sich um eine laufende
-					Nummer.
-
-					Dies hat den Vorteil, dass kurze identifizierende Eigenschaftswerte
-					entstehen. Der Nachteil ist, dass Werte wie z. B. eine laufende
-					Nummer meist keinerlei Aussagekraft haben und somit Gefahren wie
-					Verwechslung oder Fehleingabe entstehen.
-
-					Die Festlegung der Identifizierungsform für einen Objekttyp muss mit
-					großer Sorgfalt erfolgen. Relationale Datenbank-Managementsysteme
-					für die wir unsere Modellierung durch\-füh\-ren, lassen es
-					nämlich nicht zu, dass zwei Objekte desselben Objekttyps in der
-					Kombination ihrer identifizierenden Merkmale übereinstimmen. Bleibt
-					ein Restrisiko hinsichtlich der Unikalität der identifizierenden
-					Merkmale und treten dann bei der praktischen Datenbankarbeit
-					tatsächlich zwei Objekte mit übereinstimmenden Werten ihrer
-					identifizierenden Merkmale auf, lehnt das Datenbank-Managementsystem
-					die Speicherung des zweiten Objekts ab.
-
-					\begin{merke}
-						Um ein Modell übersichtlich und verständlich zu halten, sollte
-						konsequent immer nur eine der drei zur Verfügung stehenden
-						Methoden für die Identifizierung von Objekten genutzt werden!
-					\end{merke}
-			\subsection{Markierung der Identifizierenden Eigenschaft}
-				Für die Markierung der (teil)identifizierenden Eigenschaft gelten
-				die folgenden syntaktischen Regeln (diese werden u. U. in Kombination
-				mit anderen angewendet):
+Welche Eigenschaften können Sie, bezogen auf das Beispiel
+\enquote{Bundeswehr}, den identifizierten Objekttypen zuordnen?
 \clearpage
-        \begin {enumerate}
-          \item Eine identifizierende Eigenschaft (bzw. jede teilidentifizierende Eigenschaft) wird durch Unterstreichung kenntlich gemacht.
+\subsubsection{Lösungsvorschlag}
+\begin{itemize}
+    \item Objekttyp \enquote{Dienststelle}: Dienststellennummer,
+          Bezeichung
+    \item Objekttyp \enquote{Standort}: PLZ, Ort, Straße, Hausnummer
+    \item Objekttyp \enquote{Dienstposten}: Dienstposten\_ID,
+          Beginndatum, Enddatum, Dienstpostenbeschreibung
+    \item Objekttyp \enquote{Soldat}: Personalnummer, PK, Name, Vorname,
+          Dienstgrad, PLZ, Ort, Straße, Hausnummer
+    \item Objekttyp \enquote{Ausrüstung}: Versorgungsnummer, Material,
+          Farbe
+\end{itemize}
+\section{Festlegung der Identifizierung}
+Ein Objekttyp stellt die Zusammenfassung mehrerer gleichartiger Objekte
+dar. Gleichartig bedeutet, dass diese Objekte die gleichen Eigenschaften
+aufweisen und die Verarbeitungsprozesse für all diese Objekte gleich
+sind. Die einzelnen Objekte eines Objekttyps müssen aber voneinander
+unterscheidbar sein. Deshalb muss festgelegt werden, auf welche Weise ein
+Objekt innerhalb des Objekktyps identifiziert werden kann.
 
-          \begin{center}
-           \scalebox{1}{
-            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-              \node[entity](e1){Soldat};
-							\node[attribute](a1)[right = of e1]{\key{Personalnummer}} edge
-(e1);
-            \end{tikzpicture}
-           }
-          \end{center}
-          \item Die Position der (teil)identifizierenden Eigenschaft innerhalb der Liste der Eigenschaften ist bedeutungslos. Sie sollte jedoch aus Gründen der Übersichtlichkeit immer zu erst genannt werden.
-        \end{enumerate}
-      \subsection{Klassisches Pendant}
-        Bei der traditionellen Informationsspeicherung mit Hilfe von Karteikästen entspricht der Identifizierung die Festlegung eines Kennbegriffs: Üblicherweise wird im Kopf einer Karteikarte für das betreffende Objekt ein Wert angegeben, der das Objekt innerhalb des Karteikastens identifiziert\footnote{Kennbegriff wird oft auch als \enquote{Reiter} bezeichnet}. Um eine bestimmt Karteikarte manuell schneller finden zu können, werden die Karteikarten des Karteikastens nach diesem Begriff sortiert.
+\subsection{Identifizierungsvarianten}
+Für die Identifizierung eines Objekts innerhalb eines Objekttyps
+stehen die konkreten Eigenschaftswerte des Objekts zur Verfügung. Es werden drei Varianten zur Identifizierung von Objekten
+unterschieden.
+\subsubsection{Identifizierung eines Objekts durch eine einzelne
+    Eigenschaft}
+Es kann vorkommen, dass die Eigenschaftswerte einer Eigenschaft eines
+Objekttyps eindeutig ist. D. h. jeder Eigenschaftswert dieser
+Eigenschaft ist so geartet, dass jedes Objekt dieses Objekttyps einen
+unterschiedlichen Wert für diese Eigenschaft hat. Durch Angabe
+dieses Eigenschaftswertes ist dann das Objekt eindeutig identifiziert.
 
-        Betrachten wir wieder das Beispiel \enquote{Bundeswehr}. Welche Objekteigenschaften kön\-nen Ihrer Meinung nach als identifizierende Merkmale verwendet werden?
-        \subsubsection{Lösungsvorschlag}
-          \begin{itemize}
-            \item Objekttyp \enquote{Dienststelle}: Dienststellennummer
-            \item Objekttyp \enquote{Standort}: PLZ, Ort
-            \item Objekttyp \enquote{Dienstposten}: Dienstposten\_ID
-            \item Objekttyp \enquote{Soldat}: Personalnummer
-            \item Objekttyp \enquote{Ausrüstung}: Versorgungsnummer
-          \end{itemize}
-          An dieser Stelle wird die Entscheidung getroffen, dass für die Fortführung dieses Modells organisatorische Einheiten als identifizierende Eigenschaften eingeführt werden!
-          \begin{itemize}
-            \item Objekttyp \enquote{Dienststelle}: Dienststellen\_ID
-            \item Objekttyp \enquote{Standort}: Ort\_ID
-            \item Objekttyp \enquote{Dienstposten}: DP\_ID
-            \item Objekttyp \enquote{Soldat}: Personen\_ID
-            \item Objekttyp \enquote{Ausrüstung}: Ausruestungs\_ID
-          \end{itemize}
+Beispiel: Soldaten werden i. d. R. durch ihre PK eindeutig
+identifiziert
 
-    \section{Modellierungsformen}
-          \begin{center}
-           \scalebox{.6}{
-            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-              \node[entity](dienstposten){Dienstposten};
-                \node[attribute](dpid)[above = of dienstposten]{\key{DP\_ID}} edge (dienstposten);
-                \node[attribute](dienstpostenid)[above left = of dienstposten]{Dienstposten\_ID} edge (dienstposten);
-                \node[attribute](begindatum)[above right = of dienstposten]{Beginndatum} edge (dienstposten);
-                \node[attribute](enddatum)[below right = of dienstposten]{Enddatum} edge (dienstposten);
-                \node[attribute](dienstpostenbeschreibung)[below left = of dienstposten]{Dienstpostenbeschreibung} edge (dienstposten);
-              \node[entity](soldat)[below left = 6cm of dienstposten]{Soldat};
-                \node[attribute](personenid)[above = 1.6cm of soldat]{\key{Personen\_ID}} edge (soldat);
-                \node[attribute](pk)[above right = of soldat]{PK} edge (soldat);
-                \node[attribute](name)[below right = of soldat]{Name} edge (soldat);
-                \node[attribute](vorname)[below left = of soldat]{Vorname} edge (soldat);
-                \node[attribute](dienstgrad)[above left = of soldat]{Dienstgrad} edge (soldat);
-              \node[entity](ausruestung)[below = 6cm of soldat]{Ausrüstung};
-                \node[attribute](versorgungsnummer)[above left = of ausruestung]{Versorgungsnummer} edge (ausruestung);
-                \node[attribute](bezeichnung)[above = 1.7cm of ausruestung]{Bezeichnung} edge (ausruestung);
-                \node[attribute](ausruestungsid)[above right = of ausruestung]{\key{Ausruestungs\_ID}} edge (ausruestung);
-                \node[attribute](material)[below right = of ausruestung]{Material} edge (ausruestung);
-                \node[attribute](farbe)[below left = of ausruestung]{Farbe} edge (ausruestung);
-              \node[entity](dienststelle)[below right = 6cm of dienstposten]{Dienststelle};
-                \node[attribute](dienststellennummer)[below left = of dienststelle]{\key{Dienststellen\_ID}} edge (dienststelle);
-                \node[attribute](dienststellennummer)[above left = of dienststelle]{Dienststellennummer} edge (dienststelle);
-                \node[attribute](bezeichung)[above right = of dienststelle]{Bezeichnung} edge (dienststelle);
-                \node[attribute](groesse)[below right = of dienststelle]{Größe} edge (dienststelle);
-              \node[entity](standort)[below = 6cm of dienststelle]{Standort};
-                \node[attribute](ortid)[above = of standort]{\key{Ort\_ID}} edge (standort);
-                \node[attribute](plz)[above left = of standort]{PLZ} edge (standort);
-                \node[attribute](ort)[above right = of standort]{Ort} edge (standort);
-                \node[attribute](strasse)[below right = of standort]{Straße} edge (standort);
-                \node[attribute](hausnummer)[below left = of standort]{Hausnummer} edge (standort);
-            \end{tikzpicture}
-           }
-          \end{center}
-        Hinweis: Das Objekt Soldat enthält nicht alle Attribute. Es fehlen die Attribute Personalnummer, Plz, Ort, Straße und Hausnummer.
+\subsubsection{Identifizierung eines Objekts durch eine Kombination
+    mehrerer Eigenschaften}
+In einigen Fällen ist keine der Eigenschaften eines Objekttyps
+geeignet, alleine als identifizierende Eigenschaft zu fungieren. Um
+dieses Problem zu lösen kann versucht werden, eine
+\underline{minimale} Kombination von Eigenschaften eines Objekttyps
+als Identifikationsmerkmal zu benutzen. Dies funktioniert dann, wenn
+die Kombination der Werte der entsprechenden Eigenschaften bei jedem
+Objekt eindeutig sind.
+
+Beispiel: Die Kombination der beiden Attribute PLZ und Ortsbezeichnung ist eindeutig,
+eine Eigenschaft alleine nicht.
+
+\subsubsection{Identifizierung eines Objekts durch eine organisatorische
+    Eigenschaft}
+Sollte es dennoch vorkommen, dass weder eine einzelne Eigenschaft, noch eine
+Kombination von Eigenschaften zur Identifikation der Objekte eines
+Objekttyps geeignet ist, kann eine künstliche Eigenschaft
+eingeführt werden, bei der die Eindeutigkeit durch organisatorische
+Maßnahmen gewährleistet wird.
+
+Ein Beispiel hierfür wäre eine Ort\_ID, die es möglich
+macht, einen Ort eindeutig zu bestimmen ohne die Kombination aus PLZ
+und Ortsnamen heranziehen zu müssen.
+
+Es ist aber auch möglich, dass eine organisatorische Eigenschaft
+gewählt wird, da abzusehen ist, dass eine identifizierende
+Eigenschaft durch eine andere ersetzt werden soll. Die
+Umstrukturierung der Datenbank wäre zu aufwendig und zu komplex.
+
+Ein Beispiel aus der Praxis ist die PK und die Personalnummer eines
+jeden Soldaten. Die Personalnummer wird in geraumer Zeit die PK
+ersetzen. Es ist aus diesem Grund von Vorteil eine organisatorische
+Eigenschaft, wie die Personen\_ID zu wählen, um eine
+Umstrukturierung zu vermeiden.
+
+Weitere Beispiele für organisatorische Eigenschaften sind Attribute wie Artikelnummer und LfdNr.
+
+Die Identifizierung der Objekte eines Objekttyps mittels einer
+\enquote{organisatorischen Eigenschaft} ist bei der automatisierten
+Datenverarbeitung eine beliebte Vorgehensweise. Sie wird häufig
+selbst dann angewendet, wenn natürliche identifizierende
+Eigenschaften vorhanden sind. Meist handelt es sich um eine laufende
+Nummer.
+
+Dies hat den Vorteil, dass kurze identifizierende Eigenschaftswerte
+entstehen. Der Nachteil ist, dass Werte wie z. B. eine laufende
+Nummer meist keinerlei Aussagekraft haben und somit Gefahren wie
+Verwechslung oder Fehleingabe entstehen.
+
+Die Festlegung der Identifizierungsform für einen Objekttyp muss mit
+großer Sorgfalt erfolgen. Relationale Datenbank-Managementsysteme
+für die wir unsere Modellierung durch\-füh\-ren, lassen es
+nämlich nicht zu, dass zwei Objekte desselben Objekttyps in der
+Kombination ihrer identifizierenden Merkmale übereinstimmen. Bleibt
+ein Restrisiko hinsichtlich der Unikalität der identifizierenden
+Merkmale und treten dann bei der praktischen Datenbankarbeit
+tatsächlich zwei Objekte mit übereinstimmenden Werten ihrer
+identifizierenden Merkmale auf, lehnt das Datenbank-Managementsystem
+die Speicherung des zweiten Objekts ab.
+
+\begin{merke}
+    Um ein Modell übersichtlich und verständlich zu halten, sollte
+    konsequent immer nur eine der drei zur Verfügung stehenden
+    Methoden für die Identifizierung von Objekten genutzt werden!
+\end{merke}
+\subsection{Markierung der Identifizierenden Eigenschaft}
+Für die Markierung der (teil)identifizierenden Eigenschaft gelten
+die folgenden syntaktischen Regeln (diese werden u. U. in Kombination
+mit anderen angewendet):
+\begin {enumerate}
+\item Eine identifizierende Eigenschaft (bzw. jede teilidentifizierende Eigenschaft) wird durch Unterstreichung kenntlich gemacht.
+
+\begin{center}
+    \scalebox{1}{
+        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](e1){Soldat};
+            \node[attribute](a1)[right = of e1]{\key{Personalnummer}} edge
+            (e1);
+        \end{tikzpicture}
+    }
+\end{center}
+\item Die Position der (teil)identifizierenden Eigenschaft innerhalb der Liste der Eigenschaften ist bedeutungslos. Sie sollte jedoch aus Gründen der Übersichtlichkeit immer zu erst genannt werden.
+\end{enumerate}
+\subsection{Klassisches Pendant}
+Bei der traditionellen Informationsspeicherung mit Hilfe von Karteikästen entspricht der Identifizierung die Festlegung eines Kennbegriffs: Üblicherweise wird im Kopf einer Karteikarte für das betreffende Objekt ein Wert angegeben, der das Objekt innerhalb des Karteikastens identifiziert\footnote{Kennbegriff wird oft auch als \enquote{Reiter} bezeichnet}. Um eine bestimmt Karteikarte manuell schneller finden zu können, werden die Karteikarten des Karteikastens nach diesem Begriff sortiert.
+
+Betrachten wir wieder das Beispiel \enquote{Bundeswehr}. Welche Objekteigenschaften kön\-nen Ihrer Meinung nach als identifizierende Merkmale verwendet werden?
+\subsubsection{Lösungsvorschlag}
+Eine mögliche Antwort auf diese Frage könnte die folgende Aufzählung sein:
+\begin{itemize}
+    \item Objekttyp \enquote{Dienststelle}: Dienststellennummer
+    \item Objekttyp \enquote{Standort}: PLZ, Ort
+    \item Objekttyp \enquote{Dienstposten}: Dienstposten\_ID
+    \item Objekttyp \enquote{Soldat}: Personalnummer
+    \item Objekttyp \enquote{Ausrüstung}: Versorgungsnummer
+\end{itemize}
+An dieser Stelle wird die Entscheidung getroffen, dass für die Fortführung dieses Modells organisatorische Einheiten als identifizierende Eigenschaften eingeführt werden! Daraus ergeben sie die folgenden Änderungen:
+\begin{itemize}
+    \item Objekttyp \enquote{Dienststelle}: Dienststellen\_ID
+    \item Objekttyp \enquote{Standort}: Ort\_ID
+    \item Objekttyp \enquote{Dienstposten}: DP\_ID
+    \item Objekttyp \enquote{Soldat}: Personen\_ID
+    \item Objekttyp \enquote{Ausrüstung}: Ausruestungs\_ID
+\end{itemize}
+
+\section{Modellierungsformen}
+\begin{center}
+    \scalebox{.6}{
+        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](dienstposten){Dienstposten};
+            \node[attribute](dpid)[above = of dienstposten]{\key{DP\_ID}} edge (dienstposten);
+            \node[attribute](dienstpostenid)[above left = of dienstposten]{Dienstposten\_ID} edge (dienstposten);
+            \node[attribute](begindatum)[above right = of dienstposten]{Beginndatum} edge (dienstposten);
+            \node[attribute](enddatum)[below right = of dienstposten]{Enddatum} edge (dienstposten);
+            \node[attribute](dienstpostenbeschreibung)[below left = of dienstposten]{Dienstpostenbeschreibung} edge (dienstposten);
+            \node[entity](soldat)[below left = 6cm of dienstposten]{Soldat};
+            \node[attribute](personenid)[above = 1.6cm of soldat]{\key{Personen\_ID}} edge (soldat);
+            \node[attribute](pk)[above right = of soldat]{PK} edge (soldat);
+            \node[attribute](name)[below right = of soldat]{Name} edge (soldat);
+            \node[attribute](vorname)[below left = of soldat]{Vorname} edge (soldat);
+            \node[attribute](dienstgrad)[above left = of soldat]{Dienstgrad} edge (soldat);
+            \node[entity](ausruestung)[below = 6cm of soldat]{Ausrüstung};
+            \node[attribute](versorgungsnummer)[above left = of ausruestung]{Versorgungsnummer} edge (ausruestung);
+            \node[attribute](bezeichnung)[above = 1.7cm of ausruestung]{Bezeichnung} edge (ausruestung);
+            \node[attribute](ausruestungsid)[above right = of ausruestung]{\key{Ausruestungs\_ID}} edge (ausruestung);
+            \node[attribute](material)[below right = of ausruestung]{Material} edge (ausruestung);
+            \node[attribute](farbe)[below left = of ausruestung]{Farbe} edge (ausruestung);
+            \node[entity](dienststelle)[below right = 6cm of dienstposten]{Dienststelle};
+            \node[attribute](dienststellennummer)[below left = of dienststelle]{\key{Dienststellen\_ID}} edge (dienststelle);
+            \node[attribute](dienststellennummer)[above left = of dienststelle]{Dienststellennummer} edge (dienststelle);
+            \node[attribute](bezeichung)[above right = of dienststelle]{Bezeichnung} edge (dienststelle);
+            \node[attribute](groesse)[below right = of dienststelle]{Größe} edge (dienststelle);
+            \node[entity](standort)[below = 6cm of dienststelle]{Standort};
+            \node[attribute](ortid)[above = of standort]{\key{Ort\_ID}} edge (standort);
+            \node[attribute](plz)[above left = of standort]{PLZ} edge (standort);
+            \node[attribute](ort)[above right = of standort]{Ort} edge (standort);
+            \node[attribute](strasse)[below right = of standort]{Straße} edge (standort);
+            \node[attribute](hausnummer)[below left = of standort]{Hausnummer} edge (standort);
+        \end{tikzpicture}
+    }
+\end{center}
+Hinweis: Das Objekt Soldat enthält nicht alle Attribute. Es fehlen die Attribute Personalnummer, Plz, Ort, Straße und Hausnummer.

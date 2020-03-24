@@ -1,56 +1,56 @@
-      \subsection{Übungsaufgabe Universität}
-        Der Leiter der Abteilung für Verwaltungsangelegenheiten einer
-        Universität beauftragt Sie mit der Erstellung eines Datenmodells, um
-        die Verwaltungsstruktur effizienter zu gestalten. In einer Besprechung
-        wurden folgende Eckpunkte festgelegt:
+\subsection{Übungsaufgabe Universität}
+Der Leiter der Abteilung für Verwaltungsangelegenheiten einer
+Universität beauftragt Sie mit der Erstellung eines Datenmodells, um
+die Verwaltungsstruktur effizienter zu gestalten. In einer Besprechung
+wurden folgende Eckpunkte festgelegt:
 
-        Meine Universität gliedert sich in Fakultäten. Diese umfassen immer
-        mindestens ein Institut. Ein Institut kann niemals zu mehreren
-        Fakultäten gleichzeitig gehören. Für beide müssen deren
-        Bezeichungen gespeichert werden.
+Meine Universität gliedert sich in Fakultäten. Diese umfassen immer
+mindestens ein Institut. Ein Institut kann niemals zu mehreren
+Fakultäten gleichzeitig gehören. Für beide müssen deren
+Bezeichungen gespeichert werden.
 
-        In der Datenbank sollen drei unterschiedliche Personentypen eingetragen
-        werden. Diese sind mit ihren Vornamen, Nachnamen, der Adresse und dem
-        Geburtsdatum zu hinterlegen. Der erste Personentyp sind Professoren,
-        welche genau ein Institut leiten. Umgekehrt kann ein Institut auch nur
-        von genau einem Professor geleitet werden.
+In der Datenbank sollen drei unterschiedliche Personentypen eingetragen
+werden. Diese sind mit ihren Vornamen, Nachnamen, der Adresse und dem
+Geburtsdatum zu hinterlegen. Der erste Personentyp sind Professoren,
+welche genau ein Institut leiten. Umgekehrt kann ein Institut auch nur
+von genau einem Professor geleitet werden.
 
-        Professoren halten Vorlesungen. Jeder Professor hält mindestens eine
-        Vorlesung. Der Fall, dass eine Vorlesung von mehreren Professoren
-        gehalten wird, tritt nicht auf. Vorlesungen werden immer in
-        Hörsälen gehalten. In einem Hörsaal können mehrere Vorlesungen
-        gehalten werden, jedoch wird eine Vorlesung immer nur in genau einem
-        Hörsaal abgehalten.
+Professoren halten Vorlesungen. Jeder Professor hält mindestens eine
+Vorlesung. Der Fall, dass eine Vorlesung von mehreren Professoren
+gehalten wird, tritt nicht auf. Vorlesungen werden immer in
+Hörsälen gehalten. In einem Hörsaal können mehrere Vorlesungen
+gehalten werden, jedoch wird eine Vorlesung immer nur in genau einem
+Hörsaal abgehalten.
 
-        Eine weitere Aufgabe der Professoren ist es, Übungen bereitzustellen.
-        Dies geschieht jedoch auf freiwilliger Basis, so dass nicht jeder
-        Professor Übungen für seine Studenten zur Verfügung stellt. Eine
-        Übung wird immer von genau einem Professor erstellt.
+Eine weitere Aufgabe der Professoren ist es, Übungen bereitzustellen.
+Dies geschieht jedoch auf freiwilliger Basis, so dass nicht jeder
+Professor Übungen für seine Studenten zur Verfügung stellt. Eine
+Übung wird immer von genau einem Professor erstellt.
 
-        In bestimmten Zeitabständen wird ein Professor zum \enquote{Dekan}
-        gewählt. Der Dekan ist der Leiter einer Fakultät. Ein Professor kann
-        nur höchstens eine Dekanstelle besetzen und eine Fakultät wird immer
-        von genau einem Dekan geleitet.
+In bestimmten Zeitabständen wird ein Professor zum \enquote{Dekan}
+gewählt. Der Dekan ist der Leiter einer Fakultät. Ein Professor kann
+nur höchstens eine Dekanstelle besetzen und eine Fakultät wird immer
+von genau einem Dekan geleitet.
 
-        Eine zweite Personengruppe in der Datenbank sind die Wissenschaftlichen
-        Mitarbeiter (im Folgenden nur noch WiMa genannt). WiMas betreuen immer
-        wieder Übungen, haben aber auch andere Aufgaben. Eine Übung kann nur
-        von einem WiMa betreut werden. Zusätzlich zu den genannten Daten, die
-        allgemein für einen Personentyp gespeichert werden, wird für WiMas
-        und Professoren das jeweilige Gehalt in der Datenbank abgelegt.
+Eine zweite Personengruppe in der Datenbank sind die Wissenschaftlichen
+Mitarbeiter (im Folgenden nur noch WiMa genannt). WiMas betreuen immer
+wieder Übungen, haben aber auch andere Aufgaben. Eine Übung kann nur
+von einem WiMa betreut werden. Zusätzlich zu den genannten Daten, die
+allgemein für einen Personentyp gespeichert werden, wird für WiMas
+und Professoren das jeweilige Gehalt in der Datenbank abgelegt.
 
-        Der dritte Personentyp sind Studenten. Diese können an Übungen und
-        Vorlesungen teilnehmen. Damit eine Übung oder Vorlesung stattfindet,
-        muss sich mindestens ein Student dafür eingeschrieben haben. Studenten
-        erhalten, neben den angesprochenen Personenparametern, noch zusätzlich
-        eine Matrikelnummer.
+Der dritte Personentyp sind Studenten. Diese können an Übungen und
+Vorlesungen teilnehmen. Damit eine Übung oder Vorlesung stattfindet,
+muss sich mindestens ein Student dafür eingeschrieben haben. Studenten
+erhalten, neben den angesprochenen Personenparametern, noch zusätzlich
+eine Matrikelnummer.
 
-        Die an der Universität gehaltenen Vorlesungen und Übungen sind mit
-        einem Thema versehen. Die Übungen unterteilen sich in Rechen- bzw.
-        Laborübungen und werden mit einer Aufgabennummer versehen.
-        Rechenübungen finden in Hörsälen und Laborübungen in Laboren
-        statt. Nicht jeder Hörsaal bzw. jedes Labor ist immer besetzt. Eine
-        Übung findet allerdings immer nur in einem Raum statt. Für jeden
-        Hörsaal und jedes Labor muss die Anzahl der Sitzplätze, die
-        Raumnummer sowie die Gebäudenummer gespeichert werden.
+Die an der Universität gehaltenen Vorlesungen und Übungen sind mit
+einem Thema versehen. Die Übungen unterteilen sich in Rechen- bzw.
+Laborübungen und werden mit einer Aufgabennummer versehen.
+Rechenübungen finden in Hörsälen und Laborübungen in Laboren
+statt. Nicht jeder Hörsaal bzw. jedes Labor ist immer besetzt. Eine
+Übung findet allerdings immer nur in einem Raum statt. Für jeden
+Hörsaal und jedes Labor muss die Anzahl der Sitzplätze, die
+Raumnummer sowie die Gebäudenummer gespeichert werden.
 \clearpage

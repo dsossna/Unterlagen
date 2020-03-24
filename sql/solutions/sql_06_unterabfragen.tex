@@ -23,10 +23,8 @@ FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
 WHERE  ek.Kunden_ID NOT IN (SELECT Kunden_ID
                             FROM   EigenkundeMitarbeiter);
         \end{lstlisting}
-        \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt
-        (Vorname und Nachname), die keine Kundenberatung durchführen.
-        Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner
-        Bankfiliale arbeiten) und Filialleiter.
+        \item Schreiben Sie eine Abfrage, die anzeigt, ob es Mitarbeiter gibt, die keine Kundenberatung durchführen.
+        Ausgenommen sind leitende Mitarbeiter (arbeiten in keiner Filiale) und Filialleiter.
         \begin{itemize}
           \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{EXISTS}-Operators!
           \item Lösen Sie die Aufgabe mit Hilfe des \languageorasql{IN}-Operators!
@@ -42,7 +40,6 @@ WHERE NOT EXISTS (SELECT 1
                   FROM EigenkundeMitarbeiter ekm
                   WHERE m.Mitarbeiter_ID = ekm.Mitarbeiter_ID)
 ORDER BY m.Vorname;
-
 
 SELECT m.Vorname, m.Nachname
 FROM Mitarbeiter m
@@ -97,11 +94,11 @@ FROM   Kunde k INNER JOIN EigenkundeKonto ekk
        INNER JOIN Girokonto g ON (ekk.Konto_ID = g.Konto_ID)
 ORDER BY Guthaben;
         \end{lstlisting}
+        \clearpage
         \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
         dass die drei Eigenkunden mit dem niedrigsten Guthaben (Girokonto +
         Sparbuch) angezeigt werden. Es müssen auch diejenigen Kunden angezeigt
         werden, die nur ein Girokonto oder nur ein Sparbuch haben!
-\clearpage
         \begin{oraclesql}[\FALSE]
         \end{oraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -135,6 +132,7 @@ FROM   (SELECT Kunden_ID, Guthaben
 GROUP BY k.Kunden_ID, k.Vorname, k.Nachname
 ORDER BY 3;
         \end{lstlisting}
+\clearpage
         \item Schreiben Sie eine Abfrage, die alle Eigenkunden anzeigt, welche
         im Jahr 1985 keine Buchungen verursacht haben.
         \begin{oraclesql}[\FALSE]
@@ -153,7 +151,6 @@ WHERE  NOT EXISTS (SELECT 1
 GROUP BY k.Kunden_ID, Vorname, Nachname
 ORDER BY Nachname, Vorname;
         \end{lstlisting}
-\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]
@@ -182,6 +179,7 @@ WHERE  Gehalt = (SELECT MAX(Gehalt)
                  FROM   Mitarbeiter m1
                  WHERE  m.Bankfiliale_ID = m1.Bankfiliale_ID);
         \end{lstlisting}
+\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]
@@ -199,7 +197,6 @@ WHERE  Gehalt = (SELECT MAX(Gehalt)
         höchste Einkommen hatte (Das Einkommen ist die Summe aller Beträge
         eines Kunden, in der Tabelle \identifier{Buchung}). Sortieren Sie die
         Abfrage nach den Wohnorten.
-\clearpage
         \begin{oraclesql}[\FALSE]
         \end{oraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -282,7 +279,6 @@ PIVOT  (SUM(Betrag)
         \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
         dass die Beträge innerhalb der einzelnen Jahre nach Quartalen
         aufgeteilt werden.
-\clearpage
         \begin{oraclesql}[\FALSE]
         \end{oraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -319,6 +315,7 @@ FROM   (SELECT 'Summe' AS Quartal, TO_CHAR(Buchungsdatum, 'YYYY') AS Datum,
         FROM   Buchung)
 PIVOT  (SUM(Betrag) FOR Datum IN ('1985', '1986', '1987', '1988', '1989'));
         \end{lstlisting}
+\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]

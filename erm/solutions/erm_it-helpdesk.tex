@@ -1,103 +1,103 @@
-      \subsection{Übungsaufgabe IT-Helpdesk}
-        \subsubsection{Vorgaben}
-          \begin{center}
-            \scalebox{.5}{
-              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-                \node[entity](kunde){Kunde};
-                  \node[attribute](kundenid)[above left = of kunde]{\key{Kunden\_ID}} edge (kunde);
-                  \node[attribute](kundennummer)[above right = of kunde]{Kundennummer} edge (kunde);
-                  \node[attribute](vorname)[below left  = of kunde]{Vorname} edge (kunde);
-                  \node[attribute](nachname)[below right = of kunde]{Nachname} edge (kunde);
-                \node[relationship](hat)[left = 1.5cm of kunde]{hat} edge node[auto]{(1,*)}(kunde);
-                \node[entity](adresse)[left = 1.5cm of hat]{Adresse} edge node[auto]{(0,*)}(hat);
-                  \node[attribute](adresseid)[above = of adresse]{\key{Adresse\_ID}} edge (adresse);
-                  \node[attribute](strasse)[above left = of adresse]{Straß{}e} edge (adresse);
-                  \node[attribute](hausnummer)[left = of adresse]{Hausnummer} edge (adresse);
-                  \node[attribute](plz)[below left = of adresse]{PLZ} edge (adresse);
-                  \node[attribute](ort)[below = of adresse]{Ort} edge (adresse);
-                \node[relationship](gibtan)[right = 1.5cm of kunde]{gibt an} edge node[auto,swap]{(1,*)}(kunde);
-                \node[entity](kontaktdaten)[right = 1.5cm of gibtan]{Kontaktdatum} edge node[auto,swap]{(1,1)}(gibtan);
-                  \node[attribute](kontaktdatenid)[above right = of kontaktdaten]{\key{Kontaktdatums\_ID}} edge (kontaktdaten);
-                  \node[attribute](telefonnummer)[right = of kontaktdaten]{Telefonnummer} edge (kontaktdaten);
-                  \node[attribute](email)[below right = of kontaktdaten]{E-Mail-Adresse} edge (kontaktdaten);
-                \node[relationship](stellther)[below = of kunde]{stellt her} edge node[auto,swap]{(1,*)}(kunde);
-                \node[entity](kontakt)[below = of stellther]{Kontakt} edge node[auto,swap]{(1,1)}(stellther);
-                  \node[attribute](kontaktid)[above left = of kontakt]{\key{Kontak\_ID}} edge (kontakt);
-                  \node[attribute](uhrzeit)[left = of kontakt]{Uhrzeit} edge (kontakt);
-                  \node[attribute](datum)[below left = of kontakt]{Datum} edge (kontakt);
-                  \node[attribute](anlass)[above right = of kontakt]{Anlass} edge (kontakt);
-                  \node[attribute](dauer)[right = of kontakt]{Dauer} edge (kontakt);
-                \node[relationship](bearbeitet)[below = of kontakt]{bearbeitet} edge node[auto,swap]{(1,1)}(kontakt);
-                \node[entity](mitarbeiter)[below = of bearbeitet]{Mitarbeiter} edge node[auto,swap]{(0,*)}(bearbeitet);
-                  \node[attribute](mitarbeiterid)[above left = of mitarbeiter]{\key{Mitarbeiter\_ID}} edge (mitarbeiter);
-                  \node[attribute](vorname)[below left  = of mitarbeiter]{Vorname} edge (mitarbeiter);
-                  \node[attribute](nachname)[below right = of mitarbeiter]{Nachname} edge (mitarbeiter);
-                  \node[attribute](personalnummer)[above right = of mitarbeiter]{Personalnummer} edge (mitarbeiter);
-                  \end{tikzpicture}
-            }
-          \end{center}
-        \subsubsection{Transformation}
-					\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{12cm}}
-						Kunde & (\pk{Kunde\_ID}, Kundennummer, Vorname, Nachname) \\
-						Adresse & (\pk{Adresse\_ID}, PLZ, Ort, Straß{}e, Hausnummer) \\
-						KundeAdresse & (\fk{\pk{Kunde\_ID + Adresse\_ID}}) \\
-						Kontaktdatum & (\pk{Kontaktdatums\_ID}, E-Mail-Adresse, Telefonnummer, \nn{\fk{Kunde\_ID}}) \\
-						Kontakt & (\pk{Kontak\_ID}, \nn{\fk{Kunde\_ID}}, \nn{\fk{Mitarbeiter\_ID}}, Uhrzeit, Datum, Dauer, Anlass) \\
-						Mitarbeiter & (\pk{Mitarbeiter\_ID}, Personalnummer, Vorname, Nachname) \\
-					\end{tabular}
-    \clearpage
-        \subsubsection{Zusatzaufgabe}
-          \begin{center}
-            \scalebox{.5}{
-              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+\subsection{Übungsaufgabe IT-Helpdesk}
+\subsubsection{Vorgaben}
+\begin{center}
+    \scalebox{.5}{
+        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+            \node[entity](kunde){Kunde};
+            \node[attribute](kundenid)[above left = of kunde]{\key{Kunden\_ID}} edge (kunde);
+            \node[attribute](kundennummer)[above right = of kunde]{Kundennummer} edge (kunde);
+            \node[attribute](vorname)[below left  = of kunde]{Vorname} edge (kunde);
+            \node[attribute](nachname)[below right = of kunde]{Nachname} edge (kunde);
+            \node[relationship](hat)[left = 1.5cm of kunde]{hat} edge node[auto]{(1,*)}(kunde);
+            \node[entity](adresse)[left = 1.5cm of hat]{Adresse} edge node[auto]{(0,*)}(hat);
+            \node[attribute](adresseid)[above = of adresse]{\key{Adresse\_ID}} edge (adresse);
+            \node[attribute](strasse)[above left = of adresse]{Straß{}e} edge (adresse);
+            \node[attribute](hausnummer)[left = of adresse]{Hausnummer} edge (adresse);
+            \node[attribute](plz)[below left = of adresse]{PLZ} edge (adresse);
+            \node[attribute](ort)[below = of adresse]{Ort} edge (adresse);
+            \node[relationship](gibtan)[right = 1.5cm of kunde]{gibt an} edge node[auto,swap]{(1,*)}(kunde);
+            \node[entity](kontaktdaten)[right = 1.5cm of gibtan]{Kontaktdatum} edge node[auto,swap]{(1,1)}(gibtan);
+            \node[attribute](kontaktdatenid)[above right = of kontaktdaten]{\key{Kontaktdatums\_ID}} edge (kontaktdaten);
+            \node[attribute](telefonnummer)[right = of kontaktdaten]{Telefonnummer} edge (kontaktdaten);
+            \node[attribute](email)[below right = of kontaktdaten]{E-Mail-Adresse} edge (kontaktdaten);
+            \node[relationship](stellther)[below = of kunde]{stellt her} edge node[auto,swap]{(1,*)}(kunde);
+            \node[entity](kontakt)[below = of stellther]{Kontakt} edge node[auto,swap]{(1,1)}(stellther);
+            \node[attribute](kontaktid)[above left = of kontakt]{\key{Kontak\_ID}} edge (kontakt);
+            \node[attribute](uhrzeit)[left = of kontakt]{Uhrzeit} edge (kontakt);
+            \node[attribute](datum)[below left = of kontakt]{Datum} edge (kontakt);
+            \node[attribute](anlass)[above right = of kontakt]{Anlass} edge (kontakt);
+            \node[attribute](dauer)[right = of kontakt]{Dauer} edge (kontakt);
+            \node[relationship](bearbeitet)[below = of kontakt]{bearbeitet} edge node[auto,swap]{(1,1)}(kontakt);
+            \node[entity](mitarbeiter)[below = of bearbeitet]{Mitarbeiter} edge node[auto,swap]{(0,*)}(bearbeitet);
+            \node[attribute](mitarbeiterid)[above left = of mitarbeiter]{\key{Mitarbeiter\_ID}} edge (mitarbeiter);
+            \node[attribute](vorname)[below left  = of mitarbeiter]{Vorname} edge (mitarbeiter);
+            \node[attribute](nachname)[below right = of mitarbeiter]{Nachname} edge (mitarbeiter);
+            \node[attribute](personalnummer)[above right = of mitarbeiter]{Personalnummer} edge (mitarbeiter);
+        \end{tikzpicture}
+    }
+\end{center}
+\subsubsection{Transformation}
+\begin{tabular}{>{\textbf\bgroup}p{2.7cm}<{\egroup}>{\small}p{11cm}}
+    Kunde        & (\pk{Kunde\_ID}, Kundennummer, Vorname, Nachname)                                                \\
+    Adresse      & (\pk{Adresse\_ID}, PLZ, Ort, Straß{}e, Hausnummer)                                               \\
+    KundeAdresse & (\fk{\pk{Kunde\_ID + Adresse\_ID}})                                                              \\
+    Kontaktdatum & (\pk{Kontaktdatums\_ID}, E-Mail-Adresse, Telefonnummer, \nn{\fk{Kunde\_ID}})                     \\
+    Kontakt      & (\pk{Kontak\_ID}, \nn{\fk{Kunde\_ID}}, \nn{\fk{Mitarbeiter\_ID}}, Uhrzeit, Datum, Dauer, Anlass) \\
+    Mitarbeiter  & (\pk{Mitarbeiter\_ID}, Personalnummer, Vorname, Nachname)                                        \\
+\end{tabular}
+\clearpage
+\subsubsection{Zusatzaufgabe}
+\begin{center}
+    \scalebox{.5}{
+        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
 
-                \node[entity](kunde){Kunde};
-                  \node[attribute](kundenid)[above left = of kunde]{\key{Kunden\_ID}} edge (kunde);
-                  \node[attribute](kundennummer)[above right = of kunde]{Kundennummer} edge (kunde);
-                  \node[attribute](vorname)[below left  = of kunde]{Vorname} edge (kunde);
-                  \node[attribute](nachname)[below right = of kunde]{Nachname} edge (kunde);
-                \node[relationship](hat)[left = 1.5cm of kunde]{hat} edge node[auto]{(1,*)}(kunde);
-                \node[entity](adresse)[left = 1.5cm of hat]{Adresse} edge node[auto]{(0,*)}(hat);
-                  \node[attribute](adresseid)[above = of adresse]{\key{Adresse\_ID}} edge (adresse);
-                  \node[attribute](strasse)[above left = of adresse]{Straß{}e} edge (adresse);
-                  \node[attribute](hausnummer)[left = of adresse]{Hausnummer} edge (adresse);
-                  \node[attribute](plz)[below left = of adresse]{PLZ} edge (adresse);
-                  \node[attribute](ort)[below = of adresse]{Ort} edge (adresse);
-                \node[relationship](gibtan)[right = 1.5cm of kunde]{gibt an} edge node[auto,swap]{(1,*)}(kunde);
-                \node[entity](kontaktdaten)[right = 1.5cm of gibtan]{Kontaktdatum} edge node[auto,swap]{(1,1)}(gibtan);
-                  \node[attribute](kontaktdatenid)[above right = of kontaktdaten]{\key{Kontaktdatums\_ID}} edge (kontaktdaten);
-                  \node[attribute](telefonnummer)[right = of kontaktdaten]{Telefonnummer} edge (kontaktdaten);
-                  \node[attribute](email)[below right = of kontaktdaten]{E-Mail-Adresse} edge (kontaktdaten);
-                \node[relationship](stellther)[below = of kunde]{stellt her} edge node[auto,swap]{(1,*)}(kunde);
-                \node[entity](kontakt)[below = of stellther]{Kontakt} edge node[auto,swap]{(1,1)}(stellther);
-                  \node[attribute](kontaktid)[above left = of kontakt]{\key{Kontak\_ID}} edge (kontakt);
-                  \node[attribute](anlass)[above right = of kontakt]{Anlass} edge (kontakt);
-                \node[relationship](gehoertzu)[below = of kontakt]{gehört zu} edge node[auto,swap]{(1,*)}(kontakt);
-                \node[entity](telefonat)[below = of gehoertzu]{Telefonat} edge node[auto,swap]{(1,1)}(gehoertzu);
-                  \node[attribute](telefonatid)[above left = of mitarbeiter]{\key{Telefonat\_ID}} edge (telefonat);
-                  \node[attribute](datum)[left  = of mitarbeiter]{Datum} edge (telefonat);
-                  \node[attribute](uhrzeit)[below left = of mitarbeiter]{Uhrzeit} edge (telefonat);
-                  \node[attribute](dauer)[below = of mitarbeiter]{Dauer} edge (telefonat);
+            \node[entity](kunde){Kunde};
+            \node[attribute](kundenid)[above left = of kunde]{\key{Kunden\_ID}} edge (kunde);
+            \node[attribute](kundennummer)[above right = of kunde]{Kundennummer} edge (kunde);
+            \node[attribute](vorname)[below left  = of kunde]{Vorname} edge (kunde);
+            \node[attribute](nachname)[below right = of kunde]{Nachname} edge (kunde);
+            \node[relationship](hat)[left = 1.5cm of kunde]{hat} edge node[auto]{(1,*)}(kunde);
+            \node[entity](adresse)[left = 1.5cm of hat]{Adresse} edge node[auto]{(0,*)}(hat);
+            \node[attribute](adresseid)[above = of adresse]{\key{Adresse\_ID}} edge (adresse);
+            \node[attribute](strasse)[above left = of adresse]{Straß{}e} edge (adresse);
+            \node[attribute](hausnummer)[left = of adresse]{Hausnummer} edge (adresse);
+            \node[attribute](plz)[below left = of adresse]{PLZ} edge (adresse);
+            \node[attribute](ort)[below = of adresse]{Ort} edge (adresse);
+            \node[relationship](gibtan)[right = 1.5cm of kunde]{gibt an} edge node[auto,swap]{(1,*)}(kunde);
+            \node[entity](kontaktdaten)[right = 1.5cm of gibtan]{Kontaktdatum} edge node[auto,swap]{(1,1)}(gibtan);
+            \node[attribute](kontaktdatenid)[above right = of kontaktdaten]{\key{Kontaktdatums\_ID}} edge (kontaktdaten);
+            \node[attribute](telefonnummer)[right = of kontaktdaten]{Telefonnummer} edge (kontaktdaten);
+            \node[attribute](email)[below right = of kontaktdaten]{E-Mail-Adresse} edge (kontaktdaten);
+            \node[relationship](stellther)[below = of kunde]{stellt her} edge node[auto,swap]{(1,*)}(kunde);
+            \node[entity](kontakt)[below = of stellther]{Kontakt} edge node[auto,swap]{(1,1)}(stellther);
+            \node[attribute](kontaktid)[above left = of kontakt]{\key{Kontak\_ID}} edge (kontakt);
+            \node[attribute](anlass)[above right = of kontakt]{Anlass} edge (kontakt);
+            \node[relationship](gehoertzu)[below = of kontakt]{gehört zu} edge node[auto,swap]{(1,*)}(kontakt);
+            \node[entity](telefonat)[below = of gehoertzu]{Telefonat} edge node[auto,swap]{(1,1)}(gehoertzu);
+            \node[attribute](telefonatid)[above left = of mitarbeiter]{\key{Telefonat\_ID}} edge (telefonat);
+            \node[attribute](datum)[left  = of mitarbeiter]{Datum} edge (telefonat);
+            \node[attribute](uhrzeit)[below left = of mitarbeiter]{Uhrzeit} edge (telefonat);
+            \node[attribute](dauer)[below = of mitarbeiter]{Dauer} edge (telefonat);
 
-                \node[relationship](bearbeitet)[right = 1.75cm of telefonat]{bearbeitet} edge node[auto,swap]{(1,1)}(telefonat);
+            \node[relationship](bearbeitet)[right = 1.75cm of telefonat]{bearbeitet} edge node[auto,swap]{(1,1)}(telefonat);
 
-                \node[entity](mitarbeiter)[right = 1.75cm of bearbeitet]{Mitarbeiter} edge node[auto,swap]{(0,*)}(bearbeitet);
-                  \node[attribute](mitarbeiterid)[above right = 1.25cm of mitarbeiter]{\key{Mitarbeiter\_ID}} edge (mitarbeiter);
-                  \node[attribute](vorname)[above left  = 1.25cm of mitarbeiter]{Vorname} edge (mitarbeiter);
-                  \node[attribute](nachname)[below left = 1.25cm of mitarbeiter]{Nachname} edge (mitarbeiter);
-                  \node[attribute](personalnummer)[below right = 1.25cm of mitarbeiter]{Personalnummer} edge (mitarbeiter);
-                  \end{tikzpicture}
-            }
-          \end{center}
-        \subsubsection{Transformation}
-					\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{12cm}}
-						Kunde & (\pk{Kunde\_ID}, Kundennummer, Vorname, Nachname) \\
-						Adresse & (\pk{Adresse\_ID}, PLZ, Ort, Strasse, Hausnummer) \\
-						KundeAdresse & (\fk{\pk{Kunde\_ID + Adresse\_ID}}) \\
-						Kontaktdatum & (\pk{Kontaktdatums\_ID}, E-Mail-Adresse, Telefonnummer, \nn{\fk{Kunde\_ID}}) \\
-						Kontakt & (\pk{Kontak\_ID}, \nn{\fk{Kunde\_ID}}, Anlass) \\
-						Telefonat & \mbox{(\pk{Telefonat\_ID}, \nn{\fk{Kontakt\_ID}},
-						\nn{\fk{Mitarbeiter\_ID}}, Datum,} \mbox{Uhrzeit, Dauer)} \\
-						Mitarbeiter & (\pk{Mitarbeiter\_ID}, Personalnummer, Vorname, Nachname) \\
-					\end{tabular}
+            \node[entity](mitarbeiter)[right = 1.75cm of bearbeitet]{Mitarbeiter} edge node[auto,swap]{(0,*)}(bearbeitet);
+            \node[attribute](mitarbeiterid)[above right = 1.25cm of mitarbeiter]{\key{Mitarbeiter\_ID}} edge (mitarbeiter);
+            \node[attribute](vorname)[above left  = 1.25cm of mitarbeiter]{Vorname} edge (mitarbeiter);
+            \node[attribute](nachname)[below left = 1.25cm of mitarbeiter]{Nachname} edge (mitarbeiter);
+            \node[attribute](personalnummer)[below right = 1.25cm of mitarbeiter]{Personalnummer} edge (mitarbeiter);
+        \end{tikzpicture}
+    }
+\end{center}
+\subsubsection{Transformation}
+\begin{tabular}{>{\textbf\bgroup}p{2.7cm}<{\egroup}>{\small}p{11cm}}
+    Kunde        & (\pk{Kunde\_ID}, Kundennummer, Vorname, Nachname)                            \\
+    Adresse      & (\pk{Adresse\_ID}, PLZ, Ort, Strasse, Hausnummer)                            \\
+    KundeAdresse & (\fk{\pk{Kunde\_ID + Adresse\_ID}})                                          \\
+    Kontaktdatum & (\pk{Kontaktdatums\_ID}, E-Mail-Adresse, Telefonnummer, \nn{\fk{Kunde\_ID}}) \\
+    Kontakt      & (\pk{Kontak\_ID}, \nn{\fk{Kunde\_ID}}, Anlass)                               \\
+    Telefonat    & (\pk{Telefonat\_ID}, \nn{\fk{Kontakt\_ID}},
+    \nn{\fk{Mitarbeiter\_ID}}, Datum, Uhrzeit, Dauer)                                           \\
+    Mitarbeiter  & (\pk{Mitarbeiter\_ID}, Personalnummer, Vorname, Nachname)                    \\
+\end{tabular}
 \clearpage

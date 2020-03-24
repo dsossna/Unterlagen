@@ -1,116 +1,116 @@
 \chapter{Selektieren und Sortieren}
-  \chaptertoc{}
-  \cleardoubleevenpage
-  
-    \section{Selektieren von Zeilen: Die WHERE-Klausel}
-      Im vorangegangenen Kapitel wurde gezeigt, wie mit den beiden SQL-Klauseln \languageorasql{SELECT} und \languageorasql{FROM} der gesamte Inhalt einer Tabelle angezeigt werden kann. Zusätzlich zu diesen beiden Klauseln wird nun die optionale \languageorasql{WHERE}-Klausel eingeführt, die eine Selektion der Datensätze ermöglicht. Diese kann einen beliebig komplexen Ausdruck enthalten, der dann das \enquote{Auswahlkriterium} für die Datensätze darstellt. Die Syntax der \languageorasql{WHERE}-Klausel lautet wie folgt:
-      \begin{lstlisting}[language=oracle_sql,caption={Die WHERE-Klausel},label=sql02_01]
+\chaptertoc{}
+\cleardoubleevenpage
+
+\section{Selektieren von Zeilen: Die WHERE-Klausel}
+Im vorangegangenen Kapitel wurde gezeigt, wie mit den beiden SQL-Klauseln \languageorasql{SELECT} und \languageorasql{FROM} der gesamte Inhalt einer Tabelle angezeigt werden kann. Zusätzlich zu diesen beiden Klauseln wird nun die optionale \languageorasql{WHERE}-Klausel eingeführt, die eine Selektion der Datensätze ermöglicht. Diese kann einen beliebig komplexen Ausdruck enthalten, der dann das \enquote{Auswahlkriterium} für die Datensätze darstellt. Die Syntax der \languageorasql{WHERE}-Klausel lautet wie folgt:
+\begin{lstlisting}[language=oracle_sql,caption={Die WHERE-Klausel},label=sql02_01]
 WHERE <Ausdruck1> <Relationaler Operator> <Ausdruck2>
       \end{lstlisting}
-      \begin{merke}
-        Der Begriff \enquote{Ausdruck} steht in der Programmierung für ein auf einen Kontext bezogenes, auswertbares Gebilde. Bei \textit{Ausdruck1} und \textit{Ausdruck2} kann es sich beispielsweise um Spaltenbezeichner, Funktionsaufrufe, arithmetische Berechnungen, Konstanten usw. handeln.
-      \end{merke}
-      \beispiel{sql02_01} zeigt insgesamt drei Ausdrücke:
-      \begin{itemize}
-          \item \textit{<Ausdruck1>}
-          \item \textit{<Ausdruck2>}
-          \item \textit{<Ausdruck1>} <Relationaler Operator> \textit{<Ausdruck2>}
-      \end{itemize}
-      Nicht nur \textit{Ausdruck1} und \textit{Ausdruck2} sind Ausdrücke, sondern auch die Verbindung beider, mittels eines Operators, wird als Ausdruck betrachtet.
+\begin{merke}
+    Der Begriff \enquote{Ausdruck} steht in der Programmierung für ein auf einen Kontext bezogenes, auswertbares Gebilde. Bei \textit{Ausdruck1} und \textit{Ausdruck2} kann es sich beispielsweise um Spaltenbezeichner, Funktionsaufrufe, arithmetische Berechnungen, Konstanten usw. handeln.
+\end{merke}
+\beispiel{sql02_01} zeigt insgesamt drei Ausdrücke:
+\begin{itemize}
+    \item \textit{<Ausdruck1>}
+    \item \textit{<Ausdruck2>}
+    \item \textit{<Ausdruck1>} <Relationaler Operator> \textit{<Ausdruck2>}
+\end{itemize}
+Nicht nur \textit{Ausdruck1} und \textit{Ausdruck2} sind Ausdrücke, sondern auch die Verbindung beider, mittels eines Operators, wird als Ausdruck betrachtet.
 
-      \begin{merke}
-        Ein Operator ist ein mit einer Semantik belegtes Zeichen, dass eine genau definierte Operation darstellt. Operatoren werden meist in Gruppen eingeteilt, z. B. arithmetische Operatoren (+, - , *, /), relationale Operatoren, logische Operatoren, usw.
-      \end{merke}
-      \tabelle{relopersql} listet die in Oracle und MS SQL Server vorhandenen relationalen Operatoren auf.
+\begin{merke}
+    Ein Operator ist ein mit einer Semantik belegtes Zeichen, dass eine genau definierte Operation darstellt. Operatoren werden meist in Gruppen eingeteilt, z. B. arithmetische Operatoren (+, - , *, /), relationale Operatoren, logische Operatoren, usw.
+\end{merke}
+\tabelle{relopersql} listet die in Oracle und MS SQL Server vorhandenen relationalen Operatoren auf.
 \clearpage
-      \subsection{Relationale Operatoren}
-        \begin{center}
-          \tablecaption{Relationale Operatoren in Oracle und MS SQL Server}
-          \label{relopersql}
-          \begin{small}
-            \tablefirsthead{
-              \multicolumn{1}{c}{\textbf{(Operator)}} &
-              \multicolumn{1}{c}{\textbf{(Bedeutung)}} \\
-              \hline
-            }
-            \tablehead {
+\subsection{Relationale Operatoren}
+\begin{center}
+    \tablecaption{Relationale Operatoren in Oracle und MS SQL Server}
+    \label{relopersql}
+    \begin{small}
+        \tablefirsthead{
             \multicolumn{1}{c}{\textbf{(Operator)}} &
             \multicolumn{1}{c}{\textbf{(Bedeutung)}} \\
             \hline
-            }
-            \tabletail{
-              \hline
-            }
-            \tablelasttail {
-              \hline
-            }
-            \begin{supertabular}{lp{10cm}}
-              =               & Gleichheit \\
-              !=              & Ungleichheit \\
-              \textless       & Kleiner als \\
-              \textless=      & Kleiner oder gleich \\
-              \textgreater    & Größer als \\
-              \textgreater=   & Größer oder gleich \\
-              LIKE            & Ähnlichkeit zweier Zeichenketten \\
-              IN              & Der linke Ausdruck befindet sich in einer Liste von Werten, die der rechte Ausdruck erzeugt.\\
-              IS NULL         & Der linke Ausdruck liefert den Wert NULL zurück. \\
-              BETWEEN A AND B & Der Wert des linken Ausdrucks liegt zwischen den Wertgrenzen A und B. Die Wertgrenzen A und B werden in das Intervall mit einbezogen.\\
-            \end{supertabular}
-          \end{small}
-        \end{center}
-        \subsubsection{Numerische Werte vergleichen}
-          Der Vergleich von numerischen Werten gestaltet sich sowohl in Oracle als auch im MS SQL Server sehr einfach.
-          \begin{lstlisting}[language=oracle_sql,caption={Gleichheit zweier numerischer Werte},label=sql02_02]
+        }
+        \tablehead {
+            \multicolumn{1}{c}{\textbf{(Operator)}} &
+            \multicolumn{1}{c}{\textbf{(Bedeutung)}} \\
+            \hline
+        }
+        \tabletail{
+            \hline
+        }
+        \tablelasttail {
+            \hline
+        }
+        \begin{supertabular}{lp{10cm}}
+            =               & Gleichheit \\
+            !=              & Ungleichheit \\
+            \textless       & Kleiner als \\
+            \textless=      & Kleiner oder gleich \\
+            \textgreater    & Größer als \\
+            \textgreater=   & Größer oder gleich \\
+            LIKE            & Ähnlichkeit zweier Zeichenketten \\
+            IN              & Der linke Ausdruck befindet sich in einer Liste von Werten, die der rechte Ausdruck erzeugt.\\
+            IS NULL         & Der linke Ausdruck liefert den Wert NULL zurück. \\
+            BETWEEN A AND B & Der Wert des linken Ausdrucks liegt zwischen den Wertgrenzen A und B. Die Wertgrenzen A und B werden in das Intervall mit einbezogen.\\
+        \end{supertabular}
+    \end{small}
+\end{center}
+\subsubsection{Numerische Werte vergleichen}
+Der Vergleich von numerischen Werten gestaltet sich sowohl in Oracle als auch im MS SQL Server sehr einfach.
+\begin{lstlisting}[language=oracle_sql,caption={Gleichheit zweier numerischer Werte},label=sql02_02]
 SELECT Vorname, Nachname
 FROM   Mitarbeiter
 WHERE  Mitarbeiter_ID = 5;
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} \\
-                \cmidrule(l){1-1}\cmidrule(l){2-2}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{ll}
-                  Tim & Sindermann \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          \begin{lstlisting}[language=oracle_sql,caption={Wert A größer oder gleich Wert B},label=sql02_03]
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{2}{l}{\textbf{1 Zeile ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{ll}
+                Tim & Sindermann \\
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\begin{lstlisting}[language=oracle_sql,caption={Wert A größer oder gleich Wert B},label=sql02_03]
 SELECT Vorname, Nachname, Gehalt
 FROM   Mitarbeiter
 WHERE  Mitarbeiter_ID >= 50;
           \end{lstlisting}
 \clearpage
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{r}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} &
-                \multicolumn{1}{l}{\textbf{GEHALT}} \\
-                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{3}{l}{\textbf{51 Zeilen gewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{3}{l}{\textbf{51 Zeilen gewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{llr}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{l}{\textbf{GEHALT}} \\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{3}{l}{\textbf{51 Zeilen gewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{3}{l}{\textbf{51 Zeilen gewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{llr}
                 Emilia &  Köhler & 2500 \\
                 Karolin & Klingner & 2000 \\
                 Chris & Roggatz & 3000 \\
@@ -119,479 +119,477 @@ WHERE  Mitarbeiter_ID >= 50;
                 Anna & Keller & 2500 \\
                 Johannes & Klingner & 2500 \\
                 Emma & Krüger & 3500 \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          \begin{lstlisting}[language=oracle_sql,caption={Prüfen eines Intevalls},label=sql02_04]
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\begin{lstlisting}[language=oracle_sql,caption={Prüfen eines Intevalls},label=sql02_04]
 SELECT Mitarbeiter_ID, Vorname, Nachname
 FROM   Mitarbeiter
 WHERE  Mitarbeiter_ID BETWEEN 5 AND 9;
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNNAME}} \\
-                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{3}{l}{\textbf{5 Zeilen gewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{3}{l}{\textbf{5 Zeilen gewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{rll}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNNAME}} \\
+            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{3}{l}{\textbf{5 Zeilen gewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{3}{l}{\textbf{5 Zeilen gewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{rll}
                 5 & Tim & Sindermann \\
                 6 & Peter & Müller \\
                 7 & Emily & Meier \\
                 8 & Dirk & Peters \\
                 9 & Louis & Winter \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          \begin{lstlisting}[language=oracle_sql,caption={Alle Zeilen aus einer Wertemenge anzeigen},label=sql02_05]
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\begin{lstlisting}[language=oracle_sql,caption={Alle Zeilen aus einer Wertemenge anzeigen},label=sql02_05]
 SELECT Mitarbeiter_ID, Vorname, Nachname
 FROM   Mitarbeiter
 WHERE  Mitarbeiter_ID IN (5, 7, 9);
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-              \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
-              \multicolumn{1}{l}{\textbf{VORNAME}} &
-              \multicolumn{1}{l}{\textbf{NACHNNAME}} \\
-              \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{3}{l}{\textbf{3 Zeilen gewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{3}{l}{\textbf{3 Zeilen gewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{rll}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNNAME}} \\
+            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{3}{l}{\textbf{3 Zeilen gewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{3}{l}{\textbf{3 Zeilen gewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{rll}
                 5 & Tim & Sindermann \\
                 7 & Emily & Meier \\
                 9 & Louis & Winter \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
 \clearpage
-        \subsubsection{Zeichenketten vergleichen}
-          \label{stringdiff}
-          Der Vergleich zweier Zeichenketten bringt, im Gegensatz zum Vergleich numerischer Werte, eine Schwierigkeit mit sich. Abhängig vom benutzten RDBMS\footnote{RDBMS = Relationales Datenbank Management System} werden Zeichenkettenvergleiche casesensitiv oder incasesensitiv durchgeführt. In Oracle beispielsweise ist \enquote{Oracle} ungleich \enquote{oracle} oder \enquote{ORACLE} ungleich \enquote{OrAcLe}. Der MS SQL Server hingegen verhält sich nicht casesensitiv. Für ihn sind alle vier Werte gleich.
+\subsubsection{Zeichenketten vergleichen}
+\label{stringdiff}
+Der Vergleich zweier Zeichenketten bringt, im Gegensatz zum Vergleich numerischer Werte, eine Schwierigkeit mit sich. Abhängig vom benutzten RDBMS\footnote{RDBMS = Relationales Datenbank Management System} werden Zeichenkettenvergleiche casesensitiv oder incasesensitiv durchgeführt. In Oracle beispielsweise ist \enquote{Oracle} ungleich \enquote{oracle} oder \enquote{ORACLE} ungleich \enquote{OrAcLe}. Der MS SQL Server hingegen verhält sich nicht casesensitiv. Für ihn sind alle vier Werte gleich.
 
-          \begin{lstlisting}[language=oracle_sql,caption={Ein einfacher Zeichenkettenvergleich},label=sql02_06]
+\begin{lstlisting}[language=oracle_sql,caption={Ein einfacher Zeichenkettenvergleich},label=sql02_06]
 SELECT Mitarbeiter_ID, Vorname, Nachname
 FROM   Mitarbeiter
 WHERE  Nachname = 'Scholz';
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} \\
-                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-              }
-              \tablehead{}
-              \tabletail{
-              }
-              \tablelasttail{
-                \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{rll}
-                  96 & Johanna & Scholz \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          Im nächsten Beispiel wird eine ähnliche \languageorasql{WHERE}-Klausel verwendet, wie in \beispiel{sql02_06}, sie führt jedoch zu einem ganz anderen Ergebnis.
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+        }
+        \tablehead{}
+        \tabletail{
+        }
+        \tablelasttail{
+            \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{rll}
+                96 & Johanna & Scholz \\
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+Im nächsten Beispiel wird eine ähnliche \languageorasql{WHERE}-Klausel verwendet, wie in \beispiel{sql02_06}, sie führt jedoch zu einem ganz anderen Ergebnis.
 
-          \begin{merke}
-            In SQL müssen Zeichenketten in Hochkommas ' eingeschlossen werden! Diese dürfen nicht mit den Akzent-Zeichen verwechselt werden!
-          \end{merke}
-          \begin{lstlisting}[language=oracle_sql,caption={Ein einfacher Zeichenkettenvergleich},label=sql02_07]
+\begin{merke}
+    In SQL müssen Zeichenketten in Hochkommas ' eingeschlossen werden! Diese dürfen nicht mit den Akzent-Zeichen verwechselt werden!
+\end{merke}
+\begin{lstlisting}[language=oracle_sql,caption={Ein einfacher Zeichenkettenvergleich},label=sql02_07]
 SELECT Mitarbeiter_ID, Vorname, Nachname
 FROM   Mitarbeiter
 WHERE  Nachname = 'SCHOLZ';
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \begin{oraclesql}
-Keine Zeilen ausgewählt!
-              \end{oraclesql}
-            \end{small}
-          \end{center}
-          Da die Oracle-Datenbank casesensitiv arbeitet, ist \enquote{SCHOLZ} ungleich \enquote{Scholz}. Somit werden keine Datensätze gefunden. Der MS SQL Server hat hier keine Schwierigkeiten. Ihn stört die unterschiedliche Schreibweise der Zeichenketten nicht, weshalb er das gewünschte Ergebnis anzeigt.
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \begin{oraclesql}
+            Keine Zeilen ausgewählt!
+        \end{oraclesql}
+    \end{small}
+\end{center}
+Da die Oracle-Datenbank casesensitiv arbeitet, ist \enquote{SCHOLZ} ungleich \enquote{Scholz}. Somit werden keine Datensätze gefunden. Der MS SQL Server hat hier keine Schwierigkeiten. Ihn stört die unterschiedliche Schreibweise der Zeichenketten nicht, weshalb er das gewünschte Ergebnis anzeigt.
 \clearpage
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} \\
-                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
-              }
-              \begin{mssql}
-                \begin{supertabular}{rll}
-                  96 & Johanna & Scholz \\
-                \end{supertabular}
-              \end{mssql}
-            \end{small}
-          \end{center}
-        \subsubsection{Zeichenketten vergleichen mit LIKE}
-          Ist es notwendig nach einem Zeichenmuster zu suchen, wie z. B. \textit{Alle Mitarbeiter, deren Nachname mit \enquote{Sch} beginnt}, so kann dies mit dem \languageorasql{LIKE}-Operator geschehen.
-          \begin{lstlisting}[language=oracle_sql,caption={Zeichenkettensuche mit einem Suchmuster},label=sql02_08]
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{3}{l}{\textbf{1 Zeile ausgewählt}} \\
+        }
+        \begin{mssql}
+            \begin{supertabular}{rll}
+                96 & Johanna & Scholz \\
+            \end{supertabular}
+        \end{mssql}
+    \end{small}
+\end{center}
+\subsubsection{Zeichenketten vergleichen mit LIKE}
+Ist es notwendig nach einem Zeichenmuster zu suchen, wie z. B. \textit{Alle Mitarbeiter, deren Nachname mit \enquote{Sch} beginnt}, so kann dies mit dem \languageorasql{LIKE}-Operator geschehen.
+\begin{lstlisting}[language=oracle_sql,caption={Zeichenkettensuche mit einem Suchmuster},label=sql02_08]
 SELECT Mitarbeiter_ID, Vorname, Nachname
 FROM   Mitarbeiter
 WHERE  Nachname LIKE 'Sch%';
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} \\
-                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-              }
-              \tablehead{}
-              \tabletail{
-              }
-              \tablelasttail{
-                \multicolumn{1}{l}{\textbf{10 Zeilen ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{rll}
-                  4 & Sebastian & Schwarz \\
-                  11 & Sophie & Schwarz \\
-                  25 & Elias & Schreiber \\
-                  29 & Louis & Schmitz \\
-                  33 & Martin & Schacke \\
-                  36 & Hans & Schumacher \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          Der \languageorasql{LIKE}-Operator nutzt zwei Wildcards, um Suchmuster für Zeichenketten zu erstellen.
-          \begin{center}
-            \tablecaption{Wildcards des LIKE-Operators}
-            \label{likewildcards}
-            \begin{small}
-              \tablefirsthead{
-                \multicolumn{1}{c}{\textbf{(Wildcard)}} &
-                \multicolumn{1}{c}{\textbf{(Bedeutung)}} \\
-                \hline
-              }
-              \tabletail{
-                \hline
-              }
-              \tablelasttail{
-                \hline
-              }
-              \begin{supertabular}{lp{10cm}}
-                \% & (Prozentzeichen) Null, eines oder beliebig viele Zeichen \\
-                \_ & (Unterstrich) Genau ein Zeichen \\
-              \end{supertabular}
-            \end{small}
-          \end{center}
-          Für \beispiel{sql02_08} bedeutet dies: \textit{Die ersten drei Zeichen des Suchmusters sind S, c und h. Nach dem h können null, eines oder beliebig viele andere Zeichen stehen.} Im nächsten Beispiel wird die \textit{\_}-Wildcard benutzt, um alle Mitarbeiter zu suchen, deren Nachname an der dritten Stelle ein kleines g trägt.
-          \begin{lstlisting}[language=oracle_sql,caption={Zeichenkettensuche mit einem etwas komplexeren Suchmuster},label=sql02_09]
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+        }
+        \tablehead{}
+        \tabletail{
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{10 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{rll}
+                4 & Sebastian & Schwarz \\
+                11 & Sophie & Schwarz \\
+                25 & Elias & Schreiber \\
+                29 & Louis & Schmitz \\
+                33 & Martin & Schacke \\
+                36 & Hans & Schumacher \\
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+Der \languageorasql{LIKE}-Operator nutzt zwei Wildcards, um Suchmuster für Zeichenketten zu erstellen.
+\begin{center}
+    \tablecaption{Wildcards des LIKE-Operators}
+    \label{likewildcards}
+    \begin{small}
+        \tablefirsthead{
+            \multicolumn{1}{c}{\textbf{(Wildcard)}} &
+            \multicolumn{1}{c}{\textbf{(Bedeutung)}} \\
+            \hline
+        }
+        \tabletail{
+            \hline
+        }
+        \tablelasttail{
+            \hline
+        }
+        \begin{supertabular}{lp{10cm}}
+            \% & (Prozentzeichen) Null, eines oder beliebig viele Zeichen \\
+            \_ & (Unterstrich) Genau ein Zeichen \\
+        \end{supertabular}
+    \end{small}
+\end{center}
+Für \beispiel{sql02_08} bedeutet dies: \textit{Die ersten drei Zeichen des Suchmusters sind S, c und h. Nach dem h können null, eines oder beliebig viele andere Zeichen stehen.} Im nächsten Beispiel wird die \textit{\_}-Wildcard benutzt, um alle Mitarbeiter zu suchen, deren Nachname an der dritten Stelle ein kleines g trägt.
+\begin{lstlisting}[language=oracle_sql,caption={Zeichenkettensuche mit einem etwas komplexeren Suchmuster},label=sql02_09]
 SELECT Mitarbeiter_ID, Vorname, Nachname
 FROM   Mitarbeiter
 WHERE  Nachname LIKE '__g%';
           \end{lstlisting}
 \clearpage
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} \\
-                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{rll}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{rll}
                 37 & Louis & Wagner \\
                 52 & Chris & Roggatz \\
                 83 & Peter & Roggatz \\
                 88 & Joachim & Wagner \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          Die ersten beiden Zeichen des Suchmusters sind \textit{\_} Unterstriche, d. h. an der ersten und zweiten Stelle der gesuchten Zeichenketten \textbf{muss} sich jeweils genau ein Zeichen befinden. Das dritte Zeichen ist mit dem \textit{g} genau definiert. Anschließend können wieder null, eines oder beliebig viele andere Zeichen stehen.
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+Die ersten beiden Zeichen des Suchmusters sind \textit{\_} Unterstriche, d. h. an der ersten und zweiten Stelle der gesuchten Zeichenketten \textbf{muss} sich jeweils genau ein Zeichen befinden. Das dritte Zeichen ist mit dem \textit{g} genau definiert. Anschließend können wieder null, eines oder beliebig viele andere Zeichen stehen.
 
-          \begin{merke}
-            Der LIKE-Operator verwendet die beiden Wildcards \% und \_ . \% Steht für null, eines oder beliebig viele Zeichen. \_ steht für genau ein Zeichen.
-          \end{merke}
-        \subsubsection{Vergleiche mit NULL-Werten}
-          Sowohl Oracle, als auch der MS SQL Server kennen beide den Operator \languageorasql{IS NULL}. Mit seiner Hilfe können Spalten auf NULL-Werte hin überprüft werden. Sollen z. B. alle Mitarbeiter, die keinen Vorgesetzten haben, angezeigt werden, wird ein Vergleich mit dem \languageorasql{IS NULL}-Operator angestellt.
-          \begin{lstlisting}[language=oracle_sql,caption={Der IS NULL Operator},label=sql02_10]
+\begin{merke}
+    Der LIKE-Operator verwendet die beiden Wildcards \% und \_ . \% Steht für null, eines oder beliebig viele Zeichen. \_ steht für genau ein Zeichen.
+\end{merke}
+\subsubsection{Vergleiche mit NULL-Werten}
+Sowohl Oracle, als auch der MS SQL Server kennen beide den Operator \languageorasql{IS NULL}. Mit seiner Hilfe können Spalten auf NULL-Werte hin überprüft werden. Sollen z. B. alle Mitarbeiter, die keinen Vorgesetzten haben, angezeigt werden, wird ein Vergleich mit dem \languageorasql{IS NULL}-Operator angestellt.
+\begin{lstlisting}[language=oracle_sql,caption={Der IS NULL Operator},label=sql02_10]
 SELECT Mitarbeiter_ID, Vorname, Nachname, Vorgesetzter_ID
 FROM   Mitarbeiter
 WHERE  Vorgesetzter_ID IS NULL;
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} &
-                \multicolumn{1}{r}{\textbf{VORGESETZTER\_ID}} \\
-                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(r){4-4}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{rllr}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{r}{\textbf{MITARBEITER\_ID}} &
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{VORGESETZTER\_ID}} \\
+            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(r){4-4}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{4}{l}{\textbf{1 Zeile ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{rllr}
                 1 & Max & Winter & \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          Da es in diesem Beispiel keinen wesentlichen Unterschied bei der Ergebnisanzeige zwischen Oracle und SQL Server gibt (SQL Server zeigt das Wort NULL für NULL-Werte und alle Spaltenwerte linksbündig an), wurde hier auf ein getrenntes Abdrucken der Ergebnisse verzichtet.
-
-          Das Gegenstück zum \languageorasql{IS NULL}-Operator, ist der \languageorasql{IS NOT NULL}-Operator.
-\clearpage
-          \begin{merke}
-            Wird ein Ausdruck, mit Hilfe des Gleichheitsoperators (=), mit dem Wert NULL verglichen, ist das Ergebnis des Vergleichs immer NULL!
-          \end{merke}
-      \subsection{Logische Verknüpfung von Ausdrücken}
-        In vielen Fällen ist es notwendig komplexe Ausdrücke zu formulieren, indem mehrere Ausdrücke miteinander verknüpft werden. Eine solche Verknüpfung geschieht unter Zuhilfenahme der logischen Operatoren \textit{AND}, \textit{OR} und \textit{NOT}.
-        \subsubsection{Logische Verknüpfungen mit AND}
-          Der logische Operator \textit{AND} verknüpft zwei Bedingungen miteinander und liefert ein wahres Ergebnis, sobald beide Ausdrücke ein wahres Ergebnis haben. Die Logiktabelle \tabelle{logikand} zeigt die möglichen Ergebnisse einer AND-Verknüpfung.
-					\vspace{\baselineskip}
-          \begin{center}
-            \tablecaption{Der logische Operator AND}
-            \label{logikand}
-            \tablefirsthead{
-              \multicolumn{1}{l}{\textbf{Aussagen}} &
-              \multicolumn{1}{c}{\textbf{(Wahr)}} &
-              \multicolumn{1}{c}{\textbf{(Falsch)}} \\
-              \hline
-            }
-            \tablehead{}
-            \tabletail{
-              \hline
-            }
-            \tablelasttail{
-              \hline
-            }
-            \begin{supertabular}{|l|c|c|}
-              Wahr & w & f \\
-              \hline
-              Falsch & f & f \\
             \end{supertabular}
-          \end{center}
-          In \beispiel{sql02_11} wird gezeigt, wie der \textit{AND}-Operator dazu genutzt werden kann, um zwei Bedingungen miteinander zu verknüpfen. Es sollen alle Mitarbeiter angezeigt werden, deren Gehalt unter 1.500 EUR liegt und die in der Bankfiliale Nummer zwei arbeiten.
-          \begin{lstlisting}[language=oracle_sql,caption={Der AND Operator},label=sql02_11]
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+Da es in diesem Beispiel keinen wesentlichen Unterschied bei der Ergebnisanzeige zwischen Oracle und SQL Server gibt (SQL Server zeigt das Wort NULL für NULL-Werte und alle Spaltenwerte linksbündig an), wurde hier auf ein getrenntes Abdrucken der Ergebnisse verzichtet.
+
+Das Gegenstück zum \languageorasql{IS NULL}-Operator, ist der \languageorasql{IS NOT NULL}-Operator.
+\clearpage
+\begin{merke}
+    Wird ein Ausdruck, mit Hilfe des Gleichheitsoperators (=), mit dem Wert NULL verglichen, ist das Ergebnis des Vergleichs immer NULL!
+\end{merke}
+\subsection{Logische Verknüpfung von Ausdrücken}
+In vielen Fällen ist es notwendig komplexe Ausdrücke zu formulieren, indem mehrere Ausdrücke miteinander verknüpft werden. Eine solche Verknüpfung geschieht unter Zuhilfenahme der logischen Operatoren \textit{AND}, \textit{OR} und \textit{NOT}.
+\subsubsection{Logische Verknüpfungen mit AND}
+Der logische Operator \textit{AND} verknüpft zwei Bedingungen miteinander und liefert ein wahres Ergebnis, sobald beide Ausdrücke ein wahres Ergebnis haben. Die Logiktabelle \tabelle{logikand} zeigt die möglichen Ergebnisse einer AND-Verknüpfung.
+\vspace{\baselineskip}
+\begin{center}
+    \tablecaption{Der logische Operator AND}
+    \label{logikand}
+    \tablefirsthead{
+        \multicolumn{1}{l}{\textbf{Aussagen}} &
+        \multicolumn{1}{c}{\textbf{(Wahr)}} &
+        \multicolumn{1}{c}{\textbf{(Falsch)}} \\
+        \hline
+    }
+    \tablehead{}
+    \tabletail{
+        \hline
+    }
+    \tablelasttail{
+        \hline
+    }
+    \begin{supertabular}{|l|c|c|}
+        Wahr & w & f \\
+        \hline
+        Falsch & f & f \\
+    \end{supertabular}
+\end{center}
+In \beispiel{sql02_11} wird gezeigt, wie der \textit{AND}-Operator dazu genutzt werden kann, um zwei Bedingungen miteinander zu verknüpfen. Es sollen alle Mitarbeiter angezeigt werden, deren Gehalt unter 1.500 EUR liegt und die in der Bankfiliale Nummer zwei arbeiten.
+\begin{lstlisting}[language=oracle_sql,caption={Der AND Operator},label=sql02_11]
 SELECT Vorname, Nachname, Gehalt, Bankfiliale_ID
 FROM   Mitarbeiter
 WHERE  Gehalt < 1500
   AND  Bankfiliale_ID = 2;
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} &
-                \multicolumn{1}{r}{\textbf{GEHALT}} &
-                \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
-                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{1}{l}{\textbf{2 Zeilen ausgewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{1}{l}{\textbf{2 Zeilen ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{llrr}
-                  Martin & Schacke & 1000 & 2 \\
-                  Oliver & Wolf & 1000 & 2 \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-        \subsubsection{Logische Verknüpfungen mit OR}
-          Der logische Operator \textit{OR} liefert, im Unterschied zu \textit{AND}, ein wahres Ergebnis, sobald mindestens einer der beiden Ausdrücke ein wahres Ergebnis hat.
-\clearpage
-          \begin{center}
-            \tablecaption{Der logische Operator OR}
-            \label{logikor}
-            \tablefirsthead{
-              \multicolumn{1}{l}{\textbf{Aussagen}} &
-              \multicolumn{1}{c}{\textbf{(Wahr)}} &
-              \multicolumn{1}{c}{\textbf{(Falsch)}} \\
-              \hline
-            }
-            \tablehead{}
-            \tabletail{
-              \hline
-            }
-            \tablelasttail{
-              \hline
-            }
-            \begin{supertabular}{|l|c|c|}
-              Wahr & w & w \\
-              \hline
-              Falsch & w & f \\
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{GEHALT}} &
+            \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{1}{l}{\textbf{2 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{2 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{llrr}
+                Martin & Schacke & 1000 & 2 \\
+                Oliver & Wolf & 1000 & 2 \\
             \end{supertabular}
-          \end{center}
-          Wird in \beispiel{sql02_11} der Operator \textit{AND} durch ein \textit{OR} ersetzt, verändert sich die Ergebnismenge. Es werden jetzt alle Mitarbeiter angezeigt, die entweder ein Gehalt unter 1.500 EUR haben oder die in Bankfilialie Nummer zwei arbeiten.
-          \begin{lstlisting}[language=oracle_sql,caption={Der OR Operator},label=sql02_12]
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\subsubsection{Logische Verknüpfungen mit OR}
+Der logische Operator \textit{OR} liefert, im Unterschied zu \textit{AND}, ein wahres Ergebnis, sobald mindestens einer der beiden Ausdrücke ein wahres Ergebnis hat.
+\begin{center}
+    \tablecaption{Der logische Operator OR}
+    \label{logikor}
+    \tablefirsthead{
+        \multicolumn{1}{l}{\textbf{Aussagen}} &
+        \multicolumn{1}{c}{\textbf{(Wahr)}} &
+        \multicolumn{1}{c}{\textbf{(Falsch)}} \\
+        \hline
+    }
+    \tablehead{}
+    \tabletail{
+        \hline
+    }
+    \tablelasttail{
+        \hline
+    }
+    \begin{supertabular}{|l|c|c|}
+        Wahr & w & w \\
+        \hline
+        Falsch & w & f \\
+    \end{supertabular}
+\end{center}
+Wird in \beispiel{sql02_11} der Operator \textit{AND} durch ein \textit{OR} ersetzt, verändert sich die Ergebnismenge. Es werden jetzt alle Mitarbeiter angezeigt, die entweder ein Gehalt unter 1.500 EUR haben oder die in Bankfilialie Nummer zwei arbeiten.
+\begin{lstlisting}[language=oracle_sql,caption={Der OR Operator},label=sql02_12]
 SELECT Vorname, Nachname, Gehalt, Bankfiliale_ID
 FROM   Mitarbeiter
 WHERE  Gehalt < 1500
    OR  Bankfiliale_ID = 2;
           \end{lstlisting}
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} &
-                \multicolumn{1}{r}{\textbf{GEHALT}} &
-                \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
-                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{1}{l}{\textbf{9 Zeilen ausgewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{1}{l}{\textbf{9 Zeilen ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{llrr}
-                  Louis & Winter & 12000 & 2 \\
-                  Stefan & Beck & 1500 & 2 \\
-                  Martin & Schacke & 1000 & 2 \\
-                  Max & Oswald & 1500 & 2 \\
-                  Oliver & Wolf & 1000 & 2 \\
-                  Hans & Schumacher & 1000 & 3 \\
-                  Maja & Keller & 1000 & 5 \\
-                  Elias & Sindermann & 1000 & 8 \\
-                  Jonas & Meier & 1000 & 12 \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-        \subsubsection{Aussagen mit NOT umkehren}
-          Die Bedeutung des Operators \textit{NOT} ist sehr einfach zu umschreiben. Er kehrt ein Ergebnis um. Aus einem wahren Ergebnis wird ein falsches und umgekehrt. Dieser Effekt ist auch mit \languageorasql{IS NULL} und \languageorasql{IS NOT NULL} zu sehen. In \beispiel{sql02_13} werden alle Mitarbeiter angezeigt, deren Gehalt kleiner als 1.500 EUR ist und die nicht in der Bankfiliale Nummer zwei arbeiten.
-          \begin{lstlisting}[language=oracle_sql,caption={Der NOT Operator},label=sql02_13]
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{GEHALT}} &
+            \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{1}{l}{\textbf{9 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{9 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{llrr}
+                Louis & Winter & 12000 & 2 \\
+                Stefan & Beck & 1500 & 2 \\
+                Martin & Schacke & 1000 & 2 \\
+                Max & Oswald & 1500 & 2 \\
+                Oliver & Wolf & 1000 & 2 \\
+                Hans & Schumacher & 1000 & 3 \\
+                Maja & Keller & 1000 & 5 \\
+                Elias & Sindermann & 1000 & 8 \\
+                Jonas & Meier & 1000 & 12 \\
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\subsubsection{Aussagen mit NOT umkehren}
+Die Bedeutung des Operators \textit{NOT} ist sehr einfach zu umschreiben. Er kehrt ein Ergebnis um. Aus einem wahren Ergebnis wird ein falsches und umgekehrt. Dieser Effekt ist auch mit \languageorasql{IS NULL} und \languageorasql{IS NOT NULL} zu sehen. In \beispiel{sql02_13} werden alle Mitarbeiter angezeigt, deren Gehalt kleiner als 1.500 EUR ist und die nicht in der Bankfiliale Nummer zwei arbeiten.
+\begin{lstlisting}[language=oracle_sql,caption={Der NOT Operator},label=sql02_13]
 SELECT Vorname, Nachname, Gehalt, Bankfiliale_ID
 FROM   Mitarbeiter
 WHERE  Gehalt < 1500
   AND  NOT Bankfiliale_ID = 2;
           \end{lstlisting}
-\clearpage
-          \begin{center}
-            \begin{small}
-              \changefont{pcr}{m}{n}
-              \tablefirsthead{
-                \multicolumn{1}{l}{\textbf{VORNAME}} &
-                \multicolumn{1}{l}{\textbf{NACHNAME}} &
-                \multicolumn{1}{r}{\textbf{GEHALT}} &
-                \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
-                \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
-              }
-              \tablehead{}
-              \tabletail{
-                \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
-              }
-              \tablelasttail{
-                \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
-              }
-              \begin{msoraclesql}
-                \begin{supertabular}{llrr}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{GEHALT}} &
+            \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{4 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{llrr}
                 Hans & Schumacher & 1000 & 3 \\
                 Maja & Keller & 1000 & 5 \\
                 Elias & Sindermann & 1000 & 8 \\
                 Jonas & Meier & 1000 & 12 \\
-                \end{supertabular}
-              \end{msoraclesql}
-            \end{small}
-          \end{center}
-          \begin{merke}
-            Die Klammern ( und ) haben Einfluss auf die Bedeutung von Ausdrücken. Werden mehrere logische Operatoren kombiniert, kann so die Lesbarkeit von Ausdrücken verbessert oder deren Bedeutung verändert werden.
-          \end{merke}
-    \section{Festlegen einer Sortierung}
-      In allen vorangegangenen Beispielen war die Reihenfolge der Ausgabe der Datensätze unbestimmt. Sowohl Oracle als auch Microsoft SQL Server geben die Datensätze immer in der Reihenfolge aus, in der sie in der Quelltabelle vorliegen. Soll eine sortierte Ausgabe erfolgen, muss dies mit Hilfe der in \beispiel{sql01_01} gezeigten \languageorasql{ORDER BY}-Klausel geschehen. Dazu muss diese, mit Sortierbegriffen versehen, am Ende des SQL-Statements angegeben werden.
-      \subsection{Die ORDER BY Klausel}
-        \begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel},label=sql02_14]
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\begin{merke}
+    Die Klammern ( und ) haben Einfluss auf die Bedeutung von Ausdrücken. Werden mehrere logische Operatoren kombiniert, kann so die Lesbarkeit von Ausdrücken verbessert oder deren Bedeutung verändert werden.
+\end{merke}
+\section{Festlegen einer Sortierung}
+In allen vorangegangenen Beispielen war die Reihenfolge der Ausgabe der Datensätze unbestimmt. Sowohl Oracle als auch Microsoft SQL Server geben die Datensätze immer in der Reihenfolge aus, in der sie in der Quelltabelle vorliegen. Soll eine sortierte Ausgabe erfolgen, muss dies mit Hilfe der in \beispiel{sql01_01} gezeigten \languageorasql{ORDER BY}-Klausel geschehen. Dazu muss diese, mit Sortierbegriffen versehen, am Ende des SQL-Statements angegeben werden.
+\subsection{Die ORDER BY Klausel}
+\begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel},label=sql02_14]
 ORDER BY <Sortierbegriff 1> [asc|desc],
          <Sortierbegriff 2> [asc|desc],
          <Sortierbegriff n> [asc|desc] ...
         \end{lstlisting}
-        Als Sortierbegriffe können Spaltenbezeichner, Spaltenaliasnamen, berechnete Ausdrücke und auch Spaltenpositionsangaben, bezogen auf die Reihenfolge der Spaltennamen in der SELECT-Liste, genutzt werden. \beispiel{sql02_15} und \beispiel{sql02_16} zeigen die Anwendung der \languageorasql{ORDER BY}-Klausel.
-
-        \begin{merke}
-          Werden mehrere Sortierbegriffe angegeben, wird die Sortierung von links nach rechts durchgeführt. Das bedeutet, dass zuerst nach dem äußerst linken Sortierbegriff sortiert wird und anschließend wird, innerhalb dieser Sortierung, jeder weitere Sortierbegriff angewandt. Die Sortierungen werden also ineinander geschachtelt.
-        \end{merke}
-        \begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel mit Spaltenbezeichnern},label=sql02_15]
+Als Sortierbegriffe können Spaltenbezeichner, Spaltenaliasnamen, berechnete Ausdrücke und auch Spaltenpositionsangaben, bezogen auf die Reihenfolge der Spaltennamen in der SELECT-Liste, genutzt werden. \beispiel{sql02_15} und \beispiel{sql02_16} zeigen die Anwendung der \languageorasql{ORDER BY}-Klausel.
+\clearpage
+\begin{merke}
+    Werden mehrere Sortierbegriffe angegeben, wird die Sortierung von links nach rechts durchgeführt. Das bedeutet, dass zuerst nach dem äußerst linken Sortierbegriff sortiert wird und anschließend wird, innerhalb dieser Sortierung, jeder weitere Sortierbegriff angewandt. Die Sortierungen werden also ineinander geschachtelt.
+\end{merke}
+\begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel mit Spaltenbezeichnern},label=sql02_15]
 SELECT   Vorname, Nachname, Gehalt, Bankfiliale_ID
 FROM     Mitarbeiter
 WHERE    Gehalt <= 1500
 ORDER BY Gehalt;
         \end{lstlisting}
-        \begin{center}
-          \begin{small}
-            \changefont{pcr}{m}{n}
-            \tablefirsthead{
-              \multicolumn{1}{l}{\textbf{VORNAME}} &
-              \multicolumn{1}{l}{\textbf{NACHNAME}} &
-              \multicolumn{1}{r}{\textbf{GEHALT}} &
-              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
-              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
-            }
-            \tablehead{}
-            \tabletail{
-              \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
-            }
-            \tablelasttail{
-              \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
-            }
-            \begin{msoraclesql}
-              \begin{supertabular}{llrr}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{GEHALT}} &
+            \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{llrr}
                 Oliver & Wolf & 1000 & 2 \\
                 Hans & Schumacher & 1000 & 3 \\
                 Maja & Wolf & 1000 & 5 \\
@@ -600,35 +598,35 @@ ORDER BY Gehalt;
                 Martin & Schacke & 1000 & 2 \\
                 Max & Oswald & 1500 & 2 \\
                 Stefan & Beck & 1500 & 2\\
-              \end{supertabular}
-            \end{msoraclesql}
-          \end{small}
-        \end{center}
-        \begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel mit Positionsangaben},label=sql02_16]
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel mit Positionsangaben},label=sql02_16]
 SELECT   Vorname, Nachname, Gehalt, Bankfiliale_ID
 FROM     Mitarbeiter
 WHERE    Gehalt <= 1500
 ORDER BY 3, 2;
         \end{lstlisting}
-        \begin{center}
-          \begin{small}
-            \changefont{pcr}{m}{n}
-            \tablefirsthead{
-              \multicolumn{1}{l}{\textbf{VORNAME}} &
-              \multicolumn{1}{l}{\textbf{NACHNAME}} &
-              \multicolumn{1}{r}{\textbf{GEHALT}} &
-              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
-              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
-            }
-            \tablehead{}
-            \tabletail{
-%               \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
-            }
-            \tablelasttail{
-              \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
-            }
-            \begin{msoraclesql}
-              \begin{supertabular}{llrr}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{GEHALT}} &
+            \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+        }
+        \tablehead{}
+        \tabletail{
+            %               \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{llrr}
                 Maja & Keller & 1000 & 5 \\
                 Jonas & Meier & 1000 & 12 \\
                 Martin & Schacke & 1000 & 2 \\
@@ -637,40 +635,41 @@ ORDER BY 3, 2;
                 Oliver & Wolf & 1000 & 2 \\
                 Stefan & Beck & 1500 & 2 \\
                 Georg & Dühning & 1500 & 20 \\
-                \end{supertabular}
-            \end{msoraclesql}
-          \end{small}
-        \end{center}
-        \begin{merke}
-          Bei der Benutzung von Positionsangaben (siehe \beispiel{sql02_16}) muss darauf geachtet werden, dass sich diese auf die Reihenfolge der Spaltenbezeichner in der SELECT-Liste beziehen. Wird die SELECT-Liste später verändert, müssen unter Umständen auch die Positionsangaben angepasst werden.
-        \end{merke}
-      \subsection{Auf- und absteigendes Sortieren}
-      Zu jedem Suchbegriff können die beiden Kürzel \languageorasql{ASC} und \languageorasql{DESC} mit angegeben werden. \languageorasql{ASC}\footnote{engl. Ascending = aufsteigend} bewirkt aufsteigende Sortierung (Standard) und \languageorasql{DESC}\footnote{engl. Descending = absteigend} absteigende Sortierung. \beispiel{sql02_17} zeigt, wie sich das Ergebnis durch die absteigende Sortierung der Spalte \identifier{gehalt} verändert.
-        \begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel mit absteigender Sortierung},label=sql02_17]
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\clearpage
+\begin{merke}
+    Bei der Benutzung von Positionsangaben (siehe \beispiel{sql02_16}) muss darauf geachtet werden, dass sich diese auf die Reihenfolge der Spaltenbezeichner in der SELECT-Liste beziehen. Wird die SELECT-Liste später verändert, müssen unter Umständen auch die Positionsangaben angepasst werden.
+\end{merke}
+\subsection{Auf- und absteigendes Sortieren}
+Zu jedem Suchbegriff können die beiden Kürzel \languageorasql{ASC} und \languageorasql{DESC} mit angegeben werden. \languageorasql{ASC}\footnote{engl. Ascending = aufsteigend} bewirkt aufsteigende Sortierung (Standard) und \languageorasql{DESC}\footnote{engl. Descending = absteigend} absteigende Sortierung. \beispiel{sql02_17} zeigt, wie sich das Ergebnis durch die absteigende Sortierung der Spalte \identifier{gehalt} verändert.
+\begin{lstlisting}[language=oracle_sql,caption={Die ORDER BY Klausel mit absteigender Sortierung},label=sql02_17]
 SELECT   Vorname, Nachname, Gehalt, Bankfiliale_ID
 FROM     Mitarbeiter
 WHERE    Gehalt <= 1500
 ORDER BY Gehalt DESC, 2 ASC;
         \end{lstlisting}
-        \begin{center}
-          \begin{small}
-            \changefont{pcr}{m}{n}
-            \tablefirsthead{
-              \multicolumn{1}{l}{\textbf{VORNAME}} &
-              \multicolumn{1}{l}{\textbf{NACHNAME}} &
-              \multicolumn{1}{r}{\textbf{GEHALT}} &
-              \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
-              \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
-            }
-            \tablehead{}
-            \tabletail{
-              \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
-            }
-            \tablelasttail{
-              \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
-            }
-            \begin{msoraclesql}
-              \begin{supertabular}{llrr}
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead{
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} &
+            \multicolumn{1}{r}{\textbf{GEHALT}} &
+            \multicolumn{1}{r}{\textbf{BANKFILIALE\_ID}}\\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}\cmidrule(l){4-4}
+        }
+        \tablehead{}
+        \tabletail{
+            \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail{
+            \multicolumn{1}{l}{\textbf{18 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{llrr}
                 Stefen & Beck & 1500 & 2 \\
                 Georg & Dühning & 1500 & 20 \\
                 Tom & Fischer & 1500 & 17 \\
@@ -678,10 +677,10 @@ ORDER BY Gehalt DESC, 2 ASC;
                 Maximilian & Hahn & 1500 & 13 \\
                 Lena & Hermann & 1500 & 4 \\
                 Anne & Huber & 1500 & 10 \\
-                \end{supertabular}
-            \end{msoraclesql}
-          \end{small}
-        \end{center}
-        \begin{merke}
-          Eine in der \languageorasql{ORDER BY}-Klausel als Sortierbegriff genutzte Spalte, muss nicht in der SELECT-Liste der Abfrage vorhanden sein.
-        \end{merke}
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+\begin{merke}
+    Eine in der \languageorasql{ORDER BY}-Klausel als Sortierbegriff genutzte Spalte, muss nicht in der SELECT-Liste der Abfrage vorhanden sein.
+\end{merke}

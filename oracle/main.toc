@@ -1,0 +1,73 @@
+\@ifundefined {etoctocstyle}{\let \etoc@startlocaltoc \@gobble \let \etoc@settocdepth \@gobble \let \etoc@depthtag \@gobble \let \etoc@setlocaltop \@gobble }{}
+\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
+\babel@toc {ngerman}{}
+\defcounter {refsection}{0}\relax 
+\contentsline {part}{\numberline {I}SQL}{1}{part.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {1}Unterabfragen (Subqueries)}{1-1}{chapter.1}%
+\defcounter {refsection}{0}\relax 
+\etoc@startlocaltoc {2}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.1}Grundsätzliches zu Unterabfragen}{1-2}{section.1.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.1.1}Was sind Unterabfragen?}{1-2}{subsection.1.1.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.1.2}Wann sind Unterabfragen notwendig?}{1-2}{subsection.1.1.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.1.3}Regeln für Unterabfragen}{1-4}{subsection.1.1.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.1.4}Arten von Unterabfragen}{1-4}{subsection.1.1.4}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.2}Skalare Unterabfragen (Scalar Subqueries)}{1-5}{section.1.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.2.1}Wo können skalare Unterabfragen stehen?}{1-5}{subsection.1.2.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Skalare Unterabfragen in der SELECT-Klausel}{1-5}{section*.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Skalare Unterabfragen in der WHERE-Klausel}{1-5}{section*.4}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Skalare Unterabfragen in der Having-Klausel}{1-6}{section*.5}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.2.2}Fehlerquellen in skalaren Unterabfragen}{1-6}{subsection.1.2.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.3}Einspaltige Unterabfragen}{1-7}{section.1.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.3.1}Einspaltige Unterabfragen in WHERE- und HAVING-Klausel}{1-7}{subsection.1.3.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.3.2}Existenzprüfungen}{1-8}{subsection.1.3.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Der EXISTS-Operator}{1-8}{section*.6}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Der NOT EXISTS-Operator}{1-9}{section*.7}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.4}Inlineviews / Derived Tables}{1-10}{section.1.4}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.5}Top N Analysen}{1-11}{section.1.5}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.5.1}Die Top N Analyse in Oracle}{1-11}{subsection.1.5.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Die Pseudospalte Rownum}{1-11}{section*.8}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Durchführung der Top N Analyse}{1-13}{section*.9}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.5.2}Die Top N Analyse in MS SQL Server}{1-14}{subsection.1.5.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.6}Pivot-Tabellen}{1-14}{section.1.6}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.6.1}Der PIVOT-Operator (Oracle)}{1-14}{subsection.1.6.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Die Syntax des PIVOT-Operators}{1-15}{section*.10}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Spaltenaliase in der FOR-Klausel}{1-16}{section*.11}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Zusätzliche Spalten zum Pivoting}{1-16}{section*.12}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {1.6.2}Der PIVOT-Operator (MS SQL Server)}{1-18}{subsection.1.6.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Die Syntax des PIVOT-Operators}{1-19}{section*.13}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\nonumberline Zusätzliche Spalten zum Pivoting}{1-20}{section*.14}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.7}Übungen - Unterabfragen}{1-21}{section.1.7}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.8}Lösungen - Unterabfragen}{1-25}{section.1.8}%

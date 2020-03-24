@@ -41,7 +41,6 @@
           \end{itemize}
         \subsection{Kardinalität}
           Für die Angabe der Kardinalität einer Beziehungstyp-Richtung vom Objekttyp A zum Objekttyp B stellt man sich folgende Frage: \enquote{Kann ein Objekt des Objekttyps A mit mehreren Objekten des Objekttyps B in Beziehung stehen?} Es können dabei zwei unterschiedliche Fälle auftreten:
-\clearpage
           \begin{itemize}
             \item \textbf{Ja}: Der Beziehungstyp-Richtung wird die Kardinalität \textbf{N} zugeordnet. Dabei steht \textbf{N} für eine beliebige Zahl größ er oder gleich 0.
             \item \textbf{Nein}: Die Beziehungstyp-Richtung wird die Kardinalität \textbf{1} zugeordnet, denn es gibt \textbf{höchstens ein} Objekt des Objekttyps B zu dem Objekt aus Objekttyp A.
@@ -74,6 +73,7 @@
           \item Welcher Zusammenhang soll ausgedrückt werden (\textbf{Benennung})?
 
           Durch die Benennung der beiden Objekttypen mit \enquote{Soldat} und \enquote{Ausrüstung} zeigt sich der Zusammenhang, dass ein Soldat Ausrüstung besitzt.
+\clearpage
           \item Sind die beiden Objekttypen aneinader gebunden (\textbf{Optionalität})?
 
           In diesem Beispiel ist es so, dass ein Soldat Ausrüstung besitzen kann aber nicht muss, z.B. vor der Einkleidung ist man schon Soldat, obwohl noch jegliche Ausrüstungsgegenstände fehlen. Anders herum ist es möglich, dass Ausrüstungsgegenstände einem Soldaten
@@ -139,7 +139,7 @@
           sondern auch die minimalen Werte angegeben. Folgende Abbildung zeigt
           die oben verwendete Beziehung in der (Min,Max)-Notation.
           \begin{center}
-            \scalebox{.7}{
+            \scalebox{.75}{
               \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
                 \node[entity](soldat){Soldat};
                   \node[attribute](personenid)[above = 1.6cm of soldat]{\key{Personen\_ID}} edge (soldat);
@@ -159,7 +159,7 @@
           \end{center}
 
           Welche Werte können angenommen werden bzw. wofür stehen diese Werte? Bei der Min, Max-Notation gibt es eine Vielzahl von Möglichkeiten, diese hier aufzulisten, wäre schier unmöglich. Daher einige häufige Kombinationen.
-
+\clearpage
           \tablefirsthead{%
             \multicolumn{1}{l}{\textbf{Möglichkeit}} &
             \multicolumn{1}{l}{\textbf{Bedeutung}} \\
@@ -190,7 +190,7 @@
             \end{enumerate}
             Hierzu ein Beispiel:
           \begin{center}
-           \scalebox{.68}{
+           \scalebox{.7}{
             \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
               \node[entity](dienststelle){Dienststelle};
                 \node[attribute](dienststellennummer)[left = of dienststelle]{\key{Dienststellen\_ID}} edge (dienststelle);
@@ -218,6 +218,7 @@
         Nun können die Brücken aber so angelegt sein, dass es von Dateninsel A nach Dateninsel B zwei (oder mehr) verschiedene Wege gibt. Sind dann eine oder mehrere Brücken überflüssig? Bei der Datenmodellierung spricht man in solchen Fällen von \textbf{redundanten Beziehungstypen}. Das sind Beziehungstypen, die einen sachlogischen Zusammenhang zwischen zwei Objekttypen beschreiben, der bereits durch die Kombination anderer Beziehungstypen in gleicher Weise zum Ausdruck gebracht wird.
 
         Der Begriff der Redundanz spielt bei der Informationsspeicherung eine groß e Rolle. Im praktischen Datenbankbetrieb wird zum Teil Redundanz erzeugt, um Suchprozesse innerhalb der Datenbank zu beschleunigen. In der Phase der Datenmodellierung sollte man Redundanzen vermeiden, denn diese führen u. a. zu folgenden Problemen:
+\clearpage
         \begin{itemize}
           \item Mehrfache Eingabe derselben Informationen
           \item Unnötiger Speicherplatzbedarf
@@ -227,7 +228,7 @@
         Der Verdacht auf einen redundanten Beziehungstyp ergibt sich i.d.R. bei zyklischen Be\-zieh\-ungs\-typ-Struk\-turen. Kann man nun aber allein aus strukturellen Merkmalen des Datenmodells die Redundanz ableiten? Wenn dies so wäre, könnten automatisierte Optimierungsprozesse diese Redundanz wieder entfernen. Zur Verdeutlichung soll das in der folgenden Abbildung gezeigte Beispiel untersucht werden.
 
           \begin{center}
-            \scalebox{.7}{
+            \scalebox{.8}{
               \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
                 \node[entity](soldat){Soldat};
                 \node[relationship](besetzt)[right = of soldat]{besetzt} edge node[auto,swap] {(1,1)}(soldat);
@@ -240,16 +241,12 @@
 
           Ein Soldat besetzt genau einen Dienstposten und ein Dienstposten kann zu gleichen Zeit auch immer nur von einem Soldaten besetzt werden. Ein Dienstposten gehört zu genau einer Dienststelle, wobei eine Dienststelle aus mindestens einem Dienstposten bestehen muss, um die Sinnhaftigkeit des Modells zu wahren.
 
-          Nun kommt die \enquote{arbeitet für}-Beziehung hinzu, so dass auf
-          Grund der entstehenden zyklischen Struktur zwei Wege vom Soldaten zur
-          Dienststelle führen. Ist dieser Beziehungstyp nun redundant?
-          Betrachten wir zwei verschiedene Interpretationen dieses
-          Beziehungstyps.
+          Nun kommt die \enquote{arbeitet für}-Beziehung hinzu, so dass auf Grund der entstehenden zyklischen Struktur zwei Wege vom Soldaten zur Dienststelle führen. Ist dieser Beziehungstyp nun redundant?
+          Betrachten wir zwei verschiedene Interpretationen dieses Beziehungstyps.
 
-          Ein Soldat arbeitet für genau eine Dienststelle. Für eine
-          Dienststelle arbeitet mindestens ein Soldat.
+          Ein Soldat arbeitet für genau eine Dienststelle. Für eine Dienststelle arbeitet mindestens ein Soldat.
           \begin{center}
-            \scalebox{.68}{
+            \scalebox{.8}{
               \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
                 \node[entity](soldat){Soldat};
                 \node[relationship](besetzt)[right = of soldat]{besetzt} edge
@@ -269,9 +266,9 @@
           \end{center}
           In diesem Falle wäre der Beziehungstyp  \enquote{arbeitet für} redundant, denn aus der Tatsache, dass ein Soldat einen Dienstposten besetzt und der Dienstposten zu einer Dienststelle gehört, folgt stets die Aussage, dass der Soldat für eine Dienststelle arbeitet.
 
-          Ein Soldat leitet höchstens eine Dienststelle und eine Dienststelle wird von genau einem Soldaten geleitet.
+          Ein Soldat leitet höchstens eine Dienststelle, eine Dienststelle wird von genau einem Soldaten geleitet.
           \begin{center}
-            \scalebox{.68}{
+            \scalebox{.8}{
               \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
                 \node[entity](soldat){Soldat};
                 \node[relationship](besetzt)[right = of soldat]{besetzt} edge node[auto,swap] {(1,1)}(soldat);

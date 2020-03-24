@@ -1,3 +1,7 @@
+%isTable=true, weil das Symbol meist vor Tabellen benutzt wird
+\newboolean{isTable}
+\setboolean{isTable}{true}
+
 \newsavebox{\litbox}
 
 \newcommand{\chaptertoc}[1][Inhaltsangabe]{
@@ -69,46 +73,158 @@
     \endgroup
 }
 
-\newenvironment{merke}{
+\newenvironment{merke}{%
     \par
-    \leaders\vbox to 2\baselineskip{}
-    \vskip2\baselineskip
+    \vspace{.5\baselineskip}
     \marginpar{
-        \vspace*{-1.5em}
-        \ifthispageodd{
-            \hspace*{1em}
+        \Ifthispageodd{
+            \hspace*{0em}
         }
         {
             \hspace*{3em}
         }
-        \includegraphics[scale=1]{lightbulb-on}
+        \raisebox{-2\baselineskip}{
+            \includegraphics[scale=0.85]{lightbulb-on}
+        }
     }
-    \vspace{-1.5em}
-    \begin{lrbox}
-        {\litbox}
-        \begin{minipage}{0.96\linewidth}
-}
-{
+    \begin{lrbox}{\litbox}
+        \begin{minipage}{0.949\linewidth}
+            \smallskip
+}{
+            \smallskip
         \end{minipage}
     \end{lrbox}
-    \fbox{\colorbox{lightyellow}{\usebox{\litbox}}}
+    \fcolorbox{black}{lightyellow}{
+        \usebox{\litbox}
+    }
     \par
-    \addvspace{\baselineskip}
+    \vspace{.5\baselineskip}
+    \ignorespacesafterend
 }
 
-\newcommand{\pk}[1]{\underline{#1}}
-\newcommand{\fk}[1]{$\Uparrow$#1$\Uparrow$}
-\newcommand{\nn}[1]{#1 [NN]}
-\newcommand{\un}[1]{#1 [UN]}
 
-\newcommand{\changefont}[3]{\fontfamily{#1} \fontseries{#2} \fontshape{#3} \selectfont}
-\newcommand{\beispiel}[1]{\hyperref[#1]{Beispiel~\ref*{#1}}}
-\newcommand{\abschnitt}[1]{\hyperref[#1]{Abschnitt~\ref*{#1}}}
-\newcommand{\tabelle}[1]{\hyperref[#1]{Tabelle~\ref*{#1}}}
-\newcommand{\abbildung}[1]{\hyperref[#1]{Abbildung~\ref*{#1}}}
-\makeatletter
-\newcommand{\myhref}[2]{\hyper@linkurl{#2}{#1}}
-\makeatother
+\newenvironment{oraclesql}[1][\boolean{isTable}]{
+    \renewcommand*{\boolparam}{#1}
+    \par
+    \marginpar{
+        \Ifthispageodd{
+            \hspace*{0em}
+        }
+        {
+            \hspace*{3em}
+        }
+        \raisebox{-3\baselineskip}{
+            \includegraphics[scale=1]{oracle_11g}
+        }
+    }
+    \begin{lrbox}{\litbox}
+        \begin{minipage}{.949\linewidth}
+            \smallskip
+}{
+            \smallskip
+        \end{minipage}
+    \end{lrbox}
+    \usebox{\litbox}
+}
+
+\newenvironment{mssql}[1][\boolean{isTable}]{
+    \renewcommand*{\boolparam}{#1}
+    \par
+    \marginpar{
+        \Ifthispageodd{
+            \hspace*{0em}
+        }
+        {
+            \hspace*{3em}
+        }
+        \raisebox{-3\baselineskip}{
+            \includegraphics[scale=1]{ms_sql}
+        }
+    }
+    \begin{lrbox}{\litbox}
+        \begin{minipage}{.949\linewidth}
+            \smallskip
+}{
+            \smallskip
+        \end{minipage}
+    \end{lrbox}
+    \usebox{\litbox}
+}
+
+\newenvironment{msoraclesql}[1][\boolean{isTable}]{
+    \renewcommand*{\boolparam}{#1}
+    \par
+    \marginpar{
+        \Ifthispageodd{
+            \hspace*{0em}
+        }
+        {
+            \hspace*{2.8em}
+        }
+        \raisebox{-3\baselineskip}{
+            \includegraphics[scale=1]{ms_sql_oracle}
+        }
+    }
+    \begin{lrbox}{\litbox}
+        \begin{minipage}{.949\linewidth}
+            \smallskip
+}{
+            \smallskip
+        \end{minipage}
+    \end{lrbox}
+    \usebox{\litbox}
+}
+\newenvironment{literaturinternet}{
+    \par
+    \vspace{.5\baselineskip}
+    \marginpar{
+        \Ifthispageodd{
+            \hspace*{0em}
+        }
+        {
+            \hspace*{2.8em}
+        }
+        \raisebox{-2\baselineskip}{
+            \includegraphics[scale=1]{globus}
+        }
+    }
+    \begin{lrbox}{\litbox}
+        \begin{minipage}{.949\linewidth}
+            \smallskip
+            \begin{small}
+                \begin{itemize}
+}{
+                \end{itemize}
+            \end{small}
+            \smallskip
+        \end{minipage}
+    \end{lrbox}
+    \fbox{\usebox{\litbox}}
+    \par
+    \vspace{.5\baselineskip}
+    \ignorespacesafterend
+}
+
+% \newenvironment{literaturinternet}{
+%   \par
+%   \leaders\vbox to 2\baselineskip{%
+
+%   }\vskip2\baselineskip
+%   \marginpar{\vspace*{-1.5em}\Ifthispageodd{\hspace*{1em}}{\hspace*{3em}}\includegraphics[scale=1]{globus}}
+%   \vspace{-1.5em}
+%   \begin{lrbox}{\litbox}
+%     \begin{minipage}{.96\linewidth}
+%       \begin{small}
+%         \begin{itemize}
+% }{
+%         \end{itemize}
+%       \end{small}
+%     \end{minipage}
+%   \end{lrbox}
+%   \fbox{\usebox{\litbox}}
+%   \par
+%   \addvspace{\baselineskip}
+% }
 
 \newcommand{\bild}[3]{
   \begingroup
@@ -127,86 +243,6 @@
   \end{figure}
     \par
   \endgroup
-}
-
-%isTable=true, weil das Symbol meist vor Tabellen benutzt wird
-\newboolean{isTable}
-\setboolean{isTable}{true}
-\newenvironment{oraclesql}[1][\boolean{isTable}]{
-  \renewcommand*{\boolparam}{#1}
-  \par
-  \leaders\vbox to 2\baselineskip{%
-
-  }\vskip2\baselineskip
-  \marginpar{\vspace*{-1.5em}\ifthispageodd{\hspace*{1em}}{\hspace*{3em}}\includegraphics[scale=1]{oracle_11g}}
-  \ifthenelse{\boolparam} {
-    \vspace{-1.5em}
-  } {
-    \vspace{-3.5em}
-  }
-  \begin{lrbox}{\litbox}
-    \begin{minipage}{.96\linewidth}
-}{
-    \end{minipage}
-  \end{lrbox}
-  \usebox{\litbox}
-  \ifthenelse{\boolparam} {
-  \par
-  \addvspace{\baselineskip}
-  } {
-  }
-}
-
-\newenvironment{mssql}[1][\boolean{isTable}]{
-  \renewcommand*{\boolparam}{#1}
-  \par
-  \leaders\vbox to 2\baselineskip{%
-
-  }\vskip2\baselineskip
-  \marginpar{\vspace*{-1.5em}\ifthispageodd{\hspace*{1em}}{\hspace*{3em}}\includegraphics[scale=1]{ms_sql}}
-  \ifthenelse{\boolparam} {
-    \vspace{-1.5em}
-  } {
-    \vspace{-3.5em}
-  }
-  \begin{lrbox}{\litbox}
-    \begin{minipage}{.96\linewidth}
-}{
-    \end{minipage}
-  \end{lrbox}
-  \usebox{\litbox}
-  \par
-  \ifthenelse{\boolparam} {
-  \par
-  \addvspace{\baselineskip}
-  } {
-  }
-}
-
-\newenvironment{msoraclesql}[1][\boolean{isTable}]{
-  \renewcommand*{\boolparam}{#1}
-  \par
-  \leaders\vbox to 2\baselineskip{%
-
-  }\vskip2\baselineskip
-  \marginpar{\vspace*{-1.5em}\ifthispageodd{\hspace*{1em}}{\hspace*{3em}}\includegraphics[scale=1]{ms_sql_oracle}}
-  \ifthenelse{\boolparam} {
-    \vspace{-1.5em}
-  } {
-    \vspace{-3.5em}
-  }
-  \begin{lrbox}{\litbox}
-    \begin{minipage}{.96\linewidth}
-}{
-    \end{minipage}
-  \end{lrbox}
-  \usebox{\litbox}
-  \par
-  \ifthenelse{\boolparam} {
-  \par
-  \addvspace{\baselineskip}
-  } {
-  }
 }
 
 \newcommand{\identifier}[1]{\textsc{#1}}
@@ -243,7 +279,7 @@
 \newcommand{\DENY}{\languageorasql{DENY}}
 
 \newenvironment{literaturbuch}{
-  \marginpar{\vspace{1em}\ifthispageodd{\hspace*{-4em}}{\hspace*{3em}}\includegraphics[scale=1]{buch}}
+  \marginpar{\vspace{1em}\Ifthispageodd{\hspace*{-4em}}{\hspace*{3em}}\includegraphics[scale=1]{buch}}
   \begin{lrbox}{\litbox}
     \begin{minipage}{.975\linewidth}
       \begin{small}
@@ -256,23 +292,17 @@
   \par\fbox{\usebox{\litbox}}\par
 }
 
-\newenvironment{literaturinternet}{
-  \par
-  \leaders\vbox to 2\baselineskip{%
+\newcommand{\pk}[1]{\underline{#1}}
+\newcommand{\fk}[1]{$\Uparrow$#1$\Uparrow$}
+\newcommand{\nn}[1]{#1 [NN]}
+\newcommand{\un}[1]{#1 [UN]}
 
-  }\vskip2\baselineskip
-  \marginpar{\vspace*{-1.5em}\ifthispageodd{\hspace*{1em}}{\hspace*{3em}}\includegraphics[scale=1]{globus}}
-  \vspace{-1.5em}
-  \begin{lrbox}{\litbox}
-    \begin{minipage}{.96\linewidth}
-      \begin{small}
-        \begin{itemize}
-}{
-        \end{itemize}
-      \end{small}
-    \end{minipage}
-  \end{lrbox}
-  \fbox{\usebox{\litbox}}
-  \par
-  \addvspace{\baselineskip}
-}
+\newcommand{\changefont}[3]{\fontfamily{#1} \fontseries{#2} \fontshape{#3} \selectfont}
+\newcommand{\beispiel}[1]{\hyperref[#1]{Beispiel~\ref*{#1}}}
+\newcommand{\abschnitt}[1]{\hyperref[#1]{Abschnitt~\ref*{#1}}}
+\newcommand{\tabelle}[1]{\hyperref[#1]{Tabelle~\ref*{#1}}}
+\newcommand{\abbildung}[1]{\hyperref[#1]{Abbildung~\ref*{#1}}}
+\makeatletter
+\newcommand{\myhref}[2]{\hyper@linkurl{#2}{#1}}
+\makeatother
+

@@ -97,6 +97,7 @@ GROUP BY m.Mitarbeiter_ID, m.Vorname, m.Nachname, m.Geburtsdatum
 HAVING   m.Geburtsdatum BETWEEN MAX(a.Geburtsdatum) - INTERVAL '2' YEAR AND
          MAX(a.Geburtsdatum);
         \end{lstlisting}
+\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]
@@ -108,7 +109,6 @@ GROUP BY m.Mitarbeiter_ID, m.Vorname, m.Nachname, m.Geburtsdatum
 HAVING   m.Geburtsdatum BETWEEN DATEADD(YEAR, -2, MAX(a.Geburtsdatum)) AND
          MAX(a.Geburtsdatum);
         \end{lstlisting}
-\clearpage
         \item Schreiben Sie eine Abfrage, die zu jedem Filialleiter, das Gehalt
         seines am schlechtesten bezahlten Mitarbeiters anzeigt. Sortieren Sie
         die Abfrage nach den Bankfilial-IDs der Filialleiter.
