@@ -1,0 +1,203 @@
+  \section{Lösungen - Verwalten einer Oracle Instanz}
+    \begin{enumerate}
+      \input{exercises/dbadmin_04/item_a}
+        \begin{lstlisting}[language=sqlplus]
+sqlplus / as sysdba
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_b}
+        \begin{lstlisting}[language=sqlplus]
+SQL> startup nomount
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_c}
+        \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER DATABASE MOUNT;
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_d}
+        \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER DATABASE OPEN;
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_e}
+        \begin{lstlisting}[language=sqlplus]
+SQL> shutdown immediate
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_f}
+        \begin{lstlisting}[language=sqlplus]
+SQL> startup
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_g}
+        \begin{lstlisting}[language=sqlplus]
+SQL> show parameter memory_target
+        \end{lstlisting}
+       \input{exercises/dbadmin_04/item_h}
+        \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET memory_target = 800M;
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_i}
+        \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET sga_target = 400M
+  3  SCOPE=spfile;
+SQL> ALTER SYSTEM
+  2  SET pga_aggregate_target = 100M
+  3  SCOPE=spfile;
+        \end{lstlisting}
+\clearpage
+      \input{exercises/dbadmin_04/item_j}
+        \begin{lstlisting}[language=sqlplus]
+SQL> shutdown immediate
+SQL> startup
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_k}
+
+      Antwort: Beide werden als Mindestwerte für die Größe der SGA
+      (\parameter{sga\_target}) und der PGAs
+      (\parameter{pga\_aggregate\_target}) herangezogen. Der restliche
+      Speicherplatz von 300M (\parameter{memory\_target} -
+      \parameter{sga\_target} - \parameter{pga\_aggregate\_target}) kann
+      dynamisch auf beide Strukturen verteilt werden.
+      \input{exercises/dbadmin_04/item_l}
+        Beachten Sie: Die Zahlen in der folgenden Lösung können bei Ihnen anders sein.
+        \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT name, bytes
+  2  FROM   v$sgainfo
+  3  WHERE  name IN ('Buffer Cache Size', 'Shared Pool Size',
+  4                  'Large Pool Size', 'Maximum SGA Size');
+
+NAME                                  BYTES
+-------------------------------- ----------
+Buffer Cache Size                 272629760
+Shared Pool Size                  125829120
+Large Pool Size                     4194304
+Maximum SGA Size                  835104768
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_m}
+        \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SESSION
+  2  SET NLS_LANGUAGE='GERMAN';
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_n}
+        \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE PFILE = '/home/oracle/initorcl.ora'
+  2  FROM   SPFILE;
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_o}
+        \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE SPFILE = '/home/oracle/spfileorcl.ora'
+  2  FROM   MEMORY;
+        \end{lstlisting}
+\clearpage
+      \input{exercises/dbadmin_04/item_p}
+        \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> shutdown immediate
+SQL> startup mount
+SQL> col name format a50
+SQL> SELECT name
+  2  FROM   v$controlfile;
+
+NAME
+-------------------------------------------------------------
+/u01/app/oracle/oradata/orcl/control01.ctl
+/u05/fast_recovery_area/orcl/control02.ctl
+
+SQL> shutdown immediate
+SQL> host cp /u01/app/oracle/oradata/orcl/control01.ctl
+            /u02/oradata/orcl/control03.ctl
+SQL> startup nomount
+SQL> ALTER SYSTEM
+  2  SET control_files = '/u01/app/oracle/oradata/orcl/control01.ctl',
+                         '/u05/fast_recovery_area/orcl/control02.ctl',
+                         '/u02/oradata/orcl/control03.ctl'
+  3  SCOPE=spfile;
+SQL> shutdown immediate
+SQL> startup
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_q}
+      \input{exercises/dbadmin_04/item_r}
+        \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> col member format a50
+SQL> SELECT   group&\#&, member
+  2  FROM     v$logfile
+  3  ORDER BY 1;
+
+    GROUP&\#& MEMBER
+---------- --------------------------------------------------
+         1 /u01/app/oracle/oradata/orcl/redo01.log
+         2 /u01/app/oracle/oradata/orcl/redo02.log
+         3 /u01/app/oracle/oradata/orcl/redo03a.log
+         4 /u01/app/oracle/oradata/orcl/redo04a.log
+         5 /u02/oradata/orcl/redo05b.log
+         5 /u01/app/oracle/oradata/orcl/redo05a.log
+        \end{lstlisting}
+\clearpage
+      \input{exercises/dbadmin_04/item_s}
+        Beachten Sie: Die im folgenden gezeigte Lösung muss für Ihr System u. U. angepasst werden!
+        \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> shutdown immediate
+SQL> host mv /u01/app/oracle/oradata/orcl/redo01.log
+             /u01/app/oracle/oradata/orcl/redo01a.log
+SQL> host mv /u01/app/oracle/oradata/orcl/redo02.log
+             /u02/oradata/orcl/redo02a.log
+SQL> host mv /u01/app/oracle/oradata/orcl/redo03.log
+             /u03/oradata/orcl/redo03a.log
+SQL> startup mount
+SQL> ALTER DATABASE
+  2  RENAME FILE '/u01/app/oracle/oradata/orcl/redo01.log'
+  3           TO '/u01/app/oracle/oradata/orcl/redo01a.log';
+SQL> ALTER DATABASE
+  2  ADD LOGFILE MEMBER '/u02/oradata/orcl/redo01b.log'
+  3  TO GROUP 1;
+SQL> ALTER DATABASE
+  2  ADD LOGFILE MEMBER '/u03/oradata/orcl/redo01c.log'
+  3  TO GROUP 1;
+SQL> ALTER DATABASE
+  2  RENAME FILE '/u01/app/oracle/oradata/orcl/redo02.log'
+              TO '/u02/oradata/orcl/redo02a.log';
+SQL> ALTER DATABASE
+  2  ADD LOGFILE MEMBER '/u03/oradata/orcl/redo02b.log'
+  3  TO GROUP 2;
+SQL> ALTER DATABASE
+  2  ADD LOGFILE MEMBER '/u01/app/oracle/oradata/orcl/redo02c.log'
+  3  TO GROUP 2;
+SQL> ALTER DATABASE
+  2  RENAME FILE '/u01/app/oracle/oradata/orcl/redo03a.log'
+              TO '/u03/oradata/orcl/redo03a.log';
+SQL> ALTER DATABASE
+  2  ADD LOGFILE MEMBER '/u01/app/oracle/oradata/orcl/redo03b.log'
+  3  TO GROUP 3;
+SQL> ALTER DATABASE
+  2  ADD LOGFILE MEMBER '/u02/oradata/orcl/redo03c.log'
+  3  TO GROUP 3;
+        \end{lstlisting}
+\clearpage
+      \input{exercises/dbadmin_04/item_t}
+        \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> SELECT log_mode
+  2  FROM   v$database;
+
+LOG_MODE
+------------
+&ARCHIVELOG&
+
+-- Nur falls notwendig ausfuehren
+SQL> shutdown immediate
+SQL> startup mount
+SQL> ALTER DATABASE ARCHIVELOG;
+        \end{lstlisting}
+      \input{exercises/dbadmin_04/item_u}
+        \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> ALTER SYSTEM
+  2  SET log_archive_dest_1 = 'LOCATION=/u02/archive OPTIONAL';
+SQL> ALTER SYSTEM
+  2  SET log_archive_dest_2 = 'LOCATION=/u03/archive MANDATORY';
+SQL> ALTER SYSTEM
+  2  SET log_archive_dest_3 = 'LOCATION=/u04/archive OPTIONAL';
+SQL> ALTER SYSTEM
+  2  SET log_archive_min_succeed_dest=2;
+SQL> ALTER SYSTEM
+  2  SET log_archive_format='archive_%d_%t_%s_%r.arc' SCOPE=spfile;
+SQL> shutdown immediate
+SQL> startup
+        \end{lstlisting}
+    \end{enumerate}
+\clearpage

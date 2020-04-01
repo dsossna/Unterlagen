@@ -1,0 +1,9 @@
+        \item Prüfen Sie den Status des Original-Undo-Tablespace
+        \identifier{undotbs1}. Wann findet der Wechsel von \identifier{undotbs1}
+        zu \identifier{undotbs03} tatsächlich statt? Führen Sie hierzu die
+        folgende Abfrage mehrfach in ca. 30 Sekunden Abständen aus:
+
+        \begin{lstlisting}[language=oracle_sql]
+SQL> SELECT usn, status
+  2  FROM   v$rollstat;
+        \end{lstlisting}

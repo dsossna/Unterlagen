@@ -1,0 +1,1418 @@
+\chapter{Verwalten einer Oracle Instanz}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+      Eine Oracle-Umgebung besteht immer aus zwei Teilen: Datenbank und Instanz.
+    Beim Start-Up, dem \enquote{Hochfahren der Datenbank}, wird die Instanz als
+    Shared-Memory-Block im Arbeitsspeicher erzeugt. Dieser wird in die SGA und
+    die PGA unterteilt. Des Weiteren werden verschiedene Hintergrundprozesse
+    gestartet, die die Arbeit in der SGA verrichten.
+    \section{Das SQL*Plus-Tool}
+      Das SQL*Plus-Tool (Aussprache: sequel plus) ist ein textbasiertes, interaktives Tool, welches hauptsächlich für administrative Aufgaben gedacht ist. Es wird automatisch bei jedem Oracle-Datenbankserver mit installiert. Ebenso kann es mit Hilfe der Oracle Client Tools auf einem Rechner ohne Datenbankserver installiert werden.
+      \bild{Das SQL*Plus-Tool}{sql_plus}{1}
+      Das SQL*Plus-Tool kennt drei verschiedene Arten von Befehlen:
+      \begin{itemize}
+        \item SQL-Kommandos
+        \item PL/SQL-Kommandos
+        \item SQL*Plus-Befehle
+      \end{itemize}
+      Während SQL- und PL/SQL-Befehle durch die Datenbank verarbeitet werden,
+      bleiben SQL*Plus-Kommandos lokal. Sie dienen nur zur Formatierung der
+      Anzeige in SQL*Plus.
+      \subsection{Die erste Anmeldung}
+        Das Anmelden an einer Datenbank mit Hilfe des SQL*Plus-Tools verläuft
+        in drei Schritten:
+        \begin{enumerate}
+          \item Öffnen eines Terminalfensters
+          \item Auswählen der gewünschten Instanz
+          \item Starten von SQL*Plus
+        \end{enumerate}
+        Um eine Instanz auswählen zu können, liefert Oracle das Shell-Skript
+        \oscommand{oraenv} aus.
+        \bild{Das oraenv Shell-Skript}{oraenv}{1}
+
+        \begin{merke}
+          Beachten Sie den Punkt im Aufruf: \oscommand{. oraenv}
+        \end{merke}
+        Der Start des SQL*Plus-Tools erfolgt mittels der Kommandozeile: \oscommand{sqlplus / as sysdba}. Die Bedeutung des Zusatzes \oscommand{ / as sysdba} wird an späterer Stelle noch behandelt.
+      \subsection{Die wichtigsten SQL*Plus-Befehle}
+        \begin{center}
+          \tablecaption{Die wichtigsten SQL*Plus-Befehle}
+          \label{importantsqlpluscommands}
+          \begin{small}
+            \tablefirsthead{
+              \multicolumn{1}{c}{\textbf{Befehl}} &
+              \multicolumn{1}{c}{\textbf{Beispiel}} &
+              \multicolumn{1}{c}{\textbf{Erläuterung}} \\
+              \hline
+            }
+            \tablehead{
+              \multicolumn{1}{c}{\textbf{Befehl}} &
+              \multicolumn{1}{c}{\textbf{Beispiel}} &
+              \multicolumn{1}{c}{\textbf{Erläuterung}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \tablelasttail {
+              \hline
+            }
+            \begin{supertabular}{|p{4.25cm}|p{4.25cm}|p{6.25cm}|}
+              \oscommand{show user} & \oscommand{show user} & Zeigt den aktuellen Benutzernamen an. \\
+              \hline
+              \oscommand{conn[ect]} & \oscommand{conn hr/hr} & Öffnet eine Session mit dem angegebenen Nutzernamen/Passwort. \\
+              \hline
+              \oscommand{disconn[ect]} & \oscommand{disconn} & Beendet die aktuelle Session. \\
+              \hline
+              \oscommand{exit} & \oscommand{exit} & Beendet die aktuelle Session und schließt das SQL*Plus-Tool. \\
+              \hline
+              \oscommand{ho[st]} & \oscommand{ho} & Verlässt SQL*Plus und wechselt in einen Terminal. Das SQL*Plus-Tool bleibt im Hintergrund geöffnet. Durch die Eingabe von \oscommand{exit} kann zurückgewechselt werden. \\
+              \hline
+              \oscommand{desc[ribe]} & \oscommand{desc employees} & Zeigt die Definition einer Tabelle an. \\
+              \hline
+              \oscommand{ed[it]} & \oscommand{ed} & Öffnet das letzte SQL-Statement in einem Editor. Das Statement kann geändert und erneut ausgeführt werden. \\
+              \hline
+              \oscommand{col xx format  aNN} & \oscommand{col mail format a20} & Breite einer Tabellenspalte der Typen \identifier{CHAR}, \identifier{VARCHAR2} oder \identifier{DATE} begrenzen. \oscommand{xx} steht für einen Spaltenbezeichner und \oscommand{NN} steht für die Breite. \\
+              \hline
+              \oscommand{col xx format NN} & \oscommand{col salary 999999} & Begrenzt die Breite einer Spalte des Typs \identifier{NUMBER}. Jede \oscommand{9} steht für eine Stelle, d. h. \oscommand{999} erzeugt eine dreistellige Spalte. \\
+              \hline
+              \oscommand{set linesize NN} & \oscommand{set linesize 300} & Zeilenlänge auf \oscommand{NN} Zeichen begrenzen. \\
+              \hline
+              \oscommand{set long NN} & \oscommand{set long 4000} & Begrenzt die Breite einer Spalte des Typs \identifier{LONG} auf \oscommand{NN} Zeichen. \\
+              \hline
+              \oscommand{set pagesize NN} & \oscommand{set pagesize 50} & Seitenhöhe auf \oscommand{NN} Zeilen begrenzen. Die Höhe gibt an, nach wie vielen Zeilen die Spaltenüberschriften wiederholt werden. \\
+              \hline
+              \oscommand{set serveroutput on\textbar{}off} & \oscommand{set serveroutput on} & Für PL/SQL-Blöcke wird die Bild\-schirm\-ausgabe ein- oder ausgeschaltet.\\
+              \hline
+              \oscommand{startup} & startup & Startet eine Oracle-Instanz. \\
+              \hline
+              \oscommand{shutdown} & shutdown & Schließt eine Oracle-Instanz. \\
+              \hline
+              \oscommand{[l]ist} & l & Letztes SQL-Kommando anzeigen. \\
+              \hline
+              \oscommand{[r]erun} & r & Letztes SQL-Kommando wiederholen. \\
+           \end{supertabular}
+          \end{small}
+        \end{center}
+    \section{Der Start-Up-Prozess}
+      Unter dem Begriff Start-Up versteht Oracle das \enquote{Hochfahren der Datenbank}. Da die Datenbank jedoch nur eine Sammlung von Dateien ist, ist somit die Ausdrucksweise \enquote{Hochfahren der Datenbank} inkorrekt. Richtiger Weise muss es heißen \enquote{Erstellen der Instanz}, da beim Start-Up eine Instanz erstellt und mit ihrer Datenbank verbunden wird.
+
+      Der Start-Up-Prozess verläuft in drei Schritten, die Start-Up-Phasen genannt werden. Jede Phase hat einen eigenen Namen, einen bestimmten Zweck und ist für unterschiedliche, meist administrative Tätigkeiten notwendig. Die Namen der Start-Up-Phasen lauten:
+      \begin{itemize}
+        \item NOMOUNT
+        \item MOUNT
+        \item OPEN
+      \end{itemize}
+      \subsection{Die NOMOUNT-Phase}
+        Nach dem ersten Schritt des Start-Ups befindet sich die Datenbank in der NOMOUNT-Phase. Das bedeutet, dass die Instanz erstellt, aber noch nicht an die Datenbank angeschlossen wurde. Es existiert eine Instanz ohne Datenbank.
+
+        \begin{merke}
+          Um den Start-Up einer Instanz durchführen zu können, müssen die beiden Umgebungsvariablen \oscommand{ORACLE\_SID} und \oscommand{ORACLE\_HOME} gesetzt sein. Dies geschieht beim Ausführen des Shell-Skriptes: \oscommand{. oraenv}.
+        \end{merke}
+        Das Starten der Instanz geschieht mit dem SQL*Plus-Befehl \languagesqlplus{startup}. Diesem Kommando können die Zusätze \languagesqlplus{nomount}, \languagesqlplus{mount} oder \languagesqlplus{open} mitgegeben werden, um die jeweils gewünschte Start-Up-Phase zu erreichen.
+        \begin{lstlisting}[caption={Einen Start-Up bis zur NOMOUNT-Phase
+        durchführen},label=admin01,language=sqlplus]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+&SQL&*Plus: Release 11.2.0.1.0 Production &on& Tue Aug 27 10:20:29 2013
+
+Copyright (c) 1982, 2009, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> startup nomount
+ORACLE instance started.
+
+Total System Global Area  643084288 bytes
+Fixed Size                  2215984 bytes
+Variable Size             222302160 bytes
+Database Buffers          411041792 bytes
+Redo Buffers                7524352 bytes
+        \end{lstlisting}
+
+        \bild{Die NOMOUNT-Phase}{startup_nomount}{1.75}
+
+        Nach Erreichen der NOMOUNT-Phase sind drei Dinge geschehen:
+        \begin{enumerate}
+          \item Die Parameter-/Serverparameterdatei wurde gelesen
+          \item Die SGA wurde mit den gelesenen Parametern erstellt
+          \item Die Oracle-Hintergrundprozesse wurden gestartet
+        \end{enumerate}
+      \subsection{Die MOUNT-Phase}
+        Der Begriff \enquote{mounten} bedeutet, dass eine Instanz mit ihrer Datenbank verbunden wird. Dieser Vorgang wird dadurch realisiert, dass die Instanz die Kontrolldatei der Datenbank liest, um ihr die Speicherorte der Daten- und der Redo Log Dateien zu entnehmen. Der Pfad zu den Kontrolldateien ist in der Parameterdatei, im Parameter \parameter{control\_files} festgelegt.
+        \bild{Die MOUNT-Phase}{startup_mount}{1.8}
+
+        In dieser Phase ist die Instanz exklusiv geöffnet, d. h. nur Administratoren haben Zugriff, normale Nutzer noch nicht. Die MOUNT-Phase ist für administrative Tägtigkeiten, wie z. B. Recovery nach einem Datenverlust oder das Verschieben von Datenbankdateien vorgesehen.
+
+        Wie eine Instanz die MOUNT-Phase erreichen kann, hängt davon ab, ob sie geschlossen ist oder ob sie sich in der NOMOUNT-Phase befindet. Für eine geschlossene Datenbank wird mit Hilfe des Kommandos \languageorasql{startup mount} die Instanz bis in die MOUNT-Phase gebracht. Existiert die Instanz aber bereits in der NOMOUNT-Phase, muss sie mittels des Befehls \languageorasql{ALTER DATABASE MOUNT} in die MOUNT-Phase versetzt werden.
+
+        \begin{merke}
+          Eine Instanz die bereits mit \languageorasql{startup} gestartet wurde, kann nicht nochmal gestartet werden. Ihr Status muss stattdessen mit \languageorasql{ALTER DATABASE} geändert werden.
+        \end{merke}
+        \beispiel{admin02} zeigt wie eine Instanz reagiert, wenn sie nach einen Start-Up erneut gestartet werden soll.
+\clearpage
+        \begin{lstlisting}[caption={ORACLE läuft noch. Erst
+        stoppen.},label=admin02,language=sqlplus]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+&SQL&*Plus: Release 11.2.0.1.0 Production &on& Tue Aug 27 10:23:58 2013
+
+Copyright (c) 1982, 2009, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL> startup mount
+&\textbf{\textcolor{red}{ORA-01081: cannot start already-running ORACLE - shut it down first}}&
+        \end{lstlisting}
+        In \beispiel{admin01} ist zu sehen, dass das \languagesqlplus{startup nomount}-Kommando, die Instanz startet und in die NOMOUNT-Phase versetzt. Das zweite Kommando, \languagesqlplus{startup mount} quittiert Oracle mit der Fehlermeldung: \enquote{\oscommand{ORA-01081: cannot start already-running ORACLE - shut it down first}}. Dies geschieht, da die Instanz bereits gestartet worden war.
+
+        \begin{merke}
+          Eine Instanz muss erst heruntergefahren werden, bevor sie erneut gestartet werden kann.
+        \end{merke}
+        Im folgenden Beispiel wird die Instanz korrekt von der NOMOUNT-Phase in die MOUNT-Phase gehoben.
+        \begin{lstlisting}[caption={Das Kommando ALTER DATABASE MOUNT},label=admin03,,language=oracle_sql]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+&SQL&*Plus: Release 11.2.0.1.0 Production &on& Tue Aug 27 10:26:35 2013
+
+Copyright (c) 1982, 2009, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL> ALTER DATABASE MOUNT;
+
+Database altered.
+        \end{lstlisting}
+    \subsection{Die OPEN-Phase}
+      Eine Oracle-Datenbank zu öffnen bedeutet, die Daten- und Redo Log Dateien zu öffnen und sie den \enquote{normalen Nutzern} zugänglich zu machen. Das Öffnen einer geschlossenen Datenbank geschieht mit dem Kommando \languagesqlplus{startup} oder wahlweise auch mit \languagesqlplus{startup open}.
+
+      \bild{Die OPEN-Phase}{startup_open}{1.75}
+
+      \begin{lstlisting}[caption={Starten der Instanz und öffnen der
+      Datenbank},label=admin04,language=sqlplus]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+&SQL&*Plus: Release 11.2.0.1.0 Production &on& Tue Aug 27 10:36:12 2013
+
+Copyright (c) 1982, 2009, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> startup open
+ORACLE instance started.
+
+Total System Global Area  643084288 bytes
+Fixed Size                  2215984 bytes
+Variable Size             222302160 bytes
+Database Buffers          411041792 bytes
+Redo Buffers                7524352 bytes
+Database mounted.
+Database opened.
+        \end{lstlisting}
+        Für den Wechsel zwischen MOUNT- und OPEN-Phase gilt das Gleiche, wie für den Wechsel zwischen NOMOUNT- und MOUNT-Phase, er muss mittels \languageorasql{ALTER DATABASE} erfolgen, da die Instanz bereits gestartet ist.
+        \begin{lstlisting}[caption={Wechsel zwischen MOUNT- und OPEN-Phase},label=admin05,language=oracle_sql]
+ORACLE instance started.
+
+Total System Global Area  643084288 bytes
+Fixed Size                  2215984 bytes
+Variable Size             222302160 bytes
+Database Buffers          411041792 bytes
+Redo Buffers                7524352 bytes
+Database mounted.
+SQL> ALTER DATABASE OPEN;
+Database altered.
+        \end{lstlisting}
+      \subsection{Das Hochfahren einer Instanz erzwingen}
+        In einigen Fällen kommt es vor, dass eine Instanz nicht auf normalem Wege gestartet werden kann. Sollte dies geschehen, muss \enquote{der Instanzstart erzwungen werden}. Sinnvoll ist ein solches Vorgehen aber nur in den folgenden Situationen:
+        \begin{itemize}
+          \item Wenn die Instanz nicht gestartet werden kann
+          \item Wenn ein Herunterfahren der Instanz nicht möglich ist
+        \end{itemize}
+        Mit dem Kommando \languagesqlplus{startup force} wird eine Instanz gezwungen, neu zu starten. Durch einen solchen \enquote{gewaltsamen} Neustart entsteht jedoch Datenverlust, weil die Instanz ohne vorherigen Checkpoint von ihrer Datenbank getrennt wird. Alle nicht abgeschlossenen Transaktionen der Nutzer und sämtliche Sessions werden abgebrochen.
+
+        Zur Behebung des Datenverlusts, wird beim Neustart ein
+        \enquote{Instance-} bzw. \enquote{Crash recovery} durchgeführt. Dies
+        wird durch einen Eintrag im Alert-Log File belegt.
+        \begin{lstlisting}[caption={Ein erzwungener Neustart der Instanz und
+        seine Folgen - Der Eintrag im Alert Log
+        File},label=admin07,language=terminal]
+Mon Aug 26 08:59:27 2013 &ALTER DATABASE OPEN& 
+&\textbf{\textcolor{red}{Beginning crash recovery of 1 threads}}&
+ parallel recovery started with 2 processes
+Started redo scan
+Completed redo scan
+ read 119 KB redo, 82 data blocks need recovery
+Started redo application at
+ Thread 1: logseq 4, block 277
+Recovery of Online Redo Log: Thread 1 Group 1 Seq 4 Reading mem 0
+  Mem# 0: /u02/oradata/orcl/redo01.log
+Completed redo application of 0.11MB
+&\textbf{\textcolor{red}{Completed crash recovery}}& at
+ Thread 1: logseq 4, block 515, scn 1037873
+ 82 data blocks read, 82 data blocks written, 119 redo k-bytes read
+        \end{lstlisting}
+    \section{Der Shutdown-Vorgang}
+      Als \enquote{Shutdown} wird der Vorgang des Herunterfahrens der Instanz bezeichnet. Welche Einzelschritte bei einem Shutdown geschehen, hängt davon ab, welche der vier Arten des Shutdowns gewählt wurde. Folgende Shutdown-Arten gibt es:
+      \begin{itemize}
+        \item Shutdown Normal
+        \item Shutdown Transactional
+        \item Shutdown Immediate
+        \item Shutdown Abort
+      \end{itemize}
+      Ein Shutdown kann mit Hilfe eines Datenbank-Tools eingeleitet werden, z. B. SQL*Plus.
+
+      \begin{merke}
+        Nur Nutzer mit dem Privileg \privileg{SYSDBA} oder \privileg{SYSOPER} können einen Shutdown durchführen.
+      \end{merke}
+      \subsection{Shutdown NORMAL}
+        Der Shutdown NORMAL ist die gründlichste Art des Shutdown. Er führt folgende Einzelschritte durch:
+        \begin{enumerate}
+          \item Es werden keine neuen Connections zur Datenbank zugelassen
+          \item Es wird gewartet, bis alle Transaktionen der Nutzer abgeschlossen sind
+          \item Es wird gewartet, bis alle Nutzer ihre Session beendet haben
+          \item Ein Checkpoint wird ausgelöst
+        \end{enumerate}
+        Durch das Auslösen des Checkpoints werden alle geänderten Daten aus dem Database Buffer Cache in die Datendateien zurückgeschrieben. Daraus folgt, dass ein Shutdown NORMAL die Datenbank in einem konsistenten Zustand belässt.
+
+        Durchgeführt wird ein Shutdown NORMAL mit dem Kommando
+       \languagesqlplus{shutdown normal} oder einfach nur \languagesqlplus{shutdown}.
+        \begin{lstlisting}[caption={Durchführen eines Shutdown
+        NORMAL},label=admin08,language=sqlplus]
+SQL> shutdown normal
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+        \end{lstlisting}
+         \begin{merke}
+           Problematisch an einem Shutdown NORMAL ist, dass in einer Umgebung mit sehr vielen Nutzern, vermutlich nie alle Nutzer ihre Session beenden, was bedeutet, dass der Shutdown-Vorgang auch nie vollendet werden kann.
+         \end{merke}
+      \subsection{Shutdown TRANSACTIONAL}
+        Der Shutdown TRANSACTIONAL ist eine Abstufung des Shutdown NORMAL. Er führt folgende Einzelschritte durch:
+        \begin{enumerate}
+          \item Es werden keine neuen Connections zur Datenbank zugelassen
+          \item Es wird gewartet, bis alle Transaktionen der Nutzer abgeschlossen sind
+          \item Noch aktive Nutzersessions werden automatisch beendet
+          \item Ein Checkpoint wird ausgelöst
+        \end{enumerate}
+        Hier wird also lediglich auf das Ende aller noch offnen Transaktionen gewartet, nicht aber darauf, dass sich alle Nutzer vom System abmelden. Dies kann einen Shutdown-Vorgang deutlich beschleunigen, bzw. es wird dadurch eine realistische Chance für die Vollendung des Shutdowns eingeräumt.
+ 
+        \begin{merke}
+          Bei einem Shutdown TRANSACTIONAL ist es sinnvoll die Nutzer vorher zubenachrichtigen, da diese ab einem Zeitpunkt X, ihre Arbeit nicht mehr fortsetzen können.
+        \end{merke}
+        \begin{lstlisting}[caption={Durchführen eines Shutdown
+        TRANSACTIONAL},label=admin09,language=sqlplus]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+&SQL&*Plus: Release 11.2.0.1.0 Production &on& Tue Aug 27 10:50:05 2013
+
+Copyright (c) 1982, 2009, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL> shutdown transactional
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+        \end{lstlisting}
+        Der Unterschied zwischen einem Shutdown NORMAL und einem Shutdown TRANSACTIONAL ist im Alert Log File zu sehen.
+        \begin{lstlisting}[caption={Der Shutdown TRANSACTIONAL im Alert
+        Log},label=admin10,language=terminal]
+&\textbf{\textcolor{red}{Shutting down instance (transactional)}}&
+Shutting down instance: further logons disabled
+Stopping background process CJQ0
+Stopping background process QMNC
+Stopping background process MMNL
+Stopping background process MMON
+&\textbf{\textcolor{red}{All transactions complete. Performing immediate shutdown}}&
+License high water mark = 3
+All dispatchers and shared servers &shutdown&
+&ALTER DATABASE CLOSE NORMAL&
+        \end{lstlisting}
+        Der Eintrag \enquote{All transactions complete. Performing immediate shutdown} weisst darauf hin, dass nach dem Ende der letzten Transaktion sofort mit dem Shutdown begonnen wird. Bei einem Shutdown NORMAL fehlt diese Zeile, wie in \beispiel{admin11} zu sehen ist.
+        \begin{lstlisting}[caption={Der Shutdown NORMAL im Alert Log},label=admin11,language=terminal]
+&\textbf{\textcolor{red}{Shutting down instance (normal)}}&
+Stopping background process SMCO
+Shutting down instance: further logons disabled
+Mon Aug 26 10:41:26 2013
+Stopping background process CJQ0
+Stopping background process QMNC
+Stopping background process MMNL
+Stopping background process MMON
+License high water mark = 4
+All dispatchers and shared servers &shutdown&
+&ALTER DATABASE CLOSE NORMAL&
+       \end{lstlisting}
+
+       \begin{merke}
+        Ein Shutdown TRANSACTIONAL überführt die Datenbank in einen konsistenten Zustand.
+       \end{merke}
+      \subsection{Shutdown IMMEDIATE}
+        Der Shutdown IMMEDIATE ist genau das, was sein Name besagt. Die Datenbank wird sofort, ohne auf offene Transaktionen oder Nutzer zu warten heruntergefahren. Da diese Art des Shutdowns sehr radikal ist, sollten auf jeden Fall alle Nutzer informiert werden.
+
+        Nur in den folgenden Situationen sollte ein Shutdown IMMEDIATE durchgeführt werden:
+        \begin{itemize}
+          \item Vor einem automatisierten Backup
+          \item Um im Falle eines Stromausfalles die DB so schnell wie möglich herunterzufahren
+          \item Im Falle einer Datenbankfehlfunktion, wenn es nicht möglich ist, alle Nutzer vorher zu benachrichtigen
+        \end{itemize}
+        Bei diesem Shutdown werden folgende Einzelschritte durchgeführt:
+        \begin{itemize}
+          \item Es werden keine neuen Connections zur Datenbank zugelassen
+          \item Alle aktiven Transaktionen werden zurückgerollt
+          \item Noch aktive Nutzersessions werden automatisch beendet
+          \item Es wird ein Checkpoint gesetzt
+        \end{itemize}
+    
+        \begin{merke}
+          Obwohl alle Transaktionen abgebrochen und alle Sessions geschlossen werden, wird die Datenbank in einem konsistenten Zustand hinterlassen.
+        \end{merke}
+        \begin{lstlisting}[caption={Durchführen eines Shutdown IMMEDIATE},label=admin12,language=sqlplus]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+&SQL&*Plus: Release 11.2.0.1.0 Production &on& Tue Aug 27 10:52:09 2013
+
+Copyright (c) 1982, 2009, Oracle.  All rights reserved.
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL> shutdown immediate
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+        \end{lstlisting}
+      \subsection{Shutdown ABORT}
+        Der Shutdown ABORT ist die einzige Shutdown-Variante, bei der die
+        Datenbank in einem inkonsistenten Zustand hinterlassen wird. Hier wird
+        die Instanz einfach von der Datenbank getrennt, ohne dass vorher ein
+        Checkpoint ausgelöst wird. Aus diesem Grund sollte ein Shutdown ABORT
+        nur dann eingesetzt werden, wenn es notwendig ist.
+
+        Folgende Einzelschritte werden bei einem Shutdown ABORT ausgeführt:
+        \begin{itemize}
+          \item Es werden keine neuen Connections zur Datenbank zugelassen
+          \item Alle aktiven Transaktionen werden nicht zurückgerollt, sondern sofort abgebrochen (Inkonsistenz!)
+          \item Noch aktive Nutzersessions werden abgebrochen
+        \end{itemize}
+        \begin{lstlisting}[caption={Durchführen eines Shutdown ABORT},label=admin13,language=sqlplus]
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+
+&SQL&*Plus: Release 11.2.0.1.0 Production &on& Tue Aug 27 10:52:09 2013
+
+Copyright (c) 1982, 2009, Oracle.  All rights reserved.
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL> shutdown abort
+ORACLE instance shut down.
+        \end{lstlisting}
+  
+        \begin{merke}
+          Ein Neustart der Datenbank nach einem \languagesqlplus{shutdown abort} erfordert ein Instance recovery.
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{i1006091}
+        \end{literaturinternet}
+    \section{Verwalten der Parameterdatei}
+      Die Parameterdatei bzw. Serverparameterdatei ist die erste Datei, die benötigt wird, um eine Instanz hochfahren zu können. Sie enthält eine Liste mit Konfigurationsparametern, den sogenannten \enquote{Init\-iali\-sierungs\-pa\-ra\-me\-tern}.
+
+      Oracle sucht seine Parameterdatei/Serverparameterdatei beim Hochfahren der Instanz in einem betriebssystemabhängigen Standardverzeichnis. Dieses ist:
+      \begin{itemize}
+        \item \textbf{Windows}: \oscommand{\%ORACLE\_HOME\%\textbackslash database}
+        \item \textbf{UNIX}: \oscommand{\$ORACLE\_HOME/dbs}
+      \end{itemize}
+      Beim Durchsuchen des entsprechenden Standardpfades wird nach drei verschiedenen Dateinamen gesucht:
+      \begin{itemize}
+        \item \oscommand{spfile\$ORACLE\_SID.ora} (z. B. \oscommand{spfileorcl.ora})
+        \item \oscommand{spfile.ora}
+        \item \oscommand{init\$ORACLE\_SID.ora} (z. B. \oscommand{initorcl.ora})
+      \end{itemize}
+      Bei den ersten beiden Dateinamen handelt es sich um Serverparameterdateien, beim Dritten um eine Parameterdatei.
+ 
+      \begin{merke}
+        Kann Oracle keine dieser Dateien finden, wird der Startvorgang
+        abgebrochen.
+      \end{merke}
+
+      \begin{literaturinternet}
+        \item \cite{i1124822}
+      \end{literaturinternet}
+      \subsection{Initialisierungsparameter administrieren}
+        Initialisierungsparameter haben unterschiedliche Aufgaben:
+        \begin{itemize}
+          \item Benennen von Objekten wie z. B. Kontrolldateien oder Betriebssystemverzeichnissen
+          \item Beeinflussen von Kapazitäten, wie z. B. der Größe der SGA
+        \end{itemize}
+        Es kann aus unterschiedlichen Gründen notwendig sein, die Werte von Initialisierungsparametern zu verändern. Welche Auswirkungen diese Änderungen haben, hängt von den Charakteristiken der Datenbank und anderen Faktoren ab.
+        \subsubsection{Statische und dynamische Parameter}
+          Initialisierungsparameter werden in zwei Gruppen eingeteilt:
+          \begin{itemize}
+            \item \textbf{Statische Parameter}: Die Änderung an einem solchen Parameter wird erst nach einem Instanzneustart wirksam.
+            \item \textbf{Dynamische Parameter}: Änderungen an dynamischen Parametern werden sofort wirksam.
+          \end{itemize}
+          Die View \identifier{v\$system\_parameter} gibt Aufschluss darüber, ob ein Parameter statisch oder dynamisch ist.
+          \begin{lstlisting}[caption={Unterscheiden zwischen dynamischen und statischen Parametern},label=admin14,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col name format a30
+
+SQL> SELECT name, issys_modifiable
+  2  FROM   v$system_parameter;
+          \end{lstlisting}
+          In der Spalte \identifier{issys\_modifiable} können drei verschiedene Werte vorkommen:
+          \begin{itemize}
+            \item \textbf{IMMEDIATE}: Es handelt sich um einen \textbf{dynamischen} Parameter.
+            \item \textbf{FALSE}: Der Parameter ist \textbf{statisch}.
+            \item \textbf{DEFERRED}: Änderungen an einem so markierten Parameter haben nur auf neue Sessions, die nach der Änderung erstellt wurden eine Auswirkung.
+          \end{itemize}
+        \subsubsection{Initialisierungsparameter ändern}
+          Initialisierungsparameter können per \languageorasql{ALTER SYSTEM}-SQL-Kommando oder im Enterprise Manager geändert werden. \beispiel{admin15} zeigt wie der Parameter \identifier{license\_max\_sessions} von 0 auf 50 geändert wird.
+  
+          \begin{merke}
+            Der Parameter \identifier{license\_max\_sessions} legt fest, wie viele gleichzeitige Verbindungen zur Datenbank möglich sind. Ist der Schwellenwert von \identifier{license\_max\_sessions} erreicht, können sich nur noch Nutzer an der Datenbank anmelden, die das Privileg \privileg{restricted\_session} haben.
+          \end{merke}
+          \begin{lstlisting}[caption={\parameter{license\_max\_sessions} wird geändert},label=admin15,language=oracle_sql,alsolanguage=sqlplus]
+SQL> show parameter license_max_sessions
+
+NAME                                 &TYPE&        VALUE
+------------------------------------ ----------- ------------------------------
+license_max_sessions                 integer     0
+
+SQL> ALTER SYSTEM
+  2  SET license_max_sessions = 50 SCOPE=both;
+
+System altered.
+          \end{lstlisting}
+          Das \languageorasql{ALTER SYSTEM}-Kommando hat in \beispiel{admin15} zwei Klauseln:
+          \begin{itemize}
+            \item \languageorasql{SET <parameter> = wert}: Gibt den zu verändernden Parameter und den neuen Wert an. Welche Werte zulässig sind, hängt vom jeweiligen Parameter ab.
+            \item \languageorasql{SCOPE = <scope>}: Mit der \languageorasql{SCOPE}-Klausel wird geregelt, wo die Änderung vollzogen wird.
+          \end{itemize}
+          Die \languageorasql{SCOPE}-Klausel kennt drei Werte für \languageorasql{<scope>}:
+          \begin{itemize}
+            \item \languageorasql{SCOPE=both}: Die Änderung erfolgt in der SGA und im SPFILE.
+            \item \languageorasql{SCOPE=memory}: Die Änderung erfolgt nur in der SGA.
+            \item \languageorasql{SCOPE=spfile}: Die Änderung  erfolgt nur im SPFile. Damit der neue Wert wirksam wird, muss die Instanz neu gestartet werden.
+          \end{itemize}
+    
+          \begin{merke}
+            \languageorasql{SCOPE=both} ist die Standardeinstellung und kann deshalb entfallen.
+          \end{merke}
+
+          \begin{literaturinternet}
+            \item \cite{i2053602}
+          \end{literaturinternet}
+      \subsection{Sessionparameter}
+        Im Gegensatz zu Initialisierungsparametern, die systemweite Gültigkeit haben, sind Sessionparameter nur innerhalb der Session eines Nutzers gültig. Beispielsweise kann der Sessionparameter \parameter{nls\_language} von jedem Nutzer, der das \privileg{ALTER SESSION} besitzt, geändert werden. D. h. während Nutzer A mit deutschen Spracheinstellungen arbeitet, kann Nutzer B zur gleichen Zeit in englischer Sprache arbeiten.
+        \subsubsection{Sessionparameter ändern}
+          Änderungen an Sessionparametern werden mit dem SQL-Kommando \languageorasql{ALTER SESSION} durchgeführt, dessen Syntax dem \languageorasql{ALTER SYSTEM}-Kommando sehr ähnlich ist.
+
+          Geändert werden können einige dynamische Initialisierungsparameter, sowie alle Sessionparameter. Welche Initialisierungsparameter betroffen sind, kann wiederum mit Hilfe der View \identifier{v\$system\_parameter} und der Spalte \identifier{isses\_modifiable} ermittelt werden. Eine Liste der Sessionparameter kann aus der Oracle-Onlinedokumentation entnommen werden.
+          \begin{lstlisting}[caption={Sessionmodifiable
+          Initialisierungsparameter},label=admin16,language=oracle_sql,alsolanguage=sqlplus]
+ SQL> col name format a30
+
+SQL> SELECT name, isses_modifiable
+  2  FROM   v$system_parameter;
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{autoId0}
+            \item \cite{sthref3228}
+          \end{literaturinternet}
+          \begin{lstlisting}[caption={Beispiel für ALTER SESSION},label=admin17,language=oracle_sql,alsolanguage=sqlplus]
+SQL>show parameter nls_language
+
+NAME                                 &TYPE&        VALUE
+------------------------------------ ----------- ------------------------------
+nls_language                         string      GERMAN
+
+SQL>ALTER SESSION
+  2 SET nls_language = 'AMERICAN';
+
+Session altered.
+          \end{lstlisting}
+\clearpage
+          Das Ergebnis des \languageorasql{ALTER SESSION}-Statements aus \beispiel{admin17} kann nicht mit Hilfe des SQL*Plus-Kommandos \languagesqlplus{show parameter} geprüft werden, da dieses nur Systemparameter anzeigt, aber keine Sessionparameter. Die Werte aller NLS-Sessionparameter können mit Hilfe der View \identifier{v\$nls\_parameters} angezeigt werden.
+          \begin{lstlisting}[caption={Sessionparameter mit Hilfe von \identifier{v\$nls\_parameters} ermitteln},label=admin17a,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col parameter format a30
+SQL> col value format a30
+
+SQL> SELECT *
+  2  FROM   v$nls_parameters
+  3  WHERE  parameter LIKE 'NLS_LANGUAGE';
+
+PARAMETER                         VALUE
+--------------------------------- ---------------------------------
+NLS_LANGUAGE                      AMERICAN
+          \end{lstlisting}
+      \subsection{SPFiles/PFiles generieren}
+        Oracle bietet verschiedene Möglichkeiten, um ein PFile bzw. ein SPFile zu erzeugen:
+        \begin{itemize}
+          \item SPFile aus einem PFile
+          \item SPFile aus den aktuellen Initialisierungsparametern der Instanz
+          \item PFile aus einem SPFile
+          \item PFile aus den aktuellen Initialisierungsparametern der Instanz
+        \end{itemize}
+        \subsubsection{Ein SPFile generieren}
+          Da ein SPFile eine Binärdatei ist, kann es nicht von Hand erstellt werden. Oracle stellt das Kommando \languageorasql{CREATE SPFILE} zur Verfügung, um ein SPFile aus einem PFile  zu generieren.
+
+          \beispiel{admin18} zeigt die Syntax des \languageorasql{CREATE SPFILE}-Kommandos. Angaben in eckigen Klammern sind optional.
+          \begin{lstlisting}[caption={\languageorasql{CREATE SPFILE}},label=admin18,language=oracle_sql]
+CREATE SPFILE = [pfad/dateiname.ora]
+FROM   PFILE  = [pfad/dateiname.ora];
+          \end{lstlisting}
+          Die \languageorasql{SPFILE}-Klausel kann wahlweise den Dateinamen der Zieldatei annehmen. Wird kein Dateinamen angegeben, wird die Datei \oscommand{ORACLE\_HOME/dbs/spfile<SID>.ora} angelegt. Dies funktioniert jedoch nur, wenn die Instanz heruntergefahren ist, da Oracle sonst den Speicherort der Datei \oscommand{ORACLE\_HOME/dbs/spfile<SID>.ora} schützt, so dass diese nicht überschrieben werden kann.
+    
+          \begin{merke}
+            Ist die Instanz gestartet, muss für die \languageorasql{SPFILE}-Klausel ein Dateiname angegeben werden, da Oracle sonst die Fehlermeldung \enquote{\oscommand{ORA-32002: cannot create SPFILE already being used by the instance}} anzeigt.
+          \end{merke}
+
+          Dient ein PFile als Quelle kann  hier optional der Name der Quelldatei angegeben werden. Ohne Dateiname wird die Datei \oscommand{ORACLE\_HOME/dbs/init<SID>.ora} als Quelle genutzt. Ist diese Datei nicht vorhanden, antwortet Oracle mit der Fehlermeldung:
+
+          \oscommand{ORA-01078: failure in processing system parameters}\\
+          \oscommand{LRM-00109: could not open parameter file}\\
+          \oscommand{'/u01/app/oracle/product/11.2.0/ORCL/dbs/initorcl.ora'}
+
+          Durch die Angabe von MEMORY, statt PFILE, kann ein SPFile mit den Werten der aktuellen Initialisierungsparameter erzeugt werden.\beispiel{admin19} zeigt verschiedene Varianten des \languageorasql{CREATE SPFILE}-Kommandos.
+          \begin{lstlisting}[caption={Beispiele für \languageorasql{CREATE SPFILE}},label=admin19,language=oracle_sql]
+SQL> CREATE SPFILE
+  2  FROM   PFILE;
+
+File created.
+
+SQL> CREATE SPFILE = '/home/oracle/spfileorcl.ora'
+  2  FROM   PFILE;
+
+File created.
+
+SQL> CREATE SPFILE = '/home/oracle/spfileorcl.ora'
+  2  FROM  PFILE   = '?/dbs/initorcl.ora'
+
+File created.
+
+SQL> CREATE SPFILE = '/home/oracle/spfileorcl.ora'
+  2  FROM  MEMORY;
+
+File created.
+          \end{lstlisting}
+   
+          \begin{merke}
+            Das \oscommand{?} in einer Pfadangabe dient als Synonym für die Umgebungsvariable \oscommand{ORACLE\_HOME}.
+          \end{merke}
+
+          \begin{merke}
+            Wird kein Quell-SPFile angegeben, wird der Wert des Initialisierungsparameters \parameter{spfile} benutzt, um das aktuelle SPFile zu ermitteln. Wird kein Dateiname für das PFile angegeben, wird im Verzeichnis \oscommand{ORACLE\_HOME/dbs} die Datei \oscommand{init<SID>.ora} angelegt.
+          \end{merke}
+        \subsubsection{Ein PFile generieren}
+          Analog zum Kommando \languageorasql{CREATE SPFILE} existiert das \languageorasql{CREATE PFILE}-Statement.
+          \begin{lstlisting}[caption={Beispiele für \languageorasql{CREATE PFILE}},label=admin20,language=oracle_sql]
+SQL> CREATE PFILE
+  2  FROM   SPFILE;
+
+SQL> CREATE PFILE = '/home/oracle/initorcl.ora'
+  2  FROM   SPFILE;
+
+SQL> CREATE PFILE = '/home/oracle/initorcl.ora'
+  2  FROM  SPFILE   = '?/dbs/initorcl.ora'
+
+SQL> CREATE PFILE = '/home/oracle/initorcl.ora'
+  2  FROM  MEMORY;
+          \end{lstlisting}
+      \subsection{Hochfahren einer Instanz mit alternativer Parameterdatei}
+        Soll beim Hochfahren der Instanz eine alternative Parameterdatei genutzt werden.          Das Schlüsselwort \languagesqlplus{pfile} dient dazu, den Namen der alternativen Parameterdatei anzugeben. Es kann nur eine Parameterdatei verarbeiten, keine Serverparameterdatei!
+        \begin{lstlisting}[caption={Start mit alternativer Parameterdatei},label=admin21,language=sqlplus]
+SQL> startup pfile='/home/oracle/initorcl.ora';
+ORACLE instance started.
+
+Total System Global Area  643084288 bytes
+Fixed Size                  2215984 bytes
+Variable Size             222302160 bytes
+Database Buffers          411041792 bytes
+Redo Buffers                7524352 bytes
+Database mounted.
+Database opened.
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite{i1006091}
+        \end{literaturinternet}
+
+    \section{Memory Management}
+      Wie in \abschnitt{memorymanagement} bereits beschrieben, kennt Oracle drei verschiedene Arten des Memory Managements: Manual Shared Memory Management, Automatic Shared Memory Management und seit Oracle 11g auch Automatic Memory Management. Die Konfiguration dieser Memory Management Modi funktioniert mit Hilfe von Initialisierungsparametern.
+      \subsection{Manual Shared Memory Management}
+        Beim Manual Shared Memory Management müssen alle Komponenten der SGA bzw. der PGAs einzeln definiert werden. Für die SGA-Komponenten existieren die folgenden Initialisierungsparameter:
+        \begin{itemize}
+          \item \parameter{db\_cache\_size}: Legt die Größe des Database Buffer Caches fest.
+          \item \parameter{shared\_pool\_size}: Dimensioniert den Shared Pool.
+          \item \parameter{large\_pool\_size}: Gibt die Größe des Large Pool an.
+          \item \parameter{java\_pool\_size}: Definiert die Größe des Java Pools.
+          \item \parameter{streams\_pool\_size}: Legt die Größe des Streams Pools fest.
+          \item \parameter{log\_buffer}: Gibt die Größe des Redo Log Buffers an.
+        \end{itemize}
+   
+        \begin{merke}
+          Auf einige Komponenten der SGA, wie z. B. den Large Pool oder den Streams Pool wird in dieser Unterlage nicht näher eingegangen! Zudem existieren noch weitere Parameter, die über den Horizont dieses Skriptes hinausgehen.
+        \end{merke}
+        Die aktuellen Werte dieser Parameter können mit der View \identifier{v\$sgainfo} abgefragt werden.
+        \begin{lstlisting}[caption={Größe der SGA-Komponenten ermitteln},label=admin22,language=oracle_sql]
+SQL> SELECT name, bytes
+  2  FROM   v$sgainfo;
+
+NAME                                  BYTES
+-------------------------------- ----------
+Fixed SGA Size                      2217264
+Redo Buffers                        6926336
+Buffer Cache Size                 260046848
+Shared Pool Size                  121634816
+Large Pool Size                     4194304
+Java Pool Size                      4194304
+Streams Pool Size                         0
+Shared IO Pool Size                       0
+Granule Size                        4194304
+Maximum SGA Size                  764121088
+Startup overhead in Shared Pool    71303168
+Free SGA Memory Available         364904448
+        \end{lstlisting}
+      \subsection{Automatic Shared Memory Management (ASMM)}
+        Mit dem Automatic Shared Memory Management kamen in Oracle 10g zwei neue Initialisierungsparameter: \parameter{sga\_target} und \parameter{pga\_aggregate\_target}.
+
+        Um ASMM zu aktivieren, müssen folgende Voraussetzungen gegeben sein:
+        \begin{itemize}
+          \item Der Parameter \parameter{sga\_target} muss einen Wert größer 0 haben.
+          \item Es muss ein SPFile benutzt werden.
+          \item Der Parameter \parameter{statistics\_level} muss einen der beiden Werte \enquote{typical} oder \enquote{all} haben.
+          \item Der Parameter \parameter{shared\_pool\_size} muss einen Wert größer 0 haben.
+        \end{itemize}
+        Mit dem \parameter{sga\_target} wird die Speichergesamtmenge für alle Komponenten der SGA gesetzt. Er ist dynamisch und kann somit jederzeit geändert werden. Seine maximale Größe wird durch den statischen Parameter \parameter{sga\_max\_size} begrenzt (Hardlimit).
+
+        Damit die Einstellungen für die SGA-Komponenten auch nach einem Neustart der Instanz erhalten bleiben, werden in der Parameterdatei zusätzliche Initialisierungsparameter geführt: \parameter{\_\_db\_cache\_size}, \parameter{\_\_shared\_pool\_size}, \parameter{\_\_large\_pool\_size}, \parameter{\_\_java\_pool\_size} und \parameter{\_\_streams\_pool\_size}. Diese Parameter, die an dem doppelten Unterstrich vor ihrem Namen zu erkennen sind, dienen als Zwischenspeicher bis zum nächsten Instanzstart.
+
+        Zusätzlich zu \parameter{sga\_target} kann der DBA Parameter, wie \parameter{db\_cache\_size}, \parameter{shared\_pool\_size} oder \parameter{large\_pool\_size} dazu benutzen, um Mindestgrößen für diese Speicherbereiche zu setzen. Hierzu ein Beispiel:
+        \begin{lstlisting}[caption={Ein Rechenbeispiel},label=admin23,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET sga_target = 600M;
+
+System altered.
+
+SQL> ALTER SYSTEM
+  2  SET shared_pool_size = 50M;
+
+System altered.
+
+SQL> ALTER SYSTEM
+  2  SET db_cache_size = 200M;
+        \end{lstlisting}
+        Wird eine Instanz, wie in \beispiel{admin23} konfiguriert, entfallen mindestens 50 Megabyte auf den Shared Pool, mindestens 200 Megabyte auf den Database Buffer Cache und 350 Megabyte können auf alle anderen Komponenten der SGA verteilt werden.
+\clearpage
+        Zur Verwaltung der PGAs gibt es \parameter{pga\_aggregate\_target}. Dieser Parameter legt die gesamte Speichermenge fest, die für alle PGAs zur Verfügung steht. Statt einer fixen PGA-Größe, die der DBA selbst festlegen muss, kann die Datenbank nun selbst entscheiden, wie groß jede einzelne PGA werden kann. Serverprozesse die eine größere PGA benötigen können somit mehr Speicherplatz erhalten, als andere.
+
+        Problematisch an dieser Form der Speicherverwaltung ist, dass wenn ein zu kleiner Wert für \parameter{sga\_target} und ein zu großer für \parameter{pga\_aggregate\_target} gesetzt wird, die Datenbank keinen automatischen Ausgleich schaffen kann, falls die SGA mehr Memory benötigt. Hier muss dann der DBA eingreifen und selbstständig die Werte anpassen.
+      \subsection{Automatic Memory Management}
+        Das mit Oracle 11g neu eingeführte Automatic Memory Management vereinfacht die Situation des DBAs erneut. Es kommen zwei neue Parameter hinzu:
+        \begin{itemize}
+          \item \parameter{memory\_target}: Dieser dynamische Parameter definiert die Größe aller Speicherkomponenten der Instanz (SGA + PGA).
+          \item \parameter{memory\_max\_target}: Dies ist ein statischer Parameter, der als hartes Limit für \parameter{memory\_target} fungiert.
+        \end{itemize}
+        Der Vorteil dieser neuen Methode ist, dass die Datenbank automatisch einen Ausgleich zwischen SGA und PGA schaffen kann, falls eine der beiden Seiten zu wenig Speicher hat. Für das Automatic Memory Management gelten folgende Regeln:
+        \begin{center}
+          \tablecaption{Regeln für das Automatic Memory Management}
+          \label{rulesforautomaticmemorymanagement}
+          \begin{small}
+            \tablefirsthead{
+              \multicolumn{1}{c}{\parameter{memory\_target}} &
+              \multicolumn{1}{c}{\parameter{sga\_target}} &
+              \multicolumn{1}{c}{\parameter{pga\_aggregate\_target}} &
+              \multicolumn{1}{c}{\parameter{sga\_max\_size}} &
+              \multicolumn{1}{c}{\textbf{Auswirkung}} \\
+              \hline
+            }
+            \tablehead{
+              \multicolumn{1}{c}{\parameter{memory\_target}} &
+              \multicolumn{1}{c}{\parameter{sga\_target}} &
+              \multicolumn{1}{c}{\parameter{pga\_aggregate\_target}} &
+              \multicolumn{1}{c}{\parameter{sga\_max\_size}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \tablelasttail {
+              \hline
+            }
+            \begin{supertabular}{|c|c|c|c|p{4.41cm}|}
+              $x \neq 0$ & $x \neq 0$ & $x \neq 0$ & - & Die 2 Parameter \parameter{sga\_target} sowie \parameter{pga\_aggregate\_target} sind Min\-dest\-werte. \\
+              \hline
+              $x \neq 0$ & $x \neq 0$ & n. a. & - & \parameter{memory\_target} - \parameter{sga\_target} = \parameter{pga\_aggregate\_target}\\
+              \hline
+              $x \neq 0$ & n. a. & n. a. & - & \parameter{memory\_target} - Wert von  \parameter{pga\_aggregate\_target} ergibt \parameter{sga\_target} \\
+              \hline
+              $x \neq 0$ & 0 & 0 & 0 & \parameter{pga\_aggregate\_target}: 40 \% und \parameter{sga\_target}: 60 \% von \parameter{memory\_target}\\
+            \end{supertabular}
+          \end{small}
+        \end{center}
+\clearpage
+        \begin{lstlisting}[caption={Auszug aus einer Parameterdatei},label=admin24,language=terminal]
+orcl.__db_cache_size=260046848
+orcl.__java_pool_size=4194304
+orcl.__large_pool_size=4194304
+orcl.__pga_aggregate_target=268435456
+orcl.__sga_target=402653184
+orcl.__shared_pool_size=121634816
+orcl.__streams_pool_size=0
+*.compatible='11.2.0.0.0'
+*.db_block_size=8192
+*.db_domain='local'
+*.db_name='orcl'
+*.memory_max_target=730M
+*.memory_target=640M
+        \end{lstlisting}
+    \section{Verwaltung von Kontrolldateien}
+      Eine Kontrolldatei ist eine Binärdatei, welche die Struktur einer Oracle-Datenbank aufzeichnet. Jede Oracle-Datenbank benötigt eine Kontrolldatei. Sie beinhaltet folgende Informationen:
+      \begin{itemize}
+        \item Globaler Datenbankname
+        \item Dateinamen und Speicherorte der Daten- und Redo Log Dateien
+        \item Zeitstempel der Datenbankerstellung
+        \item Die aktuelle Log Sequence Number
+        \item Checkpoint-Informationen
+      \end{itemize}
+      Um eine Datenbank öffnen zu können, muss der Schreibzugriff auf die Kontrolldateien möglich sein. Generiert werden diese Dateien während der Datenbankerstellung. Standardmäßig wird immer nur eine erstellt, der Administrator sollte jedoch dafür sorgen, dass mehrere Sicherheitskopien der Kontrolldatei auf mehreren Speichermedien (Spiegelung) zur Verfügung stehen.
+      \subsection{Namensgebung für Kontrolldateien}
+        Welche Kontrolldateien die Datenbank benutzt, wird durch den Initialisierungsparameter \parameter{control\_files} in der Serverparameterdatei festgelegt. Er kann eine Liste von Dateinamen enthalten, wie das folgende Beispiel zeigt.
+\clearpage
+				\begin{lstlisting}[caption={Der Parameter \parameter{control\_files}},label=admin25,language=terminal]
+...
+CONTROL_FILES='/u02/oradata/orcl/control01.ctl',
+              '/u05/fast_recovery_area/orcl/control02.ctl'
+...
+        \end{lstlisting}
+   
+        \begin{merke}
+          Es werden alle angegebenen Kontrolldateien geöffnet und parallel in diese geschrieben.
+        \end{merke}
+      \subsection{Multiplexing der Kontrolldateien}
+        Jede Oracle-Datenbank sollte mindestens zwei Kopien einer Kontrolldatei
+        haben, die auf verschiedenen Datenträgern gespeichert sind.
+        Wurde eine Kontrolldateikopie während des laufenden Betriebs
+        beschädigt, stürzt die Instanz meist sofort ab.
+
+        Nach der Behebung des Medienfehlers kann die kaputte Kontrolldatei durch eine funktionsfähige Kopie erneuert werden.
+
+        Die Datenbank verwendet ihre Kontrolldateien wie folgt:
+        \begin{itemize}
+          \item Es wird gleichzeitig in alle Kontrolldateien geschrieben.
+          \item Nur die erste aufgelistete Kontrolldatei wird gelesen
+          \item Wird eine Kopie beschädigt, stürzt die Instanz meistens ab.
+        \end{itemize}
+        Eine Variante Kontrolldateien zu spiegeln ist, sie auf allen Datenträgern, die eine Redo Log Datei enthalten zu verteilen, da auch die Redo Logs gespiegelt werden sollten.
+      \subsection{Hinzufügen und löschen von Kontrolldateikopien}
+        \subsubsection{Hinzufügen einer weiteren Kontrolldateikopie}
+          Die zum Hinzufügen einer Kontrolldateikopie notwendigen Schritte sind:
+        \begin{enumerate}
+          \item Instanz herunterfahren und in die NOMOUNT-Phase bringen
+            \begin{lstlisting}[caption={Hinzufügen von Kontrolldateikopien 1},label=admin26,language=sqlplus]
+SQL> shutdown immediate
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SQL> startup nomount
+ORACLE instance started.
+            \end{lstlisting}
+          \item Kopieren einer funktionsfähigen Kontrolldateikopie an den neuen Speicherort
+            \begin{lstlisting}[caption={Löschen von Kontrolldateikopien 3},label=admin26a,language=sqlplus]
+SQL> host cp /u02/oradata/orcl/control01.ctl /u03/oradata/orcl/control03.ctl
+            \end{lstlisting}
+          \item Den Parameter \parameter{control\_files} mit \languageorasql{ALTER SYSTEM} bearbeiten.
+            \begin{lstlisting}[caption={Hinzufügen von Kontrolldateikopien 2},label=admin27,language=oracle_sql,alsolanguage=sqlplus]
+SQL> show parameter control_files
+
+NAME                                 &TYPE&     VALUE
+------------------------------------ -------- ------------------------------
+control_files                        string   /u02/oradata/orcl/control01.ct
+                                              l, /u05/fast_recovery_area/orc
+                                              l/control02.ctl
+SQL> ALTER SYSTEM
+  2  SET control_files='/u02/oradata/orcl/control01.ctl',
+                       '/u05/fast_recovery_area/orcl/control02.ctl',
+                       '/u03/oradata/orcl/control03.ctl'
+  3  SCOPE=spfile;
+            \end{lstlisting}
+          \item Neustart der Instanz
+        \end{enumerate}
+
+        \subsubsection{Löschen von Kontrolldateikopien}
+        Zum Löschen einer Kontrolldateikopie sind drei Schritte notwendig:
+        \begin{enumerate}
+          \item Instanz herunterfahren und in die NOMOUNT-Phase bringen
+            \begin{lstlisting}[caption={Löschen von Kontrolldateikopien 1},label=admin28,language=sqlplus]
+SQL> shutdown immediate
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SQL> startup nomount
+ORACLE instance started.
+            \end{lstlisting}
+          \item Den Parameter \parameter{control\_files} mit \languageorasql{ALTER SYSTEM} bearbeiten.
+            \begin{lstlisting}[caption={Löschen von Kontrolldateikopien 2a},label=admin29,language=sqlplus]
+SQL> show parameter control_files
+
+NAME                                 &TYPE&     VALUE
+------------------------------------ -------- ------------------------------
+control_files                        string   /u02/oradata/orcl/control01.ct
+                                              l, /u05/fast_recovery_area/orc
+                                              l/control02.ctl
+						\end{lstlisting}
+\clearpage
+						\begin{lstlisting}[caption={Löschen von Kontrolldateikopien
+						2b},language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET control_files='/u02/oradata/orcl/control01.ctl'
+  3  SCOPE=spfile;
+            \end{lstlisting}
+          \item Löschen der Kontrolldateikopie mit Hilfe des Betriebssystems
+            \begin{lstlisting}[caption={Löschen von Kontrolldateikopien 3},label=admin29a,language=sqlplus]
+SQL> host rm -f /u05/fast_recovery_area/orcl/control02.ctl
+            \end{lstlisting}
+          \item Neustart der Instanz
+        \end{enumerate}
+
+        \begin{literaturinternet}
+          \item \cite{i1006088}
+        \end{literaturinternet}
+
+    \section{Verwalten der Redo Logs}
+      Für den Betrieb einer Oracle-Datenbank wird ein Set aus \enquote{Redo Log Gruppen}, umgangssprachlich als \enquote{Redo Logs} bezeichnet, benötigt. Eine Redo Log Gruppe besteht aus einer oder mehreren Redo Log Dateien, die auch als Redo Log Member bezeichnet werden. Die primäre Funktion der Redo Logs ist das Aufzeichnen aller Änderungen, die an den Daten vorgenommen wurden (Nutz- und Metadaten).
+      \subsection{Redo Log Gruppen und Member erstellen}
+        Obwohl die Konfiguration der Redo Log Gruppen bereits vor der Installation einer Datenbank erdacht werden sollte, kann es notwendig werden, weitere Redo Log Gruppen oder neue Member zu erstellen. Für die Erstellung von Redo Log Gruppen und Membern muss der Nutzer das Privileg \privileg{ALTER DATABASE} besitzen.
+
+        Das Erzeugen einer neuen Redo Log Gruppe geschieht mit \languageorasql{ALTER DATABASE ADD LOGFILE}.
+          \begin{lstlisting}[caption={Erzeugen einer Redo Log Gruppe},label=admin30,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  ADD LOGFILE '/u02/oradata/orcl/redo04a.log'
+  3  SIZE 50M;
+          \end{lstlisting}
+  
+          \begin{merke}
+            Es sollte immer eine vollständige Pfadangabe für die Member verwendet werden, da diese sonst im Verzeichnis \oscommand{ORACLE\_HOME/dbs} erstellt werden.
+          \end{merke}
+          Das obige Statement kann durch die Angabe der Redo Log Gruppen Nummer erweitert werden:
+          \begin{lstlisting}[caption={Erzeugen einer Redo Log Gruppe mit Angabe der Gruppennummer},label=admin31,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  ADD LOGFILE GROUP 5
+  3  ('/u02/oradata/orcl/redo05a.log',
+  4   '/u03/oradata/orcl/redo05b.log')
+  5  SIZE 50M;
+          \end{lstlisting}
+          Die Angabe von \languageorasql{GROUP 5} sorgt dafür, das die Datenbank versucht, die neue Redo Log Gruppe mit der Nummer 5 zu erstellen. Dies kann aber nur funktionieren, wenn diese Nummer noch nicht belegt ist. Die beiden neu erstellten Gruppen können durch die View \identifier{v\$log} sichtbar gemacht werden.
+          \begin{lstlisting}[caption={Die View \identifier{v\$log}},label=admin32,language=oracle_sql]
+SQL> SELECT   group&\#&, members,
+  2           bytes / POWER(1024, 2) AS Megabytes
+  3  FROM     v$log
+  4  ORDER BY group&\#&;
+
+    &GROUP\#&     MEMBERS  MEGABYTES
+---------- ---------- ----------
+         1          1         50
+         2          1         50
+         3          1         50
+         4          1         50
+         5          2         50
+          \end{lstlisting}
+          Die Spalte \identifier{members} zeigt, dass die Gruppen 1 bis 4 mit jeweils nur einem Member angelegt wurden, was eine sehr gefährliche Konfiguration darstellt. Wird dieser eine Member beschädigt, ist folglich die gesamte Gruppe beschädigt. Dies führt zu Problemen bei einem Datenbank-Recovery-Vorgang, wenn der Memberausfall nicht rechtzeitig bemerkt wird.
+        \subsubsection{Redo Log Member einer Gruppe hinzufügen}
+          Um einer Redo Log Gruppe einen neuen Member hinzuzufügen, wird das SQL-Kommando \languageorasql{ALTER DATABASE ADD LOGFILE MEMBER}, zusammen mit dem Dateinamen des Members, sowie der Nummer der betroffenen Redo Log Gruppe verwendet.
+          \begin{lstlisting}[caption={Hinzufügen eines Members zu einer Redo Log Gruppe},label=admin33,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  ADD LOGFILE MEMBER '/u03/oradata/orcl/redo01b.log'
+  3  TO GROUP 1;
+          \end{lstlisting}
+          Passend zur View \identifier{v\$log}, die Informationen zu allen Log Gruppen anzeigt, gibt es auch die View \identifier{v\$logfile}. Dies befasst sich mit den Redo Log Members.
+\clearpage
+          \begin{lstlisting}[caption={Informationen über Redo Log Member sammeln},label=admin34,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col member format a50
+SQL> SELECT group&\#&, member
+  2  FROM   v$logfile;
+
+    GROUP&\#& MEMBER
+---------- --------------------------------------------------
+         3 /u02/oradata/orcl/redo03.log
+         2 /u02/oradata/orcl/redo02.log
+         1 /u02/oradata/orcl/redo01.log
+         1 /u03/oradata/orcl/redo01b.log
+         4 /u02/oradata/orcl/redo04a.log
+         5 /u02/oradata/orcl/redo05a.log
+         5 /u03/oradata/orcl/redo05b.log
+          \end{lstlisting}
+      \subsection{Redo Logs verschieben/umbenennen}
+        Es gibt Situationen, die es notwendig machen, Redo Log Member an einen anderen Speicherort zu verschieben. Dies ist beispielsweise dann der Fall, wenn ein Datenträger aus dem System entfernt werden soll oder wenn ein Datenträger eine zu hohe Auslastung hat, weil sich zu viele Redo Log Dateien, Datendateien und Kontrolldateien darauf befinden.
+
+        Das Verschieben/Umbenennen besteht im Wesentlichen aus zwei Schritten:
+        \begin{enumerate}
+          \item Verschieben/Umbenennen der Redo Log Datei mit Betriebssystemmitteln
+          \item Ändern des Dateipfades in der Datenbank
+        \end{enumerate}
+        Für diesen Vorgang muss der Nutzer das Privileg \privileg{ALTER DATABASE} auf Seiten der Datenbank und entsprechende Rechte im Betriebssytem haben.
+        \begin{enumerate}
+          \item Abfragen von \identifier{v\$logfile}
+            \begin{lstlisting}[caption={Speicherorte der Member ermitteln},label=admin35,language=oracle_sql,alsolanguage=sqlplus]
+SQL> col member format a50
+SQL> SELECT group&\#&, member
+  2  FROM   v$logfile;
+
+    GROUP&\#& MEMBER
+---------- --------------------------------------------------
+         3 /u02/oradata/orcl/redo03.log
+         2 /u02/oradata/orcl/redo02.log
+         1 /u02/oradata/orcl/redo01.log
+         1 /u03/oradata/orcl/redo01b.log
+         4 /u02/oradata/orcl/redo04a.log
+         5 /u02/oradata/orcl/redo05a.log
+         5 /u03/oradata/orcl/redo05b.log
+             \end{lstlisting}
+          \item Instanz herunterfahren
+            \begin{lstlisting}[caption={Instanz herunterfahren},label=admin36,language=sqlplus]
+SQL> shutdown immediate
+            \end{lstlisting}
+          \item Verschieben der Datei \oscommand{/u02/oradata/orcl/redo01.log} mit Betriebssystemmitteln nach \oscommand{/u02/oradata/orcl/redo01a.log}
+            \begin{lstlisting}[caption={Verschieben der Redo Log Datei mit BS Mitteln},label=admin36a,language=sqlplus]
+SQL> host mv /u02/oradata/orcl/redo01.log /u02/oradata/orcl/redo01a.log
+            \end{lstlisting}
+          \item Datenbank in die MOUNT-Phase bringen
+            \begin{lstlisting}[caption={Datenbank MOUNTen},label=admin37,language=sqlplus]
+SQL> startup mount
+            \end{lstlisting}
+          \item Ändern des Dateipfades in der Datenbank
+                  \begin{lstlisting}[caption={Redo Log Datei umbenennen},label=admin38,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  RENAME FILE '/u02/oradata/orcl/redo01.log'
+              TO '/u02/oradata/orcl/redo01a.log';
+            \end{lstlisting}
+          \item Datenbank öffnen
+            \begin{lstlisting}[caption={Datenbank öffnen},label=admin39,language=oracle_sql]
+SQL> ALTER DATABASE OPEN;
+            \end{lstlisting}
+        \end{enumerate}
+      \subsection{Löschen von Redo Log Gruppen und Membern}
+        \subsubsection{Eine Redo Log Gruppe löschen}
+          Sollte eine Redo Log Gruppe nicht mehr von Nöten sein, kann diese gelöscht werden. Hierfür benötigt der Nutzer wiederrum das \privileg{ALTER DATABASE}-Privileg. Außerdem sollten vor dem Löschen die folgenden Punkte bedacht werden:
+          \begin{itemize}
+            \item Jede Instanz benötigt mindestens zwei Redo Log Gruppen mit einer beliebigen Anzahl von Membern.
+            \item Nur eine Redo Log Gruppe, die den Status Inactive oder Unused hat, kann gelöscht werden.
+            \item Falls die Archivierung für Redo Logs aktiviert ist, sollte vorher geprüft werden, ob die zu löschende Gruppe bereits archiviert wurde.
+          \end{itemize}
+\clearpage
+            \begin{enumerate}
+              \item Prüfen, ob die Redo Log Gruppe inaktiv ist und evtl. bereits archiviert wurde
+                \begin{lstlisting}[caption={Status der Redo Logs prüfen},label=admin40,language=oracle_sql]
+SQL> SELECT group&\#&, archived, status
+  2  FROM   v$log;
+                \end{lstlisting}
+              \item Durchführen eines Log Switches und eines Checkpoints, damit die Gruppe in den Status \enquote{inactive} wechselt.
+                \begin{lstlisting}[caption={Log Switch + Checkpoint durchführen},label=admin41,language=oracle_sql]
+SQL> ALTER SYSTEM SWITCH LOGFILE;
+
+SQL> ALTER SYSTEM CHECKPOINT;
+                \end{lstlisting}
+              \item Redo Log Gruppe löschen
+              \begin{lstlisting}[caption={Log Gruppe löschen},label=admin42,language=oracle_sql]
+SQL> ALTER DATABASE DROP LOGFILE GROUP 5;
+                \end{lstlisting}
+              \item Löschen aller Memberdateien der Redo Log Gruppe mit Betriebssystemmitteln.
+              \begin{lstlisting}[caption={Log Gruppe löschen},label=admin42a,language=sqlplus]
+SQL> host rm /u02/oradata/orcl/redo05a.log /u03/oradata/orcl/redo05b.log
+                \end{lstlisting}
+            \end{enumerate}
+        \subsubsection{Redo Log Member löschen}
+          Um einen Member aus einer Redo Log Gruppe löschen zu können, benötigt der Nutzer das Privileg \privileg{ALTER DATABASE}. Außerdem sollten vor dem Löschen die folgenden Punkte bedacht werden:
+          \begin{itemize}
+            \item Beim Löschen eines Members aus einer Redo Log Gruppe wird die Redo Log Konfiguration kurzzeitig asymetrisch. Dieser Zustand sollte so schnell wie möglich bereinigt werden.
+            \item Nur in einer Redo Log Gruppe, die den Status Inactive oder Unused hat, können Member gelöscht werden.
+            \item Falls die Archivierung für Redo Logs aktiviert ist, sollte vorher geprüft werden, ob die zu löschende Gruppe bereits archiviert wurde.
+            \item Der letzte Member einer Redo Log Gruppe kann nicht gelöscht werden. Es muss dann die ganze Gruppe gelöscht werden.
+          \end{itemize}
+\clearpage
+          \begin{enumerate}
+            \item Prüfen, ob die Redo Log Gruppe inaktiv ist und evtl. bereits archiviert wurde
+              \begin{lstlisting}[caption={Status der Redo Logs prüfen},label=admin43,language=oracle_sql]
+SQL> SELECT group&\#&, archived, status
+  2  FROM   v$log;
+              \end{lstlisting}
+            \item Durchführen eines Log Switches und eines Checkpoints, damit die Gruppe in den Status \enquote{inactive} wechselt.
+              \begin{lstlisting}[caption={Log Switch + Checkpoint durchführen},label=admin44,language=oracle_sql]
+SQL> ALTER SYSTEM SWITCH LOGFILE;
+
+SQL> ALTER SYSTEM CHECKPOINT;
+              \end{lstlisting}
+            \item Redo Log Member löschen
+            \begin{lstlisting}[caption={Log Member löschen},label=admin45,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DROP LOGFILE MEMBER '/u03/oradata/orcl/redo01b.log';
+            \end{lstlisting}
+            \begin{lstlisting}[caption={Log Member löschen},label=admin45a,language=sqlplus]
+SQL> host rm -f /u03/oradata/orcl/redo01b.log
+            \end{lstlisting}
+          \end{enumerate}
+          Zuletzt muss die betreffende Datei noch betriebssystemseitig gelöscht werden.
+      \subsection{Defekte Member bearbeiten}
+        \subsubsection{Status von Redo Log Membern}
+          Wird ein Redo Member beschädigt, erhält er einen Fehlerstatus. Dieser kann in der View \identifier{v\$logfile} aus der Spalte \identifier{status} ersehen werden. Es gibt folgende Stati:
+          \begin{itemize}
+          \item \textbf{NULL} (Kein Wert): Ist die Statusspalte leer, ist der Redo Log Member voll funktionsfähig.
+          \item \textbf{INVALID}: Aus einem nicht näher definierten Grund, kann auf die Datei nicht zugegriffen werden.
+          \item \textbf{STALE}: Der Inhalt der Redo Log Member Datei ist nicht vollständig. Dies kann entstehen, wenn während der Nutzung einer Redo Log Gruppe die Instanz abstürzt.
+          \item \textbf{DELETED}: Dieser Status zeigt an, dass die Datei gelöscht wurde.
+        \end{itemize}
+\clearpage
+        \subsubsection{Leeren einer Redo Log Gruppe}
+          Wenn im laufenden Betrieb der Datenbank eine Redo Log Gruppe zerstört wird und damit die Archivierung unmöglich geworden ist, muss die beschädigte Gruppe geleert werden. Der Vorteil dieser Methode ist, dass die Datenbank hierzu nicht heruntergefahren werden muss. Weiterhin gibt es zwei Fälle, in denen das Leeren einer Redo Log Gruppe die einzige Möglichkeit darstellt, das Problem zu lösen:
+          \begin{itemize}
+            \item Wenn es nur zwei Redo Log Gruppen gibt
+            \item Wenn in der Redo Log Gruppe mit dem Status Current eine Redo Log Datei defekt ist
+          \end{itemize}
+          Um eine Redo Log Gruppe zu leeren, die gerade in der Archivierung befindlich ist, wird folgendes Kommando verwendet:
+          \begin{lstlisting}[caption={Redo Log Gruppe leeren},label=admin46,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  CLEAR LOGFILE GROUP 3;
+        \end{lstlisting}
+        Zum Leeren einer noch nicht archivierten Redo Log Gruppe, muss das SQL-Schlüsselwort \languageorasql{UNARCHIVED} hinzugefügt werden.
+        \begin{lstlisting}[caption={Eine nicht archivierte Redo Log Gruppe leeren},label=admin47,language=oracle_sql]
+SQL> ALTER DATABASE
+  2  CLEAR UNARCHIVED LOGFILE GROUP 3;
+        \end{lstlisting}
+        Dieses Statement verhindert, dass die betreffende Redo Log Gruppe jemals archiviert wird.
+   
+        \begin{merke}
+          Zu beachten ist: Wird eine Redo Log Gruppe geleert, die zum Recovery der Datenbank benötigt wird, sind alle Backups, die dieses Redo Log benötigen nutzlos und es sollte sofort ein neues Backup der Datenbank angefertigt werden. In der Alert Log Datei werden die ungültigen Datenbankbackups aufgelistet (nur mit RMAN erstellte Backups).
+        \end{merke}
+      \subsection{Informationen über Redo Log Gruppen/Member sammeln}
+        \begin{literaturinternet}
+          \item \cite{i1007497}
+        \end{literaturinternet}
+    \section{Verwalten der archivierten Redo Logs}
+    \label{administeringarchivelogs}
+      \subsection{Was sind archivierte Redo Logs}
+        Es ist möglich, die gefüllten Redo Log Gruppen einer Oracle-Datenbank an einem oder mehreren anderen Speicherorten zu sichern. Diese gesicherten Redo Logs werden als \enquote{Archived Redo Logs} oder einfach als \enquote{Archive Logs} bezeichnet. Der Prozess des Sicherns der Redo Logs heißt \enquote{Archiving}\footnote{archiving = engl. Archivierung, Sicherung}.
+ 
+        \begin{merke}
+          Wird eine Redo Log Gruppe durch multiplexing auf mehrere Speicherorte verteilt, archiviert der Archiver-Prozess immer nur eine der identischen Kopien der Redo Log Dateien.
+        \end{merke}
+        Damit die Redo Logs einer Oracle-Datenbank archiviert werden, muss die Datenbank in den \enquote{Archivelog-Modus} versetzt werden. Das Gegenstück zum Archivelog-Modus ist der \enquote{Noarchivelog-Modus}. Im Noarchivelog-Modus findet keine Archivierung statt.
+        Welcher der beiden Modi für die Datenbank verwendet werden sollte, hängt davon ab, ob Datenverlust akzeptabel ist oder nicht.
+
+        \bild{Archivierung der Redo Logs}{archiving}{3}
+      \subsection{Für die Archivierung notwendige Initialisierungsparameter}
+        \subsubsection{Anzahl der Archiver-Prozesse festlegen}
+          Der Initialisierungsparameter \parameter{log\_archive\_max\_processes} legt die Anzahl der zu startenden Archiver-Prozesse fest (Standardwert ist 4). Eine Veränderung dieses Standardwertes ist normalerweise nicht notwendig, da die Datenbank selbstständig zusätzliche Archiver-Prozesse startet, wenn dies erforderlich erscheint.
+\clearpage
+					Ein möglicher Grund für eine Änderung dieses Parameters ist z. B., dass es  performanter ist, gleich die richtige Anzahl Archiver-Prozesse zu starten. Es können bis zu 30 Archiver-Prozesse gleichzeitig gestartet werden.
+
+        \subsubsection{Speicherorte der Archiver-Prozesse festlegen}
+         Zuständig für die Festlegung der Speicherorte der Archive Logs sind die Initialisierungsparameter \parameter{log\_archive\_dest\_1} bis \parameter{log\_archive\_dest\_31}. Um beispielsweise die beiden Speicherorte \oscommand{/u02/backup/archive\_logs} und \oscommand{/u03/backup/archive\_logs} festzulegen, müssen die beiden Initialisierungsparameter \parameter{log\_archive\_dest\_1} und \parameter{log\_archive\_dest\_2} wie folgt angepasst werden:
+          \begin{lstlisting}[caption={log\_archive\_dest-Parameter setzen},label=admin48,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET log_archive_dest_1='LOCATION=/u02/backup/archive_logs';
+SQL> ALTER SYSTEM
+  2  SET log_archive_dest_2='LOCATION=/u03/backup/archive_logs';
+          \end{lstlisting}
+        \subsubsection{Dateinamen der Archive Logs konfigurieren}
+          Um das Format des Dateinamens für die Archive Logs zu setzen wird der Parameter \parameter{log\_archive\_format} verwendet. Der komplette Name eines Archive Logs setzt sich dann aus den Parameter \parameter{log\_archive\_dest\_n} + \parameter{log\_archive\_format} zusammen.
+          \begin{lstlisting}[caption={\parameter{log\_archive\_format}-Parameter
+          setzen},label=admin49,language=oracle_sql,alsolanguage=sqlplus]
+SQL> ALTER SYSTEM
+  2  SET log_archive_format='arch_%s_%r_%t.log'
+  3  SCOPE=spfile;
+          \end{lstlisting}
+    
+          \begin{merke}
+            Hat der Initialisierungsparameter \parameter{compatible} einen Wert größer oder gleich 10.0, müssen im Parameter \parameter{log\_archive\_format} die Platzhalter \%r, \%s und \%t zwingend verwendet werden. Falls nicht wird die Fehlermeldung \enquote{\oscommand{ORA-19905: log\_archive\_format must contain \%s, \%t and \%r}} ausgelöst.
+          \end{merke}
+          Die Konfiguration der Archive Log Destination kann mittels der View \identifier{v\$archive\_dest} abgefragt werden.
+          \begin{lstlisting}[caption={Die Konfiguration der Archive Log Destination abfragen},label=admin50,language=sqlplus]
+SQL> col dest_name format a20
+SQL> col destination format a30
+SQL> col error format a40
+SQL> set linesize 300
+					\end{lstlisting}
+\clearpage
+\begin{lstlisting}[caption={Die Konfiguration der Archive Log Destination abfragen - Fortsetzung},label=admin50a,language=oracle_sql]
+SQL> SELECT dest_name, status, destination, error
+  2  FROM   v$archive_dest
+  3  WHERE  dest_id < 3;
+
+DEST_NAME            STATUS    &DESTINATION&               ERROR
+------------------- --------- -------------------------- -------------------
+LOG_ARCHIVE_DEST_1  VALID     /u02/backup/archive_logs
+LOG_ARCHIVE_DEST_2  VALID     /u03/backup/archive_logs
+          \end{lstlisting}
+        \subsubsection{Status der Speicherorte}
+          Jede Archive Log Destination ist immer mit einem Status versehen, der etwas über ihre Funktionsfähigkeit und ihre Nutzung aussagt.
+        \begin{itemize}
+          \item \textbf{Valid/Invalid}: Es wurde ein gültiger bzw. ein ungültiger Speicherort angegeben. Gültig heißt, dass der Speicherort existieren muss.
+          \item \textbf{Enabled/Disabled}: Ist der Speicherort aktiviert (wird genutzt) oder deaktiviert (wird nicht genutzt)?
+          \item \textbf{Active/Inactive}: Ist der Speicherort zugänglich oder aufgrund eines Fehlers unzugänglich?
+        \end{itemize}
+        Tabelle \tabelle{redofehlerstatus} zeigt verschiedene Kombinantionen
+        dies Stati.
+        \begin{center}
+          \tablecaption{Mögliche Zustände der LOG\_ARCHIVE\_DEST\_n-Speicherorte}
+          \tablefirsthead{%
+            \hline
+            \multicolumn{1}{|c|}{ } &
+            \multicolumn{3}{|c|}{\textbf{Eigenschaften}} &
+            \multicolumn{1}{|l|}{ }
+            \\
+            \cline{2-4}
+            \multicolumn{1}{|c|}{\textbf{Status}} &
+            \multicolumn{1}{c|}{\textbf{Valid}} &
+            \multicolumn{1}{c|}{\textbf{Enabled}} &
+            \multicolumn{1}{c|}{\textbf{Active}} &
+            \multicolumn{1}{l|}{\textbf{Bedeutung}}
+            \\
+            \hline
+          }
+          \tablehead {%
+          }
+          \tabletail{%
+            \hline
+          }
+          \begin{supertabular}[h]{|l|c|c|c|p{6.2cm}|}
+            \label{redofehlerstatus}
+            \multirow{2}{3cm}{VALID} & \multirow{2}{1.5cm}{Ja} & \multirow{2}{1.5cm}{Ja} & \multirow{2}{1.5cm}{Ja} & \footnotesize Es wurde ein gültiger Speicherort angegeben, der auch erreichbar ist. \\
+            \hline
+            INACTIVE & \multirow{1}{1.5cm}{Nein} & -- & -- & \footnotesize Es wurde kein Speicherort angegeben. \\
+            \hline
+            \multirow{2}{3cm}{ERROR} & \multirow{2}{1.5cm}{Ja} & \multirow{2}{1.5cm}{Ja} & \multirow{2}{1.5cm}{Nein} & \footnotesize Es trat ein Fehler auf, als versucht wurde, am angegebenen Speicherort eine Datei zu erstellen. \\
+            \hline
+            FULL & \multirow{1}{1.5cm}{Ja} & \multirow{1}{1.5cm}{Ja} & \multirow{1}{1.5cm}{Nein} & \footnotesize Kein freier Speicher am Speicherort verfügbar. \\
+            \hline
+            \multirow{2}{3cm}{DEFERRED} & \multirow{2}{1.5cm}{Ja} & \multirow{2}{1.5cm}{Nein} & \multirow{2}{1.5cm}{Ja} & \footnotesize Der Speicherort wurde durch den Nutzer zeitweilig deaktiviert. \\
+            \hline
+            \multirow{2}{3cm}{DISABLED} & \multirow{2}{1.5cm}{Ja} & \multirow{2}{1.5cm}{Nein} & \multirow{2}{1.5cm}{Nein} & \footnotesize Der Speicherort musste aufgrund eines Zugriffsfehlers zeitweilig deaktiviert werden. \\
+            \hline
+            \multirow{3}{3cm}{BAD PARAM} & \multirow{3}{1.5cm}{--} & \multirow{3}{1.5cm}{--} & \multirow{3}{1.5cm}{--} & \footnotesize Ein nicht näher definierbarer Fehler ist aufgetreten (z. B. wurde ein ungültiger Wert für einen Parameter angegeben).\\
+          \end{supertabular}
+        \end{center}
+        \subsubsection{Probleme mit fehlerhaften Speicherorten}
+          Es kann vorkommen, dass die Speicherung eines Archive Logs an einem der angegebenen Speicherorte fehlschlägt. Oracle stellt verschiedene Möglichkeiten bereit, wie auf solche Ausfälle reagiert werden kann. Eine Möglichkeit besteht darin, mit dem Parameter \parameter{log\_archive\_min\_succeed\_dest} anzugeben, auf wie vielen Speicherorten die Archivierung als erfolgreich gelten muss, ehe die zu archivierende Redo Log Gruppe wieder verwendet werden kann. Standardwert für diesen Parameter ist 1. Der Maximalwert ist 10.
+
+          In Kombination dazu kann mit jedem \parameter{log\_archive\_dest\_n}-Parameter ein Speicherort als \textit{optional} (Standardwert) oder als \textit{mandatory} \footnote{mandatory = engl. obligatorisch, zwingend} deklariert werden. Je nachdem, wie der Parameter \parameter{log\_archive\_min\_succeed\_dest} eingestellt ist, muss die Archivierung mindestens an allen als mandatory deklarierten Speicherorten erfolgreich gewesen sein, bevor der Log Writer-Prozess die betreffende Redo Log Gruppe wieder verwenden kann.
+
+          Die folgende Tabelle soll das Verhalten der Datenbank verdeutlichen:
+          \begin{itemize}
+            \item Es wurden 4 Speicherorte deklariert, 2 als optional und 2 als mandatory
+            \item \parameter{log\_archive\_min\_succeed\_dest} wird auf die Werte 1 bis 5 eingestellt. Die Spalte Wert zeigt an, auf welchen Wert dieser Parameter gesetzt wurde. Die Spalte Auswirkungen beschreibt welche Auswirkungen diese Einstellung hat.
+          \end{itemize}
+          \begin{center}
+            \tablecaption{Auswirkungen des Parameters log\_archive\_min\_succeed\_dest}
+            \tablefirsthead{%
+              \hline
+              \multicolumn{1}{|c}{\textbf{Wert}}&
+              \multicolumn{1}{|l|}{\textbf{Auswirkungen}}
+              \\
+              \hline
+            }
+            \tablehead{%
+              \hline
+              \multicolumn{1}{|c}{\textbf{Wert}}&
+              \multicolumn{1}{|l|}{\textbf{Auswirkungen}}
+              \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \begin{supertabular}[h]{|c|p{13cm}|}
+              \multirow{2}{1.5cm}{1} & \footnotesize Die Datenbank ignoriert den für \parameter{log\_archive\_min\_succeed\_dest} eingestellten Wert und nimmt stattdessen die Anzahl der als mandatory deklarierten Speicherorte. \\
+              \hline
+              \multirow{3}{1.5cm}{2} & \footnotesize Die Archivierung gilt als erfolgreich, wenn an beiden als mandatory deklarierten Speicherorten die Speicherung erfolgreich war. Die als optional deklarierten Speicherorte werden bei der Überprüfung ignoriert. \\
+              \hline
+              \multirow{2}{1.5cm}{3} & \footnotesize Es müssen beide als mandatory und mindestens einer der als optional deklarierten Speicherorte erfolgreich gewesen sein, bevor die Archivierung als erfolgreich gilt. \\
+              \hline
+              \multirow{2}{1.5cm}{4} & \footnotesize Die Archivierung ist erst dann erfolgreich, wenn an allen Speicherorten die Archived Logs gespeichert werden konnten. \\
+              \hline
+              \multirow{2}{1.5cm}{5} & \footnotesize Es tritt ein Fehler auf, da die Anzahl der Speicherorte geringer ist, als der Wert für \parameter{log\_archive\_min\_succeed\_dest}. \\
+            \end{supertabular}
+          \end{center}
+          Für das Zusammenspiel zwischen den beiden als mandatory deklarierten Speicherorten und dem Parameter \parameter{log\_archive\_min\_succeed\_dest} gelten die folgenden Regeln:
+          \begin{itemize}
+            \item Wird ein Speicherort nicht explizit als mandatory deklariert, wird er als optional angesehen.
+            \item Wird für den Parameter \parameter{log\_archive\_min\_succeed\_dest} ein Wert angegeben, wird mindestens ein Speicherort als mandatory betrachtet.
+            \item Der Wert für \parameter{log\_archive\_min\_succeed\_dest} kann nicht größer sein, als die Anzahl der konfigurierten Speicherorte.
+          \end{itemize}
+          Das folgende Beispiel zeigt, wie ein Speicherort als mandatory deklariert wird:
+          \begin{lstlisting}[caption={\parameter{log\_archive\_dest\_n} als mandatory deklarieren},label=admin51,language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET log_archive_dest_1='LOCATION=/u02/backup/archive_logs MANDATORY';
+SQL> ALTER SYSTEM
+  2  SET log_archive_dest_2='LOCATION=/u03/backup/archive_logs OPTIONAL';
+          \end{lstlisting}
+      \subsection{Eine Datenbank in den Archivelog-Modus versetzen}
+        Eine Datenbank kann bereits bei ihrer Erstellung oder auch nachträglich in den Archivelog-Modus versetzet werden. Dazu sind folgende Schritte notwendig:
+        \begin{enumerate}
+          \item Anpassen der Intialisierungsparameter, die für das Archiving notwendig sind
+          \item Instanz konsistent herunterfahren
+          \item Die Datenbank in die MOUNT-Phase versetzen.
+          \item Den Archivierungsmodus einschalten.
+          \item Datenbank öffnen
+          \item (Herunterfahren der Datenbank und durchführen eines Backups)
+          \item (Datenbank hochfahren)
+        \end{enumerate}
+        \begin{lstlisting}[caption={Archivelog-Modus
+        aktivieren},label=admin52,language=oracle_sql,alsolanguage=sqlplus] Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL> shutdown immediate
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+				\end{lstlisting}
+\clearpage
+\begin{lstlisting}[caption={Archivelog-Modus aktivieren -
+Fortsetzung},label=admin52a,language=oracle_sql,alsolanguage=sqlplus]
+SQL> startup mount 
+ORACLE instance started.
+
+Total System Global Area  764121088 bytes
+Fixed Size                  2217264 bytes
+Variable Size             503319248 bytes
+Database Buffers          251658240 bytes
+Redo Buffers                6926336 bytes
+Database mounted.
+SQL> ALTER DATABASE ARCHIVELOG;
+
+Database altered.
+
+SQL> ALTER DATABASE OPEN;
+
+Database altered.
+        \end{lstlisting}
+    \section{Das Data Dictionary}
+      Der wichtigste Teile einer Oracle-Datenbank ist das \enquote{Data
+      Dictionary}. Es besteht aus einer Menge von Tabellen mit wichtigen
+      Metainformationen, auf die alle Nutzer Lesezugriff haben.
+      Darunter fallen:
+      \begin{itemize}
+        \item Die Definitionen aller Schemaobjekte der Datenbank (Tabellen, Views, Indizes, usw.)
+        \item Wie viel Speicherplatz für Schemaobjekte reserviert und aktuell
+        genutzt wird
+        \item Standardwerte für Tabellenspalten
+        \item Integritäts Constraints
+        \item Benutzernamen aller Oracle-Nutzer
+        \item Privilegien und Rollen mit Zuordnung zu den Nutzern
+        \item Auditing Informationen
+        \item Weitere generelle Metainformationen
+      \end{itemize}
+      Die Tabellen des Data Dictionary sind auf die gleiche Art und Weise organisiert, wie andere Tabellen auch. Sie sind jedoch im \identifier{System}-Tablespace gespeichert und gehören dem Nutzer \identifier{SYS}.
+
+      Nicht nur, dass das Data Dictionary ein zentraler Punkt in der Datebank ist, es stellt auch ein wichtiges Hilfsmittel für alle Nutzer, vom Endnutzer bis zum Administrator dar. Es kann mit Hilfe von SQL-Befehlen abgefragt, nicht aber geändert werden.
+
+      Der Oracle Nutzer \identifier{SYS} ist Eigentümer der Basistabellen und Nutzer-Views des Data Dictionary. Kein anderer Oracle Nutzer außer ihm sollte Zugriff auf diese Tabellen haben, da dies die Datenbankintegrität verletzen könnte.
+      \subsection{Benutzung und Struktur des Data Dictionary}
+        Das Data Dictionary wird auf drei unterschiedliche Arten genutzt:
+        \begin{itemize}
+          \item Oracle selbst greift lesend auf das Data Dictionary zu, um Informationen über Nutzer, Privilegien und Schemaobjekte zu erhalten.
+          \item Immer wenn ein DDL-Statement abgesetzt wird, wird das Data Dictionary durch Oracle modifiziert
+          \item Jeder Oracle Nutzer kann das Data Dictionary als Nachschlagewerk nutzen.
+        \end{itemize}
+        Das Data Dictionary besteht aus den folgenden Bestandteilen:
+        \subsubsection{Dynamic Performance Views (X\$-Views)}
+          Oracle verwaltet eine Menge von Pseudo-Views, die als Dynamic Performance Views bezeichnet werden. Es handelt sich hierbei nicht um echte Views. Sie zeigen Informationen über die Instanz und die Datenbank an und werden dynamisch im laufenden Betrieb durch den Kern von Oracle selbst aktualisiert.
+
+          Diese View tragen das Präfix \enquote{x\$} in ihrem Namen. Sie werden bei der Erstellung der Datenbank automatisch mit erstellt. Um den Inhalt der \identifier{x\$}-Views für Administratoren nutzbar zu machen, hat Oracle zusätzlich sogenannte \identifier{v\$}-Views geschaffen.
+        \subsubsection{Dynamic Performance Views (V\$-Views)}
+          \identifier{v\$}-Views benutzen als Informationsgrundlage die eben beschriebenen \identifier{x\$-Views}. Während die Namensgebung bei \identifier{x\$}-Views sehr undurchschaubar ist (z. B. \identifier{x\$ksmfs}, \identifier{x\$ksmss} oder \identifier{x\$kcbwait}) ist die der \identifier{v\$}-Views klar verständlich (z. B. \identifier{v\$session}, \identifier{v\$log} oder \identifier{v\$logfile}). Auch die Struktur der \identifier{v\$}-Views ist für Administratoren besser zu durchschauen, außerdem sind \identifier{v\$}-Views dokumentiert, im Gegensatz zu den \identifier{x\$}-Views.
+\clearpage
+        \subsubsection{Basis Tabellen}
+          Dies sind die zugrundeliegenden Tabellen, die die Metainformationen enthalten. Sie werden nur von der Datenbank selbst genutzt, da sie durch Normalisierung und kryptischen Inhalt für normale Nutzer wenig durchschaubar sind. Einige Beispiele für Basistabellen sind \identifier{user\$}, \identifier{tab\$}, \identifier{obj\$} oder \identifier{aud\$}.
+        \subsubsection{Nutzer-Views}
+          Diese Views stellen eine Zusammenfassung des Inhalts der Basistabellen dar. Sie dekodieren den unübersichtlichen Inhalt der Basistabellen und machen ihn für Nutzer lesbar. Nicht jeder Nutzer hat auf alle Views Zugriff.
+      \subsection{View-Klassen im Data Dictionary}
+        Es gibt unterschiedliche Arten von Views im Data Dictionary. Einige sind für alle Nutzer zugänglich, andere nur für Administratoren. Die einzelnen Klassen können an dem Präfix in ihrem Namen erkannt werden. Folgende Klassen gibt es:
+        \begin{itemize}
+          \item \textbf{USER}: User-Views zeigen, welche Objekte im Schema des Nutzers existieren
+          \item \textbf{ALL}: Erweiterte User-Views zeigen, auf welche Objekte der Nutzer Zugriff hat
+          \item \textbf{DBA}: Administrative Views zeigen den gesamten Datenbankinhalt
+        \end{itemize}
+   
+        \begin{merke}
+          Nicht von allen Views existieren immer alle drei Klassen, z. B. \identifier{DBA\_LOCKS}.
+        \end{merke}
+        \subsubsection{Views mit dem Präfix USER}
+          Diese Views sind die Interesantesten für normale Nutzer. Sie haben folgende Eigenschaften:
+          \begin{itemize}
+            \item Sie zeigen das private Umfeld eines Nutzers, mit all seinen Objekten in der Datenbank.
+            \item Sie zeigen nur Tabellenspalten die für den Nutzer relevant sind.
+            \item Sie sind eine Untermenge der Views mit dem Präfix ALL.
+					\end{itemize}
+\clearpage
+					\subsubsection{Views mit dem Präfix ALL}
+          ALL-Views zeigen das für den Nutzer sichtbare Umfeld in der Datenbank. Sie liefern Informationen über alle Datenbankobjekte, auf die der Nutzer Zugriff hat, inklusive der Informationen die durch USER-Views angezeigt werden. Im Gegensatz zu den USER-Views haben die ALL-Views eine Spalte \identifier{OWNER}, die den Eigentümer eines Objekts anzeigt.
+        \subsubsection{Views mit dem Präfix DBA}
+          Views mit dem Präfix DBA zeigen eine umfassende Ansicht der Datenbank mit allen Objekten, Privilegien und Nutzern. Auf diese Views hat nur administratives Personal Zugriff.
+        \subsubsection{Die Tabelle DUAL}
+          Die Tabelle \identifier{dual} ist eine Tabelle des Data Dictionary mit einer einzigen Spalte names \identifier{dummy}, die den Wert \enquote{X} enthält. Sie ist für die Durchführung von Berechnungen gedacht, wie das folgende Beispiel zeigt.
+        \begin{lstlisting}[caption={Die Tabelle DUAL},label=admin53,language=oracle_sql]
+SQL> SELECT SYSDATE AS Datum
+  2  FROM   dual;
+
+  DATUM
+---------
+29.08.13
+        \end{lstlisting}
+
+        \begin{literaturinternet}
+          \item \cite{i125539}
+          \item \cite{i2112}
+        \end{literaturinternet}
+\clearpage
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Initialisierungsparameter}
+        \begin{literaturinternet}
+          \item \cite{REFRN10019}
+          \item \cite{REFRN10021}
+          \item \cite{REFRN10033}
+          \item \cite{REFRN10075}
+          \item \cite{REFRN10079}
+          \item \cite{REFRN10086}
+          \item \cite{REFRN10089}
+          \item \cite{REFRN10090}
+          \item \cite{REFRN10091}
+          \item \cite{REFRN10094}
+          \item \cite{REFRN10284}
+          \item \cite{REFRN10285}
+          \item \cite{REFRN10123}
+          \item \cite{REFRN10165}
+          \item \cite{REFRN10202}
+          \item \cite{REFRN10198}
+          \item \cite{REFRN10256}
+          \item \cite{REFRN10243}
+          \item \cite{REFRN10214}
+        \end{literaturinternet}
+\clearpage
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{REFRN29014}
+          \item \cite{REFRN30007}
+          \item \cite{sthref3187}
+          \item \cite{REFRN30089}
+          \item \cite{sthref3267}
+          \item \cite{sthref3423}
+          \item \cite{REFRN30129}
+          \item \cite{REFRN30128}
+          \item \cite{REFRN30159}
+          \item \cite{REFRN30314}
+          \item \cite{REFRN30275}
+        \end{literaturinternet}
+\clearpage

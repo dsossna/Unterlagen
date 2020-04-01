@@ -1,0 +1,340 @@
+\chapter{Transaktionen}
+\chaptertoc{}
+\cleardoubleevenpage
+
+      Eine Transaktionen ist eine logische Arbeitseinheit, die eines oder mehrere SQL-State\-ments enthält. Transaktionen sind in sich geschlossene Einheiten. Die Ergebnisse aller SQL-Statements einer Transaktionen können entweder in die Datenbank übernommen (committed) oder rückgängig gemacht (rolled back) werden.
+
+      Eine Transaktion beginnt implizit mit der ersten DML- oder DDL-Anweisung  und endet mit einer der Anweisungen \languageorasql{COMMIT} (übernahme der Daten) oder \languageorasql{ROLLBACK} (rückgängig machen), bzw. implizit wenn eine DDL-Anweisung abgesetzt wird (auto commit).
+
+      Um das Konzept einer Transaktion bildlich darzustellen, stelle man sich die Datenbank eines Kreditinstitutes vor. Wenn ein Kunde Geld von seinem eigenen Konto auf ein anderes überweist, geschehen drei verschiedene Dinge:
+      \begin{enumerate}
+        \item Kontostand des Zahlenden herabsetzen
+        \item Kontostand des Zahlungsempfängers anpassen
+        \item Die Transaktion in einem Journal dokumentieren
+      \end{enumerate}
+      Die Datenbank muss zwei verschiedene Fälle abdecken können:
+      \begin{enumerate}
+        \item Alle drei SQL-Statements können erfolgreich abgesetzt werden
+        \item Durch ein Problem kann mindestens eines der drei Statements nicht korrekt abgesetzt werden (falsche Kontonummer, Hardwarefehler, usw.)
+      \end{enumerate}
+      Im ersten Fall muss die Datenbank die Änderungen der Transaktion in der Datenbank speichern, damit die Bankkonten der Kunden korrekt verwaltet werden. Tritt jedoch wie in Fall zwei ein Fehler auf, muss die gesamte Transaktion zurückgerollt werden.
+    \section{Eigenschaften einer Transaktion (ACID)}
+      Damit ein transaktionsbasiertes System, funktionieren kann, müssen alle
+      Transaktionen grundlegende Eigenschaften aufweisen. Diese können durch das Akronym
+      \enquote{ACID} beschrieben werden. ACID steht für \enquote{atomicity},
+     \enquote{consistency}, \enquote{isolation} und \enquote{durability}. Im
+     Deutschen wird statt ACID auch häufig AKID verwendet.
+      \begin{itemize}
+        \item \textbf{atomicity} (Atomarität): Eine Transaktion gilt als
+        atomar, wenn Sie ganz oder gar nicht ausgeführt wird. Für den
+        Benutzer muss es so aussehen, als wäre eine Transaktion eine einzelne
+        elementare Anweisung, die nicht unterbrochen werden kann. Da die
+        einzelnen Anweisungen, aus denen sich eine Transaktion zusammensetzt,
+        tatsächlich aber nacheinander ausgeführt werden müssen, muss im
+        Falle dessen, dass die Transaktion nicht vollständig ausgeführt
+        werden kann, jede einzelne Anweisung wieder rückgängig gemacht
+        werden.
+        \item \textbf{consistency} (Konsistenz): Konsistenz bedeutet, dass sich die Datenbank nach der Aus\-füh\-rung einer Transaktion in einem konsistenten Zustand befinden muss, davon ausgehend, dass die Datenbank auch vor der Transaktion schon konsistent war. Für die Konsistenz einer Datenbank sorgen die Integritäts Constraints, die bei der Ausführung einer Transaktion nicht verletzt werden dürfen.
+        \item \textbf{isolation} (Isolation): Das Prinzip der Isolation
+        bedeutet, dass parallel ausgeführte Transaktionen nicht sich nicht       
+        gegenseitig beeinflussen dürfen. Umgesetzt wird dies durch
+        verschiedene Mechanismen, wie z. B.~Sperren, Zeitstempelverfahren oder,
+        im Falle von Oracle, das Multiversioning.
+        \item \textbf{durability} (Dauerhaftigkeit): Das Ergebnis einer
+        abgeschlossenen Transaktion muss dauerhaft in der Datenbank verfügbar
+        sein, auch nach System\-ab\-stür\-zen.
+      \end{itemize}
+    \section{Transaktionen und ihre Phänomene}
+      Die Isolation von Transaktionen ist eine der wesentlichen ACID-Eigenschaften, die an eine Transaktion gestellt werden. Fehlt die Isolation vollständig oder ist diese nur mangelhaft umgesetzt, können Probleme bei der Bearbeitung und dem Abfragen von Datensätzen auftreten. Diese Phänomene sind im ANSI/ISO SQL-Standard (SQL92) definiert.
+      \subsection{Dirty Reads}
+        Gründe für Dirty Reads sind:
+        \begin{itemize}
+          \item Das DBMS implementiert keine oder nur mangelhafte Isolation für Transaktionen.
+          \item Konkurrierende Lese- und Schreibzugriffe
+        \end{itemize}
+        \begin{center}
+          \tablecaption{Dirty Reads}
+          \tablefirsthead{
+            \multicolumn{2}{c}{Transaktion 1} &
+            \multicolumn{2}{c}{Transaktion 2}\\
+            \hline
+          }
+          \tablehead{}
+          \tabletail{}
+          \tablelasttail{}
+          \begin{supertabular}{lr|ll}
+            \small{\texttt{SELECT * FROM employees;}} & \scriptsize{t1} & &\\
+            & & \scriptsize{t2} & \small{\texttt{UPDATE employees SET salary= 1000;}}\\
+            \small{Anzeigen der Datensätze} & & & \\
+            \small{mit einem Gehalt von 1000} & \scriptsize{t3} & & \\
+            & & \scriptsize{t4} & \small{\texttt{ROLLBACK;}}\\
+          \end{supertabular}
+        \end{center}
+        Das vorangegangene Beispiel zeigt zwei konkurrierende Transaktionen. Transaktion 1 liest die Daten der Tabelle \identifier{employees} zum Zeitpunkt t1. Während Transaktion 1 noch liest, beginnt Transaktion 2 zum Zeitpunkt t2 diese Daten zu verändern. Zum Zeitpunkt t3 erfolgt für Transaktion 1 die Ausgabe der Daten.
+
+				Aufgrund nicht vorhandener Isolation werden auch die noch nicht bestätigten Änderungen von Transaktion 2 mit ausgegeben. Zum Zeitpunkt t4 macht die Transaktion 2 ihr \languageorasql{UPDATE}-Statement wieder rückgängig.
+
+        Die Schlussfolgerung aus diesem Szenario zeigt, dass Transaktion 1 zum
+        Zeitpunkt t3 nicht committete Daten ausgegeben hat.
+        \begin{merke}
+          Dieses Szenario kann in Oracle nicht durchgeführt werden!
+        \end{merke}
+      \subsection{Non-Repeatable Reads}
+        Non-Repeatable Reads sind ein Phänomen, dass immer dann auftritt, wenn:
+        \begin{itemize}
+          \item das DBMS keine oder nur mangelhafte Isolation für Transaktionen implementiert
+          \item zwei gleiche Lesevorgänge \textit{eines Datensatzes} in einer Transaktion unterschiedliche Ergebnisse liefern.
+        \end{itemize}
+        \begin{center}
+          \tablecaption{Non-Repeatable Reads}
+          \tablefirsthead{
+            \multicolumn{2}{c}{Transaktion 1} &
+            \multicolumn{2}{c}{Transaktion 2}\\
+            \hline
+          }
+          \tablehead{
+          }
+          \tabletail{}
+          \begin{supertabular}{lr|ll}
+            \small{\texttt{SELECT salary FROM employees}} & & & \\
+            \small{\texttt{WHERE employee\_id = 100;}} & \scriptsize{t1} & & \\
+            \small{Anzeigen des Datensatzes (24000)} & \scriptsize{t2} & & \\
+            & & \scriptsize{t3} & \small{\texttt{UPDATE employees SET salary = 25000}} \\
+            & & & \small{\texttt{WHERE employee\_id = 100;}} \\
+            & & & \texttt{COMMIT;} \\
+            \cline{3-4}
+            \small{\texttt{SELECT salary FROM employees}} & & & \\
+            \small{\texttt{WHERE employee\_id = 100;}} & \scriptsize{t4} & & \\
+            \small{Anzeigen des Datensatzes (25000)} & \scriptsize{t5} & & \\
+          \end{supertabular}
+        \end{center}
+        Transaktion 1 führt in diesem Beispiel zweimal den gleichen
+        Lesevorgang durch. Dieser liefert zum Zeitpunkt t2 ein Gehalt von 24.000
+        \$. Bei Zeitpunkt t3 verändert Transaktion 2 die Basistabelle. Der
+        erneute Lesevorgang liefert zum Zeitpunkt t5  ein Gehalt von
+        25.000~\$. Der gleiche Lesevorgang \textit{ein und des selben
+        Datensatzes} konnte also nicht zweimal mit dem gleichen Ergebnis
+        durchgeführt werden, was als Non-Repeatable Read bezeichnet wird.
+\clearpage
+      \subsection{Phantom Reads}
+        Phantom Reads treten immer dann auf, wenn:
+        \begin{itemize}
+          \item das DBMS nicht die höchst mögliche Isolation für Transaktionen implementiert und
+          \item zwei gleiche Lesevorgänge in einer Transaktion eine \textit{unterschiedliche Menge an Ergebniszeilen} liefern. Dies bedeutet, dass zu den bereits gelesenen Zeilen neue hinzugekommen oder bestehende weggefallen sind, sich also die Menge der gelesenen Zeilen verändert hat.
+        \end{itemize}
+        \begin{center}
+          \tablecaption{Phantom Reads}
+          \tablefirsthead{
+            \multicolumn{2}{c}{Transaktion 1} &
+            \multicolumn{2}{c}{Transaktion 2}\\
+            \hline
+          }
+          \tabletail{}
+          \begin{supertabular}{lr|ll}
+            \small{\texttt{SELECT * FROM employees}} & & & \\
+            \small{\texttt{WHERE department\_id = 30;}} & \scriptsize{t1} & & \\
+            \small{Anzeigen der Datensätze: 6 Stück} & \scriptsize{t2} & & \\
+            & & & \small{\texttt{INSERT INTO employees}} \\
+            & & \scriptsize{t3} & \small{\texttt{VALUES (...);}}\\
+            & & & \texttt{COMMIT;} \\
+            \cline{3-4}
+            \small{\texttt{SELECT * FROM employees}} & & & \\
+            \small{\texttt{WHERE department\_id = 30;}} & \scriptsize{t4} & & \\
+            \small{Anzeigen der Datensätze: 7 Stück} & \scriptsize{t5} & & \\
+          \end{supertabular}
+        \end{center}
+        Transaktion 1 führt in diesem Beispiel zweimal den gleichen Lesevorgang aus. Lesevorgang 1 liefert zum Zeitpunkt t2 6 Zeilen. Zum Zeitpunkt t3 verändert Transaktion 2 diese Tabelle. Der erneute Lesevorgang von Transaktion 1 liefert jetzt, zum Zeitpunkt t5 ein verändertes Ergebnis. Es sind nun 7 Zeilen. Der gleiche Lesevorgang konnte also \textit{nicht zweimal mit der gleichen Ergebnismenge} durchgeführt werden.
+        \begin{merke}
+          Der Unterschied zwischen Non-Repeatable Reads und Phantom Reads ist der, dass bei den Non-Repeatable Reads bestehende Datensätze verändert werden. Dadurch kann sich auch die Ergebnismenge ändern. Bei den Phantom Reads werden neue Datensätze hinzugefügt oder bestehende gelöscht. Auch hier wird die Ergebnismenge geändert, aber auf eine andere Art.
+        \end{merke}
+    \section{Transaktionslevel}
+      Um die beschriebenen Transaktionsphänomene zu umgehen, wurden im ANSI/ISO SQL-Standard (SQL92) vier verschiedene Transaktionslevel festgelegt. Diese Level legen unterschiedliche Einschränkungen fest, um die genannten Phänomene zu unterdrücken.
+\clearpage
+      \begin{small}
+        \tablecaption{Transaktionslevel gemäß SQL92-Standard}
+        \tablefirsthead{
+          \hline
+          \multicolumn{1}{|c}{\textbf{Isolationslevel}} &
+          \multicolumn{1}{|c}{\textbf{Dirty Reads}} &
+          \multicolumn{1}{|c}{\textbf{Non-Repeatable Reads}} &
+          \multicolumn{1}{|c|}{\textbf{Phantom Reads}}\\
+          \hline
+        }
+        \begin{supertabular}{|l|c|c|c|}
+          Read Uncommitted & \textcolor{red}{Ja} & \textcolor{red}{Ja} & \textcolor{red}{Ja} \\
+          \hline
+          Read Committed & \textcolor{green}{Nein} & \textcolor{red}{Ja} & \textcolor{red}{Ja} \\
+          \hline
+          Repeatable Read & \textcolor{green}{Nein} & \textcolor{green}{Nein} & \textcolor{red}{Ja} \\
+          \hline
+          Serializable & \textcolor{green}{Nein} & \textcolor{green}{Nein} & \textcolor{green}{Nein}  \\
+          \hline
+        \end{supertabular}
+      \end{small}
+      \subsection{Read Uncommitted}
+        Dies ist der Transaktionslevel mit den geringsten Einschränkungen (es gibt nämlich keine). Es findet keinerlei Isolation statt, so dass eine Transaktion unbestätigte Informationen einer anderen Transaktion lesen kann. Dieser Level ist in Oracle nicht implementiert!
+      \subsection{Read Committed}
+        Diese Stufe bringt die ersten Einschränkungen mit sich. Es können nur noch bestätigte Informationen anderer Transaktionen gelesen werden. Eine Transaktion wird also lediglich vor fehlerhaften Daten einer anderen Transaktion geschützt, da fehlerhafte Daten meist zurückgerollt werden. Dieser Level ist der Standard in Oracle.
+      \subsection{Repeatable Read}
+        Durch eine verbesserte Isolation der Transaktionen wird in diesem Level sichergestellt, dass auch das Phänomen der Non-Repeatable Reads verhindert werden kann. Dieser Level ist in Oracle nicht implementiert!
+      \subsection{Serializable}
+        Serializable ist der strengste Transaktionslevel. Er verhindert jegliche Trans\-akt\-ions\-phä\-no\-me\-ne. Er tut dies allerdings auf Kosten der Performance, da, wie sein Name sagt, eine Serialisierung der einzelnen Transaktionen durchgeführt wird, d. h. Oracle versucht zwei parallel ausgeführte Transaktionen so auszuführen, als würden sie hintereinander ausgeführt.
+
+        Zusätzlich zu den Transaktionsleveln die der SQL92-Standard festgelegt hat, kennt Oracle noch einen weiteren Level, den Read Only Level. Wird eine Transaktion in diesem Level gestartet, kann sie nur Abfragen, aber kein DML Statement durchführen. Er hat die gleichen Auswirkungen wie der Level Serializable und ist für sehr lange laufende Abfragen gedacht, die ein hohes Maß an Lesekonsistenz benötigen.
+
+        \bild{Se\-ri\-a\-li\-sie\-rung von Trans\-ak\-tio\-nen}{serializable}{1.2}
+
+    \section{Transaktionssteuerung}
+      \subsection{Eine Transaktion starten}
+        Eine Transaktion kann auf zwei verschiedene Arten gestartet werden: implizit oder explizit. Implizit wird eine Transaktion durch ein beliebiges DML-Kommando gestartet. D. h. eine Transaktion beginnt implizit, sobald der Nutzer ein DML-Statement abgesetzt hat.
+
+        Um das Transaktionslevel einer Transaktion zu setzen, kann das
+        \languageorasql{SET TRANSACTION ISOLATION LEVEL}-Kommandos benutzt
+        werden. Die drei möglichen Isolationslevel werden wie folgt gesetzt:
+        \begin{lstlisting}[caption={Isolationslevel einer Transaktion
+        wählen},label=admin401,language=oracle_sql]
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+SET TRANSACTION READ ONLY;
+        \end{lstlisting}
+        Soll das Transaktionslevel für eine gesamte Session geändert werden,
+        geschieht dies mit \languageorasql{ALTER SESSION}.
+\clearpage
+        \begin{lstlisting}[caption={Isolationslevel einer Session wählen},label=admin402,language=oracle_sql]
+ALTER SESSION SET isolation_level = READ COMMITTED;
+
+ALTER SESSION SET isolation_level = SERIALIZABLE;
+        \end{lstlisting}
+      \subsection{Eine Transaktion beenden}
+        Eine Transaktion kann auf unterschiedliche Art und Weise beendet werden:
+        \begin{itemize}
+          \item Durch das Kommando \languageorasql{COMMIT}.
+
+          Ein \languageorasql{COMMIT} sorgt dafür, dass eine Transaktion beendet und ihre Änderungen in der Datenbank dauerhaft gemacht werden. Ein \languageorasql{COMMIT} kann nur dann erfolgreich sein, wenn keine Verletzung der Datenkonsistenz vorliegt.
+          \item Durch das Kommando \languageorasql{ROLLBACK}.
+
+          Mit \languageorasql{ROLLBACK} werden alle Änderungen, die eine Transaktion an einer Datenbank vorgenommen hat, rückgängig gemacht. Die Datenbank wird in den letzten konsistenten Zustand zurückversetzt.
+          \item Durch das Abbrechen einer Session.
+
+          Wird eine Session unerwartet abgebrochen, werden alle offnen Transaktionen der Session beendet. Es erfolgt kein \languageorasql{COMMIT}.
+        \end{itemize}
+      \subsection{Transaktionsteile zurückrollen}
+        Innerhalb einer Transaktion können Marken gesetzt werden, die als Savepoints bezeichnet werden. Dadurch wird eine Transaktion in einzelne Teile zerlegt. Der Nutzer hat so die Möglichkeit eine Transaktion nur teilweise, bis zu einem bestimmten Savepoint, zurückzurollen. Dies kann bei langen und komplexen Transaktion sehr nützlich sein.
+
+        Wird ein Rollback zu einem Savepoint durchgeführt, hebt Oracle nur die Sperren auf, die für die zurückgerollten Statements notwendig waren. Die Transaktion bleibt, trotz der teilweisen Rollbacks, erhalten. Andere Transaktionen, die Zugriff auf die bisher gesperrten Daten benötigen, können dann mit ihrer Arbeit fortfahren.
+
+        \begin{lstlisting}[caption={Einen Savepoint setzen},label=admin403,language=oracle_sql]
+UPDATE departments
+SET    department_ID = 11
+WHERE  department_ID = 10;
+
+SAVEPOINT dept;
+        \end{lstlisting}
+        \begin{lstlisting}[caption={Rollback zu einem Savepoint},label=admin404,language=oracle_sql]
+        
+UPDATE departments
+SET    department_ID = 21
+WHERE  department_ID = 20;
+
+SAVEPOINT dept2;
+
+ROLLBACK TO SAVEPOINT dept;
+        \end{lstlisting}
+        \begin{literaturinternet}
+          \item \cite[Konkurrierende Zugriffe und Datenkonsistenz]{dataconcurrencyandconsistency}.
+          \item \cite[Transaktionsverwaltung]{transactionmanagement}.
+        \end{literaturinternet}
+      \subsection{Deadlocks}
+        Ein Deadlock tritt immer dann auf, wenn zwei oder mehr Nutzer Sperren auf ein und die selbe Ressource legen möchten. Deadlocks verhindern, dass die betreffenden Transaktionen weiterarbeiten können. Diese Situation wird deshalb als Deadlock bezeichnet, weil es egal ist, wie lange jede Transaktion warten würde, da jeder auf den anderen wartet.
+
+        Oracle kann automatisch Deadlock-Situationen erkennen und auflösen. Dies geschieht, in dem die Transaktion, die den Deadlock bemerkt auf Statementebene zurückgerollt wird (Statement-level rollback). So werden die betreffenden Sperren freigegeben und die andere Transaktion kann weiter arbeiten.
+
+        \begin{literaturinternet}
+          \item \cite[Wie Oracle Daten sperrt]{howoraclelocksdata}
+        \end{literaturinternet}
+    \section{Multiversion Concurrency Control}
+      Multiversion Concurrency Control ist ein Mechanismus, den Oracle zur Ge\-währ\-leis\-tung der Lesekonsistenz nutzt. Dabei werden verschiedene Versionen von Datenbankobjekten aufbewahrt, so dass jeder Nutzer die benötigte Sicht seiner Daten bekommt. Die Umsetzung dieses Verfahrens wird durch verschiedene Methoden, wie z. B. Zeitstempelverfahren oder Snapshots erreicht. Oracle benutzt hierfür sogenannte Before Images seiner Datenblöcke.
+\clearpage
+      \subsection{Lesekonsistenz}
+        \subsubsection{Lesekonsistenz auf Statementebene (Statementlevel Read Consistency)}
+          \begin{merke}
+            Unter dem Begriff \enquote{Statementlevel Read Consistency} versteht man, dass eine Abfrage nur die Daten sieht, die zum Startzeitpunkt der Abfrage gültig (committed) waren. Die Länge der Laufzeit der Abfrage darf dabei keine Rolle spielen.
+          \end{merke}
+          \tablecaption{Statementlevel Read Consistency}
+          \tablefirsthead{
+            \multicolumn{2}{c}{Transaktion 1} &
+            \multicolumn{2}{c}{Transaktion 2}\\
+            \hline
+          }
+          \tabletail{}
+          \begin{supertabular}{lr|ll}
+            \label{statementlevelreadconsistency}
+            \small{\texttt{SELECT * FROM employees}} & & & \\
+            \small{\texttt{WHERE department\_id = 30;}} & \scriptsize{t1} & & \\
+            & & & \small{\texttt{DELETE employees}} \\
+            & & \scriptsize{t2} & \small{\texttt{WHERE employee\_id = 117;}}\\
+            & & & \texttt{COMMIT;} \\
+            \cline{3-4}
+            \small{Anzeigen der Datensätze: 6 Stück} & \scriptsize{t3} & & \\
+            \small{\texttt{SELECT * FROM employees}} & & & \\
+            \small{\texttt{WHERE department\_id = 30;}} & \scriptsize{t4} & & \\
+            \small{Anzeigen der Datensätze: 5 Stück} & \scriptsize{t5} & & \\
+          \end{supertabular}
+
+          Das \beispiel{statementlevelreadconsistency} zeigt die beiden Transaktionen 1 und 2. Transaktion 1 startet zum Zeitpunkt t1. Unmittelbar nach dem Start von Transaktion 1 startet Transaktion 2 zum Zeitpunkt t2. Der Delete-Vorgang von Transaktion 2 darf die Abfrage von Transaktion 1 nicht beeinflussen und die Ausgabe der Abfrageergebnisse zum Zeitpunkt t3 zeigt auch korrekte 6 Datensätze an. Erst die zum Zeitpunkt t4 gestartete Abfrage in Transaktion 1 registriert die durch Transaktion 2 vorgenommenen Änderungen. Die Lesekonsistenz auf Statementebene ist gewährleistet.
+        \subsubsection{Lesekonsistenz auf Transaktionsebene (Transactionlevel Read Consistency)}
+          \begin{merke}
+            Unter dem Begriff \enquote{Transactionlevel Read Consistency} versteht man, dass eine Abfrage nur die Daten sieht, die zum Startzeitpunkt der Transaktion gültig (committed) waren. Die Länge der Laufzeit der Transaktion darf dabei keine Rolle spielen. Um Transactionlevel Read Consistency zu erwirken, muss das Isolationslevel Serializable verwendet werden.
+          \end{merke}
+\clearpage
+          Das \beispiel{transactionlevelreadconsistency} zeigt die beiden Transaktionen 1 und 2. Transaktion 1 startet zum Zeitpunkt t1. Unmittelbar nach dem Start von Transaktion 1 startet Transaktion 2 zum Zeitpunkt t2. Der Delete-Vorgang von Transaktion 2 darf die gesamte Transaktion 1 nicht beeinflussen und die beiden Ausgaben der Abfrageergebnisse, zu den Zeitpunkten t4 und t6, zeigen auch korrekte 6 Datensätze an. Die Lesekonsistenz auf Transaktionsebene ist gewährleistet.
+          \tablecaption{Transactionlevel Read Consistency}
+          \tablefirsthead{
+            \multicolumn{2}{c}{Transaktion 1} &
+            \multicolumn{2}{c}{Transaktion 2}\\
+            \hline
+          }
+          \tabletail{}
+          \begin{supertabular}{lr|ll}
+            \label{transactionlevelreadconsistency}
+            \small{\texttt{SET TRANSACTION ISOLATION LEVEL}} & & & \\
+            \small{\texttt{SERIALIZABLE;}} & \scriptsize{t1} & & \\
+            \small{\texttt{SELECT * FROM employees}} & & & \\
+            \small{\texttt{WHERE department\_id = 30;}} & \scriptsize{t2} & & \\
+            & & & \small{\texttt{DELETE employees}} \\
+            & & \scriptsize{t3} & \small{\texttt{WHERE employee\_id = 117;}}\\
+            & & & \texttt{COMMIT;} \\
+            \cline{3-4}
+            \small{Anzeigen der Datensätze: 6 Stück} & \scriptsize{t4} & & \\
+            \small{\texttt{SELECT * FROM employees}} & & & \\
+            \small{\texttt{WHERE department\_id = 30;}} & \scriptsize{t5} & & \\
+            \small{Anzeigen der Datensätze: 6 Stück} & \scriptsize{t6} & & \\
+          \end{supertabular}
+
+      \subsection{Undo-Segmente}
+        Um die Lesekonsistenz für Abfragen zu gewährleisten, benutzt Oracle Undo-Segmente. Undo-Segmente sind spezielle Segmente, die anders als z. B.~Tabellensegmente oder Clustersegmente, nicht direkt durch den Nutzer bearbeitet werden können. Seit Oracle 9i sind alle Undo-Segmente in einem Undo-Tablespace zusammengefasst, der nur minimale Administration benötigt.
+
+        Undo-Segmente werden von der Datenbank genutzt, um Before Images von Datenblöcken zu speichern.
+        \subsubsection{Before Images}
+          Unter dem Begriff Before Image versteht Oracle eine Kopie eines Oracle blocks, bevor dieser geändert wird. Ein Before Image kann im weitesten Sinne als eine \enquote{Kopie der Originalwerte} verstanden werden.
+\clearpage
+          Before Images werden für verschiedene Zwecke benötigt. Dies sind im wesentlichen:
+          \begin{itemize}
+            \item Zurückrollen einer Transaktion, wenn ein \languageorasql{ROLLBACK}-Kommando ausgeführt werden soll
+            \item Recovery der Datenbank
+            \item Lesekonsistenz
+            \item Oracle Flashback Query
+            \item Oracle Flashback Table
+          \end{itemize}
+          Wird ein \languageorasql{ROLLBACK}-Kommando am Ende einer Transaktion abgesetzt, müssen alle durch die Transaktion verursachten Änderungen rückgängig gemacht werden. Hierzu werden die Originalwerte aus den Before Images, die in den Undo-Segmente liegen, benutzt.
+
+          Zu beachten ist, dass es mehrere Before Images eines Oracle blocks, mit unterschiedlichen Versionsständen geben kann. Da jeder Oracle block im Database Buffer Cache mit einer SCN versehen wird, kann anhand dieser das Alter des Blocks (und somit seine Version) bestimmt werden. Je höher die SCN, desto neuer ist der Block.
+
+          \subsubsection{Multiversion Concurrency Control durch Before Images}
+            \abbildung{readconsistency} zeigt die Nutzung der Before Images für das Erzeugen von Lesekonsistenz.
+
+            \bild{Lesekonsistenz durch Multiversion Concurrency Control}{readconsistency}{0.7}
+
+            Eine Transaktion wird bei SCN 4711 gestartet. Um Lesekonsistenz zu gewährleisten, muss die Datenbank dafür sorgen, dass diese Transaktion nur solche Datenblöcke liest, deren SCN kleinergleich 4711 lautet. Ein Oracle block trägt bereits die SCN 4866. Für diesen muss Oracle ein Before Image, mit einer SCN kleiner oder gleich 4711, aus den Undo-Segmenten holen.

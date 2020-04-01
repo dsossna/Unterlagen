@@ -1,0 +1,10 @@
+    \item Erstellen Sie RMAN-Skripte, um die im Folgenden beschriebene Backup Strategie zu implementieren! Benutzen Sie für die Umsetzung der Skripte, RUN-Blöcke und die manuelle Kanalanforderung!
+      \begin{itemize}
+        \item Jeden Sonntag muss ein komprimiertes Level 0 Backup der Datenbank erstellt werden!
+        \item Von Montag bis Freitag werden im Drei-Stunden-Rhythmus Backups der Archive Logs erzeugt. Aus Sicherheitsgründen müssen diese Backups, an den Speicherorten \oscommand{/u02/backup} und \oscommand{/u03/backup} dupliziert werden! Alle Kopien der gesicherten Archive Logs sollen automatisch aus der FRA entfernt werden!
+        \item Jeden Montag, Dienstag, Donnerstag und Freitag werden Level 1 Backups (inkrementell) der Datenbank erstellt und in der FRA gespeichert!
+        \item Jeden Mittwoch muss ein kumulatives Level 1 Backup der Datenbank erzeugt werden!
+        \item Jeden Samstag sind der komplette Inhalt der FRA und die Backups der Archive Logs auf das SBT-Gerät zu verschieben! Es ist sicherzustellen, dass im Anschluss daran, alle obsoleten Backups gelöscht werden!
+        \item Für diese Backup Strategie ist ein Recovery Window von 7 Tagen notwendig.
+        \item Aktivieren Sie das Block Change Tracking, um die Dauer der inkrementellen Backups zu beschleunigen!
+      \end{itemize}

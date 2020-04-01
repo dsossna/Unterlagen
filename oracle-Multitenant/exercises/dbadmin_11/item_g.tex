@@ -1,0 +1,11 @@
+    \item Setzen Sie das folgende SQL-Statement, unter Benutzung des Result
+    Caches ab. Da Sie dieses Statement mehrfach werden ausführen müssen,
+    sollten Sie es in einer SQL-Datei speichern.
+    \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
+SQL> SELECT /*+ result_cache */ *
+  2  FROM   (SELECT TO_CHAR(Buchungsdatum, 'Q') AS Quartal,
+  3                 TO_CHAR(Buchungsdatum, 'YYYY') AS Datum, Betrag
+  4          FROM   bank.Buchung)
+  5  PIVOT  (SUM(Betrag) FOR Datum IN ('1985', '1986', '1987', '1988', 
+                                       '1989'));
+    \end{lstlisting}

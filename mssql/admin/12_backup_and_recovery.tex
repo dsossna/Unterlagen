@@ -1,9 +1,7 @@
-  \chapter{Backup & Recovery}
-    \setcounter{page}{1}\kapitelnummer{chapter}
-    \minitoc
-\newpage
-
-          
+  \chapter{Backup und Recovery}
+    \chaptertoc{}
+    \cleardoubleevenpage
+    
     \section{Datenbank-Snaphots}
   DB-Snapshots (S. 155)
           \subsubsection{Verschieben von Systemdatenbanken nach einem Hardwarefehler}
@@ -37,16 +35,19 @@ NET START MSSQLSERVER /f /T3608
               \item Starten Sie die SQL Server-Instanz erneut (ohne /f und /T)
               \item Benutzen Sie Katalogsicht \identifier{sys.master\_files}, um
               das Ergebnis des Verschiebevorganges zu verifizieren.
-                \begin{lstlisting}[language=ms_sql,caption={Abfragen
+              
+              \begin{lstlisting}[language=ms_sql,caption={Abfragen
                 der View \identifier{sys.master\_files}},label=admin03_23]
-USE
-master GO
+                USE
+                master GO
 
-SELECT name AS logical_name, physical_name AS new_location, 
-       state_desc as state
-FROM   sys.master_files
-WHERE  database_id = DB_ID('msdb')
-                \end{lstlisting}
+                SELECT 
+                name AS logical_name
+                , physical_name AS new_location
+                , state_desc as state
+                FROM   sys.master_files
+                WHERE  database_id = DB_ID('msdb')
+              \end{lstlisting}
           \end{enumerate}
             \begin{literaturinternet}
             \item \cite{ms188396}

@@ -1,0 +1,523 @@
+\chapter{Konfigurieren der Oracle-Netzwerkumgebung}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Der Listener}
+      Der Listener ist ein eigenständiger, auf dem Datenbankserver laufender
+      Prozess. Er empfängt eingehende Verbindungsanforderungen der Clients und
+      leitet den Verbindungsaufbau zur Datenbank ein. Er speichert seine
+      Konfiguration in der Datei \oscommand{listener.ora}.
+
+      Da es für alle verbindungsspezifischen Parameter Standardwerte gibt, ist es möglich einen Listener ohne eine Konfiguration zu starten. Dieser Default-Listener trägt den Namen \enquote{LISTENER} und hat keine Informationen über vorhandene Instanzen zur Verfügung. Die Datenbankinstanzen müssen sich dynamisch beim Listener registrieren (PMON, Service registration). Daraus ergeben sich folgende Vorteile:
+      \begin{itemize}
+        \item \textbf{Vereinfachte Konfiguration}: Es sind keine zusätzlichen Konfigurationseinstellungen für dieses Feature notwendig.
+        \item \textbf{Connect-time failover}: Da bei dynamischer Registrierung einer Instanz dem Listener auch der Status der Instanz (started, shutdown) mitgegeben wird, kann er im Falle dessen, dass eine Instanz ausfällt, den Nutzerprozess an eine andere Instanz der gleichen Datenbank (RAC) verweisen. Dies geschieht transparent für den Nutzer. Bei der statischen Registrierung einer Instanz ist kein Connect-time failover mög\-lich.
+        \item \textbf{Runtime connection load balancing}: Service registration ermöglicht dem Listener die Verbindungsanforderungen der Clients immer an den am schwächsten ausgelasteten Service handler (Dispatcher, Dedicated Server Prozess) weiterzuleiten.
+      \end{itemize}
+      \subsection{Kommunikation zwischen Client und Server}
+        Für die Kommunikation zwischen Client und Datenbankserver verwendet Oracle eine Architektur, die auf dem ISO/OSI Modell basiert.
+        In \abbildung{network_architecture} wird sowohl der client- als auch der serverseitige Aufbau der Kommunikationsarchitektur gezeigt.
+
+        Die Gliederung der Fähigkeiten in einzelne Schichten bzw. Ebenen hat den Vorteil, dass eine Änderung an einer Ebene sich nicht auf die anderen auswirkt.
+        \subsubsection{Clientanwendung}
+          Anwendungen die mit einer Oracle-Datenbank kommunizieren wollen, müssen das Oracle Call Interface (OCI) oder das Oracle C++ Call Interface (OCCI) benutzen. Diese Interfaces stellen der Clientanwendung alle Methoden zur Verfügung, um z. B. eine Session aufzubauen, SQL-Statements an einen Serverprozess zu senden und vieles mehr.
+        \subsubsection{Presentation - TTC}
+          Wenn der Datenbankserver und die Clientanwendung auf unterschiedlichen Betriebssystemen laufen, kann es zu Schwierigkeiten kommen, da der Client und der Server unterschiedliche Zeichensätze zur Darstellung der Informationen verwenden. Der Two-Task-Common-Presentation Layer, kurz TTC, beseitigt diese Probleme durch Konvertierung der Zeichensätze.
+          \begin{merke}
+            Der TTC konvertiert nur Zeichensätze. Er ist kein \enquote{Sprachübersetzer}.
+          \end{merke}
+
+        \bild{Die Oracle Netzwerkarchitektur}{network_architecture}{1.5}
+
+        \subsubsection{Oracle Net Foundation Layer}
+          Der \textit{Oracle Net Foundation Layer (ONFL)} ist dafür Verantwortlich, die Kommunikation zwischen der Clientanwendung und dem Datenbankserver zu etablieren und aufrecht zu erhalten, sowie den Nachrichtenaustausch zwischen beiden Seiten zu ermöglichen. Diese Anforderungen kann der ONFL erfüllen, da er eine Technik verwendet, die sich \enquote{Transparent Network Substrate (TNS)} nennt. TNS stellt die Möglichkeit für eine Peer-To-Peer Kommunikation zwischen Client und Server bereit.
+
+          Eine weitere Fähigkeit des ONFL ist es, Benennungsmethoden für die Kommunikation zwischen Client und Server bereitzustellen.
+        \subsubsection{Oracle Protocol Support}
+          Auf der Position zwischen dem Oracle Network Foundation Layer und den Netzwerkprotokollen ist es seine Aufgabe als Gateway zwischen TNS, TCP/IP und den anderen Protokollen zu dienen. Er sorgt dafür, das die TNS-Fähigkeiten des ONFL mit Hilfe der Netzwerkprotokolle über das Netzwerk übertragen werden können.
+      \subsection{Service Registration}
+        Ob eine Datenbank im Netzwerk verfügbar ist, bestimmt der Listener durch einen Mechanismus, der \enquote{Service registration} genannt wird. Es gibt zwei unterschiedliche Arten von Service Registration:
+        \begin{itemize}
+          \item Static Service Registration
+          \item Dynamic Service Registration
+        \end{itemize}
+        \subsubsection{Dynamic Service Registration}
+          Die Dynamic Service Registration wird durch den Oracle Hintergrundprozess PMON durchgeführt. Er übergibt folgende Informationen an den Listener:
+          \begin{itemize}
+            \item Servicenamen der verbundenen Datenbank
+            \item Name der Instanz(en) die zu diesem Servicenamen gehören
+            \item Service handler die für diese Instanz verfügbar sind (siehe \ref{connectionmodels})
+          \end{itemize}
+          Mit Hilfe dieser Informationen ist der Listener in der Lage, die Clientanwendung mit dem Datenbankserver zu verbinden.
+          \begin{merke}
+            Der Listener muss vor dem Hochfahren der Instanz gestartet werden, da der PMON sonst die dynamic service registration nicht ordnungsgemä\ss\ durchführen kann.
+          \end{merke}
+          Der PMON versucht in Intervallen von ca. 60 Sekunden eine Verbindung zu einem Listener herzustellen, um die Registrierung nachzuholen. Dieser Mechanismus kann auch manuell, mit dem Kommando \languageorasql{ALTER SYSTEM REGISTER} durchgeführt werden.
+
+          Erhält ein Listener eine Verbindungsanforderung bevor die angeforderte Instanz registriert wurde, wird er den Client abweisen.
+\clearpage
+          \bild{Ablauf des Service Registration Mechanismus}{serviceregistration}{1.5}
+
+          Um zu erfahren, ob eine Datenbank dynamisch bei ihrem Listener registriert wurde, kann das Listener control utility (siehe \ref{lsnrctl}) genutzt werden. Die Anzeige von \enquote{status READY} sagt aus, dass die Datenbank dynamisch registriert wurde.
+          \begin{lstlisting}[caption={Wurde die Datenbank registriert?},label=admin600,language=terminal]
+Service "orcl" has 1 instance(s).
+  Instance "orcl", status READY, has 1 handler(s) for this service...
+          \end{lstlisting}
+        \subsubsection{Static service registration}
+          Bei der Static Service Registration müssen die Informationen, die der Listener benötigt, in die Konfigurationsdatei des Listeners eingetragen werden. Die Ausgabe des Listener control utilities sieht dann wie folgt aus:
+          \begin{lstlisting}[caption={Statische Registrierung},label=admin601,language=terminal]
+Service "orcl" has 1 instance(s).
+  Instance "orcl", status UNKNOWN, has 1 handler(s) for this service...
+          \end{lstlisting}
+          Die Anzeige von \enquote{status UNKNOWN} zeigt an, dass die Datenbank statisch registriert wurde, da der Listener nichts über den Zustand der Verbindung zur Datenbank weiß.
+      \subsection{Die Datei listener.ora}
+        Die Datei \oscommand{listener.ora} dient als Konfigurationsdatei für den Listener. Sie befindet sich im Verzeichnis \oscommand{\$ORACLE\_HOME/network/admin}. Sie enthält folgende Angaben:
+        \begin{itemize}
+          \item Namen der Listener
+          \item Hostname, Port und Protokoll für Verbindungen
+          \item Namen der Datenbankservices
+          \item Listenerkontroll-Parameter
+        \end{itemize}
+        \begin{merke}
+          Mit Hilfe der Umgebungsvariable \oscommand{TNS\_ADMIN} kann ein alternativer Speicherort für die Datei \oscommand{listener.ora} angegeben werden.
+        \end{merke}
+        \beispiel{admin602} zeigt den Inhalt einer Listenerkonfigurationsdatei.
+
+        In Zeile 1 steht der Name des Listeners: \enquote{LISTENER}. Die Zeilen zwei und drei definieren die \enquote{Protokolladresse} des Listeners. Sie enthält Angaben über das zu verwendende Netzwerkprotokoll, den Namen des Hosts, auf dem sich der Listener befindet und den Port, auf dem er lauscht.
+        \begin{lstlisting}[caption={Die Datei \oscommand{listener.ora}},label=admin602,language=configfile]
+LISTENER =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119SRV.oracle.com)(PORT = 1521))
+  )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = orcl.local)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/orcl)
+      (SID_NAME = orcl)
+    )
+  )
+
+ADR_BASE_LISTENER = /u01/app/oracle
+        \end{lstlisting}
+        In Zeile 6 beginnt mit dem Parameter \oscommand{SID\_LIST\_\textless listenername\textgreater} die statische Registrierung eines Datenbankservices. Die Angaben \oscommand{GLOBAL\_DBNAME}, \oscommand{ORACLE\_HOME} und \oscommand{SID\_NAME} sind notwendig, um Clients mit einer Datenbank verbinden zu können.
+
+        In der letzten Zeile wir durch den Parameter \oscommand{ADR\_BASE\_\textless listenername\textgreater} dem Listener mitgeteilt, wo sich das ADR (Automatic Diagnostic Repository) befindet.
+      \subsection{Der Oracle Net Manager}
+        Der Oracle Net Manager ist eine in Java geschriebene Software, welche seit den Tagen von Oracle 8i existiert. Er ermöglicht die einfache und schnelle Konfiguration eines Listeners. Gestartet wird er durch das Kommando \oscommand{netmgr} auf der Shell.
+        \begin{merke}
+          Genau wie für das SQL*Plus-Tool muss auch für den Net Manager zuerst das \oscommand{oraenv}-Skript ausgeführt werden.
+        \end{merke}
+        Mit Hilfe des Net Managers können verschiedene Einstellungen an der Oracle Netzwerkkonfiguration vorgenommen werden.
+\clearpage
+        \begin{itemize}
+          \item Listener konfigurieren
+          \item Benennungsmethoden konfigurieren
+          \item Net Service Names erstellen
+        \end{itemize}
+        \subsubsection{Einen Listener erstellen}
+          \begin{enumerate}
+            \item In der Baumansicht auf das Pluszeichen neben \enquote{Lokal} klicken, um den Rest der Baumansicht auf zuklappen.
+            \bild{Start\-bild\-schirm des Net Managers}{net_mgr_1}{2.4}
+            \item Auf den Knotenpunkt \enquote{Listener} klicken.
+            \bild{Das Register Listener erweitern}{net_mgr_2}{2.4}
+            \item Links in der Symbolleiste auf das grüne Pluszeichen klicken.
+            \bild{Neuen Listener hinzufügen}{net_mgr_3}{0.8}
+\clearpage
+            \item Geben Sie eine Bezeichnung für den Listener ein und klicken Sie auf \enquote{OK}.
+            \bild{Den neuen Listener benennen}{net_mgr_4}{1.1}
+            \item Der neue Listener ist fertig.
+            \bild{Der neue Listener ist da}{net_mgr_5}{2.5}
+          \end{enumerate}
+          \begin{merke}
+            Der erste Listener den Sie erstellen sollte immer \enquote{LISTENER} heißen, da dies der Standardname für einen Listener ist.
+          \end{merke}
+        \subsubsection{Eine weitere Protokolladresse konfigurieren}
+          \label{protocoladdresses}
+          Die Möglichkeit eine weitere Protokolladresse zu konfigurieren erlaubt es dem Administrator, den einen Listener auf einem alternativen Port lauschen zu lassen oder aber einen weiteren Listening-Port hinzuzufügen. Laut Aussage von Oracle genügt jedoch in den meisten Umgebungen ein einziger Listener mit einem Port. Interessant ist diese Option daher nur dann, falls der Listener auf zwei unterschiedliche Netzwerkprotokolle konfiguriert werden soll.
+
+          Das Konfigurieren einer weiteren Protokolladresse geschieht im Net Manager im Bereich \enquote{Listening-Adressen}.
+          \begin{enumerate}
+            \item Klicken Sie auf die Bezeichnung des Listener, den Sie konfigurieren möchten.
+            \item Wählen Sie aus dem Dropdownfeld rechts oben, die Option \enquote{Listening-Adressen} aus.
+            \bild{Die Option Listening-Adressen auswählen}{net_mgr_6}{1}
+            \item Klicken Sie rechts unten auf die Schaltfläche \enquote{Adresse hinzufügen}.
+            \bild{Eine neue Listening-Adresse hinzufügen}{net_mgr_7}{1}
+            \item Geben Sie den Hostnamen und die Listener Portnummer im jeweiligen Textfeld ein.
+            \bild{Fehlende Angaben ergänzen}{net_mgr_8}{1}
+          \end{enumerate}
+        \subsubsection{Statische Registrierung konfigurieren}
+          \begin{enumerate}
+            \item In der Baumansicht auf das Pluszeichen neben \enquote{Lokal} klicken, um den Rest der Baumansicht auf zuklappen.
+            \item Auf den Knotenpunkt \enquote{Listener} klicken.
+            \item Klicken Sie auf die Bezeichnung des Listener, den Sie konfigurieren möchten.
+\clearpage
+            \item Wählen Sie aus dem Dropdownfeld rechts oben, die Option \enquote{Datenbank-Services} aus.
+            \bild{Die Option \enquote{Datenbank-Services} auswählen}{net_mgr_9}{1}
+            \item Klicken Sie rechts unten auf die Schaltfläche \enquote{Datenbank hinzufügen}.
+            \bild{Die Schaltfläche \enquote{Datenbank hinzufügen}}{net_mgr_10}{1}
+            \item Füllen Sie die drei Textfelder aus, um eine Instanz statisch zu registrieren. Dies geht auch dann, wenn die Instanz noch gar nicht existiert.
+            \bild{Angaben für die statische Registrierung}{net_mgr_11}{1}
+          \end{enumerate}
+        \subsubsection{Logging konfigurieren}
+          \begin{enumerate}
+            \item In der Baumansicht auf das Pluszeichen neben \textit{Lokal} klicken, um den Rest  aufzuklappen.
+            \item Auf den Knotenpunkt \textit{Listener} klicken.
+            \item Klicken Sie auf die Bezeichnung des Listener, den Sie konfigurieren möchten.
+\clearpage
+            \item Wählen Sie aus dem Dropdownfeld rechts oben, die Option \textit{Allgemeine Parameter} aus.
+            \bild{Die Option \enquote{Allgemeine Parameter} auswählen}{net_mgr_12}{1.1}
+            \item Wählen Sie die Registerkarte \textit{Logging und Tracing} aus.
+            \bild{Die Registerkarte \enquote{Logging und Tracing}}{net_mgr_13}{1.1}
+            \item Klicken Sie auf \textit{Logging aktiviert} um das Logging zu aktivieren.
+            \item Passen Sie evtl. Pfad und Dateiname der Log-Datei an (zuerst muss der Haken bei \textit{ADR aktivieren} entfert werden).
+          \end{enumerate}
+      \subsection{Das Tool lsnrctl}
+        \label{lsnrctl}
+        Das Listener Control Utility, kurz \oscommand{lsnrctl} steht dem Administrator als Konfigurationswerkzeug für den Listener zur Verfügung. Mit seiner Hilfe kann der Listener zur Laufzeit beeinflusst und seine aktuelle Konfiguration abgefragt werden. Es ist im Wesentlichen für das Starten und Stoppen des Listeners, sowie das Abfragen von Verbindungsdaten gedacht. Es befindet sich im Verzeichnis: \oscommand{\$ORACLE\_HOME/bin}
+\clearpage
+        Aufgerufen wird es mit dem Kommando \oscommand{lsnrctl}. Die vier
+        wichtigsten Befehle dieses Tools sind:
+        \begin{itemize}
+          \item \textbf{start} [listener]: Startet den angegebenen Listener.
+          Wird kein Listener angegeben, wird der Standardlistener
+          \identifier{LISTENER} gestartet.
+          \item \textbf{stop} [listener]: Stoppt den angegebenen Listener. Wird
+          kein Listener angegeben, wird der Standardlistener
+          \identifier{LISTENER} gestoppt.
+          \item \textbf{status} [listener]: Zeigt eine Statusmeldung über den
+          angegebenen Listener. Wird kein Listener angegeben, wird
+          eine Statusmeldung zum Standardlistener \identifier{LISTENER} gezeigt.
+          \item \textbf{service} [listener]: Zeigt an, welche Services ein
+          Listener unterstützt und um welche Services es sich handelt. Dieses
+          Kommando unterscheidet sich vom Kommando status darin, dass es mehr
+          Informationen zu den einzelnen Services ausgibt.
+        \end{itemize}
+
+        \begin{literaturinternet}
+          \item \cite{i486171}
+        \end{literaturinternet}
+    \section{Benennungsmethoden}
+      Um eine Verbindung zu einer Datenbank aufbauen zu können, müssen Nutzer einen sogenannten \enquote{connect string} angeben. Dieser setzt sich zusammen aus:
+      \begin{itemize}
+        \item einem Nutzernamen,
+        \item einem Passwort und
+        \item einem \enquote{Connect Identifier}
+      \end{itemize}
+      Der Connect Identifier ist eine Zeichenkette, die alle Angaben zu der
+      Oracle-Instanz enthält, mit der die Verbindung hergestellt werden soll.
+      Er wird mittels einer Benennungsmethode in einen Connect Descriptor
+      aufgelöst. Der Listener erhält dann die Verbindungsanforderung des
+      Clients und übernimmt den Verbindungsaufbau. Oracle kennt vier
+      verschiedene Benennungsmethoden:
+      \begin{itemize}
+        \item Hostnaming
+
+          Hostnaming ist die einfachste Benennungsmethode. Wenn auf einem Server
+          nur eine einzige Datenbank läuft, genügt die IP-Adresse/der
+          DNS-Name des Servers, um die Datenbank zu kontaktieren. Es wird
+          dafür keine weitere Konfiguration auf dem Clientrechner benötigt.
+        \item Easy Naming
+
+          Easy Naming ermöglicht es, einen TCP-Connect String, der aus einer
+          IP-Adresse, einem Port und einem Servicename besteht, zum
+          Verbindungsaufbau zu verwenden. Diese Methode arbeitet völlig
+          konfigurationslos.
+        \item Local Naming
+
+         Hier wird der Net Service Name in einer lokalen Datei mit dem Namen:
+         \oscommand{tnsnames.ora} gespeichert.
+        \item Directory Naming
+
+          Beim Directory Naming werden die Connect Identifier in einem zentralen LDAP-Service, dem \enquote{Oracle Internet Directory (OID)} gespeichert.
+        \item External Naming
+
+          Bei dieser Methode, werden Net Service Names in einem externen, von Oracle unter\-stüt\-zten, Verzeichnis (NIS, CDS) gespeichert.
+      \end{itemize}
+        \begin{literaturinternet}
+          \item \cite{CIHGGHEE}
+          \item \cite{i1047762}
+        \end{literaturinternet}
+      \subsection{Die Datei sqlnet.ora}
+        Die Datei \oscommand{sqlnet.ora} ist für die Konfiguration der Oracle Netzwerkeinstellungen da. Hier kann unter anderem auch festgelegt werden, welche Benennungsmethoden aktiviert sind. \beispiel{admin603} zeigt beispielsweise den Parameter \parameter{NAMES.DIRECTORY\_PATH}.
+        \begin{lstlisting}[caption={Der Parameter NAMES.Directory\_path in der Datei sqlnet.ora},label=admin603,emph={[9]NAMES},emphstyle={[9]\color{black}},language=configfile]
+NAMES.DIRECTORY_PATH=(HOSTNAME, TNSNAMES, EZCONNECT)
+        \end{lstlisting}
+          Zwischen den beiden Klammern werden die Namen der Benennungsmethoden in der Reihenfolge angegeben, in der sie genutzt werden sollen. Damit einen Benennungsmethode funktioniert, muss sie an dieser Stelle aufgelistet sein. Folgende Werte sind für \parameter{NAMES.DIRECTORY\_PATH} zulässig:
+          \begin{itemize}
+            \item HOSTNAME  : Hostnaming
+            \item TNSNAMES  : Local Naming
+            \item EZCONNECT : Easy Connect Naming
+            \item LDAP      : Directory Naming
+            \item NIS       : Network Information Server (auch als Yellow Page bekannt)
+          \end{itemize}
+\clearpage
+      \subsection{Die Benennungsmethode Easy Naming}
+        In einer TCP/IP-Umgebung ist das Easy Naming die einfachste Methode eine Verbindung zu einer Datenbank aufzubauen. Es besteht dabei keine Notwendigkeit, Net Service Names in der Datei \oscommand{tnsnames.ora} zu speichern. Es wird einfach die TCP/IP-Methode des Hostnamings erweitert. Die Syntax für die Nutzung des Easy Namings ist folgende:
+        \begin{lstlisting}[caption={Easy Naming},label=admin606,language=terminal]
+connect username/password@[//]host[ :port][/services_name]
+        \end{lstlisting}
+        Einige Beispiele für das Easy Naming:
+        \begin{lstlisting}[caption={Beispiele für Easy Naming},label=admin607,language=terminal]
+connect hr/hr@FEA11-119SRV.oracle.com:1521/orcl.it-training-alt.fus
+connect sys/oracle@//FEA11-119SRV.oracle.com/orcl.it-training-alt.fus as sysdba
+        \end{lstlisting}
+        \begin{merke}
+          Diese Verbindungsmethode kann nur dann verwendet werden, wenn keine Advanced Features (Verschlüsselung u. ä.) für die Verbindung zur Datenbank gefordert sind.
+        \end{merke}
+        \begin{literaturinternet}
+          \item \cite{i507143}
+        \end{literaturinternet}
+      \subsection{Die Benennungsmethode Hostnaming}
+        Die einfachste Benennungsmethode ist das Hostnaming. Hier ist keine Konfigurationsarbeit auf dem Clientrechner notwendig. Alle notwendigen Einstellungen werden nur einmal auf dem Server vorgenommen.
+
+        \subsubsection{Funktionsweise}
+          Damit das Hostnaming funktioniert, müssen folgende Bedingungen erfüllt sein:
+          \begin{itemize}
+            \item Das Hostnaming muss in der Datei \textit{sqlnet.ora} aktiviert sein.
+            \item Auf dem Datenbankserver muss ein Listener gestartet sein, der TCP/IP benutzt.
+            \item Der Listeningport muss 1521 (Standardport) sein.
+            \item Der Listener muss einen Service kennen, dessen Name gleichlautend mit dem Hostnamen des DB-Servers ist. Das bedeutet, wenn der Hostname des Datenbankservers FEA11-119SRV.oracle.com lautet, dann muss folglich auch der Service Name FEA11-119SRV.oracle.com sein.
+          \end{itemize}
+          Die ersten beiden Bedingungen sind standardmäßig immer erfüllt, die Dritte muss überprüft werden. Die vierte Bedingung kann auf zwei unterschiedliche Arten erfüllt werden.
+          \begin{itemize}
+            \item Eine Instanz, deren Initialisierungsparameter \parameter{db\_name} gleichlautend mit dem Hostnamen ist, hat sich dynamisch beim Listener registriert.
+            \item Es wurde eine statische Registrierung beim Listener vorgenommen und der Listenerparameter \textit{GLOBAL\_DBNAME} wurde passend gesetzt:
+          \end{itemize}
+          \begin{lstlisting}[caption={Eine statische Registrierung und der Parameter GLOBAL\_DBNAME},label=admin604,language=configfile]
+LISTENER =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119SRV.oracle.com)(PORT = 1521))
+  )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = FEA11-119SRV.oracle.com)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0)
+      (SID_NAME = orcl)))
+          \end{lstlisting}
+        \subsubsection{Fehler im System - Bug.6374523}
+          In der Oracle Version 11.2.0.1 liegt ein Bug vor, der die Benutzung des Hostnamings erschwert. Der Fehler besteht darin, dass der Client, bei seiner Verbindungsanfrage, den Service Name der gewünschten Datenbank nicht mitsendet. Dies kann durch die Anwendung des Tools \oscommand{tnsping} sichtbar gemacht werden.
+          \begin{lstlisting}[caption={Der Parameter DEFAULT\_SERVICE\_listener\_name},label=admin604a,language=terminal]
+TNS Ping Utility for Linux: Version 11.2.0.1.0
+
+Copyright (c) 1997, 2011, Oracle.  All rights reserved.
+
+Used parameter files:
+/u01/app/oracle/product/11.2.0/orcl/network/admin/sqlnet.ora
+
+Used HOSTNAME adapter to resolve the alias
+Attempting to contact (DESCRIPTION=(CONNECT_DATA=(&\textcolor{red}{SERVICE\_NAME=}&))
+(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.20.100)(PORT=1521)))
+OK (20 msec)
+          \end{lstlisting}
+          Die Lösung hierfür ist im Oracle MySupport Forum beschrieben. Es muss der Listener-Parameter \languageconfigfile{DEFAULT\_SERVICE\_listener\_name} in die Datei \oscommand{listener.ora} eingefügt werden. Heißt der Listener \enquote{LISTENER}, so muss folgende Eintragung gemacht werden.
+\clearpage
+          \begin{lstlisting}[caption={Der Parameter DEFAULT\_SERVICE\_listener\_name},label=admin604b,language=configfile]
+LISTENER =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119SRV.oracle.com)(PORT = 1521))
+  )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = FEA11-119SRV.oracle.com)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0)
+      (SID_NAME = orcl)))
+
+&\textcolor{red}{DEFAULT\_SERVICE\_LISTENER=FEA11-119SRV.oracle.com}&
+          \end{lstlisting}
+          Durch die Angabe dieses Parameters, zusammen mit dem Hostnamen, wird jeder Client, dessen Anfrage keinen Service Name enthält, an den statisch registrierten Service \enquote{FEA11-119SRV.oracle.com} verwiesen.
+        \subsubsection{Benutzung des Hostnamings}
+          Um diese Benennungsmethode zu nutzen, muss der Nutzer an seinem Clientrechner einen Nutzernamen, ein Passwort und den Hostnamen des Datenbankservers angeben. Dies könnte z. B. so aussehen:
+          \begin{lstlisting}[caption={Ein Beispiel für Hostnaming},label=admin605,language=sqlplus]
+connect hr/hr@FEA11-119SRV.oracle.com
+          \end{lstlisting}
+          Der Hostname wird durch ein @ Zeichen vom Passwort getrennt. Die Namensauflösung erfolgt, wie gewohnt durch einen DNS-Server oder evtl. auch durch eine Hosts-Datei.
+      \subsection{Die Benennungsmethode Local Naming}
+        Beim Local Naming werden Net Service Names in einer lokalen Datei mit dem Namen \oscommand{tnsnames.ora} gespeichert. Jeder Net Service Name gehört zu einem Connect Descriptor. Wie Net Service Names und Connect Descriptors in der Datei \oscommand{tnsnames.ora} gespeichert werden, ist im folgenden Beispiel zu sehen.
+\clearpage
+        \subsubsection{Connect Descriptoren}
+          Ein Connect Descriptor wird zusammengesetzt aus:
+          \begin{itemize}
+            \item einer oder mehreren Protokolladressen eines Listeners
+            \item zusätzlichen Verbindungsdaten für die Zieldatenbank
+          \end{itemize}
+          \begin{lstlisting}[caption={Ein Connect Descriptor},label=admin608,language=configfile]
+  (DESCRIPTION=
+    (ADDRESS_LIST=
+      (ADDRESS= (PROTOCOL=tcp)(HOST=FEA11-119SRV.oracle.com)(PORT=1521))
+    )
+  (CONNECT_DATA=
+    (SERVICE_NAME=orcl)))
+          \end{lstlisting}
+          Der ADDRESS-Abschnitt enthält die Protokolladresse des Listeners. Im zweiten Abschnitt, der die Bezeichnung \enquote{CONNECT\_DATA} trägt, sind die zusätzlichen Verbindungsdaten für die Zieldatenbank enthalten. In diesem Fall wird die Zieldatenbank durch ihren Service Name \enquote{orcl} identifiziert.
+
+          Um die Nutzung solcher Connect Descriptoren zu vereinfachen, können Sie mit einem \enquote{Net Service Name} versehen werden. Im folgenden Beispiel, wird der Net Service Name \enquote{sales} für einen Connect Descriptor vergeben. Dieser Net Service Name kann dann anstatt des kompletten Connect Descriptors verwendet werden.
+          \begin{lstlisting}[caption={Aufbau eines Net Service Names},label=admin609,language=configfile]
+sales=
+  (DESCRIPTION=
+    (ADDRESS_LIST=
+     (ADDRESS= (PROTOCOL=tcp)(HOST=FEA11-119SRV.oracle.com)(PORT=1521))
+    )
+  (CONNECT_DATA=
+    (SERVICE_NAME=orcl)))
+          \end{lstlisting}
+          Um sich bei einer Datenbank anzumelden, kann, wie in den folgenden
+          Beispielen, entweder der komplette Connect Descriptor oder aber der
+          Net Service Name genutzt werden.
+          \begin{lstlisting}[caption={Verwendung eines Connect Descriptors als Connect Identifier},label=admin610,language=sqlplus,alsolanguage=terminal]
+connect scott/tiger@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)
+(HOST=FEA11-119SRV.oracle.com)(PORT=1521)) (CONNECT_DATA=(SERVICE_NAME=orcl))) \
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Verwendung eines Net Service Name als Connect Identifier},label=admin611,language=sqlplus]
+connect scott/tiger@orcl
+          \end{lstlisting}
+        \subsubsection{Konfiguration des Local Naming im Net Manager}
+          \begin{enumerate}
+            \item In der Baumansicht auf das Pluszeichen neben \textit{Lokal} klicken, um den Rest der Baumansicht auf zuklappen.
+            \item Auf den Knotenpunkt \enquote{Dienstebenennung} klicken.
+            \bild{Der Knotenpunkt \enquote{Dienstebenennung}}{net_mgr_14}{2.2}
+            \item Links in der Symbolleiste auf das grüne Pluszeichen klicken.
+            \item Geben Sie den Net Service Namen ein und klicken Sie auf \enquote{Weiter}.
+            \bild{Eingabe des Net Service Name}{net_mgr_15}{1.4}
+\clearpage
+            \item Wählen Sie die gewünschten Netzwerkprotokolle aus, mit deren Hilfe eine Verbindung zur Datenbank erstellt werden soll und klicken Sie dann auf \enquote{Weiter}
+            \bild{Auswahl des Netzwerkprotokolls}{net_mgr_16}{1.4}
+            \item Geben Sie die IP-Adresse oder den Hostnamen des Datenbankservers ein. Der Listenerport ist standardmäßig immer 1521. Falls Sie auf dem Server einen anderen Listenerport konfiguriert haben, tragen Sie diesen jetzt ein. Klicken Sie anschließend auf \enquote{Weiter}.
+            \bild{IP-Adresse und Port des Listeners festlegen}{net_mgr_17}{1.4}
+\clearpage
+            \item Geben Sie zur Identifikation der Datenbankinstanz den Service Name der Instanz an und klicken Sie auf \enquote{Weiter}.
+            \bild{Der Service Name der Datenbank}{net_mgr_18}{1.4}
+            \item Um die Verbindung zu testen, klicken Sie auf \enquote{Testen...}. Klicken Sie anschließend auf \enquote{Beenden}.
+            \bild{Der abschließende Verbindungstest}{net_mgr_19}{1.4}
+\clearpage
+            \bild{Den Assistenten beenden}{net_mgr_20}{1.3}
+
+            \bild{Der fertig konfigurierte Net Service Name}{net_mgr_21}{1.3}
+          \end{enumerate}
+      \subsection{Die Benennungsmethode Directory Naming}
+        Beim Directory Naming wird die gleiche Technik wie beim Local Naming verwendet: TNS. Der Unterschied zum Local Naming besteht jedoch darin, das die TNS-Einträge nicht mehr in einer Textdatei gespeichert werden, die lokal auf jedem Clientrechner verfügbar sein muss, sondern in einem LDAP-Verzeichnisdienst, dem Oracle Internet Directory.
+
+        Um das Directory Naming nutzen zu können, müssen die folgenden Bedingungen erfüllt werden:
+\clearpage
+        \begin{itemize}
+          \item Das Directory Naming muss in der Datei \oscommand{sqlnet.ora} aktiviert sein.
+          \item Die Datei \oscommand{ldap.ora} muss auf den Clientrechnern konfiguriert werden.
+        \end{itemize}
+        Eine neue Konfigurationsdatei die hier ins Spiel kommt, ist die Datei \oscommand{ldap.ora}. Sie steuert den Zugriff auf einen LDAP-Dienst und sieht folgendermaßen aus:
+        \begin{lstlisting}[caption={Die Datei ldap.ora},label=admin612,language=configfile]
+DEFAULT_ADMIN_CONTEXT = "ou=OracleContext"
+DIRECTORY_SERVERS = (FEA11-119OID20.oracle.com:389:636)
+DIRECTORY_SERVER_TYPE = OID
+        \end{lstlisting}
+        Die drei gezeigten Parameter haben folgende Bedeutung:
+        \begin{itemize}
+          \item \parameter{DEFAULT\_ADMIN\_CONTEXT}: Gibt an, wo in der Verzeichnisstruktur des LDAP die TNS-Daten gespeichert werden.
+          \item \parameter{DIRECTORY\_SERVERS}: Rechnername/IP-Adresse und Port/SSL-Port des Directoryservers.
+          \item \parameter{DIRECTORY\_SERVER\_TYPE}: Der Typ des Directoryserver (OID = Oracle Internetdirectory oder AD = Active Directory)
+        \end{itemize}
+
+        Die Auflösung eines in einem Directory gespeicherten Net Service Name läuft wie folgt ab:
+
+        \bild{Directory Naming}{network_directory_naming}{1.5}
+
+        \begin{itemize}
+          \item Auf dem Clientrechner wird mittels der Datei \oscommand{sqlnet.ora} ermittelt, dass eine Namensauflösung durch einen LDAP-Dienst gemacht werden soll. Die Datei \oscommand{ldap.ora} gibt vor, welcher LDAP-Dienst zuständig ist.
+          \item Der LDAP-Dienst beantwortet die Anfrage nach dem Net Service Name \enquote{orcl} mit den Verbindungsdaten für den Listener des Datenbankservers (Protokoll, IP-Adresse, Port, Service Name).
+          \item Der Client kann im dritten Schritt eine Verbindung zum Datenbankserver aufbauen. Wie der Verbindungsaufbau genau abläuft, ist davon abhängig, ob eine Dedicated Server Umgebung oder eine Shared Server Umgebung aufgebaut wurde.
+        \end{itemize}
+    \section{Netzwerk Verbindungsmodelle}
+    \label{connectionmodels}
+      Unter dem Begriff \enquote{Verbindungsmodell} versteht man die Art und Weise, wie ein Clientprozess mit einer Oracle-Instanz verbunden wird. Seit Oracle 11g gibt es drei verschiedene Verbindungsmodelle:
+
+      \begin{itemize}
+        \item Dedicated Server Architektur
+        \item Shared Server Architektur
+        \item Database Resident Connection Pooling (Oracle 11g New Feature)
+      \end{itemize}
+
+      \begin{merke}
+        Bei Dedicated Serverprozessen bzw. Dispatchern handelt es sich um sogenannte Service Handler. Ein Service Handler ist ein serverseitiger Prozess, der Anfragen eines Clients entgegen nimmt und bearbeitet (Serverprozess) oder nur zur Verarbeitung weiterleitet (Dispatcher).
+      \end{merke}
+      \subsection{Die Dedicated Server Architektur}
+        In einer Dedicated Server Architektur startet der Listener für jeden Client einen eigenen Serverprozess. Nach dem die Session des Clients beendet wurde, wird der Serverprozess ebenfalls beendet. Diese Konfiguration benötigt sehr viele Ressourcen, da jeder Client seinen eigenen Serverprozess bekommt. Grundsätzlich ist dies aber die zu bevorzugende Variante, da sie die beste Performance erzielt.
+        \begin{enumerate}
+          \item Der Client schickt eine Verbindungsanforderung an den Datenbankserver. Der Listener nimmt diese entgegen.
+          \item Der Listener erstellt einen Serverprozess.
+          \item Der Serverprozess führt die Authentifizierung des Clients durch.
+          \item Es erfolgt ein \textit{Connection-Redirect}. D. h. der Listener vermittelt die Verbindung zwischen dem Clientprozess und dem Serverprozess.
+        \end{enumerate}
+        Im Anschluss an diese vier Schritte, ist der Client mit dem Datenbankserver verbunden und kann seine Arbeit aufnehmen.
+        \bild{Aufbau der Verbindung in einer Dedicated Server Architektur}{network_dedicated_server}{0.9}
+      \subsection{Die Shared Server Architektur}
+        In einer Shared Server Architektur werden Clients nicht mit einem Serverprozess, sondern mit einem Dispatcher verbunden. Ein Dispatcher funktioniert als Verwalter und Verteiler von Arbeitsaufträgen. Er nimmt Anforderungen von Clients entgegen und leitet sie an einen Serverprozess weiter, der dann die eigentliche Arbeit verrichtet.
+
+        \bild{Aufbau der Verbindung in einer Shared Server Architektur}{network_shared_server_architecture}{0.9}
+
+        Jeder Dispatcher kann mehrere Clientverbindungen annehmen. Jede Clientanforderung wird von den Dispatchern in eine Warteschlange (Request Queue) aufgenommen. Ein Shared Serverprozess, der eine Anforderung abgearbeitet hat, nimmt sich aus dieser Warteschlange die nächste Anforderung, um sie abzuarbeiten und legt das Ergebnis der Anforderung in die Response Queue des Dispatchers, von dem die Anforderung kam. Die Dispatcher, lesen ihre Response Queue aus, um die Ergebnisse an ihre Clients auszuliefern. Auf diese Weise kann eine kleine Menge Shared Server Prozesse eine große Anzahl Clients bedienen.
+
+        Der in \abbildung{network_shared_server_architecture} gezeigte Verbindungsaufbau zwischen einem Client und der Datenbank läuft wie folgt ab:
+\clearpage
+          \begin{enumerate}
+            \item Ein Client baut eine Verbindung zum Listener auf und fordert eine Verbindung zur Datenbank an.
+            \item Der Listener leitet den Client an einen der bestehenden Dispatcher-Prozesse weiter.
+            \item Der Dispatcher platziert die Anforderung in der Request Queue.
+            \item Ein Serverprozess nimmt die Anforderung zur Verarbeitung aus der Request Queue.
+            \item Der Serverprozess legt die Anforderung in die Response Queue des Dispatchers, von dem die Anforderung kam.
+            \item Der Dispatcher leitet das Ergebnis aus seiner Response Queue an den Client weiter, der die Anforderung gestellt hat.
+          \end{enumerate}
+      \subsection{Database Resident Connection Pooling (DRCP)}
+        DRCP ist eine neue Technologie, die den Versuch darstellt, die Vorteile des Dedicated Server- und des Shared Server Modells zu vereinen. Beim DRCP erstellt die Datenbank einen Pool von Dedicated Serverprozessen, die als \enquote{Pooled Server} bezeichnet werden. Dieser Pool kann von einer sehr großen Anzahl Clients genutzt werden, sofern die Anwendungen die gleichen Credentials (Nutzername, Passwort) für den Aufbau der Session nutzen. Im Vergleich zum Shared Server Modell werden hier nicht nur die Serverprozesse geteilt, sondern auch die Sessions. Besonders vorteilhaft ist dies bei Webanwendungen, wo in kurzer Zeit sehr viele und zeitlich sehr begrenzte Connections aufgebaut werden.
+
+        \bild{Database Resident Connection Pooling}{database_resident_connection_pooling}{0.8}
+
+        \subsubsection{Der Connection Broker}
+          Der Connection Broker ist ein in Oracle 11g neu hinzugekommener Hintergrundprozess, der die Verwaltung der Pooled Server und der Sessions übernimmt. Muss ein Client an der Datenbank arbeiten, hat der Connection Broker die Aufgabe, ihm einen Serverprozess zuzuweisen. Der Serverprozess verhält sich wie ein Dedicated Serverprozess für den Client. Hat der Client seine Arbeit beendet, übernimmt der Connection Broker wieder die Verwaltung von Serverprozess und Session.
+        \subsubsection{Die Ressourcenersparnis}
+          Die durch die Nutzung von DRCP entstehende Ressourcenersparnis, kann an einem einfachen Rechenbeispiel dargestellt werden:
+
+          In einem Firmenintranet soll eine Datenbankinfrastruktur für bis zu 3.000 Clients geschaffen werden. Bei der Nutzung des Dedicated Server Modells werden für jeden Serverprozess ca. 4 MB RAM benötigt, plus 400 KB für die Session. Dies ergibt in Summe: $3000 * (4MB + 400KB) \approx 12,86 GB$
+
+          Wird die gleiche Infrastruktur als Shared Serverumgebung realisiert, werden weniger Serverprozesse benötigt, da sich mehrere Clients einen Serverprozess teilen. Werden für 3.000 Clients insgesamt 75 Serverprozesse zur Verfügung gestellt, ergeben sich folgende Zahlen: $(3000 * 400 KB) + (75 * 4 MB) \approx 1,44 GB$ Arbeitsspeicher.
+
+          Das Database Resident Connection Pooling reduziert den Ressourcenverbrauch noch einmal, da mehrere Clients sich einen Serverprozess und eine Session teilen. Hinzu kommt jedoch ein Verwaltungsoverhead, von ca. 35 KB pro Client. Das Ergebnis sieht so aus: $(75 * (400 KB + 4 MB) + (3000 * 35 KB)) \approx 0,42 GB \mathop{\widehat{=}} 431 MB$ Arbeitsspeicher.
+
+          \begin{merke}
+            DRCP kann genauso wie die Shared Server Architektur nicht für Administratoren genutzt werden!
+          \end{merke}
+
+      \subsection{Dedicated Server, Shared Server und DRCP im Vergleich}
+        \begin{center}
+          \begin{small}
+            \tablecaption{Einsatz von Dedicated und Shared Server Modell}
+            \tablefirsthead{%
+              \hline
+              \multicolumn{1}{|c}{\textbf{Dedicated Server}}&
+              \multicolumn{1}{|c|}{\textbf{Shared Server}} &
+              \multicolumn{1}{c|}{\textbf{DRCP}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \begin{supertabular}[h]{|p{4.9cm}|p{4.9cm}|p{4.9cm}|}
+              Alle Clients haben einen eigenen Serverprozess und eine eigene Session.& Clients geben ihre Anforderungen über Dispatcher an einen Pool von Serverprozessen weiter. Sie haben nur noch eine eigene Session, keinen eigenen Serverprozess mehr. & Clients werden vom Connection Broker Prozess an einen Serverprozess mit einer bestehenden Session vermittelt. \\
+              \hline
+              Soll die Client-Connection beendet werden, müssen der Serverprozess und die Session zerstört werden. & Es muss nur die Session des Clients beendet werden, der Serverprozess bleibt erhalten. & Beim Verbindungsabbau übernimmt der Connection Broker wieder die Verwaltung des Serverprozesses und der Session. \\
+              \hline
+            \end{supertabular}
+          \end{small}
+        \end{center}
+    \section{Informationen}
+      \subsection{Verzeichnis der Konfigurationsdateien}
+        \begin{literaturinternet}
+          \item  \cite{NETRF011}
+          \item  \cite{NETRF008}
+          \item  \cite{NETRF007}
+          \item  \cite{NETRF006}
+        \end{literaturinternet}
+\clearpage

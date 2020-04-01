@@ -1,0 +1,8 @@
+    \item Unternehmen Sie alle notwendigen Schritte, um dem Nutzer \identifier{alice} die Erstellung der View \identifier{v\_departments\_in\_usa}, die auf der Tabelle \identifier{departments} des Nutzers \identifier{hr} basiert zu ermöglichen.
+    \begin{lstlisting}[caption={Die View
+    \identifier{v\_departments\_in\_usa}},language=oracle_sql,alsolanguage=sqlplus]
+SELECT department_name, street_address, postal_code, city, state_province 
+FROM   hr.departments d INNER JOIN hr.locations l
+       ON (d.location_id = l.location_id)
+WHERE  l.country_id = 'US';
+    \end{lstlisting}

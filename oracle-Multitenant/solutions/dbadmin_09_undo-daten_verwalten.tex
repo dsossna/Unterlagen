@@ -1,0 +1,42 @@
+\section{Lösungen - Undo-Daten verwalten}
+  \begin{enumerate}
+    \input{exercises/dbadmin_09/item_a}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> CREATE UNDO TABLESPACE undotbs03
+  2  DATAFILE '/u02/oradata/orcl/undotbs03_01.dbf' SIZE 20M
+  3  AUTOEXTEND OFF;
+      \end{lstlisting}
+    \input{exercises/dbadmin_09/item_b}
+      \begin{enumerate}
+        \input{exercises/dbadmin_09/item_b1}
+          \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER DATABASE
+  2  DATAFILE '/u01/app/oracle/oradata/orcl/undotbs01.dbf' RESIZE 200M;
+          \end{lstlisting}
+        \input{exercises/dbadmin_09/item_b2}
+          \begin{lstlisting}[language=terminal]
+[oracle@FEA11-119SRV ~]$ . oraenv
+ORACLE_SID = [orcl] ? orcl
+The Oracle base for ORACLE_HOME=/u01/app/oracle/product/11.2.0/ORCL
+is /u01/app/oracle
+[oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
+          \end{lstlisting}
+        \input{exercises/dbadmin_09/item_b3}
+        \input{exercises/dbadmin_09/item_b4}
+        \input{exercises/dbadmin_09/item_b5}
+          \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET undo_tablespace='UNDOTBS03' SCOPE=both;
+          \end{lstlisting}
+        \input{exercises/dbadmin_09/item_b6}
+      \end{enumerate}
+    \input{exercises/dbadmin_09/item_c}
+      \begin{lstlisting}[language=oracle_sql]
+SQL> ALTER SYSTEM
+  2  SET undo_tablespace='UNDOTBS1' SCOPE=both;
+SQL> DROP TABLESPACE undotbs02
+  2  INCLUDING CONTENTS AND DATAFILES;
+SQL> DROP TABLESPACE undotbs03
+  2  INCLUDING CONTENTS AND DATAFILES;
+      \end{lstlisting}
+  \end{enumerate}

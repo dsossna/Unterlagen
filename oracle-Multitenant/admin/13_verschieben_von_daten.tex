@@ -1,0 +1,653 @@
+\chapter{Verschieben von Daten - Extract Transform and Load (ETL)}
+\chaptertoc{}
+\cleardoubleevenpage
+
+    \section{Oracle Data Pump}
+      Oracle Data Pump ist eine serverseitige Technologie, die es ermöglicht, Daten von einer Oracle-Datenbank, in eine andere Oracle-Datenbank, zu verschieben. Auf ihr basieren die beiden Tools \enquote{Data Pump Export} (expdb) und \enquote{Data Pump Import} (impdp). Mit dem Export-Utility werden die Daten in eine Binärdatei, mit proprietärem Format geschrieben, die als \enquote{Dumpfile} bezeichnet wird. Diese Datei kann dann zu einer anderen Datenbank transportiert und dort importiert werden.
+
+      Eine andere Möglichkeit des Datenaustausches besteht darin, Quell- und Zieldatenbank direkt, mittels Import-Utility, über das Netzwerk zu verbinden. Diese Methode wird als \enquote{Direct Import} bezeichnet. Hierbei wird kein Dumpfile erzeugt.
+
+      Die Data Pump besteht aus drei Teilen:
+      \begin{itemize}
+        \item Den Kommandozeilen-Programmen \oscommand{expdp} und \oscommand{impdp}
+        \item Dem PL/SQL-Paket \identifier{dbms\_datapump} (Auch Data Pump API genannt)
+        \item Dem PL/SQL-Paket \identifier{dbms\_metadata} (Auch Metadata API genannt)
+      \end{itemize}
+
+      \bild{Ein Export mit expdb}{expdp}{1}
+      \subsection{Data Pump konfigurieren}
+        Da Data Pump ein serverbasiertes Tools ist, werden Dumpfilesets und Logdateien auf dem Server geschrieben. Um der Datenbank den Speicherort der Dumpfile Sets und Logdateien bekannt zu geben, muss in der Datenbank ein Directory-Objekt erstellt werden.
+        \begin{merke}
+          Ein Directory-Objekt verbindet einen Namen in der Datenbank, mit einem Verzeichnis auf dem Datenträger. Dadurch wird es möglich, den Nutzerzugriff auf dem Datenbankserver zu begrenzen.
+        \end{merke}
+        \subsubsection{Directory-Objekte in SQL erstellen}
+          Das folgende Beispiel erstellt ein Directory-Objekt namens
+          \languageorasql{dpump_dir} für das Verzeichnis
+          \oscommand{/u02/dpdump}.
+        \begin{lstlisting}[caption={Beispiel für \languageorasql{CREATE DIRECTORY}},label=admin900,language=oracle_sql]
+SQL> CREATE DIRECTORY dpump_dir
+  2  AS '/u02/dpdump';
+          \end{lstlisting}
+          Um einem Nutzer Lese- oder Schreibrechte auf ein Directory zu geben, werden die beiden Privilegien \privileg{read} und \privileg{write} verwendet.
+          \begin{lstlisting}[caption={Zugriff auf ein Directory gewähren},label=grantondirectory,language=oracle_sql]
+SQL> GRANT read, write ON DIRECTORY dpump_dir
+  2  TO bank;
+          \end{lstlisting}
+          Diese beiden Privilegien haben nur innerhalb der Datenbank Auswirkungen. Der DBA muss sicherstellen, dass die Datenbank auf dem Dateisystem Lese- und Schreibrechte hat.
+          \begin{literaturinternet}
+            \item \cite{sthref4351}
+          \end{literaturinternet}
+      \subsection{Mit Data Pump einen Export durchführen}
+        Die wichtigste Eigenschaft eines Data Pump-Exports ist, dass festgelegt werden kann, welche Teile der Datenbank exportiert werden sollen. Dies geschieht auf der Kommandozeile durch Angabe eines Parameters. Es gibt folgende Exportarten:
+        \begin{itemize}
+          \item \textbf{Full Export Mode}: Es wird die gesamte Datenbank exportiert. Hierfür benötigt der Nutzer die Rolle \privileg{datapump\_exp\_full\_database}.
+          \begin{lstlisting}[caption={Full Database Export},label=admin901,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ expdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp FULL=y
+          \end{lstlisting}
+          \begin{merke}
+            Der Benutzer \identifier{system} ist im Besitz der Rolle \privileg{datapump\_exp\_full\_database}!
+          \end{merke}
+          Für das Kommando aus \beispiel{admin901} gibt es noch eine Kurzschreibweise. Die beiden Parameter \languageexpdpimpdp{DUMPFILE} und \languageexpdpimpdp{DIRECTORY} können im Parameter \languageexpdpimpdp{DUMPFILE} zusammengefasst werden zu: \languageexpdpimpdp{DUMPFILE=data\_pump\_dir:expdat.dmp}.
+\clearpage
+          \item \textbf{Schema Mode} (Standardmodus): Befindet sich ein Benutzer im Besitz der Rolle \privileg{datapump\_exp\_full\_database}, kann er eine Liste zu exportierender Schemata angeben. Optional hat er die Möglichkeit, auch andere Schemadefinitionen (Nutzerkonten, Grants von Rollen und Systemprivilegien, Standardrollen und Tablespace-Quotas) mit zu exportieren.
+
+          Besitzt der Nutzer die Rolle \privileg{datapump\_exp\_full\_database} nicht, kann er nur sein eigenes Schema exportieren.
+          \begin{lstlisting}[caption={Schema Export},label=admin902,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ expdp system/oracle DIRECTORY=dpump_dir
+> DUMPFILE=expdat.dmp SCHEMAS=bank
+          \end{lstlisting}
+          \item \textbf{Table Mode}: In diesem Modus werden nur die Nutzdaten der angegebenen Tabellen, aber keine Spaltendefinitionen exportiert. Die Tabelle muss in der Zieldatenbank bereits bestehen und muß aus dem gleichen Schema stammen.
+
+          Hat ein Nutzer die Rolle \privileg{datapump\_exp\_full\_database} nicht, kann er nur Tabellen aus seinem eigenen Schema exportieren.
+          \begin{lstlisting}[caption={Table Export},label=admin903,language=expdp_impdp,emph={[9]DIRECTORY, TABLES},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ expdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp TABLES=bank.mitarbeiter, bank.bankfiliale
+          \end{lstlisting}
+          \item \textbf{Tablespace Mode}: Im Tablespace Modus werden alle Objekte der angegebenen Tablespaces (Nutz- und Metadaten, keine Grants von Objektprivilegien), plus alle von den Tabellen abhängigen Objekte exportiert.
+          \begin{lstlisting}[caption={Tablespace Export},label=admin904,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ expdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp TABLESPACES=bank
+          \end{lstlisting}
+          \item \textbf{Transportable Tablespace Mode}: In diesem Modus werden nur die Metadaten der Tabellen und der von ihnen abhängigen Objekte (inklusive Grants von Objektprivilegien) exportiert. Dies ermöglicht es den Tablespace in eine andere Datenbank aufzunehmen, ohne die Grants von Objektprivilegien neu machen zu müssen. Die zu diesem Tablespace gehörenden Datendateien müssen manuell der importierenden Datenbank zur Verfügung gestellt werden.
+
+          Damit ein Tablespace in diesem Modus exportiert werden kann, muss er im Read Only Modus sein und alle Objekte in diesem Tablespace müssen \enquote{self-contained} (autark) sein. D. h. alle Partitionen einer partitionierten Tabelle müssen im Set der angegebenen Tablespaces sein.
+          \begin{enumerate}
+	    \item Der Tablespace sollte daraufhin überprüft werden, ob er als transportable tablespace exportiert werden kann. Dies kann mittels der PL/SQL-Prozedur \identifier{transport\_set\_check} aus dem PL/SQL-Paket \identifier{dbms\_tts} geschehen.
+              \begin{lstlisting}[caption={Ausführen von DBMS\_TTS}, label=admin905,language=plsql]
+SQL> EXEC DBMS_TTS.TRANSPORT_SET_CHECK('BANK',TRUE);
+              \end{lstlisting}
+              Auf diese Weise kann festgestellt werden, ob der Tablespace, samt seiner Constraints als self-contained (in sich geschlossen) bezeichnet werden kann.
+            \item Die Ergebnisse der Prozedur \identifier{transport\_set\_check} können mit Hilfe der View \identifier{transport\_set\_violations} abgefragt werden.
+            \begin{lstlisting}[caption={Die Ergebnisse von DBMS\_TTS.transport\_set\_check}, label=admin906,language=oracle_sql]
+SQL> SELECT *
+  2  FROM   transport_set_violations;
+              \end{lstlisting}
+              Nur wenn diese View keine Ergebnisse zeigt, kann der Tablespace exportiert werden. Anderenfalls müssen alle angezeigten Probleme erst behoben werden.
+            \item Der betreffende Tablespace muss \enquote{read only} geschaltet werden.
+              \begin{lstlisting}[caption={Tablespace Read Only schalten},label=admin907,language=oracle_sql]
+SQL> ALTER TABLESPACE bank READ ONLY;
+              \end{lstlisting}
+            \item Durchführen des Exports.
+              \begin{lstlisting}[caption={Transportable Tablespace Export},label=admin908,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ expdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp TRANSPORT_TABLESPACES=bank
+              \end{lstlisting}
+            \item Der Tablespace kann nach dem Export wieder \enquote{read write} geschaltet werden.
+              \begin{lstlisting}[caption={Tablespace wieder Read Write schalten.}label=admin909,language=oracle_sql]
+SQL> ALTER TABLESPACE bank READ WRITE;
+              \end{lstlisting}
+            \item Kopieren der Datendateien auf das Zielsystem
+              \begin{lstlisting}[caption={Prüfen, welche Datendateien kopiert werden müssen},label=admin910,language=oracle_sql,alsolanguage=sqlplus]
+SQL> SELECT file_name 
+  2  FROM   dba_data_files 
+  3  WHERE  tablespace_name LIKE 'BANK';
+
+FILE_NAME
+--------------------------------------------------
+/u01/app/oracle/oradata/orcl/bank01.dbf
+
+SQL> host cp /u01/app/oracle/oradata/orcl/bank01.dbf ...
+              \end{lstlisting}
+          \end{enumerate}
+        \end{itemize}
+        \begin{literaturinternet}
+          \item \cite{e22490toc}
+        \end{literaturinternet}
+      \subsection{Mit Data Pump einen Import durchführen}
+        Das Importieren von Daten in eine Datenbank funktioniert analog zum Exportieren. Es existieren die gleichen Modi und es gelten auch die gleichen Einschränkungen. Der einzige Unterschied ist, dass für den Datenimport die Rolle \privileg{datapump\_imp\_full\_database} existiert, die analog zur Rolle \privileg{datapump\_exp\_full\_database} verwendet werden kann.
+        \subsubsection{Dumpfile basierte Imports}
+          \begin{lstlisting}[caption={Full Import},label=admin911,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ impdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp FULL=y
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Schema Import},label=admin912,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ impdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp SCHEMAS=bank
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Table Import},label=admin913,language=expdp_impdp,emph={[9]DIRECTORY,TABLES},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ impdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp TABLES=bank.mitarbeiter, bank.bankfiliale
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Tablespace Import},label=admin914,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ impdp system/oracle DIRECTORY=dpump_dir  \
+> DUMPFILE=expdat.dmp TABLESPACES=bank
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Transportable Tablespace Import},label=admin915,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ impdp system/oracle DIRECTORY=dpump_dir \
+> DUMPFILE=expdat.dmp TRANSPORT_DATAFILES='/u02/bank01.dbf'
+          \end{lstlisting}
+        \subsubsection{Import über das Netzwerk}
+          Das Tool impdp ist in der Lage, einen Datenimport aus einer anderen Datenbank, unter Umgehung von Dumpfiles, zu machen. Es wird dabei ein Database Link benutzt, der eine benannte Verknüpfung zwischen zwei Datenbanken darstellt. Für die Verknüpfung wird die Oracle TNS-Technologie verwendet.
+\clearpage
+					Folgendes Beispiel zeigt einen Netzwerkimport mit impdp:
+
+          Es existieren zwei Datenbanken: \identifier{orcl} und \identifier{orclneighbour}. Es wird ein Datenimport von \identifier{orcl} nach \identifier{orclneighbour} erfolgen. Der Connect Identifier für die Datenbank \identifier{orclneighbour} wird in der Datei \oscommand{tnsnames.ora}, der Datenbank \identifier{orcl} unter dem Namen \identifier{orclneighbour} eingetragen.
+          \bild{Import mit impdp übers Netzwerk}{network_import}{1}
+          \begin{lstlisting}[caption={Der Connect Identifier für \identifier{orclneighbour}},label=admin916,language=configfile]
+ORCLNEIGHBOUR =
+  (DESCRIPTION =
+    (ADDRESS =
+      (PROTOCOL = TCP)
+      (HOST = FEA11-119SRV.oracle.com)
+      (PORT = 1521)
+    )
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = ORCLNEIGHBOUR)
+    )
+  )
+          \end{lstlisting}
+          Als nächstes wird ein Database Link von \identifier{orcl} nach \identifier{orclneighbour} eingerichtet.
+          \begin{lstlisting}[caption={Einen Database Link erstellen},label=admin917,language=oracle_sql]
+SQL> CREATE PUBLIC DATABASE LINK orcl_to_neighbour
+  2  USING 'ORCLNEIGHBOUR';
+          \end{lstlisting}
+          Nach dem Erstellen des Database Link kann der Importvorgang beginnen.
+          \begin{lstlisting}[caption={Den Netzwerkimport starten},label=admin918,language=expdp_impdp,emph={[9]DIRECTORY},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ impdp system/oracle SCHEMAS=bank \
+> DIRECTORY=dpump_dir NETWORK_LINK='ORCL_TO_NEIGHBOUR'
+          \end{lstlisting}
+          Zu beachten ist, dass der Parameter \languageexpdpimpdp{DUMPFILE} entfällt und statt dessen der Parameter \languageexpdpimpdp{NETWORK_LINK} verwendet wird.
+\clearpage
+          \begin{merke}
+            Der Name des Database Links sollte in Hochkommas ' ' gesetzt werden.
+          \end{merke}
+    \section{Der SQL*Loader - Import von CSV-Dateien}
+      Der SQL*Loader ermöglicht es, Daten aus externen Quellen in die Datenbank zu laden. Er besitzt eine mächtige Parser-Engine, die dem Eingabeformat der Daten kaum Grenzen setzt.
+
+      Eine typische SQL*Loader-Session bezieht ihre Parameter aus einer Kontrolldatei. Diese Kontrolldateien sind nicht mit den Kontrolldateien der Datenbank zu verwechseln. Für jeden SQL*Loader-Job kann eine eigene Kontrolldatei, mit SQL*Loader-Parametern erstellt werden.
+
+      Die zu importierenden Daten werden direkt in die Datenbank geschrieben. Während eines Importvorgangs kann der SQL*Loader die folgenden Dateien erstellen:
+      \begin{itemize}
+        \item Meldungen zum Importvorgang: Log-Datei
+        \item Zeilen die aufgrund eines Fehlers nicht eingefügt werden können (z. B. falscher Datentyp in der Zieltabelle): Bad-File
+        \item Zeilen die einer Filterbedingung nicht entsprechen: Discard-File
+      \end{itemize}
+
+      \bild{Übersicht über den SQL*Loader}{sqlloader}{1.8}
+
+      \subsection{SQL*Loader aufrufen}
+        Der SQL*Loader wird auf der Kommandozeile mit dem Kommando \oscommand{sqlldr} aufgerufen. Hinzukommen Parameter, die den Verlauf der SQL*Loader-Session beeinflussen.
+        \begin{lstlisting}[caption={Den SQL*Loader benutzen},label=admin919,language=expdp_impdp,emph={[9]LOG},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ sqlldr CONTROL=bank.ldr, LOG=bank.log,\
+> BAD=bank.bad, DATA=buchungen.dat USERID=bank/bank, \
+> DISCARD=bank.dsc
+        \end{lstlisting}
+        Werden immer wieder die gleichen Parameter benötigt, können diese in einer Kontrolldatei zusammengefasst werden. Eine vollständige Auflistung aller SQL*Loader Parameter finden Sie im folgenden Literaturhinweis.
+        \begin{literaturinternet}
+          \item \cite{SUTIL004}
+        \end{literaturinternet}
+      \subsection{SQL*Loader Kontrolldateien}
+        Die Kontrolldatei ist eine Textdatei, die SQL*Loader Parameter enthält. Sie teilt dem Loader mit, wo die Eingangsdaten zu finden sind, wie sie zu parsen sind, wo sie eingefügt werden sollen und vieles mehr.
+
+        Eine Kontrolldatei besteht aus drei Sektionen:
+        \begin{itemize}
+          \item In der ersten Sektion werden Session-Informationen angegeben, beispielsweise die infile-Klausel, die festlegt, wo sich die Eingabedatei befindet und wie sie heißt.
+          \item Sektion Nummer zwei besteht aus einem oder mehreren \enquote{Into Table} -Blöcken. Jeder Block beschreibt eine Zieltabelle, in die die Eingabedaten geladen werden sollen.
+          \item Die dritte Sektion ist optional und kann Informationen zu den Eingabedaten enthalten.
+        \end{itemize}
+        Einige Hinweise zur Syntax der Kontrolldatei:
+        \begin{itemize}
+          \item Die Syntax ist frei formatierbar (Statements können über mehrere Zeilen hinweg geschrieben werden)
+          \item Sie ist nicht Case-Sensitiv
+          \item Kommentare beginnen mit zwei Bindestrichen -
+          \item Die beiden Begriffe CONSTANT und ZONE sind reservierte Schlüsselwörter.
+        \end{itemize}
+        \begin{literaturinternet}
+          \item \cite{SUTIL004}
+        \end{literaturinternet}
+      \subsection{Daten Laden}
+        \subsubsection{Die Beispieldateien}
+          Für die folgenden SQL-Loader-Beispiele werden die beiden Dateien \oscommand{buchungen\_fix.csv} und \oscommand{buchungen\_var.csv} als Datenquellen herangezogen.
+          \begin{lstlisting}[caption={Die Datei \oscommand{buchungen\_fix.csv}},label=admin920,language=terminal]
+500001 -2875,92 30.04.2013 1  600000
+500002 2875,92  30.04.2013 5  600000
+500003 4687,36  08.05.2013 18 600001
+500004 -4687,36 08.05.2013 4  600001
+500005 46,45    25.05.2013 71 600002
+500006 -46,45   25.05.2013 2  600002
+500007 752,20   28.05.2013 83 600003
+500008 -752,20  28.05.2013 26 600004
+500009 -196,20  07.06.2013 10 600005
+500010 196,20   07.06.2013 11 600005
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Die Datei \oscommand{buchungen\_var.csv}},label=admin920a,language=terminal]
+500011;-2394,32;08.06.2013;21;600011
+500012;2394,32;08.06.2013;63;600011
+500013;1234,56;17.06.2013;45;600012
+500014;-1234,56;17.06.2013;16;600012
+500015;66,45;23.06.2013;29;600013
+500016;-66,45;23.06.2013;49;600013
+500017;852,20;02.07.2013;41;600014
+500018;-852,20;02.07.2013;3;600014
+500019;-296,20;07.07.2013;8;600015
+500020;296,20;07.07.2013;9;600015
+500021;832,17;16.07.2013;13;600016
+500022;-832,17;16.07.2013;43;600016
+500023;-171,00;29.07.2013;27;600017
+500024;171,00;29.07.2013;61;600017
+500025;45,30;01.08.2013;52;600018
+500026;45,30;01.08.2013;11;600018
+          \end{lstlisting}
+        \subsubsection{Datensätze fester Länge}
+          Datensätze fester Länge haben die Eigenschaft, dass alle Spalten in der Quelldatei eine genau definierte Länge haben. Durch die Angabe von \identifier{POSITION(x:y)} in der SQL*-Loader Kontrolldatei, werden die Positionen der einzelnen Spalten in der Quelldatei festgelegt. \identifier{POSITION(1:6)} besagt, dass die Spalte \identifier{Buchungs\_ID} von Zeichen eins bis Zeichen sechs reicht. Gleiches gilt für die restlichen Spalten.
+\clearpage
+          \begin{lstlisting}[caption={Datensätze fester Länge- Die Kontrolldatei \oscommand{buchungen\_fix.ldr}},label=admin921,language=configfile]
+LOAD DATA
+  INFILE  'labs/buchungen_fix.csv'
+  BADFILE 'buchungen_fix.bad'
+  APPEND INTO TABLE Buchung (
+    buchungs_id     POSITION(1:6)   INTEGER EXTERNAL,
+    betrag          POSITION(8:15)  DECIMAL EXTERNAL,
+    buchungsdatum   POSITION(17:26) DATE "DD.MM.YYYY",
+    konto_id        POSITION(28:29) INTEGER EXTERNAL,
+    transaktions_id POSITION(31:36) INTEGER EXTERNAL
+  )
+          \end{lstlisting}
+          Vor dem Aufruf des SQL*Loader muss zwingend die Umgebungsvariable \identifier{NLS\_LANG} gesetzt werden, da der Loader sonst nicht mit dem Komma, als Dezimaltrennzeichen zurecht kommt.
+          \begin{lstlisting}[caption={Den SQL*Loader benutzen},label=admin921b,language=expdp_impdp,emph={[9]LOG},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ export NLS_LANG=german_germany.UTF8
+          \end{lstlisting}
+          Die Angabe \languageexpdpimpdp{german_germany.UTF8} bewirkt drei Dinge:
+          \begin{itemize}
+            \item Der SQL*Loader erstellt seine Log-Datei in deutsch (german).
+            \item Die Ländereinstellungen (Dezimaltrennzeichen, Währungssymbol, usw.) werden auf deutsch eingestellt (germany)
+            \item Als Zeichensatz wird UTF8 genutzt (.UTF8).
+          \end{itemize}
+          Der Aufruf für den SQL*Loader sieht wie folgt aus:
+          \begin{lstlisting}[caption={Den SQL*Loader benutzen},label=admin921a,language=expdp_impdp,emph={[9]LOG},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ sqlldr USERID=bank/bank \
+> CONTROL=buchungen_fix.ldr, LOG=buchungen_fix.log
+          \end{lstlisting}
+        \subsubsection{Datensätze variabler Länge}
+          Bei Datensätzen variabler länge existiert keine fixe Spaltenlänge. Vielmehr werden die einzelnen Spalten der Quelldatei durch ein Trennzeichen von einander getrennt. In der Datei \oscommand{buchungen\_var.csv} ist dies das Semikolon (;). Die Kontrolldatei für den SQL*-Loader ändert sich dahingehend, dass das Trennzeichen festgelegt werden muss.
+\clearpage
+          \begin{lstlisting}[caption={Datensätze variabler Länge - Die Kontrolldatei \oscommand{buchungen\_var.ldr}},label=admin922,language=configfile]
+LOAD DATA
+  INFILE  'labs/buchungen_var.csv'
+  BADFILE 'buchungen_var.bad'
+  APPEND INTO TABLE Buchung
+  FIELDS TERMINATED BY ";" OPTIONALLY ENCLOSED BY '"' (
+    buchungs_id,
+    betrag,
+    buchungsdatum,
+    konto_id,
+    transaktions_id
+  )
+          \end{lstlisting}
+          Die Klausel \languageconfigfile{FIELDS TERMINATED BY} legt das Spaltentrennzeichen fest. Mit der zusätzlichen Angabe \languageconfigfile{OPTIONALLY ENCLOSED BY} kann ein Zeichen bestimmt werden, das als \enquote{Zeichenkettenbegrenzer} funktioniert. Zeichenketten, wie z. B. \enquote{Hallo Welt} können Leer- oder Sonderzeichen enthalten. Deshalb müssen sie in Begrenzungszeichen, z. B. das \"{} eingeschlossen werden. Nur so kann der Loader Start und Ende der Zeichenkette zuverlässig erkennen. Das Begrenzungszeichen wird beim Import nicht mitgenommen. Nur die Zeichen dazwischen werden importiert.
+
+          Der Aufruf für den SQL*Loader sieht wie folgt aus:
+          \begin{lstlisting}[caption={Den SQL*Loader benutzen},label=admin922a,language=expdp_impdp,emph={[9]LOG},emphstyle={[9]\sffamily\color{blue}}]
+[oracle@FEA11-119SRV admin]$ sqlldr USERID=bank/bank \
+> CONTROL=buchungen_var.ldr, LOG=buchungen_var.log
+          \end{lstlisting}
+
+        \subsubsection{Spaltenüberschriften beim Laden auslassen}
+          Mit Hilfe der \oscommand{skip n}-Klausel können beliebig viele Zeilen am Dateianfang ausgelassen werden. \oscommand{n} steht dabei für eine ganze Zahl. Dies ist beispielsweise dann nützlich, wenn die erste Zeile der Quelldatei Spaltenüberschriften enthält.
+          \begin{lstlisting}[caption={Datensätze auslassen},label=admin923,language=configfile]
+OPTIONS (SKIP=1)
+LOAD DATA
+  INFILE  'labs/buchungen_var.csv'
+  BADFILE 'buchungen_var.bad'
+  APPEND INTO TABLE Buchung
+  FIELDS TERMINATED BY ";" OPTIONALLY ENCLOSED BY '"' (
+    buchungs_id,
+    betrag,
+    buchungsdatum,
+    konto_id,
+    transaktions_id
+  )
+          \end{lstlisting}
+    \section{Externe Tabellen}
+      Externe Tabellen stellen eine Erweiterung des SQL*Loaders bzw. der Oracle Datapump dar. Sie ermöglichen es, externe Datenstrukturen so zu nutzen, als wären sie in der Datenbank gespeichert. Prinzipiell können externe Tabellen immer dann genutzt werden, wenn Daten in die Datenbank importiert werden sollen. Meist werden die externen Tabellen für Staging-Zwecke verwendet.
+        \begin{merke}
+          Staging bedeutet, die zu importierenden Daten auf Gültigkeit zu prüfen und in die für den Import nötige Form zu transformieren.
+        \end{merke}
+      \subsection{Spaltendefinitionen und Treiberwahl}
+        Die Definition externer Tabellen besteht aus zwei Teilen:
+        \begin{itemize}
+          \item Spaltendefinitionen
+          \item Treibereinstellungen
+        \end{itemize}
+        \subsubsection{Erstellen der Spaltendefinitionen}
+          Die Syntax für die Spaltendefinitionen ist die Gleiche, wie bei \enquote{normalen} Tabellen.
+          \begin{lstlisting}[caption={Die Spaltendefinition einer externen Tabelle},label=admin924,language=oracle_sql]
+CREATE TABLE kunden_ext (
+  Vorname              VARCHAR2(30),
+  Nachname             VARCHAR2(30),
+  Geburtsdatum         DATE,
+  Adresse              VARCHAR2(200),
+  PersAuswNr           VARCHAR2(9),
+  AusstDatum           DATE,
+  Ablaufdatum          DATE,
+  Staatsangeh          VARCHAR2(2),
+  Geburtsort           VARCHAR2(50),
+  Telefon              VARCHAR2(15),
+  Email                VARCHAR2(35),
+  IBAN                 VARCHAR2(22),
+  KtoEroeffDat         DATE,
+  Freistellung         NUMBER(12, 2)
+)
+...
+          \end{lstlisting}
+        \subsubsection{Wie wird die Tabelle zur externen Tabelle?}
+          Um eine externe Tabelle erstellen zu können, muss die Klausel \languageorasql{ORGANIZATION EXTERNAL} an die Spaltendefinitionen angehängt werden.
+          \begin{lstlisting}[caption={Die Tabelle zur externen Tabelle machen},label=admin925,language=oracle_sql]
+CREATE TABLE kunden_ext (
+  Vorname              VARCHAR2(30),
+  Nachname             VARCHAR2(30),
+  Geburtsdatum         DATE,
+  Adresse              VARCHAR2(200),
+  PersAuswNr           VARCHAR2(9),
+  AusstDatum           DATE,
+  Ablaufdatum          DATE,
+  Staatsangeh          VARCHAR2(2),
+  Geburtsort           VARCHAR2(50),
+  Telefon              VARCHAR2(15),
+  Email                VARCHAR2(35),
+  IBAN                 VARCHAR2(22),
+  KtoEroeffDat         DATE,
+  Freistellung         NUMBER(12, 2)
+)
+&\textcolor{red}{ORGANIZATION EXTERNAL}&
+  (
+...
+    LOCATION('bankkunden.csv')
+  );
+...
+          \end{lstlisting}
+          Mit der \languageorasql{LOCATION}-Klausel wird der Name der Quelldatei angegeben.
+        \subsubsection{Die Treibereinstellungen}
+          Die Daten für eine externe Tabelle können aus zwei verschieben Quellen stammen:
+          \begin{itemize}
+            \item Textdateien (CSV)
+            \item Datapump Dumpfiles
+          \end{itemize}
+          Das Laden von Daten aus CSV-Textdateien erfolgt mit Hilfe des SQL*Loaders. Datapump Dumpfiles werden unter zu Hilfenahme der Oracle Datapump \enquote{angezapft}. Welcher dieser beiden Treiber genutzt werden soll, wird in der \languageorasql{TYPE}-Klausel angegeben.
+\clearpage
+          \begin{lstlisting}[caption={Den Treiber auswählen},label=admin926,language=oracle_sql]
+CREATE TABLE kunden_ext (
+...
+)
+ORGANIZATION EXTERNAL
+  (
+    &\textcolor{red}{TYPE ORACLE\_LOADER}&
+...
+    LOCATION('bankkunden.csv')
+  );
+          \end{lstlisting}
+          In \beispiel{admin926} wird durch die Angabe von \languageorasql{TYPE ORACLE_LOADER} der SQL*Loader-Treiber ausgewählt. Mit \languageorasql{TYPE ORACLE_DATAPUMP} kann stattdessen die Datapump gewählt werden. Abhängig vom gewählten Treiber können Treibereinstellungen vorgenommen werden.
+
+          \begin{literaturinternet}
+            \item \cite{b28319et_concepts}
+          \end{literaturinternet}
+     \subsection{Der ORACLE\_LOADER Treiber}
+        \subsubsection{Wo kommen die Daten her?}
+          Die Quelldatei einer externen Tabelle muss sich in einem Verzeichnis auf dem Dateisystem befinden, das im Zugriff der Datenbank steht. Das bedeutet, dass ein Directory-Objekt für das betroffene Verzeichnis existieren muss.
+          \begin{merke}
+            In Oracle existiert von Haus aus das Directory-Objekt \identifier{data\_pump\_dir} das für Ladevorgänge geschaffen wurde.
+          \end{merke}
+          Mit der Klausel \languageorasql{DEFAULT DIRECTORY} wird der externen Tabelle das Directory-Objekt, in dem sich die Quelldatei befindet mitgeteilt.
+          \begin{lstlisting}[caption={Ein Directory-Objekt für die Datenquelle wählen},label=admin927,language=oracle_sql]
+CREATE TABLE kunden_ext (
+...
+)
+ORGANIZATION EXTERNAL
+  (
+    TYPE ORACLE_LOADER
+    &\textcolor{red}{DEFAULT DIRECTORY data\_pump\_dir}&
+...
+    LOCATION('bankkunden.csv')
+  );
+          \end{lstlisting}
+        \subsubsection{Interpretation der Quelldaten -  Die Access parameter}
+          Wie bereits in \beispiel{admin922} gezeigt benötigt der SQL*Loader verschiedene Angaben, um die Quelldatei richtig interpretieren zu können. Zum Beispiel:
+          \begin{itemize}
+            \item \languageorasql{FIELDS TERMINATED BY ';'}: Legt das Trennzeichen zwischen den einzelnen Spalten fest
+            \item \languageorasql{OPTIONALLY ENCLOSED BY '"'}: Gibt an, wie Zeichenfolgen umschlossen werden.
+            \item \languageorasql{RECORDS DELIMITED BY NEWLINE}: Sagt aus, wie die einzelnen Zeilen in der Quelldatei getrennt werden. \languageorasql{NEWLINE} ist das Schlüsselwort für einen Zeilenumbruch.
+            \item \languageorasql{MISSING FIELD VALUES ARE NULL}: Werte die in der Quelldatei nicht vorhanden sind, sollen in der Datenbank als NULL-Werte gelten.
+            \item \languageorasql{SKIP n}: n Zeilen zu Beginn der Quelldatei auslassen.
+          \end{itemize}
+          \begin{lstlisting}[caption={Festlegen der Access parameter},label=admin928,language=oracle_sql]
+CREATE TABLE kunden_ext (
+...
+)
+ORGANIZATION EXTERNAL
+  (
+    TYPE ORACLE_LOADER
+    DEFAULT DIRECTORY data_pump_dir
+    &\textcolor{red}{ACCESS PARAMETERS}&
+    (
+      RECORDS DELIMITED BY NEWLINE
+      SKIP 1
+      FIELDS TERMINATED BY ';'
+      OPTIONALLY ENCLOSED BY '"'
+      MISSING FIELD VALUES ARE NULL
+    )
+    LOCATION('bankkunden.csv')
+  );
+          \end{lstlisting}
+        \subsubsection{Interpretation der Quelldaten - Die Spalten der Quelldatei}
+          Damit Oracle die Daten der Quelldatei korrekt interpretieren kann, muss im \languageorasql{CREATE TABLE}-Statement der externen Tabelle, zusätzlich zur Definition der Tabellenspalten, auch eine Definition der \enquote{Quellspalten} erfolgen. Besonders wichtig ist dies, sobald Datums- oder numerische Werte importiert werden sollen.
+
+          Datumsspalten werden in der Quellspaltendefinition immer mit dem Datentyp \languageorasql{CHAR} und der Formatdefinition \languageorasql{date_format DATE mask "DD.MM.RR"}. Dies entspricht der Verwendung der SQL-Funktion \languageorasql{TO_CHAR} mit Datumswerten. Das angegebene Datumsformat \enquote{DD.MM.RR} muss das Datumsformat der Quelldaten wiederspiegeln.
+
+          Bei numerischen Werten empfiehlt sich die Nutzung des Datentyps \languageorasql{DECIMAL}, ohne Größenbeschränkung, da mit ihm die besten Ergebnisse erzielt werden können.
+          \begin{lstlisting}[caption={Festlegen der Access parameter},label=admin928a,language=oracle_sql]
+CREATE TABLE kunden_ext (
+...
+)
+ORGANIZATION EXTERNAL
+  (
+    TYPE ORACLE_LOADER
+    DEFAULT DIRECTORY data_pump_dir
+    ACCESS PARAMETERS
+    (
+      RECORDS DELIMITED BY NEWLINE
+      SKIP 1
+      FIELDS TERMINATED BY ';'
+      OPTIONALLY ENCLOSED BY '"'
+      MISSING FIELD VALUES ARE NULL (
+        Vorname              CHAR(30),
+        Nachname             CHAR(30),
+        Geburtsdatum         CHAR date_format DATE mask "DD.MM.RR",
+        Adresse              CHAR(200),
+        PersAuswNr           CHAR(9),
+        AusstDatum           CHAR date_format DATE mask "DD.MM.RR",
+        Ablaufdatum          CHAR date_format DATE mask "DD.MM.RR",
+        Staatsangeh          CHAR(2),
+        Geburtsort           CHAR(50),
+        Telefon              CHAR(15),
+        Email                CHAR(35),
+        IBAN                 CHAR(22),
+        KtoEroeffDat         CHAR date_format DATE mask "DD.MM.RR",
+        Freistellung         DECIMAL
+      )
+    )
+    LOCATION('bankkunden.csv')
+  );
+          \end{lstlisting}
+        \subsubsection{Logfile und Badfile}
+          Bei der Nutzung von externen Tabellen können ebenfalls Logfiles und Badfiles angelegt werden, so wie dies im \beispiel{admin919} gezeigt wurde. \beispiel{admin929} zeigt das komplette Statement zur Erstellung der externen Tabelle \identifier{kunden\_ext}.
+\clearpage
+          \begin{lstlisting}[caption={Logfile und Badfile},label=admin929,language=oracle_sql]
+SQL> CREATE TABLE kunden_ext (
+  2  Vorname              VARCHAR2(30),
+  3  Nachname             VARCHAR2(30),
+  4  Geburtsdatum         DATE,
+  5  Adresse              VARCHAR2(200),
+  6  PersAuswNr           VARCHAR2(9),
+  7  AusstDatum           DATE,
+  8  Ablaufdatum          DATE,
+  9  Staatsangeh          VARCHAR2(2),
+  10 Geburtsort           VARCHAR2(50),
+  11 Telefon              VARCHAR2(15),
+  12 Email                VARCHAR2(35),
+  13 IBAN                 VARCHAR2(22),
+  14 KtoEroeffDat         DATE,
+  15 Freistellung         NUMBER(12, 2)
+  16 )
+  17 ORGANIZATION EXTERNAL
+  18 (
+  19   TYPE ORACLE_LOADER
+  20   DEFAULT DIRECTORY data_pump_dir
+  21   ACCESS PARAMETERS
+  22   (
+  23     RECORDS DELIMITED BY NEWLINE
+  24     SKIP 1
+  25     &\textcolor{red}{BADFILE 'bankkunden.bad'}&
+  26     &\textcolor{red}{LOGFILE 'bankkunden.log'}&
+  27     FIELDS TERMINATED BY ';'
+  28     OPTIONALLY ENCLOSED BY '"'
+  29     MISSING FIELD VALUES ARE NULL (
+  30       Vorname              CHAR(30),
+  31       Nachname             CHAR(30),
+  32       Geburtsdatum         CHAR date_format DATE mask "DD.MM.RR",
+  33       Adresse              CHAR(200),
+  34       PersAuswNr           CHAR(9),
+  35       AusstDatum           CHAR date_format DATE mask "DD.MM.RR",
+  36       Ablaufdatum          CHAR date_format DATE mask "DD.MM.RR",
+  37       Staatsangeh          CHAR(2),
+  38       Geburtsort           CHAR(50),
+  39       Telefon              CHAR(15),
+  40       Email                CHAR(35),
+  41       IBAN                 CHAR(22),
+  42       KtoEroeffDat         CHAR date_format DATE mask "DD.MM.RR",
+  43       Freistellung         DECIMAL
+  44     )
+  45   )
+  46   LOCATION('bankkunden.csv')
+  47 );
+          \end{lstlisting}
+          \begin{literaturinternet}
+            \item \cite{b28319et_params}
+          \end{literaturinternet}
+        \subsubsection{Laden von Binärdaten}
+          Mit Hilfe des ORACLE\_LOADER Treibers ist es nicht nur möglich ASCII-Daten, sondern auch Binärdaten zu laden. In \beispiel{admin930} ff. soll für jeden Mitarbeiter der Bank ein Foto in die Datenbank geladen werden. Dazu wird der Tabelle \identifier{mitarbeiter} ein Spalte \identifier{foto}, vom Datentyp \identifier{blob} hinzugefügt. Im Anschluss daran werden dann die Daten geladen.
+          \begin{merke}
+            Das Akronym \enquote{BLOB} steht für \enquote{\textcolor{red}{B}inary \textcolor{red}{L}arge \textcolor{red}{Ob}ject}. Ein BLOB kann ein beliebiges Binärobjekt sein (PDF-Datei, PNG- oder JPG-Dateien, Worddokumente, usw.)
+          \end{merke}
+
+          \begin{lstlisting}[caption={Anfügen einer BLOB-Spalte},label=admin930,language=oracle_sql]
+SQL> ALTER TABLE mitarbeiter
+  2  ADD Foto BLOB;
+
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Die Datei mitarbeiter.csv},label=admin931,language=terminal]
+Mitarbeiter_ID;JPG_filename
+1;foto_1.jpg
+2;foto_2.jpg
+          \end{lstlisting}
+          \begin{lstlisting}[caption={Erstellen der externen Tabelle \identifier{mitarbeiter\_ext}}, label=admin932, language=oracle_sql]
+SQL> CREATE TABLE mitarbeiter_ext (
+  2  Mitarbeiter_ID    NUMBER,
+  3  Foto              BLOB
+  4  )
+  5  ORGANIZATION EXTERNAL
+  6  (
+  7    TYPE ORACLE_LOADER
+  8    DEFAULT DIRECTORY data_pump_dir
+  9    ACCESS PARAMETERS
+  10   (
+  11     RECORDS DELIMITED BY NEWLINE
+  12     SKIP 1
+  13     BADFILE 'mitarbeiter.bad'
+  14     LOGFILE 'mitarbeiter.log'
+  15     FIELDS TERMINATED BY ';'
+  16     MISSING FIELD VALUES ARE NULL
+  17     (
+  18       Mitarbeiter_ID     CHAR(1),
+  19       JPG_filename       CHAR(10)
+  20     )
+          \end{lstlisting}
+\clearpage
+          \begin{lstlisting}[caption={Erstellen der externen Tabelle \identifier{mitarbeiter\_ext} - Fortsetzung}, language=oracle_sql]
+  21     COLUMN TRANSFORMS
+  22     (
+  23       Foto FROM LOBFILE (JPG_filename) FROM (data_pump_dir) BLOB
+  24     )
+  25   )
+  26   LOCATION('mitarbeiter.csv')
+  27 );
+          \end{lstlisting}
+          Neu an dieser externen Tabelle ist die \languageorasql{COLUMN TRANSFORMS}-Klausel. Sie hat die Aufgabe, die Dateinamen aus der CSV-Datei, Spalte \identifier{jpg\_filename}, auszulesen, die Bilddateien zu öffnen und deren Inhalt in die Spalte Foto der externen Tabelle zu laden.
+      \subsection{Der ORACLE\_DATAPUMP Treiber}
+        Der Oracle Datapump Treiber ermöglicht es, Daten aus Dumpfiles zu lesen und Daten in ein Dumpfile zu schreiben. Die Syntax betreffend ändern sich nur zwei Dinge:
+        \begin{itemize}
+          \item Die \languageorasql{TYPE}-Klausel
+          \item Die Access parameter
+        \end{itemize}
+        Das folgende Beispiel zeigt, wie die Daten der Bankkunden aus einem Dumpfile gelesen werden, anstatt aus einer CSV-Datei.
+          \begin{lstlisting}[caption={Eine externe Tabelle, basierend auf einem Dumpfile},label=admin933,language=oracle_sql]
+SQL> CREATE TABLE kunden_ext (
+  2  Vorname              VARCHAR2(30),
+  3  Nachname             VARCHAR2(30),
+  4  Geburtsdatum         DATE,
+  5  Adresse              VARCHAR2(200),
+  6  PersAuswNr           VARCHAR2(9),
+  7  AusstDatum           DATE,
+  8  Ablaufdatum          DATE,
+  9  Staatsangeh          VARCHAR2(2),
+  10 Geburtsort           VARCHAR2(50),
+  11 Telefon              VARCHAR2(15),
+  12 Email                VARCHAR2(35),
+  13 IBAN                 VARCHAR2(22),
+  14 KtoEroeffDat         DATE,
+  15 Freistellung         NUMBER(12, 2)
+  16 )
+  17 ORGANIZATION EXTERNAL
+  18 (
+  19   &\textcolor{red}{TYPE ORACLE\_DATAPUMP}&
+  20   DEFAULT DIRECTORY data_pump_dir
+          \end{lstlisting}
+\clearpage
+          \begin{lstlisting}[caption={Eine externe Tabelle, basierend auf einem Dumpfile - Fortsetzung},language=oracle_sql]
+  21   ACCESS PARAMETERS
+  22   (
+  23     LOGFILE 'bankkunden.log'
+  24     COMPRESSION enabled
+  25   )
+  26   LOCATION('bankkunden.dmp')
+  27 );
+          \end{lstlisting}
+          Die Accessparameter, die zur Beschreibung des Aufbaus der Quelldatei dienten entfallen und hinzukommt die Möglichkeit, den Inhalt eines Dumpfiles zu komprimieren.
+          \begin{merke}
+            Der \languageorasql{COMPRESSION}-Access parameter wirkt sich nur aus, wenn die Daten aus der Datenbank in das Dumpfile entladen werden.
+          \end{merke}
+
+          \begin{literaturinternet}
+            \item \cite{b28319et_dp_driver}
+          \end{literaturinternet}
+    \section{Informationen}
+      \subsection{Verzeichnis der relevanten Data Dictionary Views}
+        \begin{literaturinternet}
+          \item \cite{sthref1938}
+          \item \cite{REFRN23339}
+          \item \cite{i1576965}
+          \item \cite{i1577333}
+          \item \cite{i1577411}
+        \end{literaturinternet}
+\clearpage

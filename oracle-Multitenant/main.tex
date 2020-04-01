@@ -1,0 +1,73 @@
+\input{../main}
+
+% KOMAScript guide, p. 66 (3.7 Dokumenttitel)
+% Define all neccessary attributes of the title page
+    \subtitle{Oracle 12c}
+    \date{1. Ausgabe: 09.05.2007\linebreak Letzte Änderung: \today{}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Biblatex definitionen
+\addbibresource{../bibliographie/bibliography.bib}
+
+\defbibheading{oraadminguide}{\section*{Oracle Database Administrator's Guide 11g Release 2}}
+\defbibheading{oraadvdevguid}{\section*{Oracle Database Advanced Application Developer's Guide 11g Release 2}}
+\defbibheading{brusersguide}{\section*{Database Backup and Recovery User's Guide 11g Release 2}}
+\defbibheading{oradbconcepts}{\section*{Oracle Database Concepts 11g Release 2}}
+\defbibheading{oradbref}{\section*{Oracle Database Reference 11g Release 2}}
+\defbibheading{oraglobsupguide}{\section*{Oracle Database Globalization Support Guide 11g Release 2}}
+\defbibheading{oradbinstallguidelinux}{\section*{Database Installation Guide 11g Release 2 for Linux}}
+\defbibheading{oradbinstallguidewin}{\section*{Database Installation Guide 11g Release 2 for Microsoft Windows}}
+\defbibheading{oranetadmin}{\section*{Oracle Database Net Services Reference 11g Release 2}}
+\defbibheading{oranetref}{\section*{Oracle Database Net Services Administrator's Guide 11g Release 2}}
+\defbibheading{oraplsqlpackref}{\section*{Oracle Database PL/SQL Packages and Types Reference 11g Release 2}}
+\defbibheading{orarelnoteswin}{\section*{Oracle Database Release Notes 11g Release 2 for Microsoft Windows}}
+\defbibheading{orarelnoteslinux}{\section*{Oracle Database Release Notes 11g
+Release 2 for Linux}} 
+\defbibheading{orasecguid}{\section*{Oracle Database Security Guide 11g Release 2}}
+\defbibheading{orasqlref}{\section*{Oracle Database SQL Language Reference 11g Release 2}}
+\defbibheading{orautilities}{\section*{Oracle Database Utilities 11g Release 2}}
+\defbibheading{others}{\section*{Andere Quellen}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document} 
+    \frontmatter
+    % Typeset the title page with single line spacing
+    \begin{singlespace}
+        \maketitle
+        \pagenumbering{Roman}
+        \tableofcontents
+        \pagenumbering{bychapter}
+    \end{singlespace}
+    \mainmatter
+    
+    \input{../erm/erm}
+    \input{../sql/sql}
+    \input{admin/dbadmin}
+    \backmatter
+    \appendix
+    %  \input{../bibliographie/thebibliography}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      \part{Appendix}
+        \chapter*{Oracle Database 19C}
+          \printbibliography[heading=oraadminguide,keyword=oraadminguide]
+          \printbibliography[heading=oraadvdevguid,keyword=oraadvdevguid]
+          \printbibliography[heading=brusersguide,keyword=brusersguide]
+          \printbibliography[heading=oradbconcepts,keyword=oradbconcepts]
+          \printbibliography[heading=oradbref,keyword=oradbref]
+          \printbibliography[heading=oraglobsupguide,keyword=oraglobsupguide]
+          \printbibliography[heading=oradbinstallguidelinux,keyword=oradbinstallguidelinux]
+          \printbibliography[heading=oradbinstallguidewin,keyword=oradbinstallguidewin]
+          \printbibliography[heading=oranetadmin,keyword=oranetadmin]
+          \printbibliography[heading=oranetref,keyword=oranetref]
+          \printbibliography[heading=oraplsqlpackref,keyword=oraplsqlpacklref]
+          \printbibliography[heading=orarelnoteswin,keyword=orarelnoteswin]
+          \printbibliography[heading=orarelnoteslinux,keyword=orarelnoteslinux]
+          \printbibliography[heading=orasecguid,keyword=orasecguid]
+          \printbibliography[heading=orasqlref,keyword=orasqlref]
+          \printbibliography[heading=orautilities,keyword=orautilities]
+          \printbibliography[heading=others,keyword=others]
+    %     \chapter*{Microsoft SQL Server}
+    %       \printbibliography[heading=tsqlreference,keyword=TSQLReference]
+    %      \printbibliography[heading=sqlserveradmin,keyword=SQLServerAdmin]
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
