@@ -1,84 +1,89 @@
-\subsection{Übungsaufgabe Kindergarten}
-\subsubsection{Vorgaben}
-\begin{center}
-    \scalebox{.6}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](A) at (3, 0){Person};
-            \node[attribute](a1)[above left = of A]{\key{Person\_ID}} edge (A);
-            \node[attribute](a2)[above  = of A]{Vorname} edge (A);
-            \node[attribute](a3)[above right = of A]{Nachname} edge (A);
-            \node[attribute](a4)[right = of A]{Geschlecht} edge (A);
-            \node[isa](isa1)[below = of A]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (A);
-            % Elternteil
-            \node[entity](B) at (11, -8){Elternteil};
-            \node[attribute](b1)[above left = of B]{\key{Person\_ID}} edge (B);
-            \node[attribute](b2)[above right = of B]{Adresse} edge (B);
-            % Pfad zwischen Elternteil und isa1
-            \path[draw, -] (B.north) |- (isa1.east);
-            % Kind
-            \node[entity](C) at (3, -8){Kind};
-            \node[attribute](c1)[above left = of C]{\key{Person\_ID}} edge (C);
-            \node[attribute](c2)[below left = of C]{Geburtsdatum} edge (C);
-            % Pfad zwischen Kind und isa1
-            \path[draw, -] (C.north) |- (isa1.south);
-            % Angestellte
-            \node[entity](D) at(-6, -5) {Angestellte};
-            \node[attribute](d1)[above left = of D]{\key{Person\_ID}} edge (D);
-            \node[attribute](d2)[right = of D]{SozVersNr} edge (D);
-            \node[attribute](d3)[above right = of D]{Einstellungsdatum} edge (D);
-            % Pfad zwischen Angestellte und isa1
-            \path[draw, -] (D.north) |- (isa1.west);
-            \node[isa](isa2)[below = of D]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (D);
+      \subsection{Übungsaufgabe Kindergarten}
+        \subsubsection{Vorgaben}
+          \begin{center}
+            \scalebox{.6}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](A) at (3, 0){Person};
+                  \node[attribute](a1)[above left = of A]{\key{Person\_ID}} edge (A);
+                  \node[attribute](a2)[above  = of A]{Vorname} edge (A);
+                  \node[attribute](a3)[above right = of A]{Nachname} edge (A);
+                  \node[attribute](a4)[right = of A]{Geschlecht} edge (A);
 
-            % Betreuer
-            \node[entity](E) at (-4, -15){Betreuer};
-            \node[attribute](e1)[below left = of E]{\key{Person\_ID}} edge (E);
-            \node[attribute](e2)[below = of E]{Gehalt} edge (E);
-            % Pfad zwischen Betreuer und isa2
-            \path[draw, -] (E.north) |- (isa2.east);
-            % Praktikant
-            \node[entity](F) at (-10, -12){Praktikant};
-            \node[attribute](f1)[above right = of F]{\key{Person\_ID}} edge (F);
-            \node[attribute](f2)[below right = of F]{Praktikumsende} edge (F);
-            % Pfad zwischen Praktikant und isa2
-            \path[draw, -] (F.north) |- (isa2.west);
+                \node[isa](isa1)[below = of A]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (A);
 
-            % Gruppe
-            \node[entity](G) at (3, -15){Gruppe};
-            \node[attribute](g1)[above right = of G]{\key{Gruppe\_ID}} edge (G);
-            \node[attribute](g2)[below = of G]{Bezeichnung} edge (G);
-            \node[attribute](g3)[right = of G]{Telefon} edge (G);
-            \node[attribute](g4)[below right = of G]{Raum} edge (G);
-            % Relationen
-            \node[relationship](rel4)[below = of C]{geht in} edge node[auto,swap]{(1,1)} (C);
-            \path[draw, -] (rel4.south) |- (G.north) node[auto, swap, yshift=20, xshift=15]{(1,20)};
-            \node[relationship](rel1)[right = of C]{lebt bei} edge node[auto,swap]{(1,2)} (C);
-            \path[draw, -] (rel1.east) |- (B.west) node[auto, swap, yshift=10, xshift=-15]{(0,*)};
-            \node[relationship](rel6)[below = of rel1]{hat};
-            \path[draw, -] (C.east) -- ($(C.east) + (1,0)$) |- (rel6.west) node[auto,swap,yshift=20]{(1,2)};
-            \path[draw, -] (rel6.east) -- ($(rel6.east) + (0.75, 0)$) |- (B.west) node[auto,swap,yshift=-75,xshift=-60]{(1,*)};
 
-            \node[relationship](rel2)[below = of B]{verheiratet} edge node[auto,swap]{(0,1)} (B);
-            \path [draw, -] (B.east) -- ($(B.east) + (1, 0)$) -- ($(rel2.east) + (0.8,0)$) -- (rel2.east) node[auto,swap,yshift=20]{(0,1)};
+                % Elternteil
+                \node[entity](B) at (11, -8){Elternteil};
+                    \node[attribute](b1)[above left = of B]{\key{Person\_ID}} edge (B);
+                    \node[attribute](b2)[above right = of B]{Adresse} edge (B);
+                    % Pfad zwischen Elternteil und isa1
+                    \path[draw, -] (B.north) |- (isa1.east);
+                % Kind
+                \node[entity](C) at (3, -8){Kind};
+                    \node[attribute](c1)[above left = of C]{\key{Person\_ID}} edge (C);
+                    \node[attribute](c2)[below left = of C]{Geburtsdatum} edge (C);
+                    % Pfad zwischen Kind und isa1
+                    \path[draw, -] (C.north) |- (isa1.south);
+                % Angestellte
+                \node[entity](D) at(-6, -5) {Angestellte};
+                    \node[attribute](d1)[above left = of D]{\key{Person\_ID}} edge (D);
+                    \node[attribute](d2)[right = of D]{SozVersNr} edge (D);
+                    \node[attribute](d3)[above right = of D]{Einstellungsdatum} edge (D);
+                    % Pfad zwischen Angestellte und isa1
+                    \path[draw, -] (D.north) |- (isa1.west);
 
-            \node[relationship](rel5) [right = of E]{betreut} edge node[auto,swap]{(1,1)} (E);
-            \path (rel5.east) edge node[auto,swap, yshift=22, xshift=-4]{(1,2)}(G.west);
+                \node[isa](isa2)[below = of D]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (D);
 
-            \node[relationship](rel3) at (-10, -15){unterstützt} edge node[auto,swap]{(1,1)} (F);
-            \path[draw, -] (rel3.east) |- (E.west) node[auto, swap, yshift=10, xshift=-15]{(0,1)};
-        \end{tikzpicture}
-    }
-\end{center}
-\subsubsection{Transformation}
-\begin{tabular}{>{\textbf\bgroup}p{4cm}<{\egroup}>{\small}p{10.7cm}}
-    Person        & (\pk{Person\_ID}, Vorname, Nachname, Geschlecht)                    \\
-    Elternteil    & (\fk{\pk{Person\_ID}}, Adresse, \un{\fk{Ehepartner\_ID}})           \\
-    Kind          & (\fk{\pk{Person\_ID}}, Geburtsdatum, \nn{\fk{Gruppe\_ID}})          \\
-    Angestellte   & (\fk{\pk{Person\_ID}},  Einstellungsdatum,SozVersNr)                \\
-    Betreuer      & (\fk{\pk{Person\_ID}}, Gehalt, \nn{\fk{Gruppe\_ID}})                \\
-    Praktikant    & (\fk{\pk{Person\_ID}}, Praktikumsende, \nn{\un{\fk{Betreuer\_ID}}}) \\
-    Gruppe        & (\pk{Gruppe\_ID}, Bezeichnung, Telefon, Raum)                       \\
-    Kinderwohnung & (\fk{\pk{Kind\_ID + Erwachsener\_ID}})                              \\
-    Familie       & (\fk{\pk{Kind\_ID + Erwachsener\_ID}})                              \\
-\end{tabular}
+                % Betreuer
+                \node[entity](E) at (-4, -15){Betreuer};
+                    \node[attribute](e1)[below left = of E]{\key{Person\_ID}} edge (E);
+                    \node[attribute](e2)[below = of E]{Gehalt} edge (E);
+                    % Pfad zwischen Betreuer und isa2
+                    \path[draw, -] (E.north) |- (isa2.east);
+
+                % Praktikant
+                \node[entity](F) at (-10, -12){Praktikant};
+                    \node[attribute](f1)[above right = of F]{\key{Person\_ID}} edge (F);
+                    \node[attribute](f2)[below right = of F]{Praktikumsende} edge (F);
+                    % Pfad zwischen Praktikant und isa2
+                    \path[draw, -] (F.north) |- (isa2.west);
+
+                % Gruppe
+                \node[entity](G) at (3, -15){Gruppe};
+                    \node[attribute](g1)[above right = of G]{\key{Gruppe\_ID}} edge (G);
+                    \node[attribute](g2)[below = of G]{Bezeichnung} edge (G);
+                    \node[attribute](g3)[right = of G]{Telefon} edge (G);
+                    \node[attribute](g4)[below right = of G]{Raum} edge (G);
+                % Relationen
+                \node[relationship](rel4)[below = of C]{geht in} edge node[auto,swap]{(1,1)} (C);
+                    \path[draw, -] (rel4.south) |- (G.north) node[auto, swap, yshift=20, xshift=15]{(1,20)};
+                \node[relationship](rel1)[right = of C]{lebt bei} edge node[auto,swap]{(1,2)} (C);
+                    \path[draw, -] (rel1.east) |- (B.west) node[auto, swap, yshift=10, xshift=-15]{(0,*)};
+                \node[relationship](rel6)[below = of rel1]{hat};
+                    \path[draw, -] (C.east) -- ($(C.east) + (1,0)$) |- (rel6.west) node[auto,swap,yshift=20]{(1,2)};
+                    \path[draw, -] (rel6.east) -- ($(rel6.east) + (0.75, 0)$) |- (B.west) node[auto,swap,yshift=-75,xshift=-60]{(1,*)};
+
+                \node[relationship](rel2)[below = of B]{verheiratet} edge node[auto,swap]{(0,1)} (B);
+                    \path [draw, -] (B.east) -- ($(B.east) + (1, 0)$) -- ($(rel2.east) + (0.8,0)$) -- (rel2.east) node[auto,swap,yshift=20]{(0,1)};
+
+                \node[relationship](rel5) [right = of E]{betreut} edge node[auto,swap]{(1,1)} (E);
+                    \path (rel5.east) edge node[auto,swap, yshift=22, xshift=-4]{(1,2)}(G.west);
+
+                 \node[relationship](rel3) at (-10, -15){unterstützt} edge node[auto,swap]{(1,1)} (F);
+                    \path[draw, -] (rel3.east) |- (E.west) node[auto, swap, yshift=10, xshift=-15]{(0,1)};
+              \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Transformation}
+					\begin{tabular}{>{\textbf\bgroup}p{4cm}<{\egroup}>{\small}p{11cm}}
+						Person & (\pk{Person\_ID}, Vorname, Nachname, Geschlecht) \\
+						Elternteil & (\fk{\pk{Person\_ID}}, Adresse, \un{\fk{Ehepartner\_ID}}) \\
+						Kind & (\fk{\pk{Person\_ID}}, Geburtsdatum, \nn{\fk{Gruppe\_ID}}) \\
+						Angestellte & (\fk{\pk{Person\_ID}},  Einstellungsdatum, SozVersNr) \\
+						Betreuer & (\fk{\pk{Person\_ID}}, Gehalt, \nn{\fk{Gruppe\_ID}}) \\
+						Praktikant & (\fk{\pk{Person\_ID}}, Praktikumsende, \nn{\un{\fk{Betreuer\_ID}}}) \\
+						Gruppe & (\pk{Gruppe\_ID}, Bezeichnung, Telefon, Raum) \\
+						Kinderwohnung & (\fk{\pk{Kind\_ID + Erwachsener\_ID}}) \\
+						Familie & (\fk{\pk{Kind\_ID + Erwachsener\_ID}}) \\
+					\end{tabular}
 \clearpage

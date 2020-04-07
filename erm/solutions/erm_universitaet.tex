@@ -1,79 +1,82 @@
-\subsection{Übungsaufgabe Universität}
-\subsubsection{Vorgaben}
-\begin{center}
-    \scalebox{.45}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](person){Person};
-            \node[attribute](personid)[above = of person]{\key{Person\_ID}} edge (person);
-            \node[isa](isaperson)[below = of person]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (person);
-            \node[entity](student) at (-8,-5){Student};
-            \path[draw, -] (isaperson.west) -| (student.north);
-            \node[entity](wima) at (0,-5){WiMa};
-            \path[draw, -] (isaperson.south) -| (wima.north);
-            \node[entity](professor) at (8,-5){Professor};
-            \path[draw, -] (isaperson.east) -| (professor.north);
-            \node[relationship](nimmtteilanuebung)[right = of student]{nimmt teil} edge node[auto,swap] {(0,*)}(student);
-            \node[relationship](nimmtteilanvorlesung)[left = of student]{nimmt teil} edge node[auto,swap] {(0,*)}(student);
-            \node[relationship](betreut)[below = 2.1cm of wima]{betreut} edge node[auto,swap] {(0,*)}(wima);
-            \node[relationship](stelltbereit)[right = 1cm of betreut]{stellt bereit};
-            \path[draw, -] (professor.west) -| (stelltbereit.north)  node[auto,swap,xshift=70,yshift=50]{(0,*)};
-            \node[entity](uebung)[below = 2.1cm of betreut]{Übung} edge node[auto,swap,xshift=5,yshift=-15] {(1,1)}(betreut);
-            \node[attribute](uebungid)[below left = of uebung]{\key{Übung\_ID}} edge (uebung);
-            \path[draw, -] (uebung.west) -| (nimmtteilanuebung.south) node[auto,swap,xshift=40, yshift=-170]{(1,*)};
-            \path[draw, -] (uebung.east) -| (stelltbereit.south) node[auto,swap, xshift=-35,yshift=-60]{(1,1)};
-            \node[entity](vorlesung) at (-12,-16){Vorlesung};
-            \node[attribute](vorlesungid)[above right = 1cm of vorlesung]{\key{Vorlesung\_ID}} edge (vorlesung);
-            \path[draw, -] (nimmtteilanvorlesung.south) -- (vorlesung.north) node[auto,swap, xshift=20,yshift=30]{(1,*)};
-            \node[relationship](haelt)[below = 2.4cm of professor.230]{hält} edge node[auto,yshift=15,xshift=0] {(1,*)}(professor.230);
-            \path[draw, -] (haelt.south) |- (7,-16) -| (0.4,-16) arc(0:180:0.4cm) -| (vorlesung.east) node[auto,swap,xshift=20,yshift=-10]{(1,1)};
-            \node[relationship](fuehrt)[right = of haelt]{führt};
-            \path[draw, -] (professor.320) |- (fuehrt.west) node[auto,swap,xshift=-5,yshift=70]{(0,1)};
-            \node[relationship](leitet)[right = of professor]{leitet} edge node[auto,swap] {(1,1)}(professor);
-            \node[entity](institut)[right = of leitet]{Institut} edge node[auto,swap] {(1,1)}(leitet);
-            \node[attribute](institutid)[above = of institut]{\key{Institut\_ID}} edge (institut);
-            \node[relationship](umfasst)[below = of institut]{umfasst} edge node[auto,swap] {(1,1)}(institut);
-            \node[entity](fakultaet)[below = of umfasst]{Fakultät} edge node[auto,swap] {(1,*)}(umfasst);
-            \node[attribute](fakultaetid)[below = of fakultaet]{\key{Fakultät\_ID}} edge (fakultaet);
-            \path[draw, -] (fuehrt.south) |- (fakultaet.west) node[auto,swap,xshift=-15,yshift=10]{(1,1)}(fakultaet);
+      \subsection{Übungsaufgabe Universität}
+        \subsubsection{Vorgaben}
+          \begin{center}
+            \scalebox{.45}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](person){Person};
+                  \node[attribute](personid)[above = of person]{\key{Person\_ID}} edge (person);
+                \node[isa](isaperson)[below = of person]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (person);
+                \node[entity](student) at (-8,-5){Student};
+                  \path[draw, -] (isaperson.west) -| (student.north);
+                \node[entity](wima) at (0,-5){WiMa};
+                  \path[draw, -] (isaperson.south) -| (wima.north);
+                \node[entity](professor) at (8,-5){Professor};
+                  \path[draw, -] (isaperson.east) -| (professor.north);
 
-            \node[isa](isauebung)[below = 4cm of uebung]{isa} edge node[auto,swap,xshift=10,yshift=-35]{(0,1)(1,1) disjunkt} (uebung);
+                \node[relationship](nimmtteilanuebung)[right = of student]{nimmt teil} edge node[auto,swap] {(0,*)}(student);
+                \node[relationship](nimmtteilanvorlesung)[left = of student]{nimmt teil} edge node[auto,swap] {(0,*)}(student);
+                \node[relationship](betreut)[below = 2.1cm of wima]{betreut} edge node[auto,swap] {(0,*)}(wima);
+                \node[relationship](stelltbereit)[right = 1cm of betreut]{stellt bereit};
+                  \path[draw, -] (professor.west) -| (stelltbereit.north)  node[auto,swap,xshift=70,yshift=50]{(0,*)};
+                \node[entity](uebung)[below = 2.1cm of betreut]{Übung} edge node[auto,swap,xshift=5,yshift=-15] {(1,1)}(betreut);
+                  \node[attribute](uebungid)[below left = of uebung]{\key{Übung\_ID}} edge (uebung);
+                  \path[draw, -] (uebung.west) -| (nimmtteilanuebung.south) node[auto,swap,xshift=40, yshift=-170]{(1,*)};
+                  \path[draw, -] (uebung.east) -| (stelltbereit.south) node[auto,swap, xshift=-35,yshift=-60]{(1,1)};
+                \node[entity](vorlesung) at (-12,-16){Vorlesung};
+                  \node[attribute](vorlesungid)[above right = 1cm of vorlesung]{\key{Vorlesung\_ID}} edge (vorlesung);
+                  \path[draw, -] (nimmtteilanvorlesung.south) -- (vorlesung.north) node[auto,swap, xshift=20,yshift=30]{(1,*)};
+                \node[relationship](haelt)[below = 2.4cm of professor.230]{hält} edge node[auto,yshift=15,xshift=0] {(1,*)}(professor.230);
+                  \path[draw, -] (haelt.south) |- (7,-16) -| (0.4,-16) arc(0:180:0.4cm) -| (vorlesung.east) node[auto,swap,xshift=20,yshift=-10]{(1,1)};
+                \node[relationship](fuehrt)[right = of haelt]{führt};
+                  \path[draw, -] (professor.320) |- (fuehrt.west) node[auto,swap,xshift=-5,yshift=70]{(0,1)};
+                \node[relationship](leitet)[right = of professor]{leitet} edge node[auto,swap] {(1,1)}(professor);
+                \node[entity](institut)[right = of leitet]{Institut} edge node[auto,swap] {(1,1)}(leitet);
+                  \node[attribute](institutid)[above = of institut]{\key{Institut\_ID}} edge (institut);
+                \node[relationship](umfasst)[below = of institut]{umfasst} edge node[auto,swap] {(1,1)}(institut);
+                \node[entity](fakultaet)[below = of umfasst]{Fakultät} edge node[auto,swap] {(1,*)}(umfasst);
+                  \node[attribute](fakultaetid)[below = of fakultaet]{\key{Fakultät\_ID}} edge (fakultaet);
+                  \path[draw, -] (fuehrt.south) |- (fakultaet.west) node[auto,swap,xshift=-15,yshift=10]{(1,1)}(fakultaet);
 
-            \node[entity](rechenuebung) at (-3,-19){Rechenübung};
-            \path[draw, -] (isauebung.west) -| (rechenuebung.north);
-            \node[entity](laboruebung) at (3,-19){Laborübung};
-            \path[draw, -] (isauebung.east) -| (laboruebung.north);
-            \node[relationship](findetstattin)[left = 1cm of rechenuebung]{findet statt} edge node[auto] {(1,1)}(rechenuebung);
-            \node[relationship](findetstattin1)[below = of laboruebung]{findet statt} edge node[auto,swap] {(1,1)}(laboruebung);
-            \node[entity](hoersaal)[below = of findetstattin]{Hörsaal} edge node[auto,swap] {(0,*)}(findetstattin);
-            \node[entity](labor)[left = of findetstattin1]{Labor} edge node[auto] {(0,*)}(findetstattin1);
-            \node[relationship](istin)[left = 3cm of hoersaal]{ist in} edge node[auto,swap,xshift=20,yshift=20] {(0,*)}(hoersaal);
-            \path[draw, -] (vorlesung.south) -- (istin.north) node[auto,swap, xshift=20,yshift=120]{(1,1)};
-            \node[entity](raum) at (-4.25,-28){Raum};
-            \node[attribute](raumid)[below = of raum]{\key{Raum\_ID}} edge (raum);
+                  \node[isa](isauebung)[below = 4cm of uebung]{isa} edge node[auto,swap,xshift=10,yshift=-35]{(0,1)(1,1) disjunkt} (uebung);
 
-            \node[isa90](isaraum)[above = of raum]{isa} edge node[auto]{(0,1)(1,1) disjunkt}(raum);
-            \path[draw, -] (isaraum.west) -| (hoersaal.south);
-            \path[draw, -] (isaraum.east) -| (labor.south);
-        \end{tikzpicture}
-    }
-\end{center}
-Aus Platzgründen sind nur die Primärschlüssel im Modell eingezeichnet.
-\subsubsection{Transformation}
-\begin{tabular}{>{\textbf\bgroup}p{3.5cm}<{\egroup}>{\small}p{11cm}}
-    Person           & (\pk{Person\_ID}, Vorname, Nachname, Adresse, Geburtsdatum)                             \\
-    Student          & (\fk{\pk{Person\_ID}}, Matrikelnummer)                                                  \\
-    WiMa             & (\fk{\pk{Person\_ID}}, Gehalt)                                                          \\
-    Professor        & (\fk{\pk{Person\_ID}}, Gehalt, \un{\nn{\fk  {Institut\_ID}}})                           \\
-    Institut         & (\pk{Institut\_ID}, Bezeichnung, \nn{\fk{Fakultaet\_ID}}, \un{\nn{\fk{Professor\_ID}}}) \\
-    Fakultaet        & (\pk{Fakultaet\_ID}, Bezeichnung, \un{\nn{\fk{Dekan\_ID}}})                             \\
-    Raum             & (\pk{Raum\_ID}, Sitzplaetze, Raumnummer, Gebaeudenummer)                                \\
-    Hoersaal         & (\fk{\pk{Raum\_ID}})                                                                    \\
-    Labor            & (\fk{\pk{Raum\_ID}})                                                                    \\
-    Uebung           & (\pk{Uebung\_ID}, Thema, Aufgabennummer, \nn{\fk{WiMa\_ID}}, \nn{\fk{Professor\_ID}})   \\
-    Rechenuebung     & (\pk{Uebung\_ID}, \nn{\fk{Raum\_ID}})                                                   \\
-    Laboruebung      & (\pk{Uebung\_ID}, \nn{\fk{Raum\_ID}})                                                   \\
-    StudentUebung    & (\fk{\pk{Person\_ID + Uebung\_ID}})                                                     \\
-    Vorlesung        & (\pk{Vorlesung\_ID}, Thema, \nn{\fk{Raum\_ID}}, \nn{\fk{Professor\_ID}})                \\
-    StudentVorlesung & (\fk{\pk{Person\_ID + Vorlesung\_ID}})                                                  \\
-\end{tabular}
+                \node[entity](rechenuebung) at (-3,-19){Rechenübung};
+                  \path[draw, -] (isauebung.west) -| (rechenuebung.north);
+                \node[entity](laboruebung) at (3,-19){Laborübung};
+                  \path[draw, -] (isauebung.east) -| (laboruebung.north);
+                \node[relationship](findetstattin)[left = 1cm of rechenuebung]{findet statt} edge node[auto] {(1,1)}(rechenuebung);
+                \node[relationship](findetstattin1)[below = of laboruebung]{findet statt} edge node[auto,swap] {(1,1)}(laboruebung);
+                \node[entity](hoersaal)[below = of findetstattin]{Hörsaal} edge node[auto,swap] {(0,*)}(findetstattin);
+                \node[entity](labor)[left = of findetstattin1]{Labor} edge node[auto] {(0,*)}(findetstattin1);
+                \node[relationship](istin)[left = 3cm of hoersaal]{ist in} edge node[auto,swap,xshift=20,yshift=20] {(0,*)}(hoersaal);
+                  \path[draw, -] (vorlesung.south) -- (istin.north) node[auto,swap, xshift=20,yshift=120]{(1,1)};
+                \node[entity](raum) at (-4.25,-28){Raum};
+                  \node[attribute](raumid)[below = of raum]{\key{Raum\_ID}} edge (raum);
+
+                \node[isa90](isaraum)[above = of raum]{isa} edge node[auto]{(0,1)(1,1) disjunkt}(raum);
+                  \path[draw, -] (isaraum.west) -| (hoersaal.south);
+                  \path[draw, -] (isaraum.east) -| (labor.south);
+              \end{tikzpicture}
+            }
+          \end{center}
+          Aus Platzgründen sind nur die Primärschlüssel im Modell eingezeichnet.
+        \subsubsection{Transformation}
+					\begin{tabular}{>{\textbf\bgroup}p{4cm}<{\egroup}>{\small}p{11cm}}
+						Person & (\pk{Person\_ID}, Vorname, Nachname, Adresse, Geburtsdatum) \\
+						Student & (\fk{\pk{Person\_ID}}, Matrikelnummer) \\
+						WiMa & (\fk{\pk{Person\_ID}}, Gehalt) \\
+						Professor & (\fk{\pk{Person\_ID}}, Gehalt, \un{\nn{\fk{Institut\_ID}}}) \\
+						Institut &\mbox{(\pk{Institut\_ID}, Bezeichnung,
+						\nn{\fk{Fakultaet\_ID}},} \mbox{\un{\nn{\fk{Professor\_ID}}})} \\
+						Fakultaet & (\pk{Fakultaet\_ID}, Bezeichnung, \un{\nn{\fk{Dekan\_ID}}}) \\
+						Raum & (\pk{Raum\_ID}, Sitzplaetze, Raumnummer, Gebaeudenummer) \\
+						Hoersaal & (\fk{\pk{Raum\_ID}}) \\
+						Labor & (\fk{\pk{Raum\_ID}}) \\
+            Uebung & \mbox{(\pk{Uebung\_ID}, Thema, Aufgabennummer,
+            \nn{\fk{WiMa\_ID}},} \mbox{\nn{\fk{Professor\_ID}})} \\
+					  Rechenuebung & (\pk{Uebung\_ID}, \nn{\fk{Raum\_ID}}) \\
+						Laboruebung & (\pk{Uebung\_ID}, \nn{\fk{Raum\_ID}}) \\
+						StudentUebung & (\fk{\pk{Person\_ID + Uebung\_ID}}) \\
+						Vorlesung & (\pk{Vorlesung\_ID}, Thema, \nn{\fk{Raum\_ID}}, \nn{\fk{Professor\_ID}}) \\
+            StudentVorlesung & (\fk{\pk{Person\_ID + Vorlesung\_ID}}) \\
+					\end{tabular}
 \clearpage

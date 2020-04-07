@@ -1,14 +1,14 @@
-\subsection{Übungsaufgabe Unternehmensberatung}
-Entwerfen Sie, basierend auf der folgenden Lage, ein ER-Modell, inklusive der Beziehungen zwischen den Entit\"{a}ten.
+      \subsection{Übungsaufgabe Unternehmensberatung}
+        Entwerfen Sie, basierend auf der folgenden Lage, ein ER-Modell, inklusive der Beziehungen zwischen den Entit\"{a}ten.
 
-Ein Kunde tritt an die UBE Unternehmensberatung heran und gibt den Auftrag, seine Unternehmensstruktur als Datenbank abzubilden. Nach einer ersten Besprechung mit dem Kunden, stehen folgende Fakten fest:
-\begin{itemize}
-    \item Die Datenbank muss so gestaltet sein, dass alle einzelnen Produktionsbetriebe des Kunden mit Betriebs\_ID und Bezeichnung gespeichert werden k\"{o}nnen.
-    \item Ein Produktionsbetrieb besteht aus mindestens einer Abteilung. Eine Abteilung geh\"{o}rt zu genau einem Betrieb. Zu jeder Abteilung muss deren Abteilungs\_ID und die Bezeichnung gespeichert werden.
-    \item In einer Abteilung arbeitet mindestens ein Mitarbeiter. Jeder Mitarbeiter arbeitet immer nur in einer Abteilung. Zu jedem Mitarbeiter muss dessen Mitarbeiter\_ID, sein Name und sein Gehalt gespeichert werden.
-    \item Es m\"{u}ssen alle Produkte gespeichert werden, die verkauft werden. Zu jedem Produkt ist die Produkt\_ID und dessen Bezeichnung wichtig.
-    \item Da verschiedene Betriebe auch Projekte durchf\"{u}hren, m\"{u}ssen diese mit Projekt\_ID und Bezeichnung gespeichert werden.
-    \item Produkte werden immer von mindestens einem Mitarbeiter verkauft, wobei nicht alle Mitarbeiter mit dem Verkauf von Produkten beschäftigt sind, da einige auch in Projekten arbeiten. Prinzipiell kann ein Mitarbeiter aber für mehrere Produkte zuständig sein. Es ist relevant, wie viele Stunden ein Mitarbeiter mit dem Verkauf von Produkten besch\"{a}ftigt ist.
-    \item Es m\"{u}ssen auch die Mitarbeiter ber\"{u}cksichtig werden, die nicht am Verkauf von Produkten, sondern an einer Projektarbeit beteiligt sind. An einem Projekt arbeitet immer mindestens ein Mitarbeiter, wobei jeder Mitarbeiter an höchstens einem Projekt teilnehmen kann. Jedem Projekt muss genau ein Mitarbeiter als Projektleiter zugeteilt werden. Jeder Mitarbeiter kann immer nur höchstens ein Projekt leiten.
-\end{itemize}
+        Ein Kunde tritt an die UBE Unternehmensberatung heran und gibt den Auftrag, seine Unternehmensstruktur als Datenbank abzubilden. Nach einer ersten Besprechung mit dem Kunden, stehen folgende Fakten fest:
+        \begin{itemize}
+          \item Die Datenbank muss so gestaltet sein, dass alle einzelnen Produktionsbetriebe des Kunden mit Betriebs\_ID und Bezeichnung gespeichert werden k\"{o}nnen.
+          \item Ein Produktionsbetrieb besteht aus mindestens einer Abteilung. Eine Abteilung geh\"{o}rt zu genau einem Betrieb. Zu jeder Abteilung muss deren Abteilungs\_ID und die Bezeichnung gespeichert werden.
+          \item In einer Abteilung arbeitet mindestens ein Mitarbeiter. Jeder Mitarbeiter arbeitet immer nur in einer Abteilung. Zu jedem Mitarbeiter muss dessen Mitarbeiter\_ID, sein Name und sein Gehalt gespeichert werden.
+          \item Es m\"{u}ssen alle Produkte gespeichert werden, die verkauft werden. Zu jedem Produkt ist die Produkt\_ID und dessen Bezeichnung wichtig.
+          \item Da verschiedene Betriebe auch Projekte durchf\"{u}hren, m\"{u}ssen diese mit Projekt\_ID und Bezeichnung gespeichert werden.
+          \item Produkte werden immer von mindestens einem Mitarbeiter verkauft, wobei nicht alle Mitarbeiter mit dem Verkauf von Produkten beschäftigt sind, da einige auch in Projekten arbeiten. Prinzipiell kann ein Mitarbeiter aber für mehrere Produkte zuständig sein. Es ist relevant, wie viele Stunden ein Mitarbeiter mit dem Verkauf von Produkten besch\"{a}ftigt ist.
+          \item Es m\"{u}ssen auch die Mitarbeiter ber\"{u}cksichtig werden, die nicht am Verkauf von Produkten, sondern an einer Projektarbeit beteiligt sind. An einem Projekt arbeitet immer mindestens ein Mitarbeiter, wobei jeder Mitarbeiter an höchstens einem Projekt teilnehmen kann. Jedem Projekt muss genau ein Mitarbeiter als Projektleiter zugeteilt werden. Jeder Mitarbeiter kann immer nur höchstens ein Projekt leiten.
+        \end{itemize}
 \clearpage

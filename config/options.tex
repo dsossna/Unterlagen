@@ -1,8 +1,7 @@
 \clubpenalty = 10000
 \widowpenalty = 10000 \displaywidowpenalty = 10000
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%k%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Graphicx options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -75,7 +74,7 @@
 \KOMAoptions{toc=bibliography}
 
 % KOMAScript guide, p. 81
-\KOMAoptions{parskip=full}
+\KOMAoptions{parskip=full*}
 
 % KOMAScript guide, p. 84
 \KOMAoptions{headsepline=true}
@@ -148,17 +147,7 @@
         extendedchars=true,
         formfeed=\newpage,
         frame=single,
-        escapechar=\&,
-        literate=%
-        {ß}{{\ss}}1
-        {Ä}{{\"A}}1
-        {ä}{{\"a}}1
-        {Ö}{{O}}1
-        {ö}{{\"o}}1
-        {Ü}{{\"U}}1
-        {ü}{{\"u}}1
+        escapechar=\&
         }
 
 \overfullrule=1mm
-
-\setlist[2]{noitemsep}
