@@ -3,7 +3,7 @@
   \cleardoubleevenpage
   \begin{merke}
     Im Gegensatz zu Oracle SQL wird bei MS SQL keine implizite Transaktion gestartet
-    bei DML Statements. Dies muss bei MS SQL explizit mit "SET IMPLICIT TRANSACTION" eingeschaltet werden.
+    bei DMML Statements. Dies muss bei MS SQL explizit mit "SET IMPLICIT TRANSACTION" eingeschaltet werden.
   \end{merke}
       In den vergangenen Kapiteln wurde bisher nur der Teil von SQL beschrieben,
       der als sog. \enquote{Query language} bezeichnet wird. Hier wird jetzt
@@ -11,147 +11,147 @@
       zuständige Teil von SQL heißt: \enquote{Data Manipulation Language}
       oder kurz \enquote{DML}.
 
-Gemä\ss\ SQL-Standard besteht DML aus drei Befehlen:
-\begin{itemize}
-    \item \INSERT: Daten einfügen.
-    \item \UPDATE: Daten ändern.
-    \item \DELETE: Daten löschen.
-\end{itemize}
-\section{Die DML-Anweisungen}
-\subsection{Datensätze einfügen - Die INSERT-Anweisung}
-Mit Hilfe der \INSERT-Anweisung werden neue Datensätze an eine Tabelle
-angefügt. Die Syntax für ein einfaches \INSERT lautet:
-\begin{lstlisting}[language=oracle_sql,caption={Die INSERT Anweisungen},label=sql07_01]
+      Gemä\ss\ SQL-Standard besteht DML aus drei Befehlen:
+      \begin{itemize}
+        \item \INSERT: Daten einfügen.
+        \item \UPDATE: Daten ändern.
+        \item \DELETE: Daten löschen.
+      \end{itemize}
+    \section{Die DML-Anweisungen}
+      \subsection{Datensätze einfügen - Die INSERT-Anweisung}
+        Mit Hilfe der \INSERT-Anweisung werden neue Datensätze an eine Tabelle
+        angefügt. Die Syntax für ein einfaches \INSERT lautet:
+        \begin{lstlisting}[language=oracle_sql,caption={Die INSERT Anweisungen},label=sql07_01]
 INSERT INTO <Tabelle> (<Spalte 1>, <Spalte 2>, ..., <Spalte n>)
 VALUES (<Wert 1>, <Wert 2>, ..., <Wert n>);
         \end{lstlisting}
-\begin{center}
-    \tablecaption{Die INSERT-Anweisung}
-    \label{insertsyntax}
-    \begin{small}
-        \tablefirsthead{
-            \multicolumn{1}{c}{\textbf{Ausdruck}} &
-            \multicolumn{1}{c}{\textbf{Bedeutung}} \\
-            \hline
-        }
-        \tablehead{
-            \multicolumn{1}{c}{\textbf{Ausdruck}} &
-            \multicolumn{1}{c}{\textbf{Bedeutung}} \\
-            \hline
-        }
-        \tabletail{
-            \hline
-        }
-        \tablelasttail{
-            \hline
-        }
-        \begin{supertabular}{|l|p{10.8cm}|}
-            INSERT INTO <Tabelle> & An dieser Stelle steht der Name der
-            Tabelle oder View, in die der Datensatz eingefügt werden soll.
-            \\
-            \hline
-            <Spalte 1>, <Spalte 2>, ... & Dies ist die Spaltenliste. Hier
-            können alle Spalten angegeben werden, in die Daten eingefügt
-            werden. Die Spaltenliste ist optional. \\
-            \hline
-            VALUES <Wert 1>, ... & Dies ist die Werteliste. Hier werden alle
-            Werte aufgeführt, die in <Tabelle> eingefügt werden sollen.
-            Statt einem festen Wert, kann an jeder Stelle auch ein Ausdruck
-            stehen, der einen Wert erzeugt (z. B. eine Funktion). \\
-        \end{supertabular}
-    \end{small}
-\end{center}
-\beispiel{sql07_02} demonstriert die einfachste Form eines
-\INSERT-Statements: Es wird eine neue Zeile in die Tabelle
-\identifier{Bankfiliale} eingefügt.
-\begin{lstlisting}[language=oracle_sql,caption={Ein einfaches INSERT},label=sql07_02]
+        \begin{center}
+          \tablecaption{Die INSERT-Anweisung}
+          \label{insertsyntax}
+          \begin{small}
+            \tablefirsthead{
+              \multicolumn{1}{c}{\textbf{Ausdruck}} &
+              \multicolumn{1}{c}{\textbf{Bedeutung}} \\
+              \hline
+            }
+            \tablehead{
+              \multicolumn{1}{c}{\textbf{Ausdruck}} &
+              \multicolumn{1}{c}{\textbf{Bedeutung}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \tablelasttail{
+              \hline
+            }
+            \begin{supertabular}{|l|p{10.8cm}|}
+              INSERT INTO <Tabelle> & An dieser Stelle steht der Name der
+              Tabelle oder View, in die der Datensatz eingefügt werden soll.
+              \\
+              \hline
+              <Spalte 1>, <Spalte 2>, ... & Dies ist die Spaltenliste. Hier
+              können alle Spalten angegeben werden, in die Daten eingefügt
+              werden. Die Spaltenliste ist optional. \\
+              \hline
+              VALUES <Wert 1>, ... & Dies ist die Werteliste. Hier werden alle
+              Werte aufgeführt, die in <Tabelle> eingefügt werden sollen.
+              Statt einem festen Wert, kann an jeder Stelle auch ein Ausdruck
+              stehen, der einen Wert erzeugt (z. B. eine Funktion). \\
+            \end{supertabular}
+          \end{small}
+        \end{center}
+        \beispiel{sql07_02} demonstriert die einfachste Form eines
+        \INSERT-Statements: Es wird eine neue Zeile in die Tabelle
+        \identifier{Bankfiliale} eingefügt.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein einfaches INSERT},label=sql07_02]
 INSERT INTO Bankfiliale (Bankfiliale_ID, Strasse, Hausnummer, PLZ, Ort)
 VALUES (22, 'Rosenweg', '14a', '06425', 'Ploetzkau');
         \end{lstlisting}
 \clearpage
-In obigem Beispiel wird der Wert \enquote{22} in die Spalte
-\identifier{Bankfiliale\_ID}, der Wert \enquote{Rosenweg} in die Spalte
-\identifier{Strasse} eingefügt. Die restlichen drei Werte werden in
-die Spalten \identifier{Hausnummer}, \identifier{PLZ} und
-\identifier{Ort} geschrieben.
-Die Spaltenliste der \INSERT-Anweisung muss die einzelnen Spalten keineswegs in der Reihenfolge enthalten, wie sie in der Tabelle enthalten sind.
-\begin{lstlisting}[language=oracle_sql,caption={Ein einfaches INSERT},label=sql07_03]
+        In obigem Beispiel wird der Wert \enquote{22} in die Spalte
+        \identifier{Bankfiliale\_ID}, der Wert \enquote{Rosenweg} in die Spalte
+        \identifier{Strasse} eingefügt. Die restlichen drei Werte werden in
+        die Spalten \identifier{Hausnummer}, \identifier{PLZ} und
+        \identifier{Ort} geschrieben.
+        Die Spaltenliste der \INSERT-Anweisung muss die einzelnen Spalten keineswegs in der Reihenfolge enthalten, wie sie in der Tabelle enthalten sind.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein einfaches INSERT},label=sql07_03]
 INSERT INTO Bankfiliale (Strasse, Hausnummer, PLZ, Ort, Bankfiliale_ID)
 VALUES ('Rosenweg', '14a', '06425', 'Ploetzkau', 22);
         \end{lstlisting}
-\begin{merke}
-    In der Spaltenliste müssen die Spalten nicht in der Reihenfolge
-    aufgeführt werden, wie sie in der Tabelle vorkommen. Die Reihenfolge
-    in der Spaltenliste ist beliebig!
-\end{merke}
-\vspace{1em}
-Wie in \tabelle{insertsyntax} bereits beschrieben, ist die Spaltenliste
-hinter den \languageorasql{INSERT INTO}-Schlüssel\-wörtern optional.
-Daraus folgt, dass sich \beispiel{sql07_02} auch so schreiben lässt:
-\begin{lstlisting}[language=oracle_sql,caption={Ein einfaches INSERT ohne Spaltenliste},label=sql07_04]
+        \begin{merke}
+          In der Spaltenliste müssen die Spalten nicht in der Reihenfolge
+          aufgeführt werden, wie sie in der Tabelle vorkommen. Die Reihenfolge
+          in der Spaltenliste ist beliebig!
+        \end{merke}
+        \vspace{1em}
+        Wie in \tabelle{insertsyntax} bereits beschrieben, ist die Spaltenliste
+        hinter den \languageorasql{INSERT INTO}-Schlüssel\-wörtern optional.
+        Daraus folgt, dass sich \beispiel{sql07_02} auch so schreiben lässt:
+        \begin{lstlisting}[language=oracle_sql,caption={Ein einfaches INSERT ohne Spaltenliste},label=sql07_04]
 INSERT INTO Bankfiliale
 VALUES (22, 'Rosenweg', '14a', '06425', 'Ploetzkau');
         \end{lstlisting}
-Das \INSERT-Statement in \beispiel{sql07_04} wird vom DBMS so
-interpretiert, dass der erste Wert in die erste Spalte, der zweite Wert
-in die zweite Spalte, der dritte Wert in die dritte Spalte, usw.
-eingefügt wird.
-\subsubsection{Die INSERT-Anweisung und NULL-Werte}
-Soll mit einer \INSERT-Anweisung ein NULL-Wert in eine Tabellenspalte
-eingefügt werden, geschieht dies mit Hilfe des Schlüsselwortes
-\languageorasql{NULL}. In \beispiel{sql07_05} wird eine neue Zeile in
-die Tabelle \identifier{Bank} eingefügt. Während des
-Einfügevorgangs ist der Wert für die Spalte \identifier{Rating}
-noch nicht bekannt. Die Zeile soll nun ohne diesen Wert eingefügt
-werden.
-\begin{lstlisting}[language=oracle_sql,caption={Ein einfaches \INSERT{} mit \languageorasql{NULL}-Werten},label=sql07_05]
+        Das \INSERT-Statement in \beispiel{sql07_04} wird vom DBMS so
+        interpretiert, dass der erste Wert in die erste Spalte, der zweite Wert
+        in die zweite Spalte, der dritte Wert in die dritte Spalte, usw.
+        eingefügt wird.
+        \subsubsection{Die INSERT-Anweisung und NULL-Werte}
+          Soll mit einer \INSERT-Anweisung ein NULL-Wert in eine Tabellenspalte
+          eingefügt werden, geschieht dies mit Hilfe des Schlüsselwortes
+          \languageorasql{NULL}. In \beispiel{sql07_05} wird eine neue Zeile in
+          die Tabelle \identifier{Bank} eingefügt. Während des
+          Einfügevorgangs ist der Wert für die Spalte \identifier{Rating}
+          noch nicht bekannt. Die Zeile soll nun ohne diesen Wert eingefügt
+          werden.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein einfaches \INSERT{} mit \languageorasql{NULL}-Werten},label=sql07_05]
 INSERT INTO Bank
 VALUES (21, 'KRDCU21SES', 'Lokki Bank of Cyprus', 'Steuerparadies', '42',
         '01067', 'Berlin', NULL);
         \end{lstlisting}
-\begin{merke}
-    Mit Hilfe des Schlüsselwortes \languageorasql{NULL} kann ein
-    \languageorasql{NULL}-Wert in eine Tabellenspalte eingefügt werden.
-\end{merke}
-\subsubsection{Standardwerte}
-\label{defaultvalues}
-Standardwerte werden meist dann genutzt, wenn in eine Spalte häufig
-der gleiche Wert eingefügt werden muss. Sie müssen bei der
-Erstellung einer Tabelle mit definiert werden. Ein Beispiel hierfür
-könnte die Spalte \identifier{Buchungsdatum} der Tabelle
-\identifier{Buchung} sein. Wird eine neue Buchung erfasst, muss immer
-das aktuelle Tagesdatum eingetragen werden. Diese kann durch die
-Funktion \languageorasql{SYSDATE} (Oracle) bzw.
-\languagemssql{GETDATE} (SQL Server) erzeugt werden.
+        \begin{merke}
+          Mit Hilfe des Schlüsselwortes \languageorasql{NULL} kann ein
+          \languageorasql{NULL}-Wert in eine Tabellenspalte eingefügt werden.
+        \end{merke}
+        \subsubsection{Standardwerte}
+          \label{defaultvalues}
+          Standardwerte werden meist dann genutzt, wenn in eine Spalte häufig
+          der gleiche Wert eingefügt werden muss. Sie müssen bei der
+          Erstellung einer Tabelle mit definiert werden. Ein Beispiel hierfür
+          könnte die Spalte \identifier{Buchungsdatum} der Tabelle
+          \identifier{Buchung} sein. Wird eine neue Buchung erfasst, muss immer
+          das aktuelle Tagesdatum eingetragen werden. Diese kann durch die
+          Funktion \languageorasql{SYSDATE} (Oracle) bzw.
+          \languagemssql{GETDATE} (SQL Server) erzeugt werden.
 
-\beispiel{sql07_06} zeigt, wie in die Spalte
-\identifier{Buchungsdatum} das aktuelle Datum, als Standardwert
-eingefügt wird.
-\begin{lstlisting}[language=oracle_sql,caption={Einfügen eines Standardwertes},label=sql07_06]
+          \beispiel{sql07_06} zeigt, wie in die Spalte
+          \identifier{Buchungsdatum} das aktuelle Datum, als Standardwert
+          eingefügt wird.
+          \begin{lstlisting}[language=oracle_sql,caption={Einfügen eines Standardwertes},label=sql07_06]
 INSERT INTO Buchung (Buchungs_ID, Betrag, Buchungsdatum, Konto_ID,
                      Transaktions_ID)
 VALUES (500000, 300.20, DEFAULT, 1, 666666);
           \end{lstlisting}
-\begin{merke}
-    Soll in eine Tabellenspalte deren Standardwert eingefügt werden,
-    muss das Schlüsselwort \languageorasql{DEFAULT} benutzt werden.
-\end{merke}
-\subsubsection{Die INSERT-Anweisung und Unterabfragen}
-Die \INSERT-Anweisung ist in der Lage eine Unterabfrage zu verwenden,
-um den Inhalt einer Tabelle in eine andere Tabelle einzufügen. Dies
-kann z. B. das Kopieren eines Datensatzes in eine Tabelle gleicher
-Struktur sein oder das Abfragen einzelner Attribute, um diese für
-die Berechnung neuer Werte zu nutzen. Die Syntax für die
-\INSERT-Anweisung mit Unterabfrage lautet:
-\begin{lstlisting}[language=oracle_sql,caption={Die \INSERT-Anweisung mit Unterabfrage},label=sql07_07]
+          \begin{merke}
+            Soll in eine Tabellenspalte deren Standardwert eingefügt werden,
+            muss das Schlüsselwort \languageorasql{DEFAULT} benutzt werden.
+          \end{merke}
+        \subsubsection{Die INSERT-Anweisung und Unterabfragen}
+          Die \INSERT-Anweisung ist in der Lage eine Unterabfrage zu verwenden,
+          um den Inhalt einer Tabelle in eine andere Tabelle einzufügen. Dies
+          kann z. B. das Kopieren eines Datensatzes in eine Tabelle gleicher
+          Struktur sein oder das Abfragen einzelner Attribute, um diese für
+          die Berechnung neuer Werte zu nutzen. Die Syntax für die
+          \INSERT-Anweisung mit Unterabfrage lautet:
+          \begin{lstlisting}[language=oracle_sql,caption={Die \INSERT-Anweisung mit Unterabfrage},label=sql07_07]
 INSERT INTO <Tabelle> (<Spalte 1>, <Spalte 2>, ..., <Spalte n>)
 <Unterabfrage>;
           \end{lstlisting}
-Das \INSERT-Statement kann eine beliebig komplexe Unterabfrage, wie in
-\abschnitt{subqueries} beschrieben, verwenden. \beispiel{sql07_08}
-zeigt, wie ein Datensatz aus der Tabelle \identifier{Mitarbeiter} in
-die strukturgleiche Tabelle \identifier{Ausgeschieden} kopiert wird.
-\begin{lstlisting}[language=oracle_sql,caption={Die \INSERT-Anweisung
+          Das \INSERT-Statement kann eine beliebig komplexe Unterabfrage, wie in
+          \abschnitt{subqueries} beschrieben, verwenden. \beispiel{sql07_08}
+          zeigt, wie ein Datensatz aus der Tabelle \identifier{Mitarbeiter} in
+          die strukturgleiche Tabelle \identifier{Ausgeschieden} kopiert wird.
+          \begin{lstlisting}[language=oracle_sql,caption={Die \INSERT-Anweisung
       mit Unterabfrage},label=sql07_08]
 -- Erstellen der Tabelle in Oracle
 CREATE TABLE Ausgeschieden
@@ -161,7 +161,7 @@ AS
   WHERE  1 = 2;
           \end{lstlisting}
 \clearpage
-\begin{lstlisting}[language=oracle_sql]
+          \begin{lstlisting}[language=oracle_sql]
 -- Erstellen der Tabelle in SQL Server
 SELECT *
 INTO   Ausgeschieden
@@ -173,13 +173,13 @@ SELECT *
 FROM   Mitarbeiter
 WHERE  Mitarbeiter_ID = 70;
           \end{lstlisting}
-Der Datensatz des Mitarbeiters Nummer 70 wird in die Tabelle
-\identifier{Ausgeschieden} kopiert.
-\subsection{Datensätze ändern - Die UPDATE-Anweisung}
-Die \UPDATE-Anweisung repräsentiert den Teil von DML der es
-ermöglicht, bestehende Datensätze zu verändern. Die Syntax von
-\UPDATE{} lautet:
-\begin{lstlisting}[language=oracle_sql,caption={Die Syntax des \UPDATE-Kommandos},label=sql07_09]
+          Der Datensatz des Mitarbeiters Nummer 70 wird in die Tabelle
+          \identifier{Ausgeschieden} kopiert.
+      \subsection{Datensätze ändern - Die UPDATE-Anweisung}
+        Die \UPDATE-Anweisung repräsentiert den Teil von DML der es
+        ermöglicht, bestehende Datensätze zu verändern. Die Syntax von
+        \UPDATE{} lautet:
+        \begin{lstlisting}[language=oracle_sql,caption={Die Syntax des \UPDATE-Kommandos},label=sql07_09]
 UPDATE <Tabelle>
 SET    <Spalte 1> = <Wert>,
        <Spalte 2> = <Wert>,
@@ -188,100 +188,100 @@ SET    <Spalte 1> = <Wert>,
 [WHERE  <Where-Klausel>];
         \end{lstlisting}
 
-\begin{center}
-    \tablecaption{Die UPDATE-Anweisung}
-    \label{updatesyntax}
-    \begin{small}
-        \tablefirsthead{
-            \multicolumn{1}{c}{\textbf{Ausdruck}} &
-            \multicolumn{1}{c}{\textbf{Bedeutung}} \\
-            \hline
-        }
-        \tablehead{
-            \multicolumn{1}{c}{\textbf{Ausdruck}} &
-            \multicolumn{1}{c}{\textbf{Bedeutung}} \\
-            \hline
-        }
-        \tabletail{
-            \hline
-        }
-        \tablelasttail{\hline}
-        \begin{supertabular}{|l|p{10.8cm}|}
-            UPDATE <Tabelle> & An dieser Stelle steht der Name der Tabelle
-            oder View, in der ein Datensatz verändert werden soll. \\
-            \hline
-            SET <Spalte 1> = <Wert> & Die SET-Anweisung gibt die Spalten an,
-            deren aktueller Wert durch den neuen Wert <Wert> ersetzt werden
-            soll. Hier können mehrere \enquote{Spalte = Wert}-Paare, durch
-            Komma getrennt, stehen.\\
-            \hline
-            WHERE <Where-Klausel> & Optionale WHERE-Klausel, die den Umfang
-            der Datensätze, die geändert werden sollen, einschränkt. \\
-        \end{supertabular}
-    \end{small}
-\end{center}
-Eine genauso einfache, wie auch gefährliche Form der
-\UPDATE-Anweisung, ist in \beispiel{sql07_10} zu sehen.
-\begin{lstlisting}[language=oracle_sql,caption={Ein gefährliches \UPDATE},label=sql07_10]
+        \begin{center}
+          \tablecaption{Die UPDATE-Anweisung}
+          \label{updatesyntax}
+          \begin{small}
+            \tablefirsthead{
+              \multicolumn{1}{c}{\textbf{Ausdruck}} &
+              \multicolumn{1}{c}{\textbf{Bedeutung}} \\
+              \hline
+            }
+            \tablehead{
+              \multicolumn{1}{c}{\textbf{Ausdruck}} &
+              \multicolumn{1}{c}{\textbf{Bedeutung}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \tablelasttail{\hline}
+            \begin{supertabular}{|l|p{10.8cm}|}
+              UPDATE <Tabelle> & An dieser Stelle steht der Name der Tabelle
+              oder View, in der ein Datensatz verändert werden soll. \\
+              \hline
+              SET <Spalte 1> = <Wert> & Die SET-Anweisung gibt die Spalten an,
+              deren aktueller Wert durch den neuen Wert <Wert> ersetzt werden
+              soll. Hier können mehrere \enquote{Spalte = Wert}-Paare, durch
+              Komma getrennt, stehen.\\
+              \hline
+              WHERE <Where-Klausel> & Optionale WHERE-Klausel, die den Umfang
+              der Datensätze, die geändert werden sollen, einschränkt. \\
+            \end{supertabular}
+          \end{small}
+        \end{center}
+        Eine genauso einfache, wie auch gefährliche Form der
+        \UPDATE-Anweisung, ist in \beispiel{sql07_10} zu sehen.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein gefährliches \UPDATE},label=sql07_10]
 UPDATE Mitarbeiter
 SET    Gehalt = Gehalt * 1.035;
         \end{lstlisting}
-Die Gefahr bei dieser \UPDATE-Anweisung besteht darin, das die Angabe
-einer einschränkenden \WHERE-Klausel fehlt. Das DBMS wird in diesem
-Falle alle Datensätze der Tabelle \identifier{Mitarbeiter} verändern
-und nicht nur eine bestimmte Gruppe.
+        Die Gefahr bei dieser \UPDATE-Anweisung besteht darin, das die Angabe
+        einer einschränkenden \WHERE-Klausel fehlt. Das DBMS wird in diesem
+        Falle alle Datensätze der Tabelle \identifier{Mitarbeiter} verändern
+        und nicht nur eine bestimmte Gruppe.
 
-Soll nur das Gehalt des Mitarbeiters \textit{Max Winter} geändert
-werden, muss das \UPDATE-Statement um eine \WHERE-Klausel erweitert
-werden:
-\begin{lstlisting}[language=oracle_sql,caption={Ein korrektes \UPDATE},label=sql07_11]
+        Soll nur das Gehalt des Mitarbeiters \textit{Max Winter} geändert
+        werden, muss das \UPDATE-Statement um eine \WHERE-Klausel erweitert
+        werden:
+        \begin{lstlisting}[language=oracle_sql,caption={Ein korrektes \UPDATE},label=sql07_11]
 UPDATE Mitarbeiter
 SET    Gehalt = Gehalt * 1.035
 WHERE  Mitarbeiter_ID = 1;
         \end{lstlisting}
-Wie in \tabelle{updatesyntax} zu sehen ist, können auch mehrere
-Spalten eines Datensatzes gleichzeitig geändert werden. In
-\beispiel{sql07_12} wird die Mitarbeiterin \enquote{Lena Hermann}
-(Mitarbeiter\_ID 40) von Filiale 4 nach Filiale 8 versetzt und
-gleichzeitig wird ihre Provision von 20 \% auf 30 \% erhöht.
-\begin{lstlisting}[language=oracle_sql,caption={Ein korrektes \UPDATE{} mehrerer Spalten},label=sql07_12]
+        Wie in \tabelle{updatesyntax} zu sehen ist, können auch mehrere
+        Spalten eines Datensatzes gleichzeitig geändert werden. In
+        \beispiel{sql07_12} wird die Mitarbeiterin \enquote{Lena Hermann}
+        (Mitarbeiter\_ID 40) von Filiale 4 nach Filiale 8 versetzt und
+        gleichzeitig wird ihre Provision von 20 \% auf 30 \% erhöht.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein korrektes \UPDATE{} mehrerer Spalten},label=sql07_12]
 UPDATE Mitarbeiter
 SET    Bankfiliale_ID = 8,
        Provision = 30
 WHERE  Mitarbeiter_ID = 40;
         \end{lstlisting}
-Wo Licht ist, da ist aber immer auch Schatten. Wenn bei einem
-Mitarbeiter die Provision erhöht wird, muss sie bei einem anderen
-gekürzt oder gestrichen werden. Der Mitarbeiter \enquote{Lukas
-    Weiß} hat im vergangenen Geschäftsjahr ein sehr schlechtes
-Ergebnis erziehlt, weshalb ihm die Provision gestrichen wird. Dies
-geschieht, in dem die Spalte \identifier{Provision} mit einem
-\languageorasql{NULL}-Wert gefüllt wird.
-\begin{lstlisting}[language=oracle_sql,caption={Da geht sie hin, die Provision},label=sql07_13]
+        Wo Licht ist, da ist aber immer auch Schatten. Wenn bei einem
+        Mitarbeiter die Provision erhöht wird, muss sie bei einem anderen
+        gekürzt oder gestrichen werden. Der Mitarbeiter \enquote{Lukas
+        Weiß} hat im vergangenen Geschäftsjahr ein sehr schlechtes
+        Ergebnis erziehlt, weshalb ihm die Provision gestrichen wird. Dies
+        geschieht, in dem die Spalte \identifier{Provision} mit einem
+        \languageorasql{NULL}-Wert gefüllt wird.
+        \begin{lstlisting}[language=oracle_sql,caption={Da geht sie hin, die Provision},label=sql07_13]
 UPDATE Mitarbeiter
 SET    Provision = NULL
 WHERE  Mitarbeiter_ID = 38;
         \end{lstlisting}
-Nicht nur NULL-Werte, auch Standardwerte können innerhalb eines
-\UPDATE-Statements genutzt werden.
-\begin{lstlisting}[language=oracle_sql,caption={Ein \UPDATE{} mit Standardwert},label=sql07_14]
+        Nicht nur NULL-Werte, auch Standardwerte können innerhalb eines
+        \UPDATE-Statements genutzt werden.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein \UPDATE{} mit Standardwert},label=sql07_14]
 UPDATE Mitarbeiter
 SET    Gehalt = DEFAULT
 WHERE  Mitarbeiter_ID = 82;
         \end{lstlisting}
-\beispiel{sql07_14} geht davon aus, dass für die Spalte
-\identifier{Gehalt} ein Standardwert von \enquote{1500} festgelegt
-worden ist.
-\subsubsection{UPDATE mit Unterabfrage}
-Wie bei der \INSERT-Anweisung, kann auch bei der \UPDATE-Anweisung
-eine Unterabfrage genutzt werden. Diese kann an zwei Stellen stehen:
-In der \languageorasql{SET}-Klausel und in der \WHERE-Klausel. Hierzu
-einige Beispiele.
+        \beispiel{sql07_14} geht davon aus, dass für die Spalte
+        \identifier{Gehalt} ein Standardwert von \enquote{1500} festgelegt
+        worden ist.
+        \subsubsection{UPDATE mit Unterabfrage}
+          Wie bei der \INSERT-Anweisung, kann auch bei der \UPDATE-Anweisung
+          eine Unterabfrage genutzt werden. Diese kann an zwei Stellen stehen:
+          In der \languageorasql{SET}-Klausel und in der \WHERE-Klausel. Hierzu
+          einige Beispiele.
 
-Das Gehalt des Mitarbeiters \enquote{Jannis Friedrich} soll geändert
-werden. Das neue Gehalt muss 20 \% des Gehalts seines unmittelbaren
-Vorgesetzten betragen.
-\begin{lstlisting}[language=oracle_sql,caption={\UPDATE{} mit Unterabfrage},label=sql07_15]
+          Das Gehalt des Mitarbeiters \enquote{Jannis Friedrich} soll geändert
+          werden. Das neue Gehalt muss 20 \% des Gehalts seines unmittelbaren
+          Vorgesetzten betragen.
+          \begin{lstlisting}[language=oracle_sql,caption={\UPDATE{} mit Unterabfrage},label=sql07_15]
 UPDATE Mitarbeiter
 SET    Gehalt = (SELECT v.Gehalt
                  FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
@@ -289,17 +289,17 @@ SET    Gehalt = (SELECT v.Gehalt
                  WHERE  m.Mitarbeiter_ID = 79) * 0.20
 WHERE  Mitarbeiter_ID = 79;
           \end{lstlisting}
-Mit Hilfe der folgenden \SELECT-Anweisung kann die Korrektheit des
-\UPDATE-Statements aus \beispiel{sql07_15} nachgewiesen werden.
-\begin{lstlisting}[language=oracle_sql,caption={Der Beweis},label=sql07_16]
+          Mit Hilfe der folgenden \SELECT-Anweisung kann die Korrektheit des
+          \UPDATE-Statements aus \beispiel{sql07_15} nachgewiesen werden.
+          \begin{lstlisting}[language=oracle_sql,caption={Der Beweis},label=sql07_16]
 SELECT Mitarbeiter_ID, Vorname, Nachname, Gehalt
 FROM   Mitarbeiter
 WHERE  Mitarbeiter_ID IN (79, 21);
           \end{lstlisting}
-In \beispiel{sql07_15} wird die Mitarbeiter\_ID 79 an zwei Stellen
-angegeben. Durch eine Veränderung des \UPDATE-Statements kann dies
-auf eine Angabe reduziert werden.
-\begin{lstlisting}[language=oracle_sql,caption={\UPDATE{} mit
+          In \beispiel{sql07_15} wird die Mitarbeiter\_ID 79 an zwei Stellen
+          angegeben. Durch eine Veränderung des \UPDATE-Statements kann dies
+          auf eine Angabe reduziert werden.
+          \begin{lstlisting}[language=oracle_sql,caption={\UPDATE{} mit
 korrelierter Unterabfrage in Oracle},label=sql07_17]
 UPDATE Mitarbeiter m1
 SET    Gehalt = (SELECT v.Gehalt
@@ -309,16 +309,16 @@ SET    Gehalt = (SELECT v.Gehalt
 WHERE  m1.Mitarbeiter_ID = 79;
           \end{lstlisting}
 
-In der \UPDATE-Klausel wird ein Alias für die Tabelle
-\identifier{Mitarbeiter} festgelegt. Diesen Alias benutzt die
-Unterabfrage, um auf die Werte des äußeren Statements, des
-\UPDATE-Statements, zuzugreifen. Dadurch genügt es, wenn die
-Mitarbeiter\_ID nur einmal gesetzt wird. Im MS SQL Server muss der
-Alias für die Tabelle \identifier{Mitarbeiter} über eine
-\FROM-Klausel definiert werden, so dass sich \beispiel{sql07_17} wie
-folgt ändert:
+          In der \UPDATE-Klausel wird ein Alias für die Tabelle
+          \identifier{Mitarbeiter} festgelegt. Diesen Alias benutzt die
+          Unterabfrage, um auf die Werte des äußeren Statements, des
+          \UPDATE-Statements, zuzugreifen. Dadurch genügt es, wenn die
+          Mitarbeiter\_ID nur einmal gesetzt wird. Im MS SQL Server muss der
+          Alias für die Tabelle \identifier{Mitarbeiter} über eine
+          \FROM-Klausel definiert werden, so dass sich \beispiel{sql07_17} wie
+          folgt ändert:
 \clearpage
-\begin{lstlisting}[language=ms_sql,caption={\UPDATE{} mit
+          \begin{lstlisting}[language=ms_sql,caption={\UPDATE{} mit
 korrelierter Unterabfrage im MS SQL Server},label=sql07_171]
 UPDATE m1
 SET    Gehalt = (SELECT v.Gehalt
@@ -329,13 +329,13 @@ FROM Mitarbeiter m1
 WHERE  m1.Mitarbeiter_ID = 79;
           \end{lstlisting}
 
-\enquote{Was des einen Freud ist, ist des andern Leid}. Dieser
-Grundsatz trifft auch bei der Gehaltserhöhung für Herrn Friedrich
-zu. Da er nun 400 EUR mehr Gehalt bekommt, müssen bei den anderen
-Angestellten dementsprechende Einsparungen vorgenommen  werden. Für
-alle Mitarbeiter der Filiale 14, mit Ausnahme von Herrn Friedrich,
-muss das Gehalt um 2~\% gekürzt werden.
-\begin{lstlisting}[language=oracle_sql,caption={Gehaltskürzung für eine ganze Filiale},label=sql07_18]
+          \enquote{Was des einen Freud ist, ist des andern Leid}. Dieser
+          Grundsatz trifft auch bei der Gehaltserhöhung für Herrn Friedrich
+          zu. Da er nun 400 EUR mehr Gehalt bekommt, müssen bei den anderen
+          Angestellten dementsprechende Einsparungen vorgenommen  werden. Für
+          alle Mitarbeiter der Filiale 14, mit Ausnahme von Herrn Friedrich,
+          muss das Gehalt um 2~\% gekürzt werden.
+          \begin{lstlisting}[language=oracle_sql,caption={Gehaltskürzung für eine ganze Filiale},label=sql07_18]
 UPDATE Mitarbeiter
 SET    Gehalt = Gehalt * 0.98
 WHERE  Mitarbeiter_ID IN (SELECT Mitarbeiter_ID
@@ -343,186 +343,185 @@ WHERE  Mitarbeiter_ID IN (SELECT Mitarbeiter_ID
                           WHERE  Bankfiliale_ID = 14
                             AND  Mitarbeiter_ID <> 79);
           \end{lstlisting}
-\subsection{Datensätze löschen - Die DELETE-Anweisung}
-Die dritte und letzte der DML-Anweisungen, ist die \DELETE-Anweisung.
-Sie ermöglicht es, Datensätze zu löschen. Die Syntax der
-\DELETE-Anweisung lautet wie folgt:
-\begin{lstlisting}[language=oracle_sql,caption={Die \DELETE-Anweisung},label=sql07_19]
+      \subsection{Datensätze löschen - Die DELETE-Anweisung}
+        Die dritte und letzte der DML-Anweisungen, ist die \DELETE-Anweisung.
+        Sie ermöglicht es, Datensätze zu löschen. Die Syntax der
+        \DELETE-Anweisung lautet wie folgt:
+        \begin{lstlisting}[language=oracle_sql,caption={Die \DELETE-Anweisung},label=sql07_19]
 DELETE FROM <Tabelle>
 WHERE <Where-Klausel>;
         \end{lstlisting}
-\begin{center}
-    \tablecaption{Die DELETE-Anweisung}
-    \label{deletesyntax}
-    \begin{small}
-        \tablefirsthead{
-            \multicolumn{1}{c}{\textbf{Ausdruck}} &
-            \multicolumn{1}{c}{\textbf{Bedeutung}} \\
-            \hline
-        }
-        \tablehead{
-            \multicolumn{1}{c}{\textbf{Ausdruck}} &
-            \multicolumn{1}{c}{\textbf{Bedeutung}} \\
-            \hline
-        }
-        \tabletail{
-            \hline
-        }
-        \begin{supertabular}{|l|p{10.8cm}|}
-            DELETE <Tabelle> & An dieser Stelle steht der Name der Tabelle
-            oder View, aus der Datensätze gelöscht werden sollen. \\
-            \hline
-            WHERE <Where-Klausel> & Optionale WHERE-Klausel, die den Umfang
-            der Datensätze begrenzt, die gelöscht werden sollen. \\
-        \end{supertabular}
-    \end{small}
-\end{center}
-Ähnlich wie bei der \UPDATE-Anweisung, gibt es auch bei der
-\DELETE-Anweisung eine kleine Falle. \beispiel{sql07_20} zeigt, wie man
-mit einer sehr einfachen \DELETE-Anweisung in große Schwierigkeiten
-geraten kann.
-\begin{lstlisting}[language=oracle_sql,caption={Eine tödliche \DELETE-Anweisung},label=sql07_20]
+        \begin{center}
+          \tablecaption{Die DELETE-Anweisung}
+          \label{deletesyntax}
+          \begin{small}
+            \tablefirsthead{
+              \multicolumn{1}{c}{\textbf{Ausdruck}} &
+              \multicolumn{1}{c}{\textbf{Bedeutung}} \\
+              \hline
+            }
+            \tablehead{
+              \multicolumn{1}{c}{\textbf{Ausdruck}} &
+              \multicolumn{1}{c}{\textbf{Bedeutung}} \\
+              \hline
+            }
+            \tabletail{
+              \hline
+            }
+            \begin{supertabular}{|l|p{10.8cm}|}
+              DELETE <Tabelle> & An dieser Stelle steht der Name der Tabelle
+              oder View, aus der Datensätze gelöscht werden sollen. \\
+              \hline
+              WHERE <Where-Klausel> & Optionale WHERE-Klausel, die den Umfang
+              der Datensätze begrenzt, die gelöscht werden sollen. \\
+            \end{supertabular}
+          \end{small}
+        \end{center}
+        Ähnlich wie bei der \UPDATE-Anweisung, gibt es auch bei der
+        \DELETE-Anweisung eine kleine Falle. \beispiel{sql07_20} zeigt, wie man
+        mit einer sehr einfachen \DELETE-Anweisung in große Schwierigkeiten
+        geraten kann.
+        \begin{lstlisting}[language=oracle_sql,caption={Eine tödliche \DELETE-Anweisung},label=sql07_20]
 DELETE FROM Buchung;
         \end{lstlisting}
-Die Auswirkungen der \DELETE-Anweisung aus \beispiel{sql07_20} sind
-einfach und kurz erklärt. Es werden alle Datensätze aus der Tabelle
-\identifier{Buchung} gelöscht. Des Rätsels Lösung ist die gleiche
-wie beim \UPDATE-Statement: Es fehlt die einschränkende
-\WHERE-Klausel. Um beispielsweise nur eine einzelne Buchung zu löschen
-ist folgende Modifikation notwendig:
-\begin{lstlisting}[language=oracle_sql,caption={Schon viel besser!!!},label=sql07_21]
+        Die Auswirkungen der \DELETE-Anweisung aus \beispiel{sql07_20} sind
+        einfach und kurz erklärt. Es werden alle Datensätze aus der Tabelle
+        \identifier{Buchung} gelöscht. Des Rätsels Lösung ist die gleiche
+        wie beim \UPDATE-Statement: Es fehlt die einschränkende
+        \WHERE-Klausel. Um beispielsweise nur eine einzelne Buchung zu löschen
+        ist folgende Modifikation notwendig:
+        \begin{lstlisting}[language=oracle_sql,caption={Schon viel besser!!!},label=sql07_21]
 DELETE FROM Buchung
 WHERE  Transaktions_ID = 345;
         \end{lstlisting}
-\subsubsection{DELETE mit Unterabfrage}
-Auch in der \DELETE-Anweisung kann eine Unterabfrage genutzt werden.
-Hierzu ein einfaches Beispiel: Da die Bankfiliale, in der
-Poststraße, in Aschersleben aufgelöst wird, müssen leider auch
-die dort beschäftigten Mitarbeiter wieder dem Arbeitsmarkt zur
-Verfügung gestellt werden.
-\begin{lstlisting}[language=oracle_sql,caption={\DELETE{} mit Unterabfrage},label=sql07_22]
+        \subsubsection{DELETE mit Unterabfrage}
+         Auch in der \DELETE-Anweisung kann eine Unterabfrage genutzt werden.
+         Hierzu ein einfaches Beispiel: Da die Bankfiliale, in der
+         Poststraße, in Aschersleben aufgelöst wird, müssen leider auch
+         die dort beschäftigten Mitarbeiter wieder dem Arbeitsmarkt zur
+         Verfügung gestellt werden.
+          \begin{lstlisting}[language=oracle_sql,caption={\DELETE{} mit Unterabfrage},label=sql07_22]
 DELETE FROM Mitarbeiter
 WHERE  Bankfiliale_ID = (SELECT Bankfiliale_ID
                          FROM   Bankfiliale
                          WHERE  LOWER(Strasse) LIKE 'poststrasse'
                            AND  PLZ = '06449');
           \end{lstlisting}
-\section{Das Transaktionskonzept - COMMIT und ROLLBACK}
-Die Datenbankmanagementsysteme Oracle und SQL Server sind beides
-transaktionsbasierte DBMS. Das bedeutet, dass alle DML-Anweisungen
-innerhalb einer Transaktion ablaufen. Die Frage die sich dabei stellt ist:
-\enquote{Was ist eine Transaktion?} Der Begriff Transaktion ist dem
-spätlateinischen \enquote{transagere = Überführen, Übertragen}
-entliehen und den meisten Leuten aus dem Finanzbereich bekannt. Man denke
-einfach an die Überweisung eines Betrags von Konto A auf Konto B. Der
-vereinfachte Ablauf einer solchen Finanztransaktion könnte wie folgt
-aussehen:
-\begin{enumerate}
-    \item Kontoinhaber A füllt einen Überweisungsträger aus. Damit
-          beginnt die Transaktion.
-    \item Die Bank des Kontoinhabers A zieht den Überweisungsbetrag von
-          seinem Konto ab und übermittelt die Informationen bezüglich der
-          Überweisung an Bank B.
-    \item Bank B schreibt den Betrag auf dem Konto von Kontoinhaber B gut.
-    \item Der Vorgang wird in einem Journal protokolliert. Damit ist die
-          Überweisung abgeschlossen.
-\end{enumerate}
-Warum aber der Begriff der Transaktion? Die Antwort auf diese Frage
-hängt eng mit der Antwort auf eine andere Frage zusammen: \enquote{Was
-    wäre wenn, nach der Abbuchung von Konto A der Vorgang unterbrochen
-    würde?} In so einem Falle ist das gewohnte Verhalten, das alle bisher
-gemachten Schritte wieder rückgängig gemacht werden, d. h. der
-abgebuchte Betrag muss wieder auf das Konto von A zurückgebucht werden.
-Würde dies nicht geschehen, wäre das Geld von A verschwunden.
+    \section{Das Transaktionskonzept - COMMIT und ROLLBACK}
+      Die Datenbankmanagementsysteme Oracle und SQL Server sind beides
+      transaktionsbasierte DBMS. Das bedeutet, dass alle DML-Anweisungen
+      innerhalb einer Transaktion ablaufen. Die Frage die sich dabei stellt ist:
+      \enquote{Was ist eine Transaktion?} Der Begriff Transaktion ist dem
+      spätlateinischen \enquote{transagere = Überführen, Übertragen}
+      entliehen und den meisten Leuten aus dem Finanzbereich bekannt. Man denke
+      einfach an die Überweisung eines Betrags von Konto A auf Konto B. Der
+      vereinfachte Ablauf einer solchen Finanztransaktion könnte wie folgt
+      aussehen:
+      \begin{enumerate}
+        \item Kontoinhaber A füllt einen Überweisungsträger aus. Damit
+        beginnt die Transaktion.
+        \item Die Bank des Kontoinhabers A zieht den Überweisungsbetrag von
+        seinem Konto ab und übermittelt die Informationen bezüglich der
+        Überweisung an Bank B.
+        \item Bank B schreibt den Betrag auf dem Konto von Kontoinhaber B gut.
+        \item Der Vorgang wird in einem Journal protokolliert. Damit ist die
+        Überweisung abgeschlossen.
+      \end{enumerate}
+      Warum aber der Begriff der Transaktion? Die Antwort auf diese Frage
+      hängt eng mit der Antwort auf eine andere Frage zusammen: \enquote{Was
+      wäre wenn, nach der Abbuchung von Konto A der Vorgang unterbrochen
+      würde?} In so einem Falle ist das gewohnte Verhalten, das alle bisher
+      gemachten Schritte wieder rückgängig gemacht werden, d. h. der
+      abgebuchte Betrag muss wieder auf das Konto von A zurückgebucht werden.
+      Würde dies nicht geschehen, wäre das Geld von A verschwunden.
 
-Das Rückgängigmachen aller bisher gemachten Aktionen ist aber nur dann
-möglich, wenn
-\begin{itemize}
-    \item genau bekannt ist, welche Aktionen zusammengehören und
-    \item  in welcher Reihenfolge sie stattgefunden haben.
-\end{itemize}
-Deshalb werden alle Aktionen in einer größeren Einheit, der
-Transaktion, zusammengefaßt. Es muss also im Ernstfall nur ermittelt
-werden, zu welcher Transaktion die letzte Aktion gehörte um alle
-Vorgängeraktionen ermitteln zu können.
+      Das Rückgängigmachen aller bisher gemachten Aktionen ist aber nur dann
+      möglich, wenn
+      \begin{itemize}
+        \item genau bekannt ist, welche Aktionen zusammengehören und
+        \item  in welcher Reihenfolge sie stattgefunden haben.
+      \end{itemize}
+      Deshalb werden alle Aktionen in einer größeren Einheit, der
+      Transaktion, zusammengefaßt. Es muss also im Ernstfall nur ermittelt
+      werden, zu welcher Transaktion die letzte Aktion gehörte um alle
+      Vorgängeraktionen ermitteln zu können.
 
-\begin{merke}
-    Definition \textit{Transaktion}: Eine Transaktionen ist eine logische
-    Arbeitseinheit, die einen oder mehrere Arbeitsschritte enthält.
-    Transaktionen sind in sich geschlossene Einheiten. Die Ergebnisse aller
-    Arbeitsschritte einer Transaktion können entweder übernommen oder
-    rückgängig gemacht werden.
-\end{merke}
-Dieses Konzept lässt sich auch auf Datenbanken übertragen. Werden
-mehrere zusammengehörende SQL-Anweisungen ausgeführt, muss auch
-gewährleistet werden, dass entweder alle erfolgreich beendet werden oder
-aber alle rückgängig gemacht werden.
-\subsection{Beginn und Ende einer Transaktion}
-\subsubsection{Wann beginnt eine Transaktion?}
-In Oracle startet eine Transaktion:
-\begin{itemize}
-    \item Implizit bei jedem ersten DML-Statement.
-    \item Explizit durch die Anweisung \languageorasql{SET TRANSACTION}.
-\end{itemize}
-In MS SQL Server startet eine Transaktion:
-\begin{itemize}
-    \item Wenn der implizite Transaktionsmodus aktiviert wurde, bei
-          jedem ersten DML-State\-ment.
-    \item Explizit durch die Anweisung \languagemssql{BEGIN TRANSACTION}
-\end{itemize}
-\begin{merke}
-    Das Standardverhalten in SQL Server ist, dass jedes einzelne
-    DML-Statement als eigene Transaktion abgehandelt wird. Zur
-    Ak\-ti\-vie\-rung des impliziten Transaktionsmodus muss die
-    SQL-Anweisung \languagemssql{SET IMPLICIT_TRANSACTIONS ON} abgesetzt
-    werden.
-\end{merke}
-\subsubsection{Wann endet eine Transaktion?}
-Eine Transaktion kann an zwei verschiedenen Punkten enden:
-\begin{itemize}
-    \item Sie wird erfolgreich abgeschlossen.
-    \item Sie wird manuell rückgängig gemacht.
-\end{itemize}
-\subsection{Eine Transaktion erfolgreich abschließen}
-\subsubsection{Das COMMIT-Kommando}
-Wenn alle Statements einer Transaktion erfolgreich verlaufen sind, muss
-die Transaktion beendet werden, um die gemachten Änderungen dauerhaft
-in der Datenbank zu speichern. Dies geschieht in Oracle mit Hilfe des
-Kommandos \COMMIT. Wird eine Transaktion nicht mit \COMMIT{} abgeschlossen, werden
-automatisch alle unbestätigten Änderungen rückgängig gemacht.
-\beispiel{sql07_23} ff. zeigen dieses Verhalten.
-\begin{lstlisting}[language=oracle_sql,caption={Eine Transaktion wird abgebrochen},label=sql07_23]
+      \begin{merke}
+        Definition \textit{Transaktion}: Eine Transaktionen ist eine logische
+        Arbeitseinheit, die einen oder mehrere Arbeitsschritte enthält.
+        Transaktionen sind in sich geschlossene Einheiten. Die Ergebnisse aller
+        Arbeitsschritte einer Transaktion können entweder übernommen oder
+        rückgängig gemacht werden.
+      \end{merke}
+      Dieses Konzept lässt sich auch auf Datenbanken übertragen. Werden
+      mehrere zusammengehörende SQL-Anweisungen ausgeführt, muss auch
+      gewährleistet werden, dass entweder alle erfolgreich beendet werden oder
+      aber alle rückgängig gemacht werden.
+      \subsection{Beginn und Ende einer Transaktion}
+        \subsubsection{Wann beginnt eine Transaktion?}
+          In Oracle startet eine Transaktion:
+          \begin{itemize}
+            \item Implizit bei jedem ersten DML-Statement.
+            \item Explizit durch die Anweisung \languageorasql{SET TRANSACTION}.
+          \end{itemize}
+          In MS SQL Server startet eine Transaktion:
+          \begin{itemize}
+            \item Wenn der implizite Transaktionsmodus aktiviert wurde, bei
+            jedem ersten DML-State\-ment.
+            \item Explizit durch die Anweisung \languagemssql{BEGIN TRANSACTION}
+          \end{itemize}
+          \begin{merke}
+            Das Standardverhalten in SQL Server ist, dass jedes einzelne
+            DML-Statement als eigene Transaktion abgehandelt wird. Zur
+            Ak\-ti\-vie\-rung des impliziten Transaktionsmodus muss die
+            SQL-Anweisung \languagemssql{SET IMPLICIT_TRANSACTIONS ON} abgesetzt
+            werden.
+          \end{merke}
+        \subsubsection{Wann endet eine Transaktion?}
+          Eine Transaktion kann an zwei verschiedenen Punkten enden:
+          \begin{itemize}
+            \item Sie wird erfolgreich abgeschlossen.
+            \item Sie wird manuell rückgängig gemacht.
+          \end{itemize}
+      \subsection{Eine Transaktion erfolgreich abschließen}
+        \subsubsection{Das COMMIT-Kommando}
+          Wenn alle Statements einer Transaktion erfolgreich verlaufen sind, muss
+          die Transaktion beendet werden, um die gemachten Änderungen dauerhaft
+          in der Datenbank zu speichern. Dies geschieht in Oracle mit Hilfe des
+          Kommandos \COMMIT. Wird eine Transaktion nicht mit \COMMIT{} abgeschlossen, werden
+          automatisch alle unbestätigten Änderungen rückgängig gemacht.
+          \beispiel{sql07_23} ff. zeigen dieses Verhalten.
+          \begin{lstlisting}[language=oracle_sql,caption={Eine Transaktion wird abgebrochen},label=sql07_23]
 SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
           \end{lstlisting}
-\clearpage
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-            \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-\begin{lstlisting}[language=oracle_sql,label=sql07_24]
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          \begin{lstlisting}[language=oracle_sql,label=sql07_24]
 INSERT INTO Bank
 VALUES      (21, 'NOSDEL21SES', 'Lokki Bank of Cyprus',
              'Strasse der Europaeischen Union', '3', '00000', 'Pleitingen',
@@ -532,33 +531,34 @@ SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
         \end{lstlisting}
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-                21 & NOSDEL21SES & Lokki Bank of Cyprus  \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-\begin{lstlisting}[language=oracle_sql,label=sql07_25]
+\clearpage
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                  21 & NOSDEL21SES & Lokki Bank of Cyprus  \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          \begin{lstlisting}[language=oracle_sql,label=sql07_25]
 -- An dieser Stelle findet ein Absturz der Client-Anwendung statt
 -- und die Anwendung wird neu gestartet.
 
@@ -566,36 +566,36 @@ SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
           \end{lstlisting}
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-            \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-Weil vor dem Absturz der Client-Anwendung die Transaktion nicht mit
-\COMMIT{} abgeschlossen wurde, ist die gemachte Änderung wieder
-verschwunden. Das gleiche Szenario nun noch einmal, aber mit \COMMIT{}
-am Ende.
-\begin{lstlisting}[language=oracle_sql,label=sql07_26]
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          Weil vor dem Absturz der Client-Anwendung die Transaktion nicht mit
+          \COMMIT{} abgeschlossen wurde, ist die gemachte Änderung wieder
+          verschwunden. Das gleiche Szenario nun noch einmal, aber mit \COMMIT{}
+          am Ende.
+          \begin{lstlisting}[language=oracle_sql,label=sql07_26]
 INSERT INTO Bank
 VALUES      (21, 'NOSDEL21SES', 'Lokki Bank of Cyprus',
              'Strasse der Europaeischen Union', '3', '00000', 'Pleitingen',
@@ -607,34 +607,34 @@ WHERE  Bank_ID >= 18;
 
 COMMIT;
           \end{lstlisting}
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-            %               \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-                21 & NOSDEL21SES & Lokki Bank of Cyprus  \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-
-\begin{lstlisting}[language=oracle_sql,label=sql07_27]
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+  %               \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                  21 & NOSDEL21SES & Lokki Bank of Cyprus  \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+\clearpage
+         \begin{lstlisting}[language=oracle_sql,label=sql07_27]
 -- An dieser Stelle wird die Client-Anwendung beendet und
 -- neugestartet.
 
@@ -642,42 +642,42 @@ SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
           \end{lstlisting}
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-                21 & NOSDEL21SES & Lokki Bank of Cyprus  \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-\begin{merke}
-    Die \COMMIT-Anweisung persistiert\footnote{persistent = dauerhaft}
-    die Aktionen einer Transaktion in der Datenbank. Ohne \COMMIT{} werden alle
-    Änderungen wieder zurückgerollt.
-\end{merke}
-\subsubsection{COMMIT in Microsoft SQL Server}
-In Microsoft SQL Server muss dem \COMMIT-Kommando noch das
-Schlüsselwort \languagemssql{TRANSACTION} (oder
-\languagemssql{TRAN}) hinzugefügt werden. Dies beendet sowohl
-implizite als auch explizite Transaktionen.
-\begin{lstlisting}[language=ms_sql,caption={Eine implizite Transaktion
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                  21 & NOSDEL21SES & Lokki Bank of Cyprus  \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          \begin{merke}
+            Die \COMMIT-Anweisung persistiert\footnote{persistent = dauerhaft}
+  					die Aktionen einer Transaktion in der Datenbank. Ohne \COMMIT{} werden alle
+  					Änderungen wieder zurückgerollt.
+          \end{merke}
+        \subsubsection{COMMIT in Microsoft SQL Server}
+          In Microsoft SQL Server muss dem \COMMIT-Kommando noch das
+          Schlüsselwort \languagemssql{TRANSACTION} (oder
+          \languagemssql{TRAN}) hinzugefügt werden. Dies beendet sowohl
+          implizite als auch explizite Transaktionen.
+        \begin{lstlisting}[language=ms_sql,caption={Eine implizite Transaktion
         committen},label=sql07_27a]
 SET IMPLICIT_TRANSACTIONS ON
 INSERT INTO Bank
@@ -691,7 +691,8 @@ WHERE  Bank_ID >= 18;
 
 COMMIT TRAN;
         \end{lstlisting}
-\begin{lstlisting}[language=ms_sql,caption={Eine explizite Transaktion
+\clearpage
+        \begin{lstlisting}[language=ms_sql,caption={Eine explizite Transaktion
         committen},label=sql07_27b]
 BEGIN TRANSACTION
 INSERT INTO Bank
@@ -704,46 +705,45 @@ FROM   Bank
 WHERE  Bank_ID >= 18;
 COMMIT TRAN;
         \end{lstlisting}
-
-\subsection{Eine Transaktion rückgängig machen}
-\subsubsection{Das ROLLBACK-Kommando}
-Das Kommando \ROLLBACK{} stellt das Gegenstück zu \COMMIT{} dar.
-Sollen die Aktionen einer Transaktion nicht dauerhaft in der Datenbank
-gespeichert werden, können sie mit \ROLLBACK{} zurückgerollt
-(rückgängig gemacht) werden.
-\begin{lstlisting}[language=oracle_sql,caption={Eine Transaktion wird abgebrochen},label=sql07_28]
+          
+      \subsection{Eine Transaktion rückgängig machen}
+        \subsubsection{Das ROLLBACK-Kommando}
+          Das Kommando \ROLLBACK{} stellt das Gegenstück zu \COMMIT{} dar.
+          Sollen die Aktionen einer Transaktion nicht dauerhaft in der Datenbank
+          gespeichert werden, können sie mit \ROLLBACK{} zurückgerollt
+          (rückgängig gemacht) werden.
+          \begin{lstlisting}[language=oracle_sql,caption={Eine Transaktion wird abgebrochen},label=sql07_28]
 SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
           \end{lstlisting}
-\clearpage
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-                21 & NOSDEL21SES & Lokki Bank of Cyprus \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-\begin{lstlisting}[language=oracle_sql,label=sql07_29]
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                  21 & NOSDEL21SES & Lokki Bank of Cyprus \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          \begin{lstlisting}[language=oracle_sql,label=sql07_29]
 DELETE FROM Bank
 WHERE  Bank_ID = 21;
 
@@ -751,68 +751,68 @@ SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
           \end{lstlisting}
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-            \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-\begin{lstlisting}[language=oracle_sql,label=sql07_30]
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{3 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          \begin{lstlisting}[language=oracle_sql,label=sql07_30]
 ROLLBACK;
 
 SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
           \end{lstlisting}
-\begin{center}
-    \begin{small}
-        \changefont{pcr}{m}{n}
-        \tablefirsthead {
-            \multicolumn{1}{r}{\textbf{BANK\_ID}} &
-            \multicolumn{1}{l}{\textbf{BIC}} &
-            \multicolumn{1}{l}{\textbf{NAME}} \\
-            \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
-        }
-        \tablehead{}
-        \tabletail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \tablelasttail {
-            \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
-        }
-        \begin{msoraclesql}
-            \begin{supertabular}{rll}
-                18 & BVXYDE21SES & Bank der Landwirte \\
-                19 & BGIODE21SES & Austrailian Bank Association \\
-                20 & DFGHDE21SES & South Africa Bank \\
-                21 & NOSDEL21SES & Lokki Bank of Cyprus \\
-            \end{supertabular}
-        \end{msoraclesql}
-    \end{small}
-\end{center}
-\begin{merke}
-    Die Anweisung \ROLLBACK{} rollt alle Aktionen einer Transaktion
-    zurück und beendet sie.
-\end{merke}
-\subsubsection{ROLLBACK in Microsoft SQL Server}
-Genau wie das \COMMIT-Kommando, muss auch das \ROLLBACK-Kommando um
-das Schlüsselwort \languagemssql{TRANSACTION} ergänzt werden.
+          \begin{center}
+            \begin{small}
+              \changefont{pcr}{m}{n}
+              \tablefirsthead {
+                \multicolumn{1}{r}{\textbf{BANK\_ID}} &
+                \multicolumn{1}{l}{\textbf{BIC}} &
+                \multicolumn{1}{l}{\textbf{NAME}} \\
+                \cmidrule(r){1-1}\cmidrule(l){2-2}\cmidrule(l){3-3}
+              }
+              \tablehead{}
+              \tabletail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \tablelasttail {
+                \multicolumn{3}{l}{\textbf{4 Zeilen ausgewählt}} \\
+              }
+              \begin{msoraclesql}
+                \begin{supertabular}{rll}
+                  18 & BVXYDE21SES & Bank der Landwirte \\
+                  19 & BGIODE21SES & Austrailian Bank Association \\
+                  20 & DFGHDE21SES & South Africa Bank \\
+                  21 & NOSDEL21SES & Lokki Bank of Cyprus \\
+                \end{supertabular}
+              \end{msoraclesql}
+            \end{small}
+          \end{center}
+          \begin{merke}
+            Die Anweisung \ROLLBACK{} rollt alle Aktionen einer Transaktion
+            zurück und beendet sie.
+          \end{merke}
+        \subsubsection{ROLLBACK in Microsoft SQL Server}
+          Genau wie das \COMMIT-Kommando, muss auch das \ROLLBACK-Kommando um
+          das Schlüsselwort \languagemssql{TRANSACTION} ergänzt werden.

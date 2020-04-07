@@ -1,39 +1,39 @@
-\chapter{Constraints}
-\chaptertoc{}
-\cleardoubleevenpage
-\section{Was sind Constraints}
-\label{constraints1}
-Der englische Begriff \enquote{Constraint} bedeutet übersetzt soviel wie: \enquote{Einschränkung} oder \enquote{Zwang}. Constraints werden in Datenbankmanagementsystemen verwendet, um genau definierte Richtlinien für die Erfassung und die Verwaltung der Daten zu schaffen. Sie sorgen z. B. dafür, dass manche Spalten immer zwingend einen Wert ungleich NULL haben müssen oder das sie nur eindeutige Werte aufnehmen können. Es ist auch möglich einen genauen Wertebereich für eine Spalte zu definieren oder Werte aus Spalten anderer Tabellen zu referenzieren. Oracle und MS SQL Server kennen fünf Constraints für das relationale Datenmodell:
-\begin{itemize}
-    \item \textbf{CHECK}: Definiert einen exakten Wertebereich für eine Spalte.
-    \item \textbf{NOT NULL}: Definiert eine Spalte so, dass sie zwingend immer einen Wert ungleich NULL enthalten muss.
-    \item \textbf{UNIQUE}: Legt fest, dass die Werte einer Spalte oder einer Kombination von Spalten eindeutig sein müssen.
-    \item \textbf{PRIMARY KEY}: Hat die Aufgabe, ein eindeutiges Identifikationsmerkmal für jede Zeile einer Tabelle darzustellen. Er ist eine Kombination aus dem \NOTNULL- und dem \UNIQUE-Constraint und kann sich ebenfalls auf eine Kombination von Spalten beziehen.
-    \item \textbf{FOREIGN KEY}: Referenziert eine Spalte einer anderen Tabelle, die mit einem \UNIQUE- oder \PRIMARYKEY-Constraint versehen sein muss und stellt somit die referentielle Integrität (siehe \abschnitt{refint}) der Datenbank sicher.
-\end{itemize}
-Zusätzlich zu diesen fünf kennt Oracle noch das
-\enquote{REF}-Constraint, das jedoch nur im Rahmen der objektorientierten
-Anteile von Oracle Bedeutung hat und hier keine weitere Erwähnung
-findet. SQL Server kennt zusätzlich noch ein weiteres Constraint: das
-\languagemssql{DEFAULT}-Constraint.
-\section{Die Constraints}
-Constraints können mit Hilfe der beiden Kommandos \languageorasql{CREATE
-    TABLE} und \languageorasql{ALTER TABLE} angelegt werden. Sie werden durch
-einen Bezeichner und ihren Typ repräsentiert. Die Bezeichner von
-Constraints unterliegen ebenfalls den in \tabelle{createtablerestrictions}
-beschriebenen Regeln.
+  \chapter{Constraints}
+  \chaptertoc{}
+  \cleardoubleevenpage
+    \section{Was sind Constraints}
+      \label{constraints1}
+      Der englische Begriff \enquote{Constraint} bedeutet übersetzt soviel wie: \enquote{Einschränkung} oder \enquote{Zwang}. Constraints werden in Datenbankmanagementsystemen verwendet, um genau definierte Richtlinien für die Erfassung und die Verwaltung der Daten zu schaffen. Sie sorgen z. B. dafür, dass manche Spalten immer zwingend einen Wert ungleich NULL haben müssen oder das sie nur eindeutige Werte aufnehmen können. Es ist auch möglich einen genauen Wertebereich für eine Spalte zu definieren oder Werte aus Spalten anderer Tabellen zu referenzieren. Oracle und MS SQL Server kennen fünf Constraints für das relationale Datenmodell:
+      \begin{itemize}
+        \item \textbf{CHECK}: Definiert einen exakten Wertebereich für eine Spalte.
+        \item \textbf{NOT NULL}: Definiert eine Spalte so, dass sie zwingend immer einen Wert ungleich NULL enthalten muss.
+        \item \textbf{UNIQUE}: Legt fest, dass die Werte einer Spalte oder einer Kombination von Spalten eindeutig sein müssen.
+        \item \textbf{PRIMARY KEY}: Hat die Aufgabe, ein eindeutiges Identifikationsmerkmal für jede Zeile einer Tabelle darzustellen. Er ist eine Kombination aus dem \NOTNULL- und dem \UNIQUE-Constraint und kann sich ebenfalls auf eine Kombination von Spalten beziehen.
+        \item \textbf{FOREIGN KEY}: Referenziert eine Spalte einer anderen Tabelle, die mit einem \UNIQUE- oder \PRIMARYKEY-Constraint versehen sein muss und stellt somit die referentielle Integrität (siehe \abschnitt{refint}) der Datenbank sicher.
+      \end{itemize}
+      Zusätzlich zu diesen fünf kennt Oracle noch das
+      \enquote{REF}-Constraint, das jedoch nur im Rahmen der objektorientierten
+      Anteile von Oracle Bedeutung hat und hier keine weitere Erwähnung
+      findet. SQL Server kennt zusätzlich noch ein weiteres Constraint: das
+      \languagemssql{DEFAULT}-Constraint.
+    \section{Die Constraints}
+      Constraints können mit Hilfe der beiden Kommandos \languageorasql{CREATE
+      TABLE} und \languageorasql{ALTER TABLE} angelegt werden. Sie werden durch
+      einen Bezeichner und ihren Typ repräsentiert. Die Bezeichner von
+      Constraints unterliegen ebenfalls den in \tabelle{createtablerestrictions}
+      beschriebenen Regeln.
 \clearpage
-\begin{merke}
-    Wird für ein Constraint kein Name festgelegt, legt Oracle automatisch
-    einen Namen nach dem Schema \enquote{SYS\_Cn} fest, wobei n eine
-    sechstellige Zufallszahl darstellt  z. B. SYS\_C168349. SQL Server
-    verwendet ein Namensschema mit dem Aufbau
-    \enquote{typ\_\_tabelle\_\_spalte\_\_n} wobei n eine eindeutige
-    hexadezimal Nummer darstellt, z. B.
-    PK\_\_mitarbeiter\_\_mitarbeiter\_id\_\_4B561A78.
-\end{merke}
-In einem \languageorasql{CREATE TABLE}-Kommando können Constraints als \enquote{Inline Constraint} und als \enquote{Out Of Line Constraint} angelegt werden.
-\begin{lstlisting}[language=oracle_sql,caption={Constraints erstellen},label=sql09_01]
+      \begin{merke}
+        Wird für ein Constraint kein Name festgelegt, legt Oracle automatisch
+        einen Namen nach dem Schema \enquote{SYS\_Cn} fest, wobei n eine
+        sechstellige Zufallszahl darstellt  z. B. SYS\_C168349. SQL Server
+        verwendet ein Namensschema mit dem Aufbau
+        \enquote{typ\_\_tabelle\_\_spalte\_\_n} wobei n eine eindeutige
+        hexadezimal Nummer darstellt, z. B.
+        PK\_\_mitarbeiter\_\_mitarbeiter\_id\_\_4B561A78.
+      \end{merke}
+      In einem \languageorasql{CREATE TABLE}-Kommando können Constraints als \enquote{Inline Constraint} und als \enquote{Out Of Line Constraint} angelegt werden.
+      \begin{lstlisting}[language=oracle_sql,caption={Constraints erstellen},label=sql09_01]
 CREATE TABLE <Tabellenname>(
   <Spalte 1> <Datentyp> CONSTRAINT <Inline Constraint Name> <Constraint Typ>,
   <Spalte 2> <Datentyp> CONSTRAINT <Inline Constraint Name> <Constraint Typ>,
@@ -43,25 +43,25 @@ CREATE TABLE <Tabellenname>(
   CONSTRAINT <Out Of Line Constraint Name> <Constraint Typ> <Spalte>
 );
       \end{lstlisting}
-\begin{merke}
-    Wird ein Constraint direkt mit der Definition einer Spalte angelegt, wird es als Inline Constraint bezeichnet und bezieht sich auf die Spalte mit der es definiert wurde. Wird ein Constraint im Anschluss an die Spaltendefinitionen angelegt, wird es als Out Of Line Constraint bezeichnet und kann sich auf mehrere Spalten beziehen.
-\end{merke}
-\subsection{Das CHECK-Constraint}
-Das \CHECK-Constraint hat die Aufgabe einen genauen Wertebereich für
-eine Spalte festzulegen. Beispielsweise wäre ein \CHECK-Constraint
-auf der Spalte \identifier{Gehalt} der Tabelle \identifier{Mitarbeiter}
-sinnvoll, das definiert, dass Gehälter niemals negativ und niemals
-über 90000 EUR sein können.
+      \begin{merke}
+        Wird ein Constraint direkt mit der Definition einer Spalte angelegt, wird es als Inline Constraint bezeichnet und bezieht sich auf die Spalte mit der es definiert wurde. Wird ein Constraint im Anschluss an die Spaltendefinitionen angelegt, wird es als Out Of Line Constraint bezeichnet und kann sich auf mehrere Spalten beziehen.
+      \end{merke}
+      \subsection{Das CHECK-Constraint}
+        Das \CHECK-Constraint hat die Aufgabe einen genauen Wertebereich für
+        eine Spalte festzulegen. Beispielsweise wäre ein \CHECK-Constraint
+        auf der Spalte \identifier{Gehalt} der Tabelle \identifier{Mitarbeiter}
+        sinnvoll, das definiert, dass Gehälter niemals negativ und niemals
+        über 90000 EUR sein können.
 
-In \beispiel{sql09_02} wird gezeigt, wie die oben genannte
-Einschränkung für die \identifier{Gehalt}-Spalte der Tabelle
-\identifier{Mitarbeiter} als Out Of Line Constraint angelegt wird.
-\begin{lstlisting}[language=oracle_sql,caption={Ein \CHECK-Constraint als Out Of Line Constraint},label=sql09_02]
+        In \beispiel{sql09_02} wird gezeigt, wie die oben genannte
+        Einschränkung für die \identifier{Gehalt}-Spalte der Tabelle
+        \identifier{Mitarbeiter} als Out Of Line Constraint angelegt wird.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein \CHECK-Constraint als Out Of Line Constraint},label=sql09_02]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT gehalt_ck CHECK (Gehalt > 0 AND Gehalt <= 90000);
         \end{lstlisting}
-Um ein \CHECK-Constraint als Inline Constraint anzulegen, muss es direkt bei der Tabellenerstellung mit angelegt werden. \beispiel{sql09_03} zeigt das gleiche Constraint nocheinmal, aber als Inline Constraint.
-\begin{lstlisting}[language=oracle_sql,caption={Ein \CHECK-Constraint als Inline Constraint},label=sql09_03]
+        Um ein \CHECK-Constraint als Inline Constraint anzulegen, muss es direkt bei der Tabellenerstellung mit angelegt werden. \beispiel{sql09_03} zeigt das gleiche Constraint nocheinmal, aber als Inline Constraint.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein \CHECK-Constraint als Inline Constraint},label=sql09_03]
 CREATE TABLE Mitarbeiter (
 ...
   Gehalt         NUMBER(12,2)
@@ -69,72 +69,72 @@ CREATE TABLE Mitarbeiter (
 ...
 );
         \end{lstlisting}
-\begin{merke}
-    In welchem Format ein \CHECK-Constraint angelegt wird, ob als Inline oder als Out Of Line Constraint, spielt keine Rolle. Beide Formen sind möglich. Der Unterschied besteht darin, das sich ein Inline Constraint nur auf die Spalte beziehen kann, mit deren Definition es angelegt wurde. Ein Out Of Line Constraint kann sich auf alle Spalten der Tabelle beziehen, mit der zusammen es angelegt wurde.
-\end{merke}
-Um die Auswirkungen des obigen Merksatzes zu zeigen, wird das \identifier{gehalt\_ck}-Constraint ein wenig modifiziert. Es muss jetzt auch die Spalte \identifier{Provision} mit einbezogen werden. Das Gesamtgehalt eines Mitarbeiters darf 90.000 EUR nicht überschreiten, die Provision mit eingerechnet.
-\begin{lstlisting}[language=oracle_sql,caption={Ein komplexes \CHECK-Constraint},label=sql09_04]
+        \begin{merke}
+          In welchem Format ein \CHECK-Constraint angelegt wird, ob als Inline oder als Out Of Line Constraint, spielt keine Rolle. Beide Formen sind möglich. Der Unterschied besteht darin, das sich ein Inline Constraint nur auf die Spalte beziehen kann, mit deren Definition es angelegt wurde. Ein Out Of Line Constraint kann sich auf alle Spalten der Tabelle beziehen, mit der zusammen es angelegt wurde.
+        \end{merke}
+        Um die Auswirkungen des obigen Merksatzes zu zeigen, wird das \identifier{gehalt\_ck}-Constraint ein wenig modifiziert. Es muss jetzt auch die Spalte \identifier{Provision} mit einbezogen werden. Das Gesamtgehalt eines Mitarbeiters darf 90.000 EUR nicht überschreiten, die Provision mit eingerechnet.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein komplexes \CHECK-Constraint},label=sql09_04]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT gehalt_ck CHECK (Gehalt > 0
                AND (Gehalt + (Gehalt * Provision / 100))  <= 90000);
         \end{lstlisting}
-\subsection{Das NOT NULL-Constraint}
-Das \NOTNULL-Constraint ist dafür zuständig sicherzustellen, dass beim Einfügen oder Ändern einer Tabellenzeile bestimmte Spalten immer einen Wert haben müssen.
+      \subsection{Das NOT NULL-Constraint}
+        Das \NOTNULL-Constraint ist dafür zuständig sicherzustellen, dass beim Einfügen oder Ändern einer Tabellenzeile bestimmte Spalten immer einen Wert haben müssen.
 
-\begin{merke}
-    Das \NOTNULL-Constraint stellt eine Ausnahme zu allen anderen Constraints dar, denn es kann nur als Inline Constraint angelegt werden.
-\end{merke}
-\beispiel{sql09_05} zeigt, wie ein \NOTNULL-Constraint angelegt wird.
-\begin{lstlisting}[language=oracle_sql,caption={Ein \NOTNULL-Constraint anlegen in Oracle},label=sql09_05]
+        \begin{merke}
+          Das \NOTNULL-Constraint stellt eine Ausnahme zu allen anderen Constraints dar, denn es kann nur als Inline Constraint angelegt werden.
+        \end{merke}
+        \beispiel{sql09_05} zeigt, wie ein \NOTNULL-Constraint angelegt wird.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein \NOTNULL-Constraint anlegen in Oracle},label=sql09_05]
 ALTER TABLE Mitarbeiter
 MODIFY Gehalt CONSTRAINT gehalt_nn NOT NULL;
         \end{lstlisting}
-Um ein solches Constraint wieder rückgängig zu machen, kann die folgende Kurzform verwendet werden:
-\begin{lstlisting}[language=oracle_sql,caption={Das Gegenteil von \NOTNULL},label=sql09_06]
+        Um ein solches Constraint wieder rückgängig zu machen, kann die folgende Kurzform verwendet werden:
+        \begin{lstlisting}[language=oracle_sql,caption={Das Gegenteil von \NOTNULL},label=sql09_06]
 ALTER TABLE Mitarbeiter
 MODIFY Gehalt NULL;
         \end{lstlisting}
-In den meisten DBMS wird ein \NOTNULL-Constraint intern als
+        In den meisten DBMS wird ein \NOTNULL-Constraint intern als
 \CHECK-Constraint umgesetzt, weshalb \beispiel{sql09_05} und
 \beispiel{sql09_07} gleichbedeutend sind.
-\begin{lstlisting}[language=oracle_sql,caption={Die alternative Form eines \NOTNULL-Constraints in Oracle},label=sql09_07]
+        \begin{lstlisting}[language=oracle_sql,caption={Die alternative Form eines \NOTNULL-Constraints in Oracle},label=sql09_07]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT gehalt_nn CHECK (Gehalt IS NOT NULL);
         \end{lstlisting}
-In beiden Fällen wird intern ein \CHECK-Constraint, nach dem in \beispiel{sql09_07} gezeigten Schema, angelegt. Auch in SQL Server ist dies der Fall. Im Gegensatz zu Oracle, muss bei SQL Server immer der Datentyp der Spalte mit angegeben werden, wenn eine Spalte ein \NOTNULL-Constraint erhält.
-\begin{lstlisting}[language=ms_sql,caption={Ein \NOTNULL{} Constraint
+        In beiden Fällen wird intern ein \CHECK-Constraint, nach dem in \beispiel{sql09_07} gezeigten Schema, angelegt. Auch in SQL Server ist dies der Fall. Im Gegensatz zu Oracle, muss bei SQL Server immer der Datentyp der Spalte mit angegeben werden, wenn eine Spalte ein \NOTNULL-Constraint erhält.
+        \begin{lstlisting}[language=ms_sql,caption={Ein \NOTNULL{} Constraint
 anlegen in SQL Server},label=sql09_08]
 ALTER TABLE Mitarbeiter
 ALTER COLUMN Gehalt NUMERIC(12,2) NOT NULL;
         \end{lstlisting}
-\begin{lstlisting}[language=ms_sql,caption={Die alternative Form eines
+        \begin{lstlisting}[language=ms_sql,caption={Die alternative Form eines
 \NOTNULL{} Constraints in SQL Server},label=sql09_09]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT gehalt_nn CHECK Gehalt IS NOT NULL;
         \end{lstlisting}
-\begin{merke}
-    Um in SQL Server eine Spalte mit einem \NOTNULL-Constraint zu belegen, muss der Datentyp der Spalte mit angegeben werden, auch wenn dieser sich nicht ändern soll!
-\end{merke}
-\subsection{Das UNIQUE-Constraint}
-Das \UNIQUE-Constraint hat die Aufgabe, dafür Sorge zu tragen, dass alle Werte, die in eine Tabellenspalte eingetragen werden, eindeutig sind.
+        \begin{merke}
+          Um in SQL Server eine Spalte mit einem \NOTNULL-Constraint zu belegen, muss der Datentyp der Spalte mit angegeben werden, auch wenn dieser sich nicht ändern soll!
+        \end{merke}
+      \subsection{Das UNIQUE-Constraint}
+        Das \UNIQUE-Constraint hat die Aufgabe, dafür Sorge zu tragen, dass alle Werte, die in eine Tabellenspalte eingetragen werden, eindeutig sind.
 
-\begin{merke}
-    In Oracle sind NULL-Werte eindeutig. Das heißt, in einer mit einem
-    \UNIQUE-Constraint belegten Spalte können beliebig viele NULL-Werte
-    vorkommen. In SQL Server sind NULL-Werte nicht eindeutig. Somit kann
-    in SQL Server nur ein NULL-Wert pro Tabellenspalte vorkommen, wenn
-    die Spalte mit einem \UNIQUE-Constraint belegt ist.
-\end{merke}
-\beispiel{sql09_10} zeigt, wie in Oracle und SQL Server ein
-\UNIQUE-Constraint auf die Spalte \identifier{SozVersNr} der Tabelle
-\identifier{Mitarbeiter} gelegt wird.
+        \begin{merke}
+          In Oracle sind NULL-Werte eindeutig. Das heißt, in einer mit einem
+          \UNIQUE-Constraint belegten Spalte können beliebig viele NULL-Werte
+          vorkommen. In SQL Server sind NULL-Werte nicht eindeutig. Somit kann
+          in SQL Server nur ein NULL-Wert pro Tabellenspalte vorkommen, wenn
+          die Spalte mit einem \UNIQUE-Constraint belegt ist.
+        \end{merke}
+        \beispiel{sql09_10} zeigt, wie in Oracle und SQL Server ein
+        \UNIQUE-Constraint auf die Spalte \identifier{SozVersNr} der Tabelle
+        \identifier{Mitarbeiter} gelegt wird.
 \clearpage
-\begin{lstlisting}[language=oracle_sql,caption={Ein UNIQUE-Constraint anlegen},label=sql09_10]
+        \begin{lstlisting}[language=oracle_sql,caption={Ein UNIQUE-Constraint anlegen},label=sql09_10]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT sozversnr_uk UNIQUE (SozVersNr);
         \end{lstlisting}
-Wie bereits beim \CHECK-Constraint gezeigt, kann auch ein \UNIQUE-Constraint als Inline Constraint erstellt werden. \beispiel{sql09_11} zeigt diesen Vorgang. Die Syntax ist in Oracle und SQL Server gleich.
-\begin{lstlisting}[language=oracle_sql,caption={Ein \UNIQUE-Constraint als Inline Constraint anlegen},label=sql09_11]
+        Wie bereits beim \CHECK-Constraint gezeigt, kann auch ein \UNIQUE-Constraint als Inline Constraint erstellt werden. \beispiel{sql09_11} zeigt diesen Vorgang. Die Syntax ist in Oracle und SQL Server gleich.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein \UNIQUE-Constraint als Inline Constraint anlegen},label=sql09_11]
 CREATE TABLE Mitarbeiter (
 ...
   SozVersNr       VARCHAR2(20)
@@ -142,31 +142,31 @@ CREATE TABLE Mitarbeiter (
 ...
 );
         \end{lstlisting}
-Oftmals genügt es nicht, wenn der Wert einer Spalte eindeutig ist. Es kann auch sein, dass die Kombination mehrerer Werte aus mehreren Spalten eindeutig sein muss. In so einem Fall kann ein \UNIQUE-Constraint auch auf eine Kombination mehrerer Spalten gelegt werden, wie \beispiel{sql09_12} zeigt.
-\begin{lstlisting}[language=oracle_sql,caption={Ein kombiniertes UNIQUE-Constraint anlegen},label=sql09_12]
+        Oftmals genügt es nicht, wenn der Wert einer Spalte eindeutig ist. Es kann auch sein, dass die Kombination mehrerer Werte aus mehreren Spalten eindeutig sein muss. In so einem Fall kann ein \UNIQUE-Constraint auch auf eine Kombination mehrerer Spalten gelegt werden, wie \beispiel{sql09_12} zeigt.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein kombiniertes UNIQUE-Constraint anlegen},label=sql09_12]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT mitarbeiter_uk UNIQUE (Vorname, Nachname, SozVersNr);
         \end{lstlisting}
-\subsection{Das PRIMARY KEY-Constraint}
-Das \PRIMARYKEY-Constraint hat eine ganz besondere Aufgabe. Es ist dafür zuständig, ein Attribut oder eine Gruppe von Attributen einer Tabelle als eindeutig zu kennzeichnen, um so ein Identifikationsmerkmal für jede Tabellenzeile einer Tabelle zu schaffen.
+      \subsection{Das PRIMARY KEY-Constraint}
+        Das \PRIMARYKEY-Constraint hat eine ganz besondere Aufgabe. Es ist dafür zuständig, ein Attribut oder eine Gruppe von Attributen einer Tabelle als eindeutig zu kennzeichnen, um so ein Identifikationsmerkmal für jede Tabellenzeile einer Tabelle zu schaffen.
 
-Die Nutzung von Primärschlüsseln ist notwendig, da es eine wesentliche Leistung eines relationalen Datenbankmanagementsystems ist, die Datenkonsistenz zu gewährleisten und hierzu gehört auch das Vermeiden von redundanten Datensätzen.
+        Die Nutzung von Primärschlüsseln ist notwendig, da es eine wesentliche Leistung eines relationalen Datenbankmanagementsystems ist, die Datenkonsistenz zu gewährleisten und hierzu gehört auch das Vermeiden von redundanten Datensätzen.
 
-\begin{merke}
-    Der Unterschied zwischen einem \UNIQUE-Constraint und einem \PRIMARYKEY-Constraint ist, dass ein \PRIMARYKEY-Constraint keine NULL-Werte zulässt. Ein \PRIMARYKEY-Constraint ist eine Mischung aus einem \NOTNULL- und einem \UNIQUE-Constraint.
-\end{merke}
-Da eine relationale Datenbank nicht ohne \PRIMARYKEY-Constraints
-auskommt, werden diese meist schon bei der Erstellung einer Tabelle
-angelegt.
+        \begin{merke}
+          Der Unterschied zwischen einem \UNIQUE-Constraint und einem \PRIMARYKEY-Constraint ist, dass ein \PRIMARYKEY-Constraint keine NULL-Werte zulässt. Ein \PRIMARYKEY-Constraint ist eine Mischung aus einem \NOTNULL- und einem \UNIQUE-Constraint.
+        \end{merke}
+        Da eine relationale Datenbank nicht ohne \PRIMARYKEY-Constraints
+        auskommt, werden diese meist schon bei der Erstellung einer Tabelle
+        angelegt.
 \clearpage
-\begin{lstlisting}[language=oracle_sql,caption={Ein PRIMARY KEY-Constraint als Inline Constraint anlegen},label=sql09_13]
+        \begin{lstlisting}[language=oracle_sql,caption={Ein PRIMARY KEY-Constraint als Inline Constraint anlegen},label=sql09_13]
 CREATE TABLE Mitarbeiter (
   Mitarbeiter_ID      NUMBER CONSTRAINT mitarbeiter_pk PRIMARY KEY,
 ...
 );
         \end{lstlisting}
-Genau wie bei einem \UNIQUE-Constraint, kann es notwendig sein, einen Primäschlüssel nicht nur auf eine Spalte, sondern auf eine Gruppe von Spalten zu legen. Dies ist meist in schwachen Entitäten der Fall, da hier die Kombination zweier Primärschlüssel aus den beiden äußeren Entitäten als Primärschlüssel genutzt wird.
-\begin{lstlisting}[language=oracle_sql,caption={Ein PRIMARY KEY-Constraint als Out Of Line Constraint auf mehrere Spalten anlegen},label=sql09_14]
+        Genau wie bei einem \UNIQUE-Constraint, kann es notwendig sein, einen Primäschlüssel nicht nur auf eine Spalte, sondern auf eine Gruppe von Spalten zu legen. Dies ist meist in schwachen Entitäten der Fall, da hier die Kombination zweier Primärschlüssel aus den beiden äußeren Entitäten als Primärschlüssel genutzt wird.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein PRIMARY KEY-Constraint als Out Of Line Constraint auf mehrere Spalten anlegen},label=sql09_14]
 CREATE TABLE Mitarbeiter (
   Mitarbeiter_ID      NUMBER,
   Vorname             VARCHAR2(30),
@@ -177,39 +177,39 @@ CREATE TABLE Mitarbeiter (
 ...
 );
         \end{lstlisting}
-\subsection{Das FOREIGN KEY-Constraint}
-\label{refint}
-In einem RDBMS steht üblicherweise keine Entität \enquote{einzeln im Raum}. Sie steht immer in Zusammenhang mit anderen Entitäten. Diese Zusammenhänge werden durch Foreign Key-Constraints dargestellt und überwacht.
+      \subsection{Das FOREIGN KEY-Constraint}
+        \label{refint}
+        In einem RDBMS steht üblicherweise keine Entität \enquote{einzeln im Raum}. Sie steht immer in Zusammenhang mit anderen Entitäten. Diese Zusammenhänge werden durch Foreign Key-Constraints dargestellt und überwacht.
 
-\begin{merke}
-    Der Zusammenhang, in dem die Entitäten eines RDBMS stehen, wird als \enquote{Referentielle Integrität} bezeichnet.
-\end{merke}
-Ein Beispiel hierfür stellen die beiden Tabellen \identifier{Mitarbeiter} und \identifier{Bankfiliale} bereit. Sie stehen, durch die Spalte \identifier{Bankfiliale\_ID}, die in beiden Relationen vorkommt, in Zusammenhang zu einander. Dieser Zusammenhang besteht darin, dass jeder Mitarbeiter genau einer Bankfiliale zugeordnet ist. Das heißt,  in die Spalte \identifier{Bankfiliale\_ID} der Tabelle \identifier{Mitarbeiter} werden die Primärschlüsselwerte der Tabelle \identifier{Bankfiliale} eingetragen, um so den Zusammenhang herzustellen.
-\beispiel{sql09_15} zeigt, wie ein Fremdschlüsselconstraint angelegt wird.
+        \begin{merke}
+          Der Zusammenhang, in dem die Entitäten eines RDBMS stehen, wird als \enquote{Referentielle Integrität} bezeichnet.
+        \end{merke}
+        Ein Beispiel hierfür stellen die beiden Tabellen \identifier{Mitarbeiter} und \identifier{Bankfiliale} bereit. Sie stehen, durch die Spalte \identifier{Bankfiliale\_ID}, die in beiden Relationen vorkommt, in Zusammenhang zu einander. Dieser Zusammenhang besteht darin, dass jeder Mitarbeiter genau einer Bankfiliale zugeordnet ist. Das heißt,  in die Spalte \identifier{Bankfiliale\_ID} der Tabelle \identifier{Mitarbeiter} werden die Primärschlüsselwerte der Tabelle \identifier{Bankfiliale} eingetragen, um so den Zusammenhang herzustellen.
+        \beispiel{sql09_15} zeigt, wie ein Fremdschlüsselconstraint angelegt wird.
 \clearpage
-\begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint als Out Of Line Constraint anlegen},label=sql09_15]
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint als Out Of Line Constraint anlegen},label=sql09_15]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT mitarbeiter_filiale_fk
 FOREIGN KEY (Bankfiliale_ID)
 REFERENCES Bankfiliale(Bankfiliale_ID);
         \end{lstlisting}
-Die Definition eines Fremdschlüssels als Out Of Line Constraint hat zwei Teile:
-\begin{itemize}
-    \item Die \languageorasql{FOREIGN KEY}-Klausel: Sie legt fest, welche Spalte die referenzierende Spalte ist.
-    \item die \languageorasql{REFERENCES}-Klausel: Sie legt fest, welche Spalte referenziert wird. Bei dieser Spalte muss es sich um eine Primärschlüssel- oder \UNIQUE-Spalte handeln.
-\end{itemize}
-\begin{merke}
-    Wird ein Fremdschlüssel als Inline Constraint bei der Erstellung der Tabelle miterstellt, entfällt die \languageorasql{FOREIGN KEY}-Klausel.
-\end{merke}
-\begin{merke}
-    Es gibt zwei Situationen, die in einer relationalen Datenbank keines Falls auftreten dürfen:
-    \begin{itemize}
-        \item Ein referenzierter Primärschlüsselwert wird gelöscht. Beispiel: Eine Bankfiliale, in der sich noch Mitarbeiter befinden, wird aus der Tabelle \identifier{Bankfiliale} gelöscht. Dies würde Datensätze in der Tabelle \identifier{Mitarbeiter} zurücklassen, die sich auf eine Filiale beziehen, die gar nicht mehr existiert.
-        \item In eine Fremdschlüsselspalte wird ein Wert eingetragen, der in der referenzierten Primärschlüsselspalte nicht vorkommt. Beispiel: Ein Mitarbeiter wird in die Bankfiliale mit der ID 300 aufgenommen, welche gar nicht existiert. Auch hier würde sich ein Angestellter auf eine Abteilung beziehen, welche es nicht gibt.
-    \end{itemize}
-    In beiden Fällen wäre die Referentielle Integrität der Datenbank verletzt, was zu Informationsverlust bzw. fehlerhafter Information führt. Dies zu vermeiden ist die Aufgabe des Foreign Key-Constraints.
-\end{merke}
-\begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint als Inline Constraint anlegen},label=sql09_16]
+        Die Definition eines Fremdschlüssels als Out Of Line Constraint hat zwei Teile:
+        \begin{itemize}
+          \item Die \languageorasql{FOREIGN KEY}-Klausel: Sie legt fest, welche Spalte die referenzierende Spalte ist.
+          \item die \languageorasql{REFERENCES}-Klausel: Sie legt fest, welche Spalte referenziert wird. Bei dieser Spalte muss es sich um eine Primärschlüssel- oder \UNIQUE-Spalte handeln.
+        \end{itemize}
+        \begin{merke}
+          Wird ein Fremdschlüssel als Inline Constraint bei der Erstellung der Tabelle miterstellt, entfällt die \languageorasql{FOREIGN KEY}-Klausel.
+        \end{merke}
+       \begin{merke}
+          Es gibt zwei Situationen, die in einer relationalen Datenbank keines Falls auftreten dürfen:
+          \begin{itemize}
+            \item Ein referenzierter Primärschlüsselwert wird gelöscht. Beispiel: Eine Bankfiliale, in der sich noch Mitarbeiter befinden, wird aus der Tabelle \identifier{Bankfiliale} gelöscht. Dies würde Datensätze in der Tabelle \identifier{Mitarbeiter} zurücklassen, die sich auf eine Filiale beziehen, die gar nicht mehr existiert.
+            \item In eine Fremdschlüsselspalte wird ein Wert eingetragen, der in der referenzierten Primärschlüsselspalte nicht vorkommt. Beispiel: Ein Mitarbeiter wird in die Bankfiliale mit der ID 300 aufgenommen, welche gar nicht existiert. Auch hier würde sich ein Angestellter auf eine Abteilung beziehen, welche es nicht gibt.
+        \end{itemize}
+        In beiden Fällen wäre die Referentielle Integrität der Datenbank verletzt, was zu Informationsverlust bzw. fehlerhafter Information führt. Dies zu vermeiden ist die Aufgabe des Foreign Key-Constraints.
+        \end{merke}
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint als Inline Constraint anlegen},label=sql09_16]
 CREATE TABLE Mitarbeiter (
 ...
   Bankfiliale_ID      NUMBER
@@ -218,37 +218,37 @@ CREATE TABLE Mitarbeiter (
 ...
 );
         \end{lstlisting}
-Der SQL-Standard kennt zwei Erweiterungen zum \languageorasql{FOREIGN KEY}-Constraint. Dies sind die beiden Klauseln \languageorasql{ON DELETE CASCADE} und \languageorasql{ON DELETE SET NULL}.
-\begin{itemize}
-    \item \languageorasql{ON DELETE CASCADE}: Wird ein referenzierter Wert gelöscht, werden automatisch alle referenzierenden Werte mitgelöscht. Beispiel: Wird eine Filiale aus der Tabelle \identifier{Bankfiliale} gelöscht, werden automatisch auch alle Mitarbeiter gelöscht, welche sich in dieser Filiale befinden.
-    \item \languageorasql{ON DELETE SET NULL}: Wird ein referenzierter Wert gelöscht, werden automatisch alle referenzierenden Werte auf NULL gesetzt. Beispiel: Wird eine Filiale aus der Tabelle \identifier{Bankfiliale} gelöscht, wird die \identifier{Bankfiliale\_ID} eines jeden Angestellen automatisch auf NULL gesetzt.
-\end{itemize}
-Beide Zusätze können sehr nützlich sein, bergen jedoch auch große Risiken in sich. Wird beispielsweise die \languageorasql{ON DELETE CASCADE}-Klausel zu unvorsichtig angewandt, kann es passieren, das Daten gelöscht werden, die gar nicht gelöscht werden dürfen.
+        Der SQL-Standard kennt zwei Erweiterungen zum \languageorasql{FOREIGN KEY}-Constraint. Dies sind die Klauseln \languageorasql{ON DELETE CASCADE} und \languageorasql{ON DELETE SET NULL}.
+        \begin{itemize}
+          \item \languageorasql{ON DELETE CASCADE}: Wird ein referenzierter Wert gelöscht, werden automatisch alle referenzierenden Werte mitgelöscht. Beispiel: Wird eine Filiale aus der Tabelle \identifier{Bankfiliale} gelöscht, werden automatisch auch alle Mitarbeiter gelöscht, welche sich in dieser Filiale befinden.
+          \item \languageorasql{ON DELETE SET NULL}: Wird ein referenzierter Wert gelöscht, werden automatisch alle referenzierenden Werte auf NULL gesetzt. Beispiel: Wird eine Filiale aus der Tabelle \identifier{Bankfiliale} gelöscht, wird die \identifier{Bankfiliale\_ID} eines jeden Angestellen automatisch auf NULL gesetzt.
+        \end{itemize}
+        Beide Zusätze können sehr nützlich sein, bergen jedoch auch große Risiken in sich. Wird die \languageorasql{ON DELETE CASCADE}-Klausel zu unvorsichtig angewandt, kann es passieren, das Daten gelöscht werden, die gar nicht gelöscht werden dürfen.
 
-Die \languageorasql{ON DELETE SET NULL} ist nicht so radikal, wie \languageorasql{ON DELETE CASCADE}, aber auch sie ist nicht ganz ungefährlich. Wird ein referenzierter Wert gelöscht, werden alle referenzierenden Werte kaskadierend auf NULL gesetzt. Das hat zur Folge, das plötzlich Datensätze bestehen, die keinen Bezug mehr zu anderen Datensätzen haben.
+        Die \languageorasql{ON DELETE SET NULL} ist nicht so radikal, wie \languageorasql{ON DELETE CASCADE}, aber auch sie ist nicht ganz ungefährlich. Wird ein referenzierter Wert gelöscht, werden alle referenzierenden Werte kaskadierend auf NULL gesetzt. Das hat zur Folge, das plötzlich Datensätze bestehen, die keinen Bezug mehr zu anderen Datensätzen haben.
 
-\begin{merke}
-    Sowohl bei der \languageorasql{ON DELETE CASCADE}- als auch bei der \languageorasql{ON DELETE SET NULL}-Klausel muss mit äußerster Vorsicht gearbeitet werden.
-\end{merke}
-\beispiel{sql09_17} und \beispiel{sql09_18} zeigen, wie diese Klauseln angewandt werden.
-\begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint mit ON DELETE CASCADE-Klausel},label=sql09_17]
+        \begin{merke}
+          Sowohl bei der \languageorasql{ON DELETE CASCADE}- als auch bei der \languageorasql{ON DELETE SET NULL}-Klausel muss mit äußerster Vorsicht gearbeitet werden.
+        \end{merke}
+        \beispiel{sql09_17} und \beispiel{sql09_18} zeigen, wie diese Klauseln angewandt werden.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint mit ON DELETE CASCADE-Klausel},label=sql09_17]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT mitarbeiter_filiale_fk FOREIGN KEY (Bankfiliale_ID))
   REFERENCES Bankfiliale(Bankfiliale_ID)
   ON DELETE CASCADE;
         \end{lstlisting}
 
-\begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint mit ON DELETE SET NULL-Klausel},label=sql09_18]
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint mit ON DELETE SET NULL-Klausel},label=sql09_18]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT mitarbeiter_filiale_fk FOREIGN KEY (Bankfiliale_ID))
   REFERENCES Bankfiliale(Bankfiliale_ID)
   ON DELETE SET NULL;
         \end{lstlisting}
-\subsection{Das SQL Server DEFAULT-Constraint}
-In Microsoft SQL Server werden Standardwerte als Constraints an eine
-Spalte angefügt. Das Anfügen eines Default-Constraints an eine Spalte
-während der Tabellenerstellung funktioniert genauso wie in Oracle.
-\begin{lstlisting}[language=ms_sql,caption={Erstellen
+      \subsection{Das SQL Server DEFAULT-Constraint}
+        In Microsoft SQL Server werden Standardwerte als Constraints an eine
+        Spalte angefügt. Das Anfügen eines Default-Constraints an eine Spalte
+        während der Tabellenerstellung funktioniert genauso wie in Oracle.
+          \begin{lstlisting}[language=ms_sql,caption={Erstellen
           einer Tabelle mit einem Standardwert},label=sql09_18a]
 CREATE TABLE
   Aktie ( Aktie_ID  NUMERIC,
@@ -258,42 +258,42 @@ CREATE TABLE
   ISIN      VARCHAR(12)
 );
           \end{lstlisting}
-Der Unterschied zwischen Oracle und MS SQL Server zeigt sich aber, wenn ein Default-Constraint nachträglich hinzugefügt werden soll.
-\begin{lstlisting}[language=ms_sql,caption={Tabellenspalte mit
+          Der Unterschied zwischen Oracle und MS SQL Server zeigt sich aber, wenn ein Default-Constraint nachträglich hinzugefügt werden soll.
+          \begin{lstlisting}[language=ms_sql,caption={Tabellenspalte mit
           Standardwert hinzufügen in SQL Server},label=sql09_18b] 
 ALTER TABLE Aktie
 ADD CONSTRAINT herkunft_dv
 DEFAULT 'USA'
 FOR Herkunft;
           \end{lstlisting}
-Anders als in Oracle muss für den SQL Server die \languagemssql{ADD CONSTRAINT}-Klausel benutzt werden.
-\section{Constraints umbenennen und löschen}
-\subsection{Constraints umbenennen}
-Sowohl in Oracle als auch in SQL Server ist es möglich, ein Constraint umzubenennen.
-\begin{lstlisting}[language=oracle_sql,caption={Ein Constraint umbenennen in Oracle},label=sql09_19]
+          Anders als in Oracle muss für den SQL Server die \languagemssql{ADD CONSTRAINT}-Klausel benutzt werden.
+    \section{Constraints umbenennen und löschen}
+      \subsection{Constraints umbenennen}
+        Sowohl in Oracle als auch in SQL Server ist es möglich, ein Constraint umzubenennen.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Constraint umbenennen in Oracle},label=sql09_19]
 ALTER TABLE Mitarbeiter
 RENAME CONSTRAINT gehalt_ck TO gehalt_provision_ck;
         \end{lstlisting}
-\begin{lstlisting}[language=ms_sql,caption={Ein Constraint umbenennen in SQL Server},label=sql09_20,emphstyle={[9]\color{red}},emph={[9]sp_rename}]
+        \begin{lstlisting}[language=ms_sql,caption={Ein Constraint umbenennen in SQL Server},label=sql09_20,emphstyle={[9]\color{red}},emph={[9]sp_rename}]
 EXEC sp_rename 'gehalt_ck', 'gehalt_provision_ck', 'OBJECT';
         \end{lstlisting}
-\subsection{Constraints löschen}
-Soll ein bereits bestehendes Constraint wieder entfernt werden, muss in Oracle und SQL Server die \languageorasql{DROP CONSTRAINT}-Klausel des \languageorasql{ALTER TABLE}-Kommandos genutzt werden.
-\begin{lstlisting}[language=oracle_sql,caption={Ein Constraint löschen},label=sql09_21]
+      \subsection{Constraints löschen}
+        Soll ein bereits bestehendes Constraint wieder entfernt werden, muss in Oracle und SQL Server die \languageorasql{DROP CONSTRAINT}-Klausel des \languageorasql{ALTER TABLE}-Kommandos genutzt werden.
+        \begin{lstlisting}[language=oracle_sql,caption={Ein Constraint löschen},label=sql09_21]
 ALTER TABLE Mitarbeiter
 DROP CONSTRAINT mitarbeiter_filiale_fk;
         \end{lstlisting}
-Dies läßt sich auf alle fünf Constraintarten anwenden.
+        Dies läßt sich auf alle fünf Constraintarten anwenden.
 
-Enthält eine zu löschende Tabelle Primär\-schlüssel- oder Unique\-Constraints, welche durch Fremd\-schlüssel anderer Tabellen referenziert werden, muss in Oracle zusätzlich die Klausel \languageorasql{CASCADE CONSTRAINTS} verwendet werden. Dadurch werden die Fremdschlüssel der anderern Objekte entfernt. In SQL Server müssen zuerst die referenzierenden Foreign Key Constraints gelöscht werden, ehe die Tabelle gelöscht werden kann.
-\begin{lstlisting}[language=oracle_sql, caption={Eine Tabelle mit
+        Enthält eine zu löschende Tabelle Primär\-schlüssel- oder Unique\-Constraints, welche durch Fremd\-schlüssel anderer Tabellen referenziert werden, muss in Oracle zusätzlich die Klausel \languageorasql{CASCADE CONSTRAINTS} verwendet werden. Dadurch werden die Fremdschlüssel der anderern Objekte entfernt. In SQL Server müssen zuerst die referenzierenden Foreign Key Constraints gelöscht werden, ehe die Tabelle gelöscht werden kann.
+        \begin{lstlisting}[language=oracle_sql, caption={Eine Tabelle mit
         Fremdschlüsselbeziehungen löschen},label=sql09_22]
 DROP TABLE Mitarbeiter CASCADE CONSTRAINTS;
         \end{lstlisting}
-\subsection{Standardwerte in SQL Server löschen}
-\label{sqlserverdefaultconstraint}
-Was Standardwerte sind, ist bereits aus dem vorhergehenden Kapitel bekannt. Wie sie in Oracle und in SQL Server angelegt werden ist ebenfalls bekannt. Was bisher noch nicht gezeigt wurde, ist, wie sie in SQL Server wieder gelöscht werden. Da in SQL Server ein Standardwert wie ein Constraint behandelt wird, muss auch die \languagemssql{DROP CONSTRAINT}-Klausel des \languagemssql{ALTER TABLE}-Statements verwendet werden, um einen Standardwert zu löschen.
-\begin{lstlisting}[language=ms_sql,caption={Einen Standardwert in SQL Server löschen},label=sql09_23]
+      \subsection{Standardwerte in SQL Server löschen}
+        \label{sqlserverdefaultconstraint}
+        Was Standardwerte sind, ist bereits aus dem vorhergehenden Kapitel bekannt. Wie sie in Oracle und in SQL Server angelegt werden ist ebenfalls bekannt. Was bisher noch nicht gezeigt wurde, ist, wie sie in SQL Server wieder gelöscht werden. Da in SQL Server ein Standardwert wie ein Constraint behandelt wird, muss auch die \languagemssql{DROP CONSTRAINT}-Klausel des \languagemssql{ALTER TABLE}-Statements verwendet werden, um einen Standardwert zu löschen.
+        \begin{lstlisting}[language=ms_sql,caption={Einen Standardwert in SQL Server löschen},label=sql09_23]
 ALTER TABLE Aktie
 DROP CONSTRAINT herkunft_dv;
         \end{lstlisting}
