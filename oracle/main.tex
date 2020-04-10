@@ -2,12 +2,12 @@
 
 % KOMAScript guide, p. 66 (3.7 Dokumenttitel)
 % Define all neccessary attributes of the title page
-    \subtitle{Oracle 11g}
+    \subtitle{Oracle 12c}
     \date{1. Ausgabe: 09.05.2007\linebreak Letzte Änderung: \today{}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Biblatex definitionen
-\addbibresource{../bibliographie/bibliography.bib}
+\addbibresource{bibliography.bib}
 
 \defbibheading{oraadminguide}{\section*{Oracle Database Administrator's Guide 11g Release 2}}
 \defbibheading{oraadvdevguid}{\section*{Oracle Database Advanced Application Developer's Guide 11g Release 2}}
@@ -29,45 +29,20 @@ Release 2 for Linux}}
 \defbibheading{others}{\section*{Andere Quellen}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{document} 
-    \frontmatter
-    % Typeset the title page with single line spacing
-    \begin{singlespace}
-        \maketitle
-        \pagenumbering{Roman}
-        \tableofcontents
-        \pagenumbering{bychapter}
-    \end{singlespace}
-    \mainmatter
-    
-    \input{../erm/erm}
-    \input{../sql/sql}
-    \input{admin/dbadmin}
-    \backmatter
-    \appendix
-    %  \input{../bibliographie/thebibliography}
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      \part{Appendix}
-        \chapter*{Oracle Database 11g Release 2}
-          \printbibliography[heading=oraadminguide,keyword=oraadminguide]
-          \printbibliography[heading=oraadvdevguid,keyword=oraadvdevguid]
-          \printbibliography[heading=brusersguide,keyword=brusersguide]
-          \printbibliography[heading=oradbconcepts,keyword=oradbconcepts]
-          \printbibliography[heading=oradbref,keyword=oradbref]
-          \printbibliography[heading=oraglobsupguide,keyword=oraglobsupguide]
-          \printbibliography[heading=oradbinstallguidelinux,keyword=oradbinstallguidelinux]
-          \printbibliography[heading=oradbinstallguidewin,keyword=oradbinstallguidewin]
-          \printbibliography[heading=oranetadmin,keyword=oranetadmin]
-          \printbibliography[heading=oranetref,keyword=oranetref]
-          \printbibliography[heading=oraplsqlpackref,keyword=oraplsqlpacklref]
-          \printbibliography[heading=orarelnoteswin,keyword=orarelnoteswin]
-          \printbibliography[heading=orarelnoteslinux,keyword=orarelnoteslinux]
-          \printbibliography[heading=orasecguid,keyword=orasecguid]
-          \printbibliography[heading=orasqlref,keyword=orasqlref]
-          \printbibliography[heading=orautilities,keyword=orautilities]
-          \printbibliography[heading=others,keyword=others]
-    %     \chapter*{Microsoft SQL Server}
-    %       \printbibliography[heading=tsqlreference,keyword=TSQLReference]
-    %      \printbibliography[heading=sqlserveradmin,keyword=SQLServerAdmin]
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\frontmatter
+% Typeset the title page with single line spacing
+\begin{singlespace}
+    \maketitle
+    \pagenumbering{Roman}
+    \tableofcontents
+    \pagenumbering{bychapter}
+\end{singlespace}
+\mainmatter
+
+%    \input{../erm/erm}
+\input{../sql/sql}
+% \input{admin/dbadmin}
+\backmatter
+\printbibliography
 \end{document}

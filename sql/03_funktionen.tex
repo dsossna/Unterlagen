@@ -238,7 +238,7 @@ gültiger Länge handelt.
 \beispiel{sql03_05} zeigt die Anwendung der Funktion \languageorasql{SUBSTR}, um die IBAN eines Kontos in ihre Bestandteile zu zerlegen.
 \begin{lstlisting}[language=oracle_sql,caption={Die Anwendung der Funktion \languageorasql{SUBSTR}},label=sql03_05]
 SELECT SUBSTR(IBAN, 1, 2) AS Laenderkuerzel, SUBSTR(IBAN, 5 , 8) AS BLZ,
-       SUBSTR(IBAN, 13, LEN(IBAN)) AS KtoNr
+       SUBSTR(IBAN, 14) AS KtoNr
 FROM   Konto
 WHERE  Konto_ID = 1281;
           \end{lstlisting}
@@ -739,7 +739,8 @@ heißt.
 \begin{lstlisting}[language=ms_sql,caption={Rundungsfunktionen in MS SQL},label=sql03_16]
 SELECT SQRT(3) AS "Wurzel 3", CEILING(SQRT(3)) AS "Aufrunden",
        FLOOR(SQRT(3)) AS "Abrunden",
-       ROUND(SQRT(3), 2) AS "Kaufm. runden";
+       ROUND(SQRT(3), 2) AS "Kaufm. runden"
+FROM   dual;
         \end{lstlisting}
 \begin{center}
     \begin{small}
@@ -835,7 +836,8 @@ In MS SQL Server gibt es nur die Funktion \languagemssql{LOG10}
 SELECT 9 % 2 AS Modulo, POWER(10, 2) AS Power,
        LOG10(1000) AS Log, SQRT(16) AS Quadratwurzel,
        SQRT(27) / SQRT(3) AS "3. Wurzel von 27",
-       LOG10(8) / LOG10(5) AS "Log 8 Basis 5";
+       LOG10(8) / LOG10(5) AS "Log 8 Basis 5"
+FROM   dual;
         \end{lstlisting}
 \begin{center}
     \begin{small}
@@ -1203,7 +1205,7 @@ Das Ergebnis dieser Funktion ist die Differenz zwischen dem Startdatum und dem E
 Mit Hilfe der Funktionen \languagemssql{DATEPART} und \languagemssql{DATENAME} können Teile eines Datums, als Zeichenkette extrahiert werden.
 \begin{lstlisting}[language=ms_sql,caption={\languagemssql{DATEPART} und \languagemssql{DATENAME} in SQL Server},label=sql03_24]
 SELECT GETDATE(), DATEPART(YEAR, GETDATE()),
-       DATEPART(MONTH, GETDATE()) AS "DATEPART",
+       DATEPART(MONTH, GETDATE()) AS "DATEPART"
        DATENAME(MONTH, GETDATE()) AS "DATENAME";
           \end{lstlisting}
 \begin{center}

@@ -1,17 +1,19 @@
 \clearpage
-    \section{Konvertierungsfunktion f\"ur R\"omische Zahlen}
-      \begin{enumerate}
-        \item Deise beiden Funktionen wandeln Arabische Zahlen in R\"omische und umgekehrt um.
-        \begin{mssql}[\FALSE]
-        \end{mssql}
-  \begin{lstlisting}[language=ms_sql,caption={Die Fehlermeldung in SQL Server},label=sql05_04]
+\section{Konvertierungsfunktion für Römische Zahlen}
+\begin{enumerate}
+    \item Diese beiden Funktionen wandeln arabische Zahlen in Römische und umgekehrt um.
+          \begin{mssql}[\FALSE]
+          \end{mssql}
+          \begin{lstlisting}[language=ms_sql,caption={Die Fehlermeldung in SQL Server},label=sql05_04]
   IF OBJECT_ID('dbo.ToRomanNumerals') is NOT NULL
       drop function dbo.ToRomanNumerals
  go
  CREATE FUNCTION dbo.ToRomanNumerals (@Number INT)
   /**
  summary:   >
- This is a simple routine for converting a decimal integer into a roman numeral.
+ This is a simple routine for converting a decimal integer into a roman
+ numeral.
+ 
  Author: Phil Factor
  Revision: 1.2
  date: 3rd Feb 2014
@@ -51,11 +53,11 @@
            ('D', 500),
            ('CM', 900),
            ('M', 1000),
-           (N'|ↄↄ', 5000),
-           (N'cc|ↄↄ', 10000),
-           (N'|ↄↄↄ', 50000),
-           (N'ccc|ↄↄↄ', 100000),
-           (N'ccc|ↄↄↄↄↄↄ', 150000)
+           (N'(V)', 5000),
+           (N'(X)', 10000),
+           (N'(L)', 50000),
+           (N'(C)', 100000),
+           (N'(C)(L)', 150000)
   
    WHILE @Number > 0
      SELECT  @RomanNumeral = COALESCE(@RomanNumeral, '') + symbol,
@@ -81,7 +83,7 @@
    RAISERROR ('failed fifth test',16,1)   
  if NOT dbo.ToRomanNumerals(949) = 'CMXLIX'
    RAISERROR ('failed Sixth test',16,1)   
- if NOT dbo.ToRomanNumerals(154321) = N'ccc|ↄↄↄↄↄↄMMMMCCCXXI'
+ if NOT dbo.ToRomanNumerals(154321) = N'(C)(L)M(V)CCCXXI'
    RAISERROR ('failed Seventh test',16,1)   
  GO
   
@@ -128,11 +130,11 @@
            ('D', 500),
            ('CM', 900),
            ('M', 1000),
-           (N'|ↄↄ', 5000),
-           (N'cc|ↄↄ', 10000),
-           (N'|ↄↄↄ', 50000),
-           (N'ccc|ↄↄↄ', 100000),
-           (N'ccc|ↄↄↄↄↄↄ', 150000)
+           (N'(V)', 5000),
+           (N'(X)', 10000),
+           (N'(L)', 50000),
+           (N'(C)', 100000),
+           (N'(C)(L)', 150000)
   
  WHILE @instring>0 AND @RowCount>0
      BEGIN

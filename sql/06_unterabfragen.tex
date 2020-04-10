@@ -198,44 +198,36 @@ WHERE  Kunden_ID IN (SELECT Kunden_ID
                      FROM   EigenkundeKonto
                      WHERE  Eroeffnungsdatum < TO_DATE('01.01.1980'));
         \end{lstlisting}
-        \begin{lstlisting}[language=ms_sql,caption={Die Fehlermeldung in SQL Server},label=sql05_04]
-          SELECT Vorname, Nachname
-          FROM   Kunde
-          WHERE  Kunden_ID IN (SELECT Kunden_ID
-                               FROM   EigenkundeKonto
-                               WHERE  Eroeffnungsdatum < CONVERT(DATETIME2,'01.01.1980',104));
-                  \end{lstlisting}
-
-        \begin{center}
-          \begin{small}
-            \changefont{pcr}{m}{n}
-            \tablefirsthead {
-              \multicolumn{1}{l}{\textbf{VORNAME}} &
-              \multicolumn{1}{l}{\textbf{NACHNAME}} \\
-              \cmidrule(l){1-1}\cmidrule(l){2-2}
-            }
-            \tablehead{}
-            \tabletail {
-              \multicolumn{2}{l}{\textbf{28 Zeilen ausgewählt}} \\
-            }
-            \tablelasttail {
-              \multicolumn{2}{l}{\textbf{28 Zeilen ausgewählt}} \\
-            }
-            \begin{msoraclesql}
-              \begin{supertabular}{ll}
-									Jan & Weiß \\
-									Petra & Berger \\
-									Karolin & Lange \\
-									Tom & Hartmann \\
-								\end{supertabular}
-            \end{msoraclesql}
-          \end{small}
-        \end{center}
-        Auf die gleiche Art und Weise, wie in \beispiel{sql06_07} gezeigt, können einspaltige Unterabfragen auch in einer \HAVING-Klausel eingesetzt werden, was jedoch nur sehr selten vorkommt.
-      \subsection{Existenzprüfungen}
-				\subsubsection{Der EXISTS-Operator}
-          Der Name \textit{Existenzprüfung} sagt ohne Umschweife aus, worum es geht. Mit Hilfe des Operators \languageorasql{EXISTS} kann die Existenz bestimmter Daten geprüft werden. \beispiel{sql06_08} zeigt auf worum es sich hierbei handelt. Es soll eine Liste der Bankfilialen ermittelt werden, in denen Mitarbeiter eingesetzt sind.
-          \begin{lstlisting}[language=oracle_sql,caption={Der \languageorasql{EXISTS}-Operator},label=sql06_08]
+\begin{center}
+    \begin{small}
+        \changefont{pcr}{m}{n}
+        \tablefirsthead {
+            \multicolumn{1}{l}{\textbf{VORNAME}} &
+            \multicolumn{1}{l}{\textbf{NACHNAME}} \\
+            \cmidrule(l){1-1}\cmidrule(l){2-2}
+        }
+        \tablehead{}
+        \tabletail {
+            \multicolumn{2}{l}{\textbf{28 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail {
+            \multicolumn{2}{l}{\textbf{28 Zeilen ausgewählt}} \\
+        }
+        \begin{msoraclesql}
+            \begin{supertabular}{ll}
+                Jan & Weiß \\
+                Petra & Berger \\
+                Karolin & Lange \\
+                Tom & Hartmann \\
+            \end{supertabular}
+        \end{msoraclesql}
+    \end{small}
+\end{center}
+Auf die gleiche Art und Weise, wie in \beispiel{sql06_07} gezeigt, können einspaltige Unterabfragen auch in einer \HAVING-Klausel eingesetzt werden, was jedoch nur sehr selten vorkommt.
+\subsection{Existenzprüfungen}
+\subsubsection{Der EXISTS-Operator}
+Der Name \textit{Existenzprüfung} sagt ohne Umschweife aus, worum es geht. Mit Hilfe des Operators \languageorasql{EXISTS} kann die Existenz bestimmter Daten geprüft werden. \beispiel{sql06_08} zeigt auf worum es sich hierbei handelt. Es soll eine Liste der Bankfilialen ermittelt werden, in denen Mitarbeiter eingesetzt sind.
+\begin{lstlisting}[language=oracle_sql,caption={Der \languageorasql{EXISTS}-Operator},label=sql06_08]
 SELECT Strasse, Hausnummer, PLZ, Ort
 FROM   Bankfiliale b
 WHERE  EXISTS (SELECT 1
