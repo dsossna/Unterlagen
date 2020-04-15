@@ -1,81 +1,85 @@
-\subsection{Übungsaufgabe Diensthundeschule}
-\subsubsection{Vorgaben}
-\begin{center}
-    \scalebox{.5}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](dienststelle){Diensstelle};
-            \node[attribute](dienststellenid)[below = of dienststelle]{\key{Dienststellen\_ID}} edge (dienststelle);
-            \node[relationship](untersteht)[above = of dienststelle]{untersteht};
-            \path[draw, -] (dienststelle.120) |- ($(dienststelle.120) + (0, 0.5)$) -- ($(dienststelle.west) + (-1, 1.125)$) |- (untersteht.west) node[auto,swap, xshift=-60,yshift=10]{(0,*) ist vorgesetzt von};
-            \path[draw, -] (dienststelle.60) |- ($(dienststelle.60) + (0, 0.5)$) -- ($(dienststelle.east) + (1, 1.125)$) |- (untersteht.east) node[auto,swap, xshift=40,yshift=10]{(0,1) untersteht};
-            \node[entity](diensthund) at (0,-6){Diensthund};
-            \node[attribute](diensthundid)[above = of diensthund]{\key{Diensthund\_ID}} edge (diensthund);
-            \node[relationship](besitzt) at (-4.5,-2.5){besitzt};
-            \path[draw, -] (dienststelle.west) -| (besitzt.north) node[auto,swap, xshift=15,yshift=20]{(0,*)};
-            \path[draw, -] (diensthund.120) |- ($(diensthund.120) + (0, 0.5)$) -- ($(besitzt.south) + (0, -1.3)$) -- (besitzt.south) node[auto,swap, xshift=15,yshift=-30]{(1,1)};
-            \node[relationship](isteigentum) at (4.5,-2.5){ist Eigentum};
-            \path[draw, -] (dienststelle.east) -| (isteigentum.north) node[auto,swap, xshift=15,yshift=10]{(0,*)};
-            \path[draw, -] (diensthund.60) |- ($(diensthund.60) + (0, 0.5)$) -- ($(isteigentum.south) + (0, -0.7)$) -- (isteigentum.south) node[auto,swap, xshift=15,yshift=-15]{(1,1)};
+      \subsection{Übungsaufgabe Diensthundeschule}
+        \subsubsection{Vorgaben}
+          \begin{center}
+            \scalebox{.5}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+                \node[entity](dienststelle){Diensstelle};
+                  \node[attribute](dienststellenid)[below = of dienststelle]{\key{Dienststellen\_ID}} edge (dienststelle);
+                \node[relationship](untersteht)[above = of dienststelle]{untersteht};
+                  \path[draw, -] (dienststelle.120) |- ($(dienststelle.120) + (0, 0.5)$) -- ($(dienststelle.west) + (-1, 1.125)$) |- (untersteht.west) node[auto,swap, xshift=-60,yshift=10]{(0,*) ist vorgesetzt von};
+                  \path[draw, -] (dienststelle.60) |- ($(dienststelle.60) + (0, 0.5)$) -- ($(dienststelle.east) + (1, 1.125)$) |- (untersteht.east) node[auto,swap, xshift=40,yshift=10]{(0,1) untersteht};
+                \node[entity](diensthund) at (0,-6){Diensthund};
+                  \node[attribute](diensthundid)[above = of diensthund]{\key{Diensthund\_ID}} edge (diensthund);
+                \node[relationship](besitzt) at (-4.5,-2.5){besitzt};
+                  \path[draw, -] (dienststelle.west) -| (besitzt.north) node[auto,swap, xshift=15,yshift=20]{(0,*)};
+                  \path[draw, -] (diensthund.120) |- ($(diensthund.120) + (0, 0.5)$) -- ($(besitzt.south) + (0, -1.3)$) -- (besitzt.south) node[auto,swap, xshift=15,yshift=-30]{(1,1)};
+                \node[relationship](isteigentum) at (4.5,-2.5){ist Eigentum};
+                  \path[draw, -] (dienststelle.east) -| (isteigentum.north) node[auto,swap, xshift=15,yshift=10]{(0,*)};
+                  \path[draw, -] (diensthund.60) |- ($(diensthund.60) + (0, 0.5)$) -- ($(isteigentum.south) + (0, -0.7)$) -- (isteigentum.south) node[auto,swap, xshift=15,yshift=-15]{(1,1)};
 
-            \node[relationship](hat)[left = 3cm of diensthund]{hat} edge node[auto]{(1,1)}(diensthund);
-            \node[entity](status)[left = 2cm of hat]{Status} edge node[auto]{(0,*)}(hat);
-            \node[attribute](statusid)[above = of status]{\key{Status\_ID}} edge (status);
-            \node[relationship](bewohnt)[right = 3.5cm of diensthund]{bewohnt} edge node[auto,swap]{(1,*)}(diensthund);
-            \node[attribute](Zeitraum)[below = of bewohnt]{Zeitraum} edge (bewohnt);
-            \node[entity](zwinger)[right = 2cm of bewohnt]{Zwinger} edge node[auto,swap]{(0,*)}(bewohnt);
-            \node[attribute](zwingerid)[below = of zwinger]{\key{Zwinger\_ID}} edge (zwinger);
-            \node[relationship](untergliedertin)[above = 2cm of zwinger]{untergliedert in} edge node[auto]{(1,1)}(zwinger);
-            \node[entity](zwingerart)[above = 2cm of untergliedertin]{Zwingerart} edge node[auto]{(1,*)}(untergliedertin);
-            \node[attribute](zwingerartid)[above = of zwingerart]{\key{Zwingerart\_ID}} edge (zwingerart);
-            \node[relationship](durchlaeuft)[below = 2cm of diensthund]{durchläuft} edge node[auto,swap]{(1,*)}(diensthund);
-            \node[entity](untersuchung)[below = 2cm of durchlaeuft]{Untersuchung} edge node[auto,swap]{(1,1)}(durchlaeuft);
-            \node[attribute](untersuchungid)[left = of untersuchung]{\key{Untersuchung\_ID}} edge (untersuchung);
-            \node[relationship](fuehrtdurch) at (5,-12){führt druch};
-            \path[draw, -] (untersuchung.10) -| ($(untersuchung.10) + (0.5, 0)$) -- ($(fuehrtdurch.west) + (-1.6, 0)$) -- (fuehrtdurch.west) node[auto,swap, xshift=-25,yshift=10]{(1,1)};
-            \node[relationship](unterstuetzt) at (5,-16){unterstützt};
-            \path[draw, -] (untersuchung.350) -| ($(untersuchung.350) + (0.5, 0)$) -- ($(unterstuetzt.west) + (-1.7, 0)$) -- (unterstuetzt.west) node[auto,swap, xshift=-25,yshift=10]{(1,*)};
-            \node[entity](medpersonal)[right = 7cm of untersuchung]{Med\_Personal};
-            \node[attribute](medpersoanlid)[above = 2.5cm of medpersonal]{\key{Med\_Personal\_ID}} edge (medpersonal);
-            \path[draw, -] (medpersonal.170) -| ($(medpersonal.170) + (-0.5, 0)$) -- ($(fuehrtdurch.east) + (1.4, 0)$) -- (fuehrtdurch.east) node[auto,swap, xshift=25,yshift=10]{(0,*)};
-            \path[draw, -] (medpersonal.190) -| ($(medpersonal.190) + (-0.5, 0)$) -- ($(unterstuetzt.east) + (1.5, 0)$) -- (unterstuetzt.east) node[auto,swap, xshift=25,yshift=10]{(0,*)};
-            \node[isa](isauntersuchung)[below = 3cm of untersuchung]{isa} edge node[auto,xshift=-10,yshift=-20]{(0,1)(1,1) disjunkt} (untersuchung);
-            \node[entity](ankaufuntersuchung) at (-7.5,-20){Ankaufuntersuchung};
-            \node[entity](nachuntersuchung) at (-2.5,-20){Nachuntersuchung};
-            \node[entity](behandlung) at (2.5,-20){Behandlung};
-            \node[entity](ausmusterungsgutachten) at (7.5,-20){Ausmusterungsgutachten};
-            \path[draw, -] (isauntersuchung.west) -| (ankaufuntersuchung.north);
-            \path[draw, -] (isauntersuchung.west) -| (nachuntersuchung.north);
-            \path[draw, -] (isauntersuchung.east) -| (behandlung.north);
-            \path[draw, -] (isauntersuchung.east) -| (ausmusterungsgutachten.north);
+                \node[relationship](hat)[left = 3cm of diensthund]{hat} edge node[auto]{(1,1)}(diensthund);
+                \node[entity](status)[left = 2cm of hat]{Status} edge node[auto]{(0,*)}(hat);
+                  \node[attribute](statusid)[above = of status]{\key{Status\_ID}} edge (status);
+                \node[relationship](bewohnt)[right = 3.5cm of diensthund]{bewohnt} edge node[auto,swap]{(1,*)}(diensthund);
+                  \node[attribute](Zeitraum)[below = of bewohnt]{Zeitraum} edge (bewohnt);
+                \node[entity](zwinger)[right = 2cm of bewohnt]{Zwinger} edge node[auto,swap]{(0,*)}(bewohnt);
+                  \node[attribute](zwingerid)[below = of zwinger]{\key{Zwinger\_ID}} edge (zwinger);
+                \node[relationship](untergliedertin)[above = 2cm of zwinger]{untergliedert in} edge node[auto]{(1,1)}(zwinger);
+                \node[entity](zwingerart)[above = 2cm of untergliedertin]{Zwingerart} edge node[auto]{(1,*)}(untergliedertin);
+                  \node[attribute](zwingerartid)[above = of zwingerart]{\key{Zwingerart\_ID}} edge (zwingerart);
+                \node[relationship](durchlaeuft)[below = 2cm of diensthund]{durchläuft} edge node[auto,swap]{(1,*)}(diensthund);
+                \node[entity](untersuchung)[below = 2cm of durchlaeuft]{Untersuchung} edge node[auto,swap]{(1,1)}(durchlaeuft);
+                  \node[attribute](untersuchungid)[left = of untersuchung]{\key{Untersuchung\_ID}} edge (untersuchung);
+                \node[relationship](fuehrtdurch) at (5,-12){führt druch};
+                  \path[draw, -] (untersuchung.10) -| ($(untersuchung.10) + (0.5, 0)$) -- ($(fuehrtdurch.west) + (-1.6, 0)$) -- (fuehrtdurch.west) node[auto,swap, xshift=-25,yshift=10]{(1,1)};
+                \node[relationship](unterstuetzt) at (5,-16){unterstützt};
+                  \path[draw, -] (untersuchung.350) -| ($(untersuchung.350) + (0.5, 0)$) -- ($(unterstuetzt.west) + (-1.7, 0)$) -- (unterstuetzt.west) node[auto,swap, xshift=-25,yshift=10]{(1,*)};
+                \node[entity](medpersonal)[right = 7cm of untersuchung]{Med\_Personal};
+                  \node[attribute](medpersoanlid)[above = 2.5cm of medpersonal]{\key{Med\_Personal\_ID}} edge (medpersonal);
+                  \path[draw, -] (medpersonal.170) -| ($(medpersonal.170) + (-0.5, 0)$) -- ($(fuehrtdurch.east) + (1.4, 0)$) -- (fuehrtdurch.east) node[auto,swap, xshift=25,yshift=10]{(0,*)};
+                  \path[draw, -] (medpersonal.190) -| ($(medpersonal.190) + (-0.5, 0)$) -- ($(unterstuetzt.east) + (1.5, 0)$) -- (unterstuetzt.east) node[auto,swap, xshift=25,yshift=10]{(0,*)};
+                \node[isa](isauntersuchung)[below = 3cm of untersuchung]{isa} edge node[auto,xshift=-10,yshift=-20]{(0,1)(1,1) disjunkt} (untersuchung);
 
-            \node[relationship](bestehtaus)[below = 2cm of behandlung]{besteht aus} edge node[auto,swap]{(1,*)}(behandlung);
-            \node[entity](behandlungsposition)[left = 2cm of bestehtaus]{Behandlungsposition} edge node[auto]{(1,1)}(bestehtaus);
-            \node[attribute](behandlungspositionid)[left = of behandlungsposition]{\key{Behandlungsposition\_ID}} edge (behandlungsposition);
-            \node[relationship](enthaelt)[below = 2cm of behandlungsposition]{enthält} edge node[auto,swap]{(1,1)}(behandlungsposition);
-            \node[entity](diagnose)[below = 2cm of enthaelt]{Diagnose} edge node[auto,swap]{(0,*)}(enthaelt);
-            \node[attribute](diagnoseid)[right = of diagnose]{\key{Diagnose\_ID}} edge (diagnose);
-        \end{tikzpicture}
-    }
-\end{center}
-\subsubsection{Transformation}
-\begin{tabular}{>{\small\textbf\bgroup}p{3.8cm}<{\egroup}>{\small}p{10.8cm}}
-    Dienststelle           & (\pk{Dienststellen\_ID},           Bezeichnung, Dienststellennummer, Adresse, Telefonnr, \fk{VorgesetzteDienststelle\_ID}) \\
-    Diensthund             & (\pk{Diensthund\_ID}, Name, Fellfarbe, Geschlecht, Kaufdatum, \nn{\fk{Besitzer\_ID}},
-    \nn{\fk{Eigentuemer\_ID}}, \nn{\fk{Status\_ID}})                                                                                                    \\
-    Zwinger                & (\pk{Zwinger\_ID}, Ort, Zwingernummer, \nn{\fk{Zwingerart\_ID}})                                                           \\
-    Diensthundezwinger     & (\pk{DH\_Zwinger\_ID},
-    \nn{\fk{Diensthund\_ID}}, \nn{\fk{Zwinger\_ID}}, Zeitraum)                                                                                          \\
-    Zwingerart             & (\pk{Zwingerart\_ID}, Bezeichnung)                                                                                         \\
-    Status                 & (\pk{Status\_ID}, Bezeichnung)                                                                                             \\
-    Untersuchung           & (\pk{Untersuchung\_ID}, Datum,
-    \nn{\fk{Diensthund\_ID}}, \nn{\fk{MedPersonal\_ID}})                                                                                                \\
-    MedPersonal            & (\pk{Med\_Personal\_ID}, Name, Dienstgrad)                                                                                 \\
-    Untersuchungspersonal  & (\fk{\pk{Untersuchung\_ID + Med\_Personal\_ID}})                                                                           \\
-    Ankaufuntersuchung     & (\fk{\pk{Untersuchung\_ID}}, Groesse, Gewicht, Roentgenzahnalter)                                                          \\
-    Nachuntersuchung       & (\fk{\pk{Untersuchung\_ID}}, Befund)                                                                                       \\
-    Behandlung             & (\fk{\pk{Untersuchung\_ID}})                                                                                               \\
-    Ausmusterungsgutachten & (\fk{\pk{Untersuchung\_ID}}, Bericht)                                                                                      \\
-    Behandlungsposition    & (\pk{Behandlungsposition\_ID}, \nn{\fk{Untersuchung\_ID}}, \nn{\fk{Diagnose\_ID}}, Notiz)                                  \\
-    Diagnose               & (\pk{Diagnose\_ID}, Diagnosetext)                                                                                          \\
-\end{tabular}
+                \node[entity](ankaufuntersuchung) at (-7.5,-20){Ankaufuntersuchung};
+                \node[entity](nachuntersuchung) at (-2.5,-20){Nachuntersuchung};
+                \node[entity](behandlung) at (2.5,-20){Behandlung};
+                \node[entity](ausmusterungsgutachten) at (7.5,-20){Ausmusterungsgutachten};
+                  \path[draw, -] (isauntersuchung.west) -| (ankaufuntersuchung.north);
+                  \path[draw, -] (isauntersuchung.west) -| (nachuntersuchung.north);
+                  \path[draw, -] (isauntersuchung.east) -| (behandlung.north);
+                  \path[draw, -] (isauntersuchung.east) -| (ausmusterungsgutachten.north);
+
+                \node[relationship](bestehtaus)[below = 2cm of behandlung]{besteht aus} edge node[auto,swap]{(1,*)}(behandlung);
+                \node[entity](behandlungsposition)[left = 2cm of bestehtaus]{Behandlungsposition} edge node[auto]{(1,1)}(bestehtaus);
+                \node[attribute](behandlungspositionid)[left = of behandlungsposition]{\key{Behandlungsposition\_ID}} edge (behandlungsposition);
+                \node[relationship](enthaelt)[below = 2cm of behandlungsposition]{enthält} edge node[auto,swap]{(1,1)}(behandlungsposition);
+                \node[entity](diagnose)[below = 2cm of enthaelt]{Diagnose} edge node[auto,swap]{(0,*)}(enthaelt);
+                  \node[attribute](diagnoseid)[right = of diagnose]{\key{Diagnose\_ID}} edge (diagnose);
+              \end{tikzpicture}
+            }
+          \end{center}
+        \subsubsection{Transformation}
+					\begin{tabular}{>{\textbf\bgroup}p{5.5cm}<{\egroup}>{\small}p{9.6cm}}
+						Dienststelle & \mbox{(\pk{Dienststellen\_ID}, Bezeichnung,
+						Dienststellennummer,} \mbox{Adresse, Telefonnr,
+						\fk{VorgesetzteDienststelle\_ID})} \\
+						Diensthund & \mbox{(\pk{Diensthund\_ID}, Name, Fellfarbe, Geschlecht,
+						Kaufdatum,} \mbox{\nn{\fk{Besitzer\_ID}},
+						\nn{\fk{Eigentuemer\_ID}},} \mbox{\nn{\fk{Status\_ID}})} \\
+						Zwinger & (\pk{Zwinger\_ID}, Ort, Zwingernummer, \nn{\fk{Zwingerart\_ID}}) \\
+						Diensthundezwinger & \mbox{(\pk{DH\_Zwinger\_ID},
+						\nn{\fk{Diensthund\_ID}},} \mbox{\nn{\fk{Zwinger\_ID}}, Zeitraum)} \\
+						Zwingerart & (\pk{Zwingerart\_ID}, Bezeichnung) \\
+						Status & (\pk{Status\_ID}, Bezeichnung) \\
+						Untersuchung & \mbox{(\pk{Untersuchung\_ID}, Datum,
+						\nn{\fk{Diensthund\_ID}},} \mbox{\nn{\fk{MedPersonal\_ID}})} \\
+						MedPersonal & (\pk{Med\_Personal\_ID}, Name, Dienstgrad) \\
+						Untersuchungspersonal & (\fk{\pk{Untersuchung\_ID + Med\_Personal\_ID}}) \\
+						Ankaufuntersuchung & (\fk{\pk{Untersuchung\_ID}}, Groesse, Gewicht, Roentgenzahnalter) \\
+						Nachuntersuchung & (\fk{\pk{Untersuchung\_ID}}, Befund) \\
+						Behandlung & (\fk{\pk{Untersuchung\_ID}}) \\
+						Ausmusterungsgutachten & (\fk{\pk{Untersuchung\_ID}}, Bericht) \\
+						Behandlungsposition & (\pk{Behandlungsposition\_ID}, Notiz, \nn{\fk{Untersuchung\_ID}}, \nn{\fk{Diagnose\_ID}}) \\
+						Diagnose & (\pk{Diagnose\_ID}, Diagnosetext) \\
+          \end{tabular}
 \clearpage

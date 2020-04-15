@@ -1,59 +1,59 @@
 \clearpage
-\subsection{Übungsaufgabe Bank}
-Der Manager einer neu gegründeten Bank beauftragt Sie mit der
-Erstellung eines Datenmodells für die Verwaltung der Bankgeschäfte.
-In der vor kurzem erfolgten Besprechung wurden folgende Eckpunkte
-festgelegt:
+      \subsection{Übungsaufgabe Bank}
+        Der Manager einer neu gegründeten Bank beauftragt Sie mit der
+        Erstellung eines Datenmodells für die Verwaltung der Bankgeschäfte.
+        In der vor kurzem erfolgten Besprechung wurden folgende Eckpunkte
+        festgelegt:
 
-Meine Bank hat mehrere Kunden aber mindestens Einen sonst würde meine
-Bank nicht existieren. Alle meine Kunden besitzen eine Kunden ID, einen
-Vorname, einen Nachnamen, ein Geburtsdatum und eine Rechnungsadresse.
+        Meine Bank hat mehrere Kunden aber mindestens Einen sonst würde meine
+        Bank nicht existieren. Alle meine Kunden besitzen eine Kunden ID, einen
+        Vorname, einen Nachnamen, ein Geburtsdatum und eine Rechnungsadresse.
 
-Kunden können eines oder mehrere Konten besitzen. Jedes Konto hat
-jedoch genau einen Besitzer. Ein Konto ist entweder ein Sparbuch, ein
-Depot oder ein Girokonto. Andere Arten von Konten werden bei uns nicht
-geführt und es gibt auch keine Mischformen dieser drei Kontoarten.
-Jedes Konto soll in unserer Datenbank mit einer IBAN (international bank
-account number) versehen werden. Für die Sparbücher und die
-Girokonten ist auch das aktuelle Guthaben zu speichern. Auf unsere
-Sparbücher gibt es einen Habenzinssatz, für die Girokonten wird ein
-Sollzinssatz geführt, der bei Überziehung des Kontos zum Tragen
-kommt. Wer ein Girokonto besitzt, für den wird jährlich eine
-Kontoführungsgebühr fällig. Bei einem Depot muss eine
-Eröffnungsgebühr gezahlt werden.
+        Kunden können eines oder mehrere Konten besitzen. Jedes Konto hat
+        jedoch genau einen Besitzer. Ein Konto ist entweder ein Sparbuch, ein
+        Depot oder ein Girokonto. Andere Arten von Konten werden bei uns nicht
+        geführt und es gibt auch keine Mischformen dieser drei Kontoarten.
+        Jedes Konto soll in unserer Datenbank mit einer IBAN (international bank
+        account number) versehen werden. Für die Sparbücher und die
+        Girokonten ist auch das aktuelle Guthaben zu speichern. Auf unsere
+        Sparbücher gibt es einen Habenzinssatz, für die Girokonten wird ein
+        Sollzinssatz geführt, der bei Überziehung des Kontos zum Tragen
+        kommt. Wer ein Girokonto besitzt, für den wird jährlich eine
+        Kontoführungsgebühr fällig. Bei einem Depot muss eine
+        Eröffnungsgebühr gezahlt werden.
 
-Unsere Kunden können einer anderen Person, die ebenfalls bei uns Kunde
-sein muss, höchstens eine Vollmacht über ein Konto geben. Ein Kunde
-kann mehrere Vollmachten über verschiedene Konten besitzen.
+        Unsere Kunden können einer anderen Person, die ebenfalls bei uns Kunde
+        sein muss, höchstens eine Vollmacht über ein Konto geben. Ein Kunde
+        kann mehrere Vollmachten über verschiedene Konten besitzen.
 
-Ein wesentlicher Bestandteil der Datenbank ist unser Buchungssystem. Auf
-den Konten unserer Kunden erfolgen Buchungen (Einzahlungen,
-Auszahlungen, Überweisungen, usw. NICHT SPEZIALISIEREN!!!), die mit
-einem Betrag und einem Buchungsdatum gespeichert werden müssen. Jede
-Buchung ist immer genau einem Konto zuordenbar, während es für ein
-Konto mehrere Buchungen geben kann. Es muss auch der Fall
-berücksichtigt werden, dass z. B. auf einem neu eröffneten Konto
-noch keine Buchung vorgenommen wurde.
+        Ein wesentlicher Bestandteil der Datenbank ist unser Buchungssystem. Auf
+        den Konten unserer Kunden erfolgen Buchungen (Einzahlungen,
+        Auszahlungen, Überweisungen, usw. NICHT SPEZIALISIEREN!!!), die mit
+        einem Betrag und einem Buchungsdatum gespeichert werden müssen. Jede
+        Buchung ist immer genau einem Konto zuordenbar, während es für ein
+        Konto mehrere Buchungen geben kann. Es muss auch der Fall
+        berücksichtigt werden, dass z. B. auf einem neu eröffneten Konto
+        noch keine Buchung vorgenommen wurde.
 
-Damit unsere Kunden auch Geschäfte mit Kunden anderer Banken tätigen
-können, müssen von diesen fremden Personen der Vorname, der Nachname
-und eine IBAN gespeichert werden. Auch benötigen wir den Namen und den
-BIC (bank identity code) der fremden Bank (Hinweis: Hier bietet es sich
-an, die Kunden in Eigenkunden unserer Bank und Fremdkunden zu
-unterteilen!). Es kommt auch vor, dass einer unserer Kunden Kunde bei
-einer anderen Bank ist und Geld von einem seiner Konten auf ein Anderes,
-bei einer anderen Bank, transferieren möchte.
+        Damit unsere Kunden auch Geschäfte mit Kunden anderer Banken tätigen
+        können, müssen von diesen fremden Personen der Vorname, der Nachname
+        und eine IBAN gespeichert werden. Auch benötigen wir den Namen und den
+        BIC (bank identity code) der fremden Bank (Hinweis: Hier bietet es sich
+        an, die Kunden in Eigenkunden unserer Bank und Fremdkunden zu
+        unterteilen!). Es kommt auch vor, dass einer unserer Kunden Kunde bei
+        einer anderen Bank ist und Geld von einem seiner Konten auf ein Anderes,
+        bei einer anderen Bank, transferieren möchte.
 
-Die Eigenkunden können von mehreren Mitarbeitern unserer Bank betreut
-werden. Ein Mitarbeiter kann mehrere Kunden betreuen. Die Vorgesetzten
-der Filialleiter, die ebenfalls als Mitarbeiter geführt werden,  haben
-keinen Kundenkontakt. Jeder Mitarbeiter hat genau einen Vorgesetzten,
-auß{}er mir selbst. Ein vorgesetzter Mitarbeiter hat aber mehrere
-Mitarbeiter, die er führt. Meine Mitarbeiter sollen in der Datenbank
-mit Vorname, Nachname und einer Mitarbeiter ID gespeichert werden.
+        Die Eigenkunden können von mehreren Mitarbeitern unserer Bank betreut
+        werden. Ein Mitarbeiter kann mehrere Kunden betreuen. Die Vorgesetzten
+        der Filialleiter, die ebenfalls als Mitarbeiter geführt werden,  haben
+        keinen Kundenkontakt. Jeder Mitarbeiter hat genau einen Vorgesetzten,
+        auß{}er mir selbst. Ein vorgesetzter Mitarbeiter hat aber mehrere
+        Mitarbeiter, die er führt. Meine Mitarbeiter sollen in der Datenbank
+        mit Vorname, Nachname und einer Mitarbeiter ID gespeichert werden.
 
-Jeder Mitarbeiter der Bank arbeitet in einer Bankfiliale, auß{}er den
-Vorgesetzten der Filialleiter. In einer Bankfiliale arbeiten mindestens
-ein aber maximal zehn Mitarbeiter. Die Bankfiliale soll mit ihrer
-Adresse in der Datenbank gespeichert werden.
+        Jeder Mitarbeiter der Bank arbeitet in einer Bankfiliale, auß{}er den
+        Vorgesetzten der Filialleiter. In einer Bankfiliale arbeiten mindestens
+        ein aber maximal zehn Mitarbeiter. Die Bankfiliale soll mit ihrer 
+        Adresse in der Datenbank gespeichert werden.
 \clearpage

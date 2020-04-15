@@ -1,31 +1,31 @@
-\subsection{Übungsaufgabe Diensthundeschule}
-Der Kommandeur der Schule für Diensthundewesen der Bundeswehr (SDstHundeBw) bittet Sie ein Datenmodell zu entwerfen, um eine bereits vorhandene Patientenanwendung zu ersetzen. Patienten im Sinne dieser Anwendung sind Diensthunde. In einer Besprechung wurden folgende Eckpunkte festgelegt:
+      \subsection{Übungsaufgabe Diensthundeschule}
+        Der Kommandeur der Schule für Diensthundewesen der Bundeswehr (SDstHundeBw) bittet Sie ein Datenmodell zu entwerfen, um eine bereits vorhandene Patientenanwendung zu ersetzen. Patienten im Sinne dieser Anwendung sind Diensthunde. In einer Besprechung wurden folgende Eckpunkte festgelegt:
 
-Als Erstes müssen alle relavanten Dienststellen mit ihrer Bezeichnung, der Dienststellennummer, der Adresse und der Telefonnummer eines Ansprechpartners in der Datenbank hinterlegt werden. Jede Dienststelle untersteht höchstens einer anderen Dienststelle, eine Dienststelle hat keine oder mehrere Dienststellen unter sich.
+        Als Erstes müssen alle relavanten Dienststellen mit ihrer Bezeichnung, der Dienststellennummer, der Adresse und der Telefonnummer eines Ansprechpartners in der Datenbank hinterlegt werden. Jede Dienststelle untersteht höchstens einer anderen Dienststelle, eine Dienststelle hat keine oder mehrere Dienststellen unter sich.
 
-Zu einem Diensthund sind sein Name, seine Fellfarbe, das Geschlecht und das Kaufdatum wichtig.
+        Zu einem Diensthund sind sein Name, seine Fellfarbe, das Geschlecht und das Kaufdatum wichtig.
 
-Zwischen den Dienststellen und den Diensthunden existieren zwei unterschiedliche Beziehungen. Es gibt Dienststellen, die Eigentümer der Diensthunde sind und andere Dienststellen, die Besitzer der Diensthunde sind. Dies kommt dadurch zu Stande, dass die Hunde nicht immer in der Dienststelle ihren Dienst verrichten, die der Eigentümer des Hundes ist. Jede hier erfasste Dienststelle besitzt bzw. ist Eigentümer von mindestens einem Hund. Ein Diensthund ist jedoch immer nur einer Dienststelle zugeordnet. Dies gilt für den Besitz eines Hundes und auch für das Eigentum an einem Hund.
+        Zwischen den Dienststellen und den Diensthunden existieren zwei unterschiedliche Beziehungen. Es gibt Dienststellen, die Eigentümer der Diensthunde sind und andere Dienststellen, die Besitzer der Diensthunde sind. Dies kommt dadurch zu Stande, dass die Hunde nicht immer in der Dienststelle ihren Dienst verrichten, die der Eigentümer des Hundes ist. Jede hier erfasste Dienststelle besitzt bzw. ist Eigentümer von mindestens einem Hund. Ein Diensthund ist jedoch immer nur einer Dienststelle zugeordnet. Dies gilt für den Besitz eines Hundes und auch für das Eigentum an einem Hund.
 
-Die an der Klinik der SDstHundeBw befindlichen Diensthunde haben alle genau einen Status (z. B. dienstfähig, eingeschränkt dienstfähig, usw.). Ein Status kann an mehrere Diensthunde vergeben werden. Des Weiteren bewohnt jeder Diensthund, während seines Aufenthaltes an der SDstHundeBw einen Zwinger. Für das Personal in der Tierklinik ist es wichtig zu wissen, welcher Diensthund wann und wie oft welchen Zwinger bewohnt hat (es soll eine Historie der Zwingeraufenthalte der Hunde möglich sein). Es muss mit eingeplant werden, dass nicht immer alle Zwinger von Hunden bewohnt werden. Ein Zwinger gehört zu genau einer Zwingerart. Beispielsweise gibt es normale Zwinger und Quarantäne Zwinger. Von jeder Zwingerart gibt es mindestens einen Zwinger in der Tierklinik. Zu einem Zwinger werden der Ort, an dem er sich befindet und die Zwingernummer gespeichert. Für die Zwingerart soll lediglich deren Bezeichnung angegeben werden.
+        Die an der Klinik der SDstHundeBw befindlichen Diensthunde haben alle genau einen Status (z. B. dienstfähig, eingeschränkt dienstfähig, usw.). Ein Status kann an mehrere Diensthunde vergeben werden. Des Weiteren bewohnt jeder Diensthund, während seines Aufenthaltes an der SDstHundeBw einen Zwinger. Für das Personal in der Tierklinik ist es wichtig zu wissen, welcher Diensthund wann und wie oft welchen Zwinger bewohnt hat (es soll eine Historie der Zwingeraufenthalte der Hunde möglich sein). Es muss mit eingeplant werden, dass nicht immer alle Zwinger von Hunden bewohnt werden. Ein Zwinger gehört zu genau einer Zwingerart. Beispielsweise gibt es normale Zwinger und Quarantäne Zwinger. Von jeder Zwingerart gibt es mindestens einen Zwinger in der Tierklinik. Zu einem Zwinger werden der Ort, an dem er sich befindet und die Zwingernummer gespeichert. Für die Zwingerart soll lediglich deren Bezeichnung angegeben werden.
 
-Ein Diensthund durchläuft im Laufe seines Lebens verschiedene Untersuchungen in der Tierklinik. Zu jeder Untersuchung ist das Untersuchungsdatum wichtig. Bei jedem Untersuchungstermin wird immer nur genau ein Hund behandelt.
+        Ein Diensthund durchläuft im Laufe seines Lebens verschiedene Untersuchungen in der Tierklinik. Zu jeder Untersuchung ist das Untersuchungsdatum wichtig. Bei jedem Untersuchungstermin wird immer nur genau ein Hund behandelt.
 
-Durchgeführt werden die Untersuchungen von medizinischem Fachpersonal. Eine Untersuchung wird von genau einem Tierarzt durchgeführt, der während seiner Anwesenheit an der SDstHundeBw die verschiedenstens Untersuchungen durchführen kann.
+        Durchgeführt werden die Untersuchungen von medizinischem Fachpersonal. Eine Untersuchung wird von genau einem Tierarzt durchgeführt, der während seiner Anwesenheit an der SDstHundeBw die verschiedenstens Untersuchungen durchführen kann.
 
-Zu jeder Untersuchung wird auch immer mindestens ein anderer Tierarzt oder eine Krankenschwester hinzugezogen. In der Datenbank soll für das medizinische Personal der Name
-und der Dienstgrad gespeichert werden.
+        Zu jeder Untersuchung wird auch immer mindestens ein anderer Tierarzt oder eine Krankenschwester hinzugezogen. In der Datenbank soll für das medizinische Personal der Name
+        und der Dienstgrad gespeichert werden.
 
-Es gibt vier verschiedene Arten von Untersuchungen, welche unterschieden werden müssen:
-\begin{itemize}
-    \item Die Ankaufuntersuchung: Jeder Hund wird vor seinem Ankauf durch die Bundeswehr gründlich Untersucht.
-    \item Die Behandlung: Ein Diensthund wird auch im Falle einer ganz normalen Erkrankung, während seiner Anwesenheit an der SDstHundeBw, in der Tierklinik behandelt.
-    \item Die Nachuntersuchung: Nach seinem Ankauf durch die Bw wird ein Hund in seinen ersten zwei Dienstjahren mehrfach nachuntersucht.
-    \item Das Ausmusterungsgutachten: Hat ein Diensthund ein gewisses Alter erreicht oder eine schwere Verletzung erlitten, wird er aus dem Dienst entlassen.
-\end{itemize}
+        Es gibt vier verschiedene Arten von Untersuchungen, welche unterschieden werden müssen:
+        \begin{itemize}
+          \item Die Ankaufuntersuchung: Jeder Hund wird vor seinem Ankauf durch die Bundeswehr gründlich Untersucht.
+          \item Die Behandlung: Ein Diensthund wird auch im Falle einer ganz normalen Erkrankung, während seiner Anwesenheit an der SDstHundeBw, in der Tierklinik behandelt.
+          \item Die Nachuntersuchung: Nach seinem Ankauf durch die Bw wird ein Hund in seinen ersten zwei Dienstjahren mehrfach nachuntersucht.
+          \item Das Ausmusterungsgutachten: Hat ein Diensthund ein gewisses Alter erreicht oder eine schwere Verletzung erlitten, wird er aus dem Dienst entlassen.
+        \end{itemize}
 
-Für die Ankaufuntersuchung sind Angaben wie die Größ{}e und das Gewicht des Hundes sowie sein Röntgenzahnalter wichtig. Zu einer Nachuntersuchung wird nur ein Befund in Textform gespeichert.
+        Für die Ankaufuntersuchung sind Angaben wie die Größ{}e und das Gewicht des Hundes sowie sein Röntgenzahnalter wichtig. Zu einer Nachuntersuchung wird nur ein Befund in Textform gespeichert.
 
-Wird eine \enquote{normale} Behandlung an einem Diensthund durchgeführt, so besteht diese aus mindestens einer oder mehreren Behandlungspositionen (Operation, Medikamentengabe, usw.) die einzeln zu speichern sind. Dabei ist eine erfasste Behandlungsposition immer eindeutig einer Behandlung eines Diensthundes zuordenbar. Der behandelnde Arzt muss auch die Möglichkeit besitzen, zu einer Behandlungsposition eine kurze Notiz zu schreiben. Neben dieser Option ist zu jeder Behandlungsposition eine entsprechende Diagnose zu vermerken. Diese werden jedoch in einer separaten Liste verwaltet. So kann es auch vorkommen, dass dort Diagnosen aufgelistet sind, die bisher noch bei keinem Diensthund festgestellt wurden.
+        Wird eine \enquote{normale} Behandlung an einem Diensthund durchgeführt, so besteht diese aus mindestens einer oder mehreren Behandlungspositionen (Operation, Medikamentengabe, usw.) die einzeln zu speichern sind. Dabei ist eine erfasste Behandlungsposition immer eindeutig einer Behandlung eines Diensthundes zuordenbar. Der behandelnde Arzt muss auch die Möglichkeit besitzen, zu einer Behandlungsposition eine kurze Notiz zu schreiben. Neben dieser Option ist zu jeder Behandlungsposition eine entsprechende Diagnose zu vermerken. Diese werden jedoch in einer separaten Liste verwaltet. So kann es auch vorkommen, dass dort Diagnosen aufgelistet sind, die bisher noch bei keinem Diensthund festgestellt wurden.
 
-Für ein Ausmusterungsgutachten muss der Arzt einen kompletten Bericht im System hinterlegen können.
+        Für ein Ausmusterungsgutachten muss der Arzt einen kompletten Bericht im System hinterlegen können.

@@ -1,608 +1,606 @@
-\chapter{Erweiterte ER Modellierung}
-\chaptertoc{}
-\cleardoubleevenpage
+  \chapter{Erweiterte ER Modellierung}
+  \chaptertoc{}
+  \cleardoubleevenpage
+  
+    In diesem Abschnitt wird das ER-Modell um die drei Eigenschaften Rekursion, Spezialisierung und Generalisierung erweitert, so dass eine umfangreichere und genauere Beschreibung des betrachteten Gegenstandbereichs möglich ist.
 
-In diesem Abschnitt wird das ER-Modell um die drei Eigenschaften Rekursion, Spezialisierung und Generalisierung erweitert, so dass eine umfangreichere und genauere Beschreibung des betrachteten Gegenstandbereichs möglich ist.
+    \section{Rekursive Beziehungen}
+      Häufig ist es wichtig und notwendig den sachlogischen Zusammenhang zwischen zwei Objekten festzuhalten, die beide demselben Objekttyp angehören. So ist es für ein Unternehmen nützlich zu wissen, welcher Mitarbeiter durch welche anderen Mitarbeiter - im Krankheits- oder Urlaubsfall - vertreten werden kann.
 
-\section{Rekursive Beziehungen}
-Häufig ist es wichtig und notwendig den sachlogischen Zusammenhang zwischen zwei Objekten festzuhalten, die beide demselben Objekttyp angehören. So ist es für ein Unternehmen nützlich zu wissen, welcher Mitarbeiter durch welche anderen Mitarbeiter - im Krankheits- oder Urlaubsfall - vertreten werden kann.
+      \subsection{Definition eines rekursiven Beziehungstyps}
+        \begin{merke}
+          Ein rekursiver Beziehungstyp beschreibt den sachlogischen Zusammenhang zwischen Objekten, die dem gleichen Objekttyp angehören.
+        \end{merke}
 
-\subsection{Definition eines rekursiven Beziehungstyps}
-\begin{merke}
-    Ein rekursiver Beziehungstyp beschreibt den sachlogischen Zusammenhang zwischen Objekten, die dem gleichen Objekttyp angehören.
-\end{merke}
+        Für einen rekursiven Beziehungstyp sind dieselben Angaben erforderlich, wie für einen binären. Somit ist für einen solchen Beziehungstyp folgendes festzulegen (siehe \ref{naming_optionaliy_kardinality}):
+        \begin{enumerate}
+          \item eine aussagekräftige Benennung
+          \item eine Angabe zur Optionalität
+          \item eine Angabe zur Kardinalität
+        \end{enumerate}
+        Bei der traditionellen Informationsspeicherung, mit Hilfe von Karteikärtchen, wird der rekursive Beziehungstyp durch Querverweise, innerhalb des Karteikastens, realisiert. Im betrachteten Vertretungsbeispiel würden auf der Karteikarte des Mitarbeiters die Personalnummern seiner möglichen Vertreter notiert werden.
 
-Für einen rekursiven Beziehungstyp sind dieselben Angaben erforderlich, wie für einen binären. Somit ist für einen solchen Beziehungstyp folgendes festzulegen (siehe \ref{naming_optionaliy_kardinality}):
-\begin{enumerate}
-    \item eine aussagekräftige Benennung
-    \item eine Angabe zur Optionalität
-    \item eine Angabe zur Kardinalität
-\end{enumerate}
-Bei der traditionellen Informationsspeicherung, mit Hilfe von Karteikärtchen, wird der rekursive Beziehungstyp durch Querverweise, innerhalb des Karteikastens, realisiert. Im betrachteten Vertretungsbeispiel würden auf der Karteikarte des Mitarbeiters die Personalnummern seiner möglichen Vertreter notiert werden.
+      \subsection{Syntaxregeln für rekursive Beziehungstypen}
+        \label{syntaxofrecursiverelationtypes}
+        \begin{itemize}
+          \item Ein rekursiver Beziehungstyp zur Kennzeichnung eines sachlogischen Zusammenhangs zwischen den Objekten ein- und desselben Objekttyps A wird als eine Verbindungslinie dargestellt, die den Objekttyp A mit sich selbst verbindet. Diese Form der Verbindungslinie, die aus A austritt und zu A zurückführt, ist der Anlass für die Bezeichnung \enquote{rekursiv}\footnote{rekursiv = zurückführend}
+          \item Die Benennung des Beziehungstyps steht in einer Raute, am Beziehungstyp (siehe \ref{naming_optionaliy_kardinality})
+          \item Optionalität und Kardinalität der jeweiligen Beziehungstyp-Richtung werden in gleicher Weise angegeben, wie beim binären Beziehungstyp.
+        \end{itemize}
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){Soldat};
+              \node[relationship](rel1)[right = of A]{Relation};
+              \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(0,1)} (rel1.north);
+              \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(0,*)} (rel1.south);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Setzt man beim Führungsverhältnis der Soldaten voraus, dass ein Soldat von höchstens einem anderen Soldaten geführt wird und dass er selbst mehrere Soldaten führen kann, dann ergibt sich das folgende Datenmodell.
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){Soldat};
+              \node[relationship](rel1)[right = of A]{Führung};
+              \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(0,1) wird geführt} (rel1.north);
+              \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(0,*) führt} (rel1.south);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Bei rekursiven Beziehungen ist eine genauere Beschreibung der Beziehungstyp-Richtung notwendig. Im o. a. Beispiel wird der Sachverhalt \enquote{Führung} durch \enquote{führt} und \enquote{wird geführt} näher erläutert.
 
-\subsection{Syntaxregeln für rekursive Beziehungstypen}
-\label{syntaxofrecursiverelationtypes}
-\begin{itemize}
-    \item Ein rekursiver Beziehungstyp zur Kennzeichnung eines sachlogischen Zusammenhangs zwischen den Objekten ein- und desselben Objekttyps A wird als eine Verbindungslinie dargestellt, die den Objekttyp A mit sich selbst verbindet. Diese Form der Verbindungslinie, die aus A austritt und zu A zurückführt, ist der Anlass für die Bezeichnung \enquote{rekursiv}\footnote{rekursiv = zurückführend}
-    \item Die Benennung des Beziehungstyps steht in einer Raute, am Beziehungstyp (siehe \ref{naming_optionaliy_kardinality})
-    \item Optionalität und Kardinalität der jeweiligen Beziehungstyp-Richtung werden in gleicher Weise angegeben, wie beim binären Beziehungstyp.
-\end{itemize}
-\begin{center}
-    \scalebox{.9}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](A){Soldat};
-            \node[relationship](rel1)[right = of A]{Relation};
-            \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(0,1)} (rel1.north);
-            \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(0,*)} (rel1.south);
-        \end{tikzpicture}
-    }
-\end{center}
-Setzt man beim Führungsverhältnis der Soldaten voraus, dass ein Soldat von höchstens einem anderen Soldaten geführt wird und dass er selbst mehrere Soldaten führen kann, dann ergibt sich das folgende Datenmodell.
-\begin{center}
-    \scalebox{.9}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](A){Soldat};
-            \node[relationship](rel1)[right = of A]{Führung};
-            \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(0,1) wird geführt} (rel1.north);
-            \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(0,*) führt} (rel1.south);
-        \end{tikzpicture}
-    }
-\end{center}
-Bei rekursiven Beziehungen ist eine genauere Beschreibung der Beziehungstyp-Richtung notwendig. Im o. a. Beispiel wird der Sachverhalt \enquote{Führung} durch \enquote{führt} und \enquote{wird geführt} näher erläutert.
+        Die Angaben sind folgendermaß en zu lesen:
+        \begin{itemize}
+          \item Ein Soldat \enquote{führt} keinen oder mehrere andere Soldaten und
+          \item ein Soldat \enquote{wird geführt} von höchstens einem anderen Soldaten
+        \end{itemize}
+        Betrachtet man bei diesem Beziehungstyp Kardinalität und Optionalität, stellt sich nach einiger Überlegung die Frage, ob alle Kombinationen, welche bei den binären Beziehungstypen existieren, auch bei rekursive wiederzufinden sind.
 
-Die Angaben sind folgendermaß en zu lesen:
-\begin{itemize}
-    \item Ein Soldat \enquote{führt} keinen oder mehrere andere Soldaten und
-    \item ein Soldat \enquote{wird geführt} von höchstens einem anderen Soldaten
-\end{itemize}
-Betrachtet man bei diesem Beziehungstyp Kardinalität und Optionalität, stellt sich nach einiger Überlegung die Frage, ob alle Kombinationen, welche bei den binären Beziehungstypen existieren, auch bei rekursive wiederzufinden sind.
-
-Die Besonderheit eines rekursiven Beziehungstyps gegenüber einem binären Beziehungstyp, der Objekttyp A und B miteinander verknüpft, besteht darin, dass die Objekttypen A und B identisch sind. Somit sind rekursive Beziehungstypen nur dann möglich, wenn die Objekttypen A und B, die Mengen von Objekten repräsentieren, die dieselbe Mächtigkeit besitzen können.
-\begin{merke}
-    Die Mächtigkeit eines Objekttyps beschreibt die genaue Anzahl der in ihm zusammengefassten Objekte.
-\end{merke}
-An dieser Stelle soll dieser Sachverhalt nicht näher erläutert, sondern nur das für die Modellierung relevante Ergebnis betrachtet werden.
-
-Die \tabelle{combinationsrecurisverelationtyps} \enquote{Mögliche Kombinationen von rekursiven Beziehungstypen} zeigt, in der\\ (Min,Max)-Notation, die möglichen Kombinationen von Kardinalität und Optionalität und trifft eine Aussage, über die Verwendungsmöglichkeit bei rekursiven Beziehungstypen.
-\begin{center}
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Beziehungstyp}} &
-    \multicolumn{1}{l}{\textbf{Verwendung bei rekursiven Beziehungstypen}} \\
-}
-\tablecaption{Mögliche Kombinationen von rekursiven Beziehungstypen}
-\label{combinationsrecurisverelationtyps}
-\begin{supertabular}[h]{lp{5cm}}
-    (1,1):(1,1) & möglich\\
-    (1,1):(0,1) & nicht möglich\\
-    (0,1):(0,1) & möglich\\
-    (1,1):(1,*) & nicht möglich\\
-    (0,1):(1,*) & nicht möglich\\
-    (1,1):(0,*) & möglich\\
-    (0,1):(0,*) & möglich\\
-    (1,*):(1,*) & möglich\\
-    (1,*):(0,*) & möglich\\
-    (0,*):(0,*) & möglich\\
-\end{supertabular}
-\end{center}
-Die sieben möglichen Kombinationen werden, im späteren Verlauf
-dieser Unterlage (Kapitel 4 Transformation), im Zusammenhang mit ihrer
-Repräsentation im physischen Datenbankmodell, der Reihe nach
-untersucht und durch Beispiele veranschaulicht.
-\section{Anwendung rekursiver Beziehungstypen}
-Hier soll nun gezeigt werden, wie
-\tabelle{combinationsrecurisverelationtyps} hilft, in der Praxis Fehler
-zu vermeiden. Die nächste Abbildung zeigt zwei Entitäten (Version A
-und B), die das Verhältnis der Soldaten bzgl. Führung und geführt
-werden darstellen sollen.
-
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](A){Soldat};
-            \node[relationship](rel1)[right = of A]{Führung};
-            \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(1,1) wird geführt} (rel1.north);
-            \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(1,*) führt} (rel1.south);
-        \end{tikzpicture}
-    }
-\end{center}
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](A){Soldat};
-            \node[relationship](rel1)[right = of A]{Führung};
-            \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(0,1) wird geführt} (rel1.north);
-            \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(0,*) führt} (rel1.south);
-        \end{tikzpicture}
-    }
-\end{center}
-
-Beide Versionen sollen bezüglich der nächst genannten Fragen
-untersucht werden:
-\begin{itemize}
-    \item Was sagen die Versionen aus?
-    \item Wird die Realität richtig abgebildet?
-    \item Kann man sie realisieren (gemäß\ \tabelle{combinationsrecurisverelationtyps})?
-\end{itemize}
-\subsection{Version A}
-\subsubsection{Was sagt die Version aus?}
-Ein Soldat führt mindestens einen oder mehrere andere Soldaten und ein Soldat wird von genau einem anderen Soldaten geführt.
-
-In dieser Abbildung der Realität gibt es nur Vorgesetzte, da jeder Soldat immer mindestens einen anderen führt.
-
-\subsubsection{Wird die Realität richtig abgebildet?}
-Es gibt laut Version A nur solche Soldaten, die andere führen. Doch in der Realität ist dies sicherlich nicht der Fall, da z.B. ein Soldat in der Grundausbildung nicht immer  einen anderen Soldaten führen wird. In der anderen Fragerichtung muss man ebenfalls alle Soldaten betrachten. Die Aussage, dass ein Soldat von genau einem anderen geführt wird, betrachtet den Chef der Einheit nicht. Dieser sollte, in Bezug auf die eigene Einheit, keinen Vorgesetzten haben.
-
-Es zeigt sich, dass die Realität mit sehr hoher Wahrscheinlichkeit nicht korrekt abgebildet wurde. Ausnahmen kann es natürlich jederzeit geben.
-\subsubsection{Kann man sie realisieren?}
-\tabelle{combinationsrecurisverelationtyps} trifft, was die Realisierung in einem relationalem Datenbanksystem angeht, in Zeile 4 die klare Aussage, dass es nicht möglich ist. Man kann anhand der Tabelle schon einen Hinweis auf evtl. Fehler in der Modellierung finden.
-\subsection{Version B}
-\subsubsection{Was sagt die Version aus?}
-Ein Soldat führt null oder mehrere Untergebene und ein Soldat wird von null oder höchstens einem anderen Soldaten geführt. Dabei kann es sich entweder um den Chef oder einen Untergebenen handeln.
-\subsubsection{Wird die Realität richtig abgebildet?}
-Version B stellt die Möglichkeit bereit, dass in der Tabelle Soldat sowohl der Chef als auch die Untergebenen aufgeführt werden können, was sich darin widerspiegelt, dass ein Soldat keinen oder höchstens einen Chef haben kann und ein Soldat keinen oder mehrere Soldaten führen kann. Dies entspricht, nach der allgemeinen Auffassung, der Realität.
-\subsubsection{Kann man sie realisieren?}
-In \tabelle{combinationsrecurisverelationtyps} gibt in diesem Fall Zeile 7 die Auskunft, dass eine rekursive Beziehung mit diesen Kardinalitäten möglich ist. Eine Bestätigung, dass die Realität mit groß er Wahrscheinlichkeit richtig modelliert wurde. Eine hundertprozentige Aussage über richtig oder falsch kann man in diesem Verfahren jedoch nicht treffen.
-\section{Spezialisierung}
-\label{specialization}
-Die Spezialisierung ist eine Vorgehensweise, die Objekttypen als Mengen
-betrachtet. Es kann für die ER-Modellierung unter Umständen sinnvoll
-sein, eine Menge in mehrere Teilmengen zu zerlegen. Eine solche Zerlegung
-wird meist dann vorgenommen, wenn die Teilmengen eigene Attribute haben,
-die nur in den jeweiligen Teilmengen vorkommen. Auf diese Weise werden
-leere Felder in der Datenbank, sog. NULL-Werte vermieden, da möglichst
-immer alle Attribute mit Werten befüllt werden. Ein Beispiel hierzu:
-
-Die Menge aller Personen an einer Universtität enthält die beiden
-Teilmengen \enquote{Student} und \enquote{WiMa}\footnote{WiMa =
-    Wissenschaftlicher Mitarbeiter}. Die Menge \enquote{Person} wird als
-\enquote{Supertyp}, der übergeordnetet Objekttyp, bezeichnet und die
-beiden Teilmengen \enquote{Student} und \enquote{WiMa} als
-\enquote{Subtyp}, die untergeordneten Objekttypen.
-
-Ein Student besitzt eine Matrikelnummer, mit der er an der Universität
-registriert wurde. Der WiMa besitzt diese nicht, bezieht aber ein Gehalt
-für seine wissenschaftlichen Studienarbeiten. Ein Attribut
-\enquote{Gehalt} macht für den Studenten keinen Sinn, da er keines
-empfängt und der WiMa benötigt keine Matrikelnummer. Durch die
-Trennung von \enquote{Person} in \enquote{Student} und \enquote{WiMa}
-werden unnötige NULL-Werte in der Datenbank vermieden.
-
-Wie so vieles im Leben ist das Spezialisieren von Objekttypen jedoch
-nicht ganz so einfach, wie es im ersten Moment scheint. Bevor auf die
-insgesamt vier verschiedenen Variationen dieses Verfahrens eingegangen
-werden kann, werden noch einige Definitionen benötigt.
-\subsection{Definitionen}
-\subsubsection{Disjunkt}
-Ein System von Subtypen und Supertypen heisst disjunkt, wenn die
-einzelnen Subtypen keine gemeinsamen Elemente haben, d. h. ein
-Datensatz kann nur in einem der Subtypen auftreten.
-\subsubsection{Vollständige Überdeckung}
-Ein System von Subtypen und Supertypen nennt man vollständig, wenn
-der Supertyp keine eigenen Elemente enthält, also jedes Element in
-einem der Subtypen enthalten ist.
-
-\begin{merke}
-    Die beiden Begriffe \enquote{Disjunkt} und \enquote{Vollständige
-        Überdeckung} werden als Konsistenzbedingungen bezeichnet.
-    Konsistenzbedingungen ergeben sich entweder aus feststehenden
-    Tatsachen oder sie müssen durch den Designer definiert werden!
-\end{merke}
-
-\subsection{Kombinationen}
-Die Unter- und Obermengenbeziehungen lassen sich mit diesen Begriffen in
-vier verschiedene Systeme einteilen:
-\begin{enumerate}
-    \item Vollständige Überdeckung und Überlappung nicht zugelassen (= disjunkt, kein gemeinsames Element)
-    \item Vollständige Überdeckung und Überlappung zugelassen (= nicht disjunkt, gemeinsame Elemente möglich)
-    \item Nicht vollständige Überdeckung und Überlappung nicht zugelassen (= disjunkt)
-    \item Nicht vollständige Überdeckung und Überlappung zugelassen (= nicht disjunkt)
-\end{enumerate}
-Es handelt sich bei der Spezialisierung um den Sonderfall eines 1:1
-Beziehungstyps mit besonderer Semantik. Es werden nun die oben
-angesprochenen Fälle erläutert und anhand von Beispielen, die immer
-zwei Untermengen angeben, veranschaulicht. In der Realität kann es
-natürlich weitere spezialisierte Objekttypen geben.
-\subsection{Vollständige Überdeckung und Disjunkt}
-\label{complette_disjunkt}
-Wenn man die Objektmengen dieser 1. Beziehungsart grafisch darstellt,
-ergibt sich diese Abbildung:
-
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}[node distance=1.5cm]
-            \node[auto,swap](C) at (2.25, -2){\huge Menge C};
-            \node[circleA](A) at (0,0){Menge A};
-            \node[circleB](B) at (4,0){Menge B};
-        \end{tikzpicture}
-    }
-\end{center}
-Die Objektmenge C besteht hier vollständig aus den Objektmengen A und
-B, d. h. es gibt keine Elemente, die den beiden Mengen A und B nicht
-zuordenbar sind. Des Weiteren gibt es keine Schnittmenge zwischen A und
-B.
-
-$C := \{x \mid ((x \in A) \wedge (x \notin B)) \vee ((x \in B) \wedge (x \notin A))\}$
-
-Dieser Fall wird im ER-Modell folgendermaß en dargestellt.
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](obj1){Supertyp};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
-            \node[entity](obj2)[below left = of isa]{Subtyp 1};
-            \node[entity](obj3)[below right = of isa]{Subtyp 2};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
-\begin{merke}
-    Spezifische oder lokale Attribute hängen an den Untermengen, dies sind hier die Subtypen 1 und 2.
-\end{merke}
-Der Supertyp (Person) umfasst alle Angestellten einer Universität.
-Der Subtyp 1 (Student) beinhaltet alle Studenten dieser Universität
-und der Subtyp 2 (WiMa) beinhaltet alle wissenschaftlichen Mitarbeiter
-(WiMa) einer Universität. Es existieren im Supertyp \enquote{Person}
-nur Objekte, deren identifizierendes Attribut als Fremdschlüssel
-entweder im Subtyp \enquote{Student} oder im Subtyp \enquote{WiMa}
-vorkommt. Die drei folgenden Tabellen zeigen verschiedene
-Ausprägungen der Subtypen.
+        Die Besonderheit eines rekursiven Beziehungstyps gegenüber einem binären Beziehungstyp, der Objekttyp A und B miteinander verknüpft, besteht darin, dass die Objekttypen A und B identisch sind. Somit sind rekursive Beziehungstypen nur dann möglich, wenn die Objekttypen A und B, die Mengen von Objekten repräsentieren, die dieselbe Mächtigkeit besitzen können.
 \clearpage
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Vorname}} &
-    \multicolumn{1}{l}{\textbf{Nachname}} &
-    \multicolumn{1}{l}{\textbf{Geburtsdatum}}\\
-}
-\tablecaption{Person}
-\begin{supertabular}[h]{llll}
-    1 & Heinz & Meier & 01.02.1990 \\
-    2 & Michael & Schulz & 02.05.1980 \\
-    3 & Frank & Bertling & 04.10.1981 \\
-    4 & Hans & Fasshauer & 07.09.1991 \\
-\end{supertabular}
+        \begin{merke}
+          Die Mächtigkeit eines Objekttyps beschreibt die genaue Anzahl der in ihm zusammengefassten Objekte.
+        \end{merke}
+        An dieser Stelle soll dieser Sachverhalt nicht näher erläutert, sondern nur das für die Modellierung relevante Ergebnis betrachtet werden.
 
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
-}
-\tablecaption{Student}
-\begin{supertabular}[h]{lp{5cm}}
-    1 & 65420\\
-    4 & 66530\\
-\end{supertabular}
+        Die \tabelle{combinationsrecurisverelationtyps} \enquote{Mögliche Kombinationen von rekursiven Beziehungstypen} zeigt, in der\\ (Min,Max)-Notation, die möglichen Kombinationen von Kardinalität und Optionalität und trifft eine Aussage, über die Verwendungsmöglichkeit bei rekursiven Beziehungstypen.
 
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Gehalt}} \\
-}
+        \tablefirsthead{%
+          \multicolumn{1}{l}{\textbf{Beziehungstyp}} &
+          \multicolumn{1}{l}{\textbf{Verwendung bei rekursiven Beziehungstypen}} \\
+        }
+        \tablecaption{Mögliche Kombinationen von rekursiven Beziehungstypen}
+        \label{combinationsrecurisverelationtyps}
+        \begin{supertabular}[h]{lp{5cm}}
+          (1,1):(1,1) & möglich\\
+          (1,1):(0,1) & nicht möglich\\
+          (0,1):(0,1) & möglich\\
+          (1,1):(1,*) & nicht möglich\\
+          (0,1):(1,*) & nicht möglich\\
+          (1,1):(0,*) & möglich\\
+          (0,1):(0,*) & möglich\\
+          (1,*):(1,*) & möglich\\
+          (1,*):(0,*) & möglich\\
+          (0,*):(0,*) & möglich\\
+        \end{supertabular}
 
-\tablecaption{WiMa}
-\begin{supertabular}[h]{lp{5cm}}
-    2 & 3000\\
-    3 & 3150\\
-\end{supertabular}
+        Die sieben möglichen Kombinationen werden, im späteren Verlauf
+        dieser Unterlage (Kapitel 4 Transformation), im Zusammenhang mit ihrer
+        Repräsentation im physischen Datenbankmodell, der Reihe nach
+        untersucht und durch Beispiele veranschaulicht.
+      \section{Anwendung rekursiver Beziehungstypen}
+        Hier soll nun gezeigt werden, wie
+        \tabelle{combinationsrecurisverelationtyps} hilft, in der Praxis Fehler
+        zu vermeiden. Die nächste Abbildung zeigt zwei Entitäten (Version A
+        und B), die das Verhältnis der Soldaten bzgl. Führung und geführt
+        werden darstellen sollen.
+        
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){Soldat};
+              \node[relationship](rel1)[right = of A]{Führung};
+              \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(1,1) wird geführt} (rel1.north);
+              \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(1,*) führt} (rel1.south);
+            \end{tikzpicture}
+          }
+        \end{center}
+         \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](A){Soldat};
+              \node[relationship](rel1)[right = of A]{Führung};
+              \draw[link] (A.north) |- ($(A.north) +(0.5, 1)$) -| node [pos=0.4, auto, swap,yshift=0.75cm] {(0,1) wird geführt} (rel1.north);
+              \draw[link] (A.south) |- ($(A.south) + (0.5,-1)$) -| node [pos=0.4, auto, yshift=-0.75cm] {(0,*) führt} (rel1.south);
+            \end{tikzpicture}
+          }
+        \end{center}
+        
+        Beide Versionen sollen bezüglich der nächst genannten Fragen
+        untersucht werden:
+        \begin{itemize}
+          \item Was sagen die Versionen aus?
+          \item Wird die Realität richtig abgebildet?
+          \item Kann man sie realisieren (gemäß\ \tabelle{combinationsrecurisverelationtyps})?
+        \end{itemize}
+        \subsection{Version A}
+          \subsubsection{Was sagt die Version aus?}
+            Ein Soldat führt mindestens einen oder mehrere andere Soldaten und ein Soldat wird von genau einem anderen Soldaten geführt.
 
-Zusammenfassend ergibt sich für den 1. Fall die folgende Abbildung:
+            In dieser Abbildung der Realität gibt es nur Vorgesetzte, da jeder Soldat immer mindestens einen anderen führt.
 
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}
-            \node[entity](obj1){Person};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
-            \node[entity](obj2)[below left = of isa]{Student};
-            \node[entity](obj3)[below right = of isa]{WiMa};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
+          \subsubsection{Wird die Realität richtig abgebildet?}
+            Es gibt laut Version A nur solche Soldaten, die andere führen. Doch in der Realität ist dies sicherlich nicht der Fall, da z.B. ein Soldat in der Grundausbildung nicht immer  einen anderen Soldaten führen wird. In der anderen Fragerichtung muss man ebenfalls alle Soldaten betrachten. Die Aussage, dass ein Soldat von genau einem anderen geführt wird, betrachtet den Chef der Einheit nicht. Dieser sollte, in Bezug auf die eigene Einheit, keinen Vorgesetzten haben.
+
+            Es zeigt sich, dass die Realität mit sehr hoher Wahrscheinlichkeit nicht korrekt abgebildet wurde. Ausnahmen kann es natürlich jederzeit geben.
+          \subsubsection{Kann man sie realisieren?}
+            \tabelle{combinationsrecurisverelationtyps} trifft, was die Realisierung in einem relationalem Datenbanksystem angeht, in Zeile 4 die klare Aussage, dass es nicht möglich ist. Man kann anhand der Tabelle schon einen Hinweis auf evtl. Fehler in der Modellierung finden.
+        \subsection{Version B}
+          \subsubsection{Was sagt die Version aus?}
+            Ein Soldat führt null oder mehrere Untergebene und ein Soldat wird von null oder höchstens einem anderen Soldaten geführt. Dabei kann es sich entweder um den Chef oder einen Untergebenen handeln.
+          \subsubsection{Wird die Realität richtig abgebildet?}
+            Version B stellt die Möglichkeit bereit, dass in der Tabelle Soldat sowohl der Chef als auch die Untergebenen aufgeführt werden können, was sich darin widerspiegelt, dass ein Soldat keinen oder höchstens einen Chef haben kann und ein Soldat keinen oder mehrere Soldaten führen kann. Dies entspricht, nach der allgemeinen Auffassung, der Realität.
+          \subsubsection{Kann man sie realisieren?}
+            In \tabelle{combinationsrecurisverelationtyps} gibt in diesem Fall Zeile 7 die Auskunft, dass eine rekursive Beziehung mit diesen Kardinalitäten möglich ist. Eine Bestätigung, dass die Realität mit groß er Wahrscheinlichkeit richtig modelliert wurde. Eine hundertprozentige Aussage über richtig oder falsch kann man in diesem Verfahren jedoch nicht treffen.
+    \section{Spezialisierung}
+      \label{specialization}
+       Die Spezialisierung ist eine Vorgehensweise, die Objekttypen als Mengen
+       betrachtet. Es kann für die ER-Modellierung unter Umständen sinnvoll
+       sein, eine Menge in mehrere Teilmengen zu zerlegen. Eine solche Zerlegung
+       wird meist dann vorgenommen, wenn die Teilmengen eigene Attribute haben,
+       die nur in den jeweiligen Teilmengen vorkommen. Auf diese Weise werden
+       leere Felder in der Datenbank, sog. NULL-Werte vermieden, da möglichst
+       immer alle Attribute mit Werten befüllt werden. Ein Beispiel hierzu:
+
+       Die Menge aller Personen an einer Universtität enthält die beiden
+       Teilmengen \enquote{Student} und \enquote{WiMa}\footnote{WiMa =
+       Wissenschaftlicher Mitarbeiter}. Die Menge \enquote{Person} wird als
+       \enquote{Supertyp}, der übergeordnetet Objekttyp, bezeichnet und die
+       beiden Teilmengen \enquote{Student} und \enquote{WiMa} als
+       \enquote{Subtyp}, die untergeordneten Objekttypen.
+\clearpage
+       Ein Student besitzt eine Matrikelnummer, mit der er an der Universität
+       registriert wurde. Der WiMa besitzt diese nicht, bezieht aber ein Gehalt
+       für seine wissenschaftlichen Studienarbeiten. Ein Attribut
+       \enquote{Gehalt} macht für den Studenten keinen Sinn, da er keines
+       empfängt und der WiMa benötigt keine Matrikelnummer. Durch die
+       Trennung von \enquote{Person} in \enquote{Student} und \enquote{WiMa}
+       werden unnötige NULL-Werte in der Datenbank vermieden.
+
+      Wie so vieles im Leben ist das Spezialisieren von Objekttypen jedoch
+      nicht ganz so einfach, wie es im ersten Moment scheint. Bevor auf die
+      insgesamt vier verschiedenen Variationen dieses Verfahrens eingegangen
+      werden kann, werden noch einige Definitionen benötigt.
+      \subsection{Definitionen}
+        \subsubsection{Disjunkt}
+          Ein System von Subtypen und Supertypen heisst disjunkt, wenn die
+          einzelnen Subtypen keine gemeinsamen Elemente haben, d. h. ein
+          Datensatz kann nur in einem der Subtypen auftreten.
+        \subsubsection{Vollständige Überdeckung}
+          Ein System von Subtypen und Supertypen nennt man vollständig, wenn
+          der Supertyp keine eigenen Elemente enthält, also jedes Element in
+          einem der Subtypen enthalten ist.
+
+          \begin{merke}
+            Die beiden Begriffe \enquote{Disjunkt} und \enquote{Vollständige
+            Überdeckung} werden als Konsistenzbedingungen bezeichnet.
+            Konsistenzbedingungen ergeben sich entweder aus feststehenden
+            Tatsachen oder sie müssen durch den Designer definiert werden!
+          \end{merke}
+
+      \subsection{Kombinationen}
+        Die Unter- und Obermengenbeziehungen lassen sich mit diesen Begriffen in
+        vier verschiedene Systeme einteilen:
+        \begin{enumerate}
+          \item Vollständige Überdeckung und Überlappung nicht zugelassen (= disjunkt, kein gemeinsames Element)
+          \item Vollständige Überdeckung und Überlappung zugelassen (= nicht disjunkt, gemeinsame Elemente möglich)
+          \item Nicht vollständige Überdeckung und Überlappung nicht zugelassen (= disjunkt)
+          \item Nicht vollständige Überdeckung und Überlappung zugelassen (= nicht disjunkt)
+        \end{enumerate}
+        Es handelt sich bei der Spezialisierung um den Sonderfall eines 1:1
+        Beziehungstyps mit besonderer Semantik. Es werden nun die oben
+        angesprochenen Fälle erläutert und anhand von Beispielen, die immer
+        zwei Untermengen angeben, veranschaulicht. In der Realität kann es
+        natürlich weitere spezialisierte Objekttypen geben.
+      \subsection{Vollständige Überdeckung und Disjunkt}
+        \label{complette_disjunkt}
+        Wenn man die Objektmengen dieser 1. Beziehungsart grafisch darstellt,
+        ergibt sich diese Abbildung:
+
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm]
+              \node[auto,swap](C) at (2.25, -2){\huge Menge C};
+              \node[circleA](A) at (0,0){Menge A};
+              \node[circleB](B) at (4,0){Menge B};
+            \end{tikzpicture}
+          }
+        \end{center}
+        Die Objektmenge C besteht hier vollständig aus den Objektmengen A und
+        B, d. h. es gibt keine Elemente, die den beiden Mengen A und B nicht
+        zuordenbar sind. Des Weiteren gibt es keine Schnittmenge zwischen A und
+        B.
+
+        $C := \{x \mid ((x \in A) \wedge (x \notin B)) \vee ((x \in B) \wedge (x \notin A))\}$
+
+        Dieser Fall wird im ER-Modell folgendermaß en dargestellt.
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](obj1){Supertyp};
+              \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
+              \node[entity](obj2)[below left = of isa]{Subtyp 1};
+              \node[entity](obj3)[below right = of isa]{Subtyp 2};
+              \path[draw, -] (isa.west) -| (obj2.north);
+              \path[draw, -] (isa.east) -| (obj3.north);
+            \end{tikzpicture}
+          }
+        \end{center}
+        \begin{merke}
+          Spezifische oder lokale Attribute hängen an den Untermengen, dies sind hier die Subtypen 1 und 2.
+        \end{merke}
+          Der Supertyp (Person) umfasst alle Angestellten einer Universität.
+          Der Subtyp 1 (Student) beinhaltet alle Studenten dieser Universität
+          und der Subtyp 2 (WiMa) beinhaltet alle wissenschaftlichen Mitarbeiter
+          (WiMa) einer Universität. Es existieren im Supertyp \enquote{Person}
+          nur Objekte, deren identifizierendes Attribut als Fremdschlüssel
+          entweder im Subtyp \enquote{Student} oder im Subtyp \enquote{WiMa}
+          vorkommt. Die drei folgenden Tabellen zeigen verschiedene
+          Ausprägungen der Subtypen.
+\clearpage
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Vorname}} &
+            \multicolumn{1}{l}{\textbf{Nachname}} &
+            \multicolumn{1}{l}{\textbf{Geburtsdatum}}\\
+          }
+          \tablecaption{Person}
+          \begin{supertabular}[h]{llll}
+            1 & Heinz & Meier & 01.02.1990 \\
+            2 & Michael & Schulz & 02.05.1980 \\
+            3 & Frank & Bertling & 04.10.1981 \\
+            4 & Hans & Fasshauer & 07.09.1991 \\
+          \end{supertabular}
+
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
+          }
+          \tablecaption{Student}
+          \begin{supertabular}[h]{lp{5cm}}
+            1 & 65420\\
+            4 & 66530\\
+          \end{supertabular}
+
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Gehalt}} \\
+          }
+
+          \tablecaption{WiMa}
+          \begin{supertabular}[h]{lp{5cm}}
+            2 & 3000\\
+            3 & 3150\\
+          \end{supertabular}
+
+          Zusammenfassend ergibt sich für den 1. Fall die folgende Abbildung:
+
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}
+                \node[entity](obj1){Person};
+                \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
+                \node[entity](obj2)[below left = of isa]{Student};
+                \node[entity](obj3)[below right = of isa]{WiMa};
+                \path[draw, -] (isa.west) -| (obj2.north);
+                \path[draw, -] (isa.east) -| (obj3.north);
+              \end{tikzpicture}
+            }
+          \end{center}
 \vspace{\baselineskip}
-\begin{center}
-    \scalebox{.6}{
-        \begin{tikzpicture}[node distance=1.5cm]
-            \node[auto,swap](C) at (2.25, -2.5){\huge Person};
-            \node[circleA](A) at (0,0){Student};
-            \node[circleB](B) at (5,0){WiMa};
-        \end{tikzpicture}
-    }
-\end{center}
+          \begin{center}
+            \scalebox{.6}{
+              \begin{tikzpicture}[node distance=1.5cm]
+                \node[auto,swap](C) at (2.25, -2.5){\huge Person};
+                \node[circleA](A) at (0,0){Student};
+                \node[circleB](B) at (5,0){WiMa};
+              \end{tikzpicture}
+            }
+          \end{center}
 
-\begin{merke}
-    Es müssen zusätzliche programmtechnische Maß nahmen getroffen werden, um sicherzustellen, dass jedes Objekt des Supertyps genau ein zugehöriges Objekt in Subtyp 1 oder Subtyp 2 besitzt.
-\end{merke}
-\subsection{Vollständige Überdeckung und nicht Disjunkt}
-Wenn man die Objektmengen dieser 2. Beziehungsart grafisch darstellt, ergibt sich die folgende Abbildung:
+          \begin{merke}
+            Es müssen zusätzliche programmtechnische Maß nahmen getroffen werden, um sicherzustellen, dass jedes Objekt des Supertyps genau ein zugehöriges Objekt in Subtyp 1 oder Subtyp 2 besitzt.
+          \end{merke}
+      \subsection{Vollständige Überdeckung und nicht Disjunkt}
+        Wenn man die Objektmengen dieser 2. Beziehungsart grafisch darstellt, ergibt sich die folgende Abbildung:
 
-\begin{center}
-    \scalebox{.6}{
-        \begin{tikzpicture}[node distance=1.5cm]
-            \node[auto,swap](C) at (1.5,-0.5) {\huge Menge C};
-            \node[circleA](A) at (0,2) {Menge A};
-            \node[circleB](B) at (2,2) {Menge B};
-        \end{tikzpicture}
-    }
-\end{center}
-Hier besteht die Objektmenge C ebenfalls vollständig aus den Objektmengen A und B, was widerum heiß{}t, dass es keine Elemente gibt, die den beiden Mengen A und B nicht zuordenbar sind.
+        \begin{center}
+          \scalebox{.6}{
+            \begin{tikzpicture}[node distance=1.5cm]
+              \node[auto,swap](C) at (1.5,-0.5) {\huge Menge C};
+              \node[circleA](A) at (0,2) {Menge A};
+              \node[circleB](B) at (2,2) {Menge B};
+            \end{tikzpicture}
+          }
+        \end{center}
+        Hier besteht die Objektmenge C ebenfalls vollständig aus den Objektmengen A und B, was widerum heiß{}t, dass es keine Elemente gibt, die den beiden Mengen A und B nicht zuordenbar sind.
 
-Der Unterschied zu Fall 1 ist, dass es hier eine Schnittmenge zwischen A und B gibt.
+        Der Unterschied zu Fall 1 ist, dass es hier eine Schnittmenge zwischen A und B gibt.
 
-Fall 2 wird im ER-Modell sehr ähnlich dargestellt, wie Fall 1, nur mit dem Unterschied, dass das Schlüsselwort \enquote{Disjunkt} entfällt.
-\begin{center}
-    \scalebox{.6}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](obj1){Supertyp};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
-            \node[entity](obj2)[below left = of isa]{Subtyp 1};
-            \node[entity](obj3)[below right = of isa]{Subtyp 2};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
+        Fall 2 wird im ER-Modell sehr ähnlich dargestellt, wie Fall 1, nur mit dem Unterschied, dass das Schlüsselwort \enquote{Disjunkt} entfällt.
+        \begin{center}
+          \scalebox{.6}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](obj1){Supertyp};
+              \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
+              \node[entity](obj2)[below left = of isa]{Subtyp 1};
+              \node[entity](obj3)[below right = of isa]{Subtyp 2};
+              \path[draw, -] (isa.west) -| (obj2.north);
+              \path[draw, -] (isa.east) -| (obj3.north);
+            \end{tikzpicture}
+          }
+        \end{center}
 
-Nun soll das im vorigen Abschnitt eingeführe Beispiel herangezogen werden. Als Änderung soll ein WiMa an der selben Universität auch noch studieren können.
+          Nun soll das im vorigen Abschnitt eingeführe Beispiel herangezogen werden. Als Änderung soll ein WiMa an der selben Universität auch noch studieren können.
 \vfil
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Vorname}} &
-    \multicolumn{1}{l}{\textbf{Nachname}} &
-    \multicolumn{1}{l}{\textbf{Geburtsdatum}} \\
-}
-\tablecaption{Person}
-\begin{supertabular}[h]{llll}
-    1 & Heinz & Meier & 01.02.1990 \\
-    2 & Michael & Schulz & 02.05.1980 \\
-    3 & Frank & Bertling & 04.10.1981 \\
-    4 & Hans & Fasshauer & 07.09.1991 \\
-    5 & Tobias & Schreiber & 20.07.1983 \\
-\end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Vorname}} &
+            \multicolumn{1}{l}{\textbf{Nachname}} &
+            \multicolumn{1}{l}{\textbf{Geburtsdatum}} \\
+          }
+          \tablecaption{Person}
+          \begin{supertabular}[h]{llll}
+            1 & Heinz & Meier & 01.02.1990 \\
+            2 & Michael & Schulz & 02.05.1980 \\
+            3 & Frank & Bertling & 04.10.1981 \\
+            4 & Hans & Fasshauer & 07.09.1991 \\
+            5 & Tobias & Schreiber & 20.07.1983 \\
+          \end{supertabular}
 \vfil
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
-}
-\clearpage
-\tablecaption{Student}
-\begin{supertabular}[h]{lp{5cm}}
-    1 & 65420\\
-    4 & 66530\\
-    5 & 66460\\
-\end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
+          }
+          \tablecaption{Student}
+          \begin{supertabular}[h]{lp{5cm}}
+            1 & 65420\\
+            4 & 66530\\
+            5 & 66460\\
+          \end{supertabular}
 
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Gehalt}} \\
-}
-\tablecaption{WiMa}
-\begin{supertabular}[h]{lp{5cm}}
-    2 & 3000\\
-    3 & 3150\\
-    5 & 2900\\
-\end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Gehalt}} \\
+          }
+          \tablecaption{WiMa}
+          \begin{supertabular}[h]{lp{5cm}}
+            2 & 3000\\
+            3 & 3150\\
+            5 & 2900\\
+          \end{supertabular}
 
-Die Person mit der Nummer 5 ist ein studierender WiMa, welcher ein Aufbaustudium an der selben Univesität absolviert und gehört sowohl dem Subtyp \enquote{Student} als auch dem Subtyp \enquote{WiMa} an. Als identifizierendes Attribut wird die Eigenschaft \enquote{Person\_ID} verwendet. Es ergibt sich für das Beispiel die folgende Abbildung:
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}
-            \node[entity](obj1){Person};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
-            \node[entity](obj2)[below left = of isa]{Student};
-            \node[entity](obj3)[below right = of isa]{WiMa};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
+          Die Person mit der Nummer 5 ist ein studierender WiMa, welcher ein Aufbaustudium an der selben Univesität absolviert und gehört sowohl dem Subtyp \enquote{Student} als auch dem Subtyp \enquote{WiMa} an. Als identifizierendes Attribut wird die Eigenschaft \enquote{Person\_ID} verwendet. Es ergibt sich für das Beispiel die folgende Abbildung:
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}
+                \node[entity](obj1){Person};
+                \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
+                \node[entity](obj2)[below left = of isa]{Student};
+                \node[entity](obj3)[below right = of isa]{WiMa};
+                \path[draw, -] (isa.west) -| (obj2.north);
+                \path[draw, -] (isa.east) -| (obj3.north);
+              \end{tikzpicture}
+            }
+          \end{center}
 \vspace{\baselineskip}
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}
-            \node[circleA](A) at (0,2) {Student};
-            \node[circleB](B) at (2,2) {WiMa};
-        \end{tikzpicture}
-    }
-\end{center}
-\subsection{Nicht vollständige Überdeckung und Disjunkt}
-In Fall Nummer 3 besteht die Obermenge C aus den beiden Teilmengen A und B, jedoch ist es möglich, dass in der Menge C Elemente existieren, die nicht den Mengen A und B angehören. Da sich A und B disjunkt verhalten existiert keine Schnittmenge zwischen A und B.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}
+                \node[circleA](A) at (0,2) {Student};
+                \node[circleB](B) at (2,2) {WiMa};
+              \end{tikzpicture}
+            }
+          \end{center}
+      \subsection{Nicht vollständige Überdeckung und Disjunkt}
+        In Fall Nummer 3 besteht die Obermenge C aus den beiden Teilmengen A und B, jedoch ist es möglich, dass in der Menge C Elemente existieren, die nicht den Mengen A und B angehören. Da sich A und B disjunkt verhalten existiert keine Schnittmenge zwischen A und B.
 
-$C := \{x \mid (((x \in A) \wedge (x \notin B)) \vee ((x \in B) \wedge (x \notin A))) \vee ((x \notin A) \wedge (x \notin B))\}$
+        $C := \{x \mid (((x \in A) \wedge (x \notin B)) \vee ((x \in B) \wedge (x \notin A))) \vee ((x \notin A) \wedge (x \notin B))\}$
 
-Wenn man die Objektmengen dieser 3. Beziehungsart grafisch darstellt, ergibt sich folgende Abbildung:
+        Wenn man die Objektmengen dieser 3. Beziehungsart grafisch darstellt, ergibt sich folgende Abbildung:
 
-\begin{center}
-    \scalebox{.6}{
-        \begin{tikzpicture}[node distance=1.5cm]
-            \node[circleC, scale=1.5](C) at (0,0) {\huge Menge C};
-            \node[circleA, scale=0.75](A) at (-1.2,0) {Menge A};
-            \node[circleB, scale=0.75](B) at (1.2,0) {Menge B};
-        \end{tikzpicture}
-    }
-\end{center}
+        \begin{center}
+          \scalebox{.6}{
+            \begin{tikzpicture}[node distance=1.5cm]
+              \node[circleC, scale=1.5](C) at (0,0) {\huge Menge C};
+              \node[circleA, scale=0.75](A) at (-1.2,0) {Menge A};
+              \node[circleB, scale=0.75](B) at (1.2,0) {Menge B};
+            \end{tikzpicture}
+          }
+        \end{center}
 \vspace{\baselineskip}
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](obj1){Objekt 1};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
-            \node[entity](obj2)[below left = of isa]{Objekt 2};
-            \node[entity](obj3)[below right = of isa]{Objekt 3};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
-Es wird wieder auf das Universitätsbeispiel zurückgegriffen. Diesmal existieren in dem Supertyp keine Objekte, deren identifizierendes Attribut sowohl im Subtyp \enquote{Student} als auch im Subtyp \enquote{WiMa} vorkommt. Dies wird in den folgenden Tabellen gezeigt.
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](obj1){Objekt 1};
+              \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
+              \node[entity](obj2)[below left = of isa]{Objekt 2};
+              \node[entity](obj3)[below right = of isa]{Objekt 3};
+              \path[draw, -] (isa.west) -| (obj2.north);
+              \path[draw, -] (isa.east) -| (obj3.north);
+            \end{tikzpicture}
+          }
+        \end{center}
+				Es wird wieder auf das Universitätsbeispiel zurückgegriffen. Diesmal existieren in dem Supertyp keine Objekte, deren identifizierendes Attribut sowohl im Subtyp \enquote{Student} als auch im Subtyp \enquote{WiMa} vorkommt. Dies wird in den folgenden Tabellen gezeigt.
 
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Vorname}} &
-    \multicolumn{1}{l}{\textbf{Nachname}} &
-    \multicolumn{1}{l}{\textbf{Geburtsdatum}}\\
-}
-\tablecaption{Person}
-\begin{supertabular}[h]{llll}
-    1 & Heinz & Meier & 01.02.1990 \\
-    2 & Michael & Schulz & 02.05.1980 \\
-    3 & Frank & Bertling & 04.10.1981 \\
-    4 & Hans & Fasshauer & 07.09.1991 \\
-    5 & Tobias & Schreiber & 20.07.1983 \\
-    6 & Martin & Speier & 21.08.1996 \\
-\end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Vorname}} &
+            \multicolumn{1}{l}{\textbf{Nachname}} &
+            \multicolumn{1}{l}{\textbf{Geburtsdatum}}\\
+          }
+          \tablecaption{Person}
+          \begin{supertabular}[h]{llll}
+            1 & Heinz & Meier & 01.02.1990 \\
+            2 & Michael & Schulz & 02.05.1980 \\
+            3 & Frank & Bertling & 04.10.1981 \\
+            4 & Hans & Fasshauer & 07.09.1991 \\
+            5 & Tobias & Schreiber & 20.07.1983 \\
+            6 & Martin & Speier & 21.08.1996 \\
+          \end{supertabular}
 
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
-}
-\clearpage
-\tablecaption{Student}
-\begin{supertabular}[h]{lp{5cm}}
-    1 & 65420\\
-    4 & 66530\\
-    5 & 66460\\
-\end{supertabular}
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Gehalt}} \\
-}
-\tablecaption{WiMa}
-\begin{supertabular}[h]{lp{5cm}}
-    2 & 3000\\
-    3 & 3150\\
-\end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
+          }
+          \tablecaption{Student}
+          \begin{supertabular}[h]{lp{5cm}}
+            1 & 65420\\
+            4 & 66530\\
+            5 & 66460\\
+          \end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Gehalt}} \\
+          }
+          \tablecaption{WiMa}
+          \begin{supertabular}[h]{lp{5cm}}
+            2 & 3000\\
+            3 & 3150\\
+          \end{supertabular}
 
-Die Person mit der Person\_ID 6 kommt in den Subtypen nicht vor, da sie ein Praktikant ist und nur die Attribute des Supertyps in sich vereint.
+          Die Person mit der Person\_ID 6 kommt in den Subtypen nicht vor, da sie ein Praktikant ist und nur die Attribute des Supertyps in sich vereint.
 
-Es ergibt sich im Beispiel für den 3. Fall die folgende Abbildung:
-\begin{center}
-    \scalebox{.6}{
-        \begin{tikzpicture}
-            \node[entity](obj1){Person};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
-            \node[entity](obj2)[below left = of isa]{Student};
-            \node[entity](obj3)[below right = of isa]{WiMa};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
-\vspace{\baselineskip}
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}
-            \node[circleC, scale=1.5](C) at (0,0) {\huge Menge C};
-            \node[circleA, scale=0.75](A) at (-1.2,0) {Menge A};
-            \node[circleB, scale=0.75](B) at (1.2,0) {Menge B};
-        \end{tikzpicture}
-    }
-\end{center}
-\subsection{Nicht vollständige Überdeckung und nicht Disjunkt}
-Wenn man die Objektmengen dieser 4. Beziehungsart grafisch darstellt, ergibt sich folgende Abbildung:
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}[node distance=1.5cm]
-            \node[circleC, scale=1.5](C) at (0,0) {\huge Menge C};
-            \node[circleA, scale=0.75](A) at (-1,0) {Menge A};
-            \node[circleB, scale=0.75](B) at (1,0) {Menge B};
-        \end{tikzpicture}
-    }
-\end{center}
-In Fall Nummer 4 besteht die Obermenge C aus den beiden Teilmengen A und
-B, jedoch ist es möglich, dass in der Menge C Elemente existieren, die
-nicht den Mengen A und B angehören. Da dieser Fall nicht disjunkt ist,
-ist eine Schnittmenge zwischen A und B vorhanden.
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](obj1){Objekt 1};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
-            \node[entity](obj2)[below left = of isa]{Objekt 2};
-            \node[entity](obj3)[below right = of isa]{Objekt 3};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
-Für den 4. Beziehungstyp wird erneut das Universitätsbeispiel herangezogen.
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Klasse}} &
-    \multicolumn{1}{l}{\textbf{Vorname}} &
-    \multicolumn{1}{l}{\textbf{Nachname}} &
-    \multicolumn{1}{l}{\textbf{Geburtsdatum}} \\
-}
-\tablecaption{Person}
-\begin{supertabular}[h]{lllll}
-    1 & S & Heinz & Meier & 01.02.1990 \\
-    2 & W & Michael & Schulz & 02.05.1980 \\
-    3 & W & Frank & Bertling & 04.10.1981 \\
-    4 & S & Hans & Fasshauer & 07.09.1991 \\
-    5 & W & Tobias & Schreiber & 20.07.1983 \\
-    6 & M & Kai & Sperling & 24.11.1980 \\
-\end{supertabular}
+          Es ergibt sich im Beispiel für den 3. Fall die folgende Abbildung:
+          \begin{center}
+            \scalebox{.6}{
+              \begin{tikzpicture}
+                \node[entity](obj1){Person};
+                \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1) disjunkt}(obj1);
+                \node[entity](obj2)[below left = of isa]{Student};
+                \node[entity](obj3)[below right = of isa]{WiMa};
+                \path[draw, -] (isa.west) -| (obj2.north);
+                \path[draw, -] (isa.east) -| (obj3.north);
+              \end{tikzpicture}
+            }
+          \end{center}
+          \vspace{\baselineskip}
+					\begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}
+                \node[circleC, scale=1.5](C) at (0,0) {\huge Menge C};
+                \node[circleA, scale=0.75](A) at (-1.2,0) {Menge A};
+                \node[circleB, scale=0.75](B) at (1.2,0) {Menge B};
+              \end{tikzpicture}
+            }
+          \end{center}
+      \subsection{Nicht vollständige Überdeckung und nicht Disjunkt}
+        Wenn man die Objektmengen dieser 4. Beziehungsart grafisch darstellt, ergibt sich folgende Abbildung:
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm]
+              \node[circleC, scale=1.5](C) at (0,0) {\huge Menge C};
+              \node[circleA, scale=0.75](A) at (-1,0) {Menge A};
+              \node[circleB, scale=0.75](B) at (1,0) {Menge B};
+            \end{tikzpicture}
+          }
+        \end{center}
+        In Fall Nummer 4 besteht die Obermenge C aus den beiden Teilmengen A und
+        B, jedoch ist es möglich, dass in der Menge C Elemente existieren, die
+        nicht den Mengen A und B angehören. Da dieser Fall nicht disjunkt ist,
+        ist eine Schnittmenge zwischen A und B vorhanden.
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](obj1){Objekt 1};
+              \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
+              \node[entity](obj2)[below left = of isa]{Objekt 2};
+              \node[entity](obj3)[below right = of isa]{Objekt 3};
+              \path[draw, -] (isa.west) -| (obj2.north);
+              \path[draw, -] (isa.east) -| (obj3.north);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Für den 4. Beziehungstyp wird erneut das Universitätsbeispiel herangezogen.
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Klasse}} &
+            \multicolumn{1}{l}{\textbf{Vorname}} &
+            \multicolumn{1}{l}{\textbf{Nachname}} &
+            \multicolumn{1}{l}{\textbf{Geburtsdatum}} \\
+          }
+          \tablecaption{Person}
+          \begin{supertabular}[h]{lllll}
+            1 & S & Heinz & Meier & 01.02.1990 \\
+            2 & W & Michael & Schulz & 02.05.1980 \\
+            3 & W & Frank & Bertling & 04.10.1981 \\
+            4 & S & Hans & Fasshauer & 07.09.1991 \\
+            5 & W & Tobias & Schreiber & 20.07.1983 \\
+            6 & M & Kai & Sperling & 24.11.1980 \\
+          \end{supertabular}
 
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
-}
-\clearpage
-\tablecaption{Student}
-\begin{supertabular}[h]{lp{5cm}}
-    1 & 65420\\
-    4 & 66530\\
-    5 & 66460\\
-\end{supertabular}
-\tablefirsthead{%
-    \multicolumn{1}{l}{\textbf{Person\_ID}} &
-    \multicolumn{1}{l}{\textbf{Gehalt}} \\
-}
-\tablecaption{WiMa}
-\begin{supertabular}[h]{lp{5cm}}
-    2 & 3000\\
-    3 & 3150\\
-    5 & 2900\\
-\end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Matrikelnummer}} \\
+          }
+          \tablecaption{Student}
+          \begin{supertabular}[h]{lp{5cm}}
+            1 & 65420\\
+            4 & 66530\\
+            5 & 66460\\
+          \end{supertabular}
+          \tablefirsthead{%
+            \multicolumn{1}{l}{\textbf{Person\_ID}} &
+            \multicolumn{1}{l}{\textbf{Gehalt}} \\
+          }
+          \tablecaption{WiMa}
+          \begin{supertabular}[h]{lp{5cm}}
+            2 & 3000\\
+            3 & 3150\\
+            5 & 2900\\
+          \end{supertabular}
 
-Hier wurde nun die Eigenschaft \enquote{Klasse} eingeführt. Diese wird benötigt, um anzugeben, welches Objekt zu welcher Spezialisierung gehört. Diese Eigenschaft wird auch als \enquote{diskriminierende Eigenschaft} bezeichnet.
+          Hier wurde nun die Eigenschaft \enquote{Klasse} eingeführt. Diese wird benötigt, um anzugeben, welches Objekt zu welcher Spezialisierung gehört. Diese Eigenschaft wird auch als \enquote{diskriminierende Eigenschaft} bezeichnet.
 
-Die Person mit der Person\_ID 6 ist ein Mitarbeiter der Universität und gehört zu keinem der beiden Subtypen. Dieser Mitarbeiter vereint nur die Eigenschaften des Supertyps in sich. Als identifizierendes Attribut wird die Eigenschaft \enquote{Person\_ID} verwendet.
+          Die Person mit der Person\_ID 6 ist ein Mitarbeiter der Universität und gehört zu keinem der beiden Subtypen. Dieser Mitarbeiter vereint nur die Eigenschaften des Supertyps in sich. Als identifizierendes Attribut wird die Eigenschaft \enquote{Person\_ID} verwendet.
 
-Es ergibt sich für den 4. Fall im Beispiel die folgende Abbildung:
+          Es ergibt sich für den 4. Fall im Beispiel die folgende Abbildung:
 
-\begin{center}
-    \scalebox{.7}{
-        \begin{tikzpicture}
-            \node[entity](obj1){Person};
-            \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
-            \node[entity](obj2)[below left = of isa]{Student};
-            \node[entity](obj3)[below right = of isa]{WiMa};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
-\clearpage
-\section{Generalisierung}
-Unter Generalisierung versteht man den Prozess der Gewinnung einer Obermenge aus mehreren ähnlichen Untermengen. Aus der gewonnenen Obermenge entsteht ein neuer Objekttyp, der durch diejenigen Eigenschaften beschrieben wird, die den ähnlichen Untermengen gemeinsam sind. Es handelt sich hierbei also um den Umkehrprozess zur Spezialisierung. Bei der Generalisierung handelt es sich um einen \enquote{Bottom-up-Ansatz}, zu dem die Spezialisierung den \enquote{Top-down-Ansatz} bildet. In der Praxis findet man oft die Kombination aus beiden Ansätzen.
+          \begin{center}
+            \scalebox{.7}{
+              \begin{tikzpicture}
+                \node[entity](obj1){Person};
+                \node[isa](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
+                \node[entity](obj2)[below left = of isa]{Student};
+                \node[entity](obj3)[below right = of isa]{WiMa};
+                \path[draw, -] (isa.west) -| (obj2.north);
+                \path[draw, -] (isa.east) -| (obj3.north);
+              \end{tikzpicture}
+            }
+          \end{center}
 
-Gemeinsame Merkmale bzw. Eigenschaften von Objekttypen oder Subtypen werden identifiziert und zu einem einzigen Objekttyp (Obermenge) generalisiert.
-\subsection{Beispiel für die Generalisierung}
-Die Objekttypen \enquote{Student} und \enquote{WiMa} können zum Objekttyp \enquote{Person} generalisiert werden. \enquote{Student} und \enquote{WiMa} sind jetzt Untermengen der generalisierten Obermenge \enquote{Person}. Bei der Generalisierung ist ebenfalls zu unterscheiden, ob bei den Mengen eine Überdeckung und/oder eine Überlappung möglich sein soll (vgl. Fallunterscheidung bei Spezialisierung). Im ER-Modell sieht dieser Sachverhalt folgendermaß en aus:
-\begin{center}
-    \scalebox{.6}{
-        \begin{tikzpicture}
-            \node[entity](obj1){Person};
-            \node[isa90](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
-            \node[entity](obj2)[below left = of isa]{Student};
-            \node[entity](obj3)[below right = of isa]{WiMa};
-            \path[draw, -] (isa.west) -| (obj2.north);
-            \path[draw, -] (isa.east) -| (obj3.north);
-        \end{tikzpicture}
-    }
-\end{center}
-Das Ergebnis der Generalisierung unterscheidet sich zur Spezialisierung nicht, es handelt sich wie oben beschrieben nur um zwei verschiedene Ansätze der Modellierung.
+     \section{Generalisierung}
+      Unter Generalisierung versteht man den Prozess der Gewinnung einer Obermenge aus mehreren ähnlichen Untermengen. Aus der gewonnenen Obermenge entsteht ein neuer Objekttyp, der durch diejenigen Eigenschaften beschrieben wird, die den ähnlichen Untermengen gemeinsam sind. Es handelt sich hierbei also um den Umkehrprozess zur Spezialisierung. Bei der Generalisierung handelt es sich um einen \enquote{Bottom-up-Ansatz}, zu dem die Spezialisierung den \enquote{Top-down-Ansatz} bildet. In der Praxis findet man oft die Kombination aus beiden Ansätzen.
 
-Für die Gerneralisierung gilt ebenfalls, dass es mehr als zwei Subtypen geben kann. In der grafischen Darstellung werden diese weiteren Subtypen an das Dreieck angehängt. Im dargestellten Beispiel für die Gerneralisierung kann z.B. der Subtyp \enquote{Professor} angehängt werden, um das Beispiel zu erweitern.
+      Gemeinsame Merkmale bzw. Eigenschaften von Objekttypen oder Subtypen werden identifiziert und zu einem einzigen Objekttyp (Obermenge) generalisiert.
+      \subsection{Beispiel für die Generalisierung}
+        Die Objekttypen \enquote{Student} und \enquote{WiMa} können zum Objekttyp \enquote{Person} generalisiert werden. \enquote{Student} und \enquote{WiMa} sind jetzt Untermengen der generalisierten Obermenge \enquote{Person}. Bei der Generalisierung ist ebenfalls zu unterscheiden, ob bei den Mengen eine Überdeckung und/oder eine Überlappung möglich sein soll (vgl. Fallunterscheidung bei Spezialisierung). Im ER-Modell sieht dieser Sachverhalt folgendermaß en aus:
+        \begin{center}
+          \scalebox{.7}{
+            \begin{tikzpicture}
+              \node[entity](obj1){Person};
+              \node[isa90](isa) [below = of obj1]{ISA} edge node[auto] {(0,1) (1,1)}(obj1);
+              \node[entity](obj2)[below left = of isa]{Student};
+              \node[entity](obj3)[below right = of isa]{WiMa};
+              \path[draw, -] (isa.west) -| (obj2.north);
+              \path[draw, -] (isa.east) -| (obj3.north);
+            \end{tikzpicture}
+          }
+        \end{center}
+        Das Ergebnis der Generalisierung unterscheidet sich zur Spezialisierung nicht, es handelt sich wie oben beschrieben nur um zwei verschiedene Ansätze der Modellierung.
 
-Würde ein Objekttyp \enquote{Praktikant} in das Beispiel aufgenommen, ohne das ein eigener Subtyp für ihn geschaffen wird, müsste er im Objekttyp \enquote{Person} gespeichert werden, woraus folgt, dass das Beispiel keine vollständige Überdeckung mehr bietet. In der Mengendarstellung wäre der \enquote{Praktikant} ausserhalb von \enquote{Student} und \enquote{WiMa} im Rechteck von \enquote{Person} zu finden.
+        Für die Gerneralisierung gilt ebenfalls, dass es mehr als zwei Subtypen geben kann. In der grafischen Darstellung werden diese weiteren Subtypen an das Dreieck angehängt. Im dargestellten Beispiel für die Gerneralisierung kann z.B. der Subtyp \enquote{Professor} angehängt werden, um das Beispiel zu erweitern.
+
+        Würde ein Objekttyp \enquote{Praktikant} in das Beispiel aufgenommen, ohne das ein eigener Subtyp für ihn geschaffen wird, müsste er im Objekttyp \enquote{Person} gespeichert werden, woraus folgt, dass das Beispiel keine vollständige Überdeckung mehr bietet. In der Mengendarstellung wäre der \enquote{Praktikant} ausserhalb von \enquote{Student} und \enquote{WiMa} im Rechteck von \enquote{Person} zu finden.
 \clearpage
