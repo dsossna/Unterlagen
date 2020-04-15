@@ -42,7 +42,6 @@ FROM     Eigenkunde
 WHERE    Geburtsdatum BETWEEN '20.02.1980' AND '02.03.1988'
 ORDER BY Geburtsdatum;
         \end{lstlisting}
-\clearpage
          \item Zeigen Sie, in alphabetischer Reihenfolge, die Mitarbeiter\_ID
          und den Nachnamen der Mitarbeiter an, die die Vorgesetzter\_ID
          \enquote{5} oder \enquote{6} haben.
@@ -85,7 +84,6 @@ SELECT Kunden_ID, Geburtsdatum
 FROM   Eigenkunde
 WHERE  Geburtsdatum BETWEEN '01.01.1980' AND '31.12.1980';
         \end{lstlisting}
-\clearpage
         \item Erstellen Sie eine Abfrage, die den Nachnamen, das Gehalt und die
         Provision für alle Mitarbeiter anzeigt, die eine Provision erhalten.
         Sortieren Sie die Ausgabe in absteigender Reihenfolge nach dem Gehalt.
@@ -106,6 +104,7 @@ SELECT Nachname
 FROM   Mitarbeiter
 WHERE  Nachname LIKE '__a%';
         \end{lstlisting}
+\clearpage
         \item Zeigen Sie die Nachnamen aller Mitarbeiter an, deren Nachname ein
         kleines \enquote{a} und ein kleines \enquote{e} enthält.
         \begin{msoraclesql}[\FALSE]

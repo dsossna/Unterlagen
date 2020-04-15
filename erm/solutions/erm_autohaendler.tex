@@ -1,74 +1,76 @@
-\subsection{Übungsaufgabe Autohändler}
-\subsubsection{Vorgaben}
-\begin{center}
-    \scalebox{.5}{
-        \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
-            \node[entity](personal){Personal};
-            \node[attribute](personalid)[above = of personal]{\key{Personal\_ID}} edge (personal);
-            \node[attribute](vorname)[above left = of personal]{Vorname} edge (personal);
-            \node[attribute](nachname)[above right = of personal]{Nachname} edge (personal);
-            \node[attribute](adresse)[right = of personal]{Adresse} edge (personal);
-            \node[attribute](geburtsdatum)[left = of personal]{Geburtsdatum} edge (personal);
-            \node[isa](isapersonal)[below = of personal]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (personal);
-            \node[entity](mechaniker) at (-5,-5){Mechaniker};
-            \path[draw, -] (isapersonal.west) -| (mechaniker.north);
-            %           \node[attribute](vorname)[above left = of mechaniker]{Vorname} edge (mechaniker);
-            %           \node[attribute](nachname)[above right = of mechaniker]{Nachname} edge (mechaniker);
-            %           \node[attribute](adresse)[below right = of mechaniker]{Adresse} edge (mechaniker);
-            %           \node[attribute](geburtsdatum)[below left = of mechaniker]{Geburtsdatum} edge (mechaniker);
+      \subsection{Übungsaufgabe Autohändler}
+        \subsubsection{Vorgaben}
+          \begin{center}
+            \scalebox{.5}{
+              \begin{tikzpicture}[node distance=1.5cm, every edge/.style={link}]
+              \node[entity](personal){Personal};
+                \node[attribute](personalid)[above = of personal]{\key{Personal\_ID}} edge (personal);
+                \node[attribute](vorname)[above left = of personal]{Vorname} edge (personal);
+                \node[attribute](nachname)[above right = of personal]{Nachname} edge (personal);
+                \node[attribute](adresse)[right = of personal]{Adresse} edge (personal);
+                \node[attribute](geburtsdatum)[left = of personal]{Geburtsdatum} edge (personal);
+              \node[isa](isapersonal)[below = of personal]{isa} edge node[auto,swap]{(0,1)(1,1) disjunkt} (personal);
+              \node[entity](mechaniker) at (-5,-5){Mechaniker};
+                \path[draw, -] (isapersonal.west) -| (mechaniker.north);
+      %           \node[attribute](vorname)[above left = of mechaniker]{Vorname} edge (mechaniker);
+      %           \node[attribute](nachname)[above right = of mechaniker]{Nachname} edge (mechaniker);
+      %           \node[attribute](adresse)[below right = of mechaniker]{Adresse} edge (mechaniker);
+      %           \node[attribute](geburtsdatum)[below left = of mechaniker]{Geburtsdatum} edge (mechaniker);
 
-            \node[entity](verkaeufer) at (5,-5){Verkäufer};
-            \path[draw, -] (isapersonal.east) -| (verkaeufer.north);
-            %           \node[attribute](vorname)[above right = of verkaeufer]{Vorname} edge (verkaeufer);
-            %           \node[attribute](nachname)[above left = of verkaeufer]{Nachname} edge (verkaeufer);
-            %           \node[attribute](adresse)[below left = of verkaeufer]{Adresse} edge (verkaeufer);
-            %           \node[attribute](geburtsdatum)[below right = of verkaeufer]{Geburtsdatum} edge (verkaeufer);
+              \node[entity](verkaeufer) at (5,-5){Verkäufer};
+                \path[draw, -] (isapersonal.east) -| (verkaeufer.north);
+      %           \node[attribute](vorname)[above right = of verkaeufer]{Vorname} edge (verkaeufer);
+      %           \node[attribute](nachname)[above left = of verkaeufer]{Nachname} edge (verkaeufer);
+      %           \node[attribute](adresse)[below left = of verkaeufer]{Adresse} edge (verkaeufer);
+      %           \node[attribute](geburtsdatum)[below right = of verkaeufer]{Geburtsdatum} edge (verkaeufer);
 
-            \node[relationship](fuehrtdurch)[below = 1.625cm of mechaniker]{führt durch} edge node[auto,swap] {(1,*)}(mechaniker);
-            \node[relationship](betreut)[below = 2cm of verkaeufer]{betreut} edge node[auto,swap] {(0,*)}(verkaeufer);
-            \node[relationship](nimmtvor)[right = 7cm of verkaeufer]{nimmt vor} edge node[auto,swap] {(0,*)}(verkaeufer);
-            \node[entity](reparatur)[below = 1.625cm of fuehrtdurch]{Reparatur} edge node[auto,swap] {(1,1)}(fuehrtdurch);
-            \node[attribute](reparaturid)[above left = of reparatur]{\key{Reparatur\_ID}} edge (reparatur);
-            \node[attribute](datum)[above right = of reparatur]{Datum} edge (reparatur);
-            \node[attribute](arbeitsstunden)[below left = of reparatur]{Arbeitsstunden} edge (reparatur);
-            \node[attribute](rechungsbetrag)[below right = of reparatur]{Rechnungspreis} edge (reparatur);
+              \node[relationship](fuehrtdurch)[below = 1.625cm of mechaniker]{führt durch} edge node[auto,swap] {(1,*)}(mechaniker);
+              \node[relationship](betreut)[below = 2cm of verkaeufer]{betreut} edge node[auto,swap] {(0,*)}(verkaeufer);
+              \node[relationship](nimmtvor)[right = 7cm of verkaeufer]{nimmt vor} edge node[auto,swap] {(0,*)}(verkaeufer);
+              \node[entity](reparatur)[below = 1.625cm of fuehrtdurch]{Reparatur} edge node[auto,swap] {(1,1)}(fuehrtdurch);
+                \node[attribute](reparaturid)[above left = of reparatur]{\key{Reparatur\_ID}} edge (reparatur);
+                \node[attribute](datum)[above right = of reparatur]{Datum} edge (reparatur);
+                \node[attribute](arbeitsstunden)[below left = of reparatur]{Arbeitsstunden} edge (reparatur);
+                \node[attribute](rechungsbetrag)[below right = of reparatur]{Rechnungspreis} edge (reparatur);
 
-            \node[entity](kunde)[below = 2cm of betreut]{Kunde} edge node[auto,swap] {(1,1)}(betreut);
-            \node[attribute](kundenid)[above left = 0.5cm of kunde]{\key{Kunden\_ID}} edge (kunde);
-            \node[attribute](vorname)[below left = 0.5cm of kunde]{Vorname} edge (kunde);
-            \node[attribute](nachname)[below right = 0.5cm of kunde]{Nachname} edge (kunde);
-            \node[attribute](adresse)[above right = 0.5cm of kunde]{Adresse} edge (kunde);
+              \node[entity](kunde)[below = 2cm of betreut]{Kunde} edge node[auto,swap] {(1,1)}(betreut);
+                \node[attribute](kundenid)[above left = 0.5cm of kunde]{\key{Kunden\_ID}} edge (kunde);
+                \node[attribute](vorname)[below left = 0.5cm of kunde]{Vorname} edge (kunde);
+                \node[attribute](nachname)[below right = 0.5cm of kunde]{Nachname} edge (kunde);
+                \node[attribute](adresse)[above right = 0.5cm of kunde]{Adresse} edge (kunde);
 
-            \node[entity](verkauf)[below = 5.5cm of nimmtvor]{Verkauf} edge node[auto,swap] {(1,1)}(nimmtvor);
-            \node[attribute](verkaufid)[above left = of verkauf]{\key{Verkauf\_ID}} edge (verkauf);
-            \node[attribute](datum)[above right = of verkauf]{Datum} edge (verkauf);
+              \node[entity](verkauf)[below = 5.5cm of nimmtvor]{Verkauf} edge node[auto,swap] {(1,1)}(nimmtvor);
+                \node[attribute](verkaufid)[above left = of verkauf]{\key{Verkauf\_ID}} edge (verkauf);
+                \node[attribute](datum)[above right = of verkauf]{Datum} edge (verkauf);
 
-            \node[relationship](wirdrepariert)[below = 4cm of reparatur]{wird repariert} edge node[auto,swap] {(1,1)}(reparatur);
-            \node[relationship](besitzt)[below = of kunde]{besitzt} edge node[auto,swap] {(0,*)}(kunde);
-            \node[relationship](wirdverkauft)[below = 4cm of verkauf]{wird verkauft} edge node[auto,swap] {(1,1)}(verkauf);
-            \node[entity](auto)[below = of besitzt]{Auto} edge node[auto,swap] {(0,1)}(besitzt);
-            \path[draw, -] (auto.west) -| (wirdrepariert.east) node[auto,swap, xshift=100,yshift=10]{(0,*)};
-            \path[draw, -] (auto.east) -| (wirdverkauft.west) node[auto,swap, xshift=-90,yshift=10]{(0,1)};
-            \node[attribute](autoid)[above left = of auto]{\key{Auto\_ID}} edge (auto);
-            \node[attribute](marke)[above right = of auto]{Marke} edge (auto);
-            \node[attribute](typ)[below left = of auto]{Modell} edge (auto);
-            \node[attribute](preis)[below right = of auto]{Preis} edge (auto);
-            \node[attribute](fahrleistung)[below = of auto]{Fahrleistung} edge (auto);
+              \node[relationship](wirdrepariert)[below = 4cm of reparatur]{wird repariert} edge node[auto,swap] {(1,1)}(reparatur);
+              \node[relationship](besitzt)[below = of kunde]{besitzt} edge node[auto,swap] {(0,*)}(kunde);
+              \node[relationship](wirdverkauft)[below = 4cm of verkauf]{wird verkauft} edge node[auto,swap] {(1,1)}(verkauf);
+              \node[entity](auto)[below = of besitzt]{Auto} edge node[auto,swap] {(0,1)}(besitzt);
+                \path[draw, -] (auto.west) -| (wirdrepariert.east) node[auto,swap, xshift=100,yshift=10]{(0,*)};
+                \path[draw, -] (auto.east) -| (wirdverkauft.west) node[auto,swap, xshift=-90,yshift=10]{(0,1)};
+                \node[attribute](autoid)[above left = of auto]{\key{Auto\_ID}} edge (auto);
+                \node[attribute](marke)[above right = of auto]{Marke} edge (auto);
+                \node[attribute](typ)[below left = of auto]{Modell} edge (auto);
+                \node[attribute](preis)[below right = of auto]{Preis} edge (auto);
+                \node[attribute](fahrleistung)[below = of auto]{Fahrleistung} edge (auto);
 
-            \node[relationship](nimmtan)[right = 2.5cm of fuehrtdurch]{nimmt an};
-            \path[draw, -] (verkaeufer.west) -| (nimmtan.north) node[auto,swap, xshift=55,yshift=80]{(0,*)};
-            \path[draw, -] (reparatur.east) -| (nimmtan.south) node[auto,swap, xshift=-55,yshift=-60]{(1,1)};
-        \end{tikzpicture}
-    }
-\end{center}
-\subsubsection{Transformation}
-\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{11.7cm}}
-    Personal   & (\pk{Personal\_ID}, Vorname, Nachname, Geburtsdatum, Adresse)                                                                      \\
-    Mechaniker & (\fk{\pk{Personal\_ID}})                                                                                                           \\
-    Verkäufer  & (\fk{\pk{Personal\_ID}})                                                                                                           \\
-    Kunde      & (\pk{Kunden\_ID}, Vorname, Nachname, Adresse \nn{\fk{Verkäufer\_ID}})                                                              \\
-    Auto       & (\pk{Auto\_ID}, Marke, Modell, Preis, Fahrleistung, \fk{Kunden\_ID})                                                               \\
-    Verkauf    & (\pk{Verkauf\_ID}, Datum, \nn{\fk{Verkäufer\_ID}}, \un{\nn{\fk{Auto\_ID}}})                                                        \\
-    Reparatur  & (\pk{Reparatur\_ID}, Arbeitsstunden, Datum, \nn{\fk{Auto\_ID}}, \nn{\fk{Verkäufer\_ID}}, \nn{\fk{Mechaniker\_ID}}, Rechnungspreis) \\
-\end{tabular}
+              \node[relationship](nimmtan)[right = 2.5cm of fuehrtdurch]{nimmt an};
+                \path[draw, -] (verkaeufer.west) -| (nimmtan.north) node[auto,swap, xshift=55,yshift=80]{(0,*)};
+                \path[draw, -] (reparatur.east) -| (nimmtan.south) node[auto,swap, xshift=-55,yshift=-60]{(1,1)};
+              \end{tikzpicture}
+              }
+            \end{center}
+        \subsubsection{Transformation}
+					\begin{tabular}{>{\textbf\bgroup}p{3.1cm}<{\egroup}>{\small}p{12cm}}
+						Personal& (\pk{Personal\_ID}, Vorname, Nachname, Geburtsdatum, Adresse) \\
+						Mechaniker& (\fk{\pk{Personal\_ID}}) \\
+						Verkäufer& (\fk{\pk{Personal\_ID}}) \\
+						Kunde& (\pk{Kunden\_ID}, Vorname, Nachname, Adresse \nn{\fk{Verkäufer\_ID}}) \\
+						Auto& (\pk{Auto\_ID}, Marke, Modell, Preis, Fahrleistung, \fk{Kunden\_ID}) \\
+						Verkauf& (\pk{Verkauf\_ID}, Datum, \nn{\fk{Verkäufer\_ID}}, \un{\nn{\fk{Auto\_ID}}}) \\
+						Reparatur & \mbox{(\pk{Reparatur\_ID}, Arbeitsstunden, Datum,
+						Rechnungspreis,} \mbox{\nn{\fk{Verkäufer\_ID}},
+						\nn{\fk{Mechaniker\_ID}}, \nn{\fk{Auto\_ID}})} \\
+					\end{tabular}
 \clearpage

@@ -40,7 +40,6 @@ FROM   Kunde k INNER JOIN Eigenkunde ek
        INNER JOIN Depot d
          ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
-\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]
@@ -53,7 +52,7 @@ FROM   Kunde k INNER JOIN Eigenkunde ek
        INNER JOIN Depot d
          ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
-
+\clearpage
         \item Schreiben Sie eine Abfrage, die für alle Eigenkunden deren Vor-
         und Nachnamen anzeigt, sowie den Vor- und den Nachnamen ihres
         persönlichen Finanzberaters (Tabelle
@@ -88,7 +87,6 @@ WHERE  ekm.Kunden_ID IS NULL;
         \end{lstlisting}
         \item Schreiben Sie eine Abfrage, die zu jedem Mitarbeiter (Vorname,
         Nachname) den Vor- und den Nachnamen seines Vorgesetzten anzeigt.
-\clearpage
         \begin{msoraclesql}[\FALSE]
         \end{msoraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -136,7 +134,6 @@ WHERE  ekm.Mitarbeiter_ID IS NULL
         höchstens 3 Jahre älter, aber keinesfalls jünger sind als ihr
         Vorgesetzter, den Vornamen, den Nachnamen, das Geburtsdatum und das
         Geburtsdatum des Vorgesetzten anzeigt.
-\clearpage
         \begin{oraclesql}[\FALSE]
         \end{oraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -256,7 +253,6 @@ FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
        INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
        INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
-        \clearpage
         \item Schreiben Sie eine Abfrage, die eine Liste aller Eigenkunden
         ausgibt, die ein Girokonto und ein Sparbuch besitzten, aber kein Depot.
         \begin{oraclesql}[\FALSE]
@@ -277,6 +273,7 @@ FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
        INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
        INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
+\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]

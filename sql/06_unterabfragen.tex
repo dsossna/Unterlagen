@@ -28,7 +28,7 @@ Mit Hilfe von SQL können zwei verschiedene Arten von Problemstellungen gelöst 
 Unter einer einschrittigen Problemstellung versteht man die Art von Fragestellung, die mit einer einzigen Abfrage (einem einzigen Arbeitsschritt) gelöst werden kann, so wie dies in den vorangegangenen Kapiteln der Fall war.
 
 Mehrschrittige Problemstellungen erfordern, wie der Name es sagt, mehrere Abfragen, die aufeinander aufbauen (die eine Abfrage benötigt das Ergebnis der anderen), um zu einer Lösung zu kommen. Eine solche Problemstellung könnte z. B. so lauten: \enquote{Wie hoch ist das Gehalt des Vorgesetzten der Mitarbeiterin \textit{Lena Große}?}
-
+\clearpage
 Diese Frage lässt sich in zwei Fragen teilen:
 \begin{enumerate}
     \item Wer ist der Vorgesetzte von Lena Große?
@@ -117,10 +117,12 @@ WHERE  Mitarbeiter_ID = (SELECT Vorgesetzter_ID
         \end{msoraclesql}
     \end{small}
 \end{center}
+\clearpage
 \begin{merke}
     Das DBMS arbeitet bei einer solchen Auswahlabfrage immer zuerst die Unterabfrage(n) ab!
 \end{merke}
 \subsection{Regeln für Unterabfragen}
+Für die Anwendung von Unterabfragen gelten die folgenden Grundsätze:
 \begin{itemize}
     \item Unterabfragen stehen immer in Klammern!
     \item Es können alle ihnen bisher bekannten Operatoren eingesetzt werden!
@@ -136,7 +138,7 @@ Grundsätzlich gibt es vier unterschiedliche Arten von Unterabfragen:
 \begin{itemize}
     \item Skalare Unterabfragen: Eine solche Abfrage liefert exakt einen Wert zurück.
     \item Einspaltige Unterabfragen: Dieser Abfragetyp liefert mehrere Werte aus einer Spalte zurück.
-    \item Mehrspaltige Unterabfragen: Die Abfrage liefert Werte mehrerer Spalten zurückgeliefert.
+    \item Mehrspaltige Unterabfragen: Mit einer solchen Abfrage werden Werte mehrerer Spalten zurückgeliefert.
     \item Korrelierte Unterabfragen: Ihre Ausführung ist von der Hauptabfrage abhängig.
 \end{itemize}
 \clearpage
@@ -276,6 +278,7 @@ Das Besondere an dieser Form der Abfrage ist die \WHERE-Klausel der Unterabfrage
 \begin{merke}
     Werden die Tabellen einer Unterabfrage mit einer Tabelle der Hauptabfrage verknüpft, spricht man von einer \enquote{korrelierten Unterabfrage}.
 \end{merke}
+\clearpage
 Für die Ausführung des gesamten Statements bedeutet dies, das die Unterabfrage nicht nur einmal, sondern mehrfach ausgeführt werden muss. Genauer gesagt wird die Unterabfrage für jede Zeile der Hauptabfrage einmal ausgeführt. Bezogen auf \beispiel{sql06_08} bedeutet dies, dass die Unterabfrage 21 mal ausgeführt wird, da die Tabelle Bankfiliale 21 Datensätze hat. Die Mehrfachausführung der Unterabfrage ist notwendig, da für jede Bankfiliale einzeln geprüft werden muss, ob es dort Mitarbeiter gibt oder nicht.
 
 Eine weitere Besonderheit dieser Art von Abfrage ist die \SELECT-Klausel der Unterabfrage. Dort stehen keine Spaltenbezeichner und auch kein *. Statt dessen wird hier ein Literal, eine 1 (eins) verwendet. Der Hintergrund hierfür ist, das die \SELECT-Klausel der Unterabfrage für die Ausführung des gesamten Statements keine Bedeutung hat. Es wird nur geprüft, ob für jeden Datensatz der Hauptabfrage ein Datensatz in der Unterabfrage existiert. Das bedeutet, dass sobald die Unterabfrage eine Zeile zurückliefert die Bedingung erfüllt ist und der Datensatz der Hauptabfrage angezeigt wird.
@@ -485,6 +488,7 @@ FROM   (SELECT   Konto_ID, Guthaben
         ORDER BY Guthaben DESC)
 WHERE    Rownum < 3;
         \end{lstlisting}
+\clearpage
 \begin{center}
     \begin{small}
         \changefont{pcr}{m}{n}
@@ -648,6 +652,7 @@ gebildet, in dem der Name der aggregierten Spalte (hier
 kombiniert werden. Dadurch entstehen die Namen \identifier{1\_GEHALT},
 \identifier{2\_GEHALT} und \identifier{3\_GEHALT}. Auch an dieser
 Stelle sind Aliasnamen möglich.
+\clearpage
 \begin{lstlisting}[language=oracle_sql,caption={Die \languageorasql{FOR}-Klausel mit Aliasnamen},label=sql06_20]
 SELECT *
 FROM   (SELECT Gehalt, Bankfiliale_ID
@@ -680,7 +685,7 @@ PIVOT  (MIN(Gehalt) AS Gehalt FOR Bankfiliale_ID
 \end{center}
 \subsubsection{Zusätzliche Spalten zum Pivoting}
 In einer Pivot-Abfrage können noch weitere Spalten enthalten sein, die nicht aggregiert oder in der \languageorasql{FOR}-Klausel genutzt werden. Diese Spalten werden als zusätzliche Gruppierungsmerkmale genutzt.
-\clearpage
+
 \begin{merke}
     Oracle führt eine implizite Gruppierung der Ergebnismenge durch. Diese basiert auf allen nicht gruppierten Spalten, inklusive der Spalten, die in der \languageorasql{FOR}-Klausel genutzt werden.
 \end{merke}
@@ -697,6 +702,7 @@ FROM   (SELECT Gehalt, TO_CHAR(Geburtsdatum, 'YYYY') AS Geburtsdatum, Ort
         FROM   Mitarbeiter)
 PIVOT  (MIN(Gehalt) AS Gehalt FOR Geburtsdatum IN ('1987', '1988', '1989'));
           \end{lstlisting}
+\clearpage
 \begin{center}
     \begin{small}
         \changefont{pcr}{m}{n}
@@ -708,12 +714,12 @@ PIVOT  (MIN(Gehalt) AS Gehalt FOR Geburtsdatum IN ('1987', '1988', '1989'));
             \cmidrule(l){1-1}\cmidrule(r){2-2}\cmidrule(r){3-3}\cmidrule(r){4-4}
         }
         \tablehead{}
-        %   \tabletail {
-        %     \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
-        %   }
-        %   \tablelasttail {
-        %     \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
-        %   }
+        \tabletail {
+            \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
+        }
+        \tablelasttail {
+            \multicolumn{4}{l}{\textbf{25 Zeilen ausgewählt}} \\
+        }
         \begin{oraclesql}
             \begin{supertabular}{lrrr}
                 Calbe &  &  &  \\
@@ -726,7 +732,12 @@ PIVOT  (MIN(Gehalt) AS Gehalt FOR Geburtsdatum IN ('1987', '1988', '1989'));
                 Schönebeck &  &  &  \\
                 Giersleben &  &  &  \\
                 Gera &  &  & 3500 \\
-                ... & & & \\
+                München &  &  &  \\
+                Egeln &  &  &  \\
+                Güsten &  &  &  \\
+                Seeland &  &  & 2500 \\
+                Ilberstedt &  &  &  \\
+                Bördeaue &  &  &  \\
                 Hamburg & 12000 &  &  \\
                 Alsleben &  &  &  \\
                 Schwerin &  &  &  \\
@@ -749,6 +760,7 @@ FROM     Mitarbeiter
 WHERE    Bankfiliale_ID IN (1, 2, 3)
 GROUP BY Bankfiliale_ID;
         \end{lstlisting}
+\clearpage
 \begin{center}
     \begin{small}
         \changefont{pcr}{m}{n}
@@ -818,6 +830,7 @@ Diese Inlineview legt fest, welche Spalten im Endergebnis der Abfrage zu sehen s
 \begin{lstlisting}[language=ms_sql,caption={Der \languageorasql{PIVOT}-Operator},label=sql06_25]
 PIVOT  (MIN(Gehalt) FOR Bankfiliale_ID IN ([1], [2], [3])) AS Pivottable;
           \end{lstlisting}
+\clearpage
 Die Bedeutung dieses Operators ist:
 \begin{itemize}
     \item Gruppiere nach der Spalte \identifier{Bankfiliale\_ID}.
@@ -840,11 +853,14 @@ In einer Pivot-Abfrage können noch weitere Spalten enthalten sein, die nicht ag
 \begin{merke}
     MS SQL Server führt eine implizite Gruppierung der Ergebnismenge durch. Diese basiert auf allen nicht gruppierten Spalten, inklusive der Spalten, die in der \languagemssql{FOR}-Klausel genutzt werden.
 \end{merke}
-In \beispiel{sql06_26} wird im ersten Schritt nach dem Geburtsjahr, von 1987 bis 1989 gruppiert. Da diese Spalte in der \languagemssql{FOR}-Klausel verwendet wird, wird diese Information in Spaltenform dargestellt. Die Spalte Ort hingegen, wird in Zeilenform angezeigt, da sie nicht in der \languagemssql{FOR}-Klausel angegeben wurde.
+In \beispiel{sql06_26} wird im ersten Schritt nach dem Geburtsjahr, von 1987 bis 1989 gruppiert. Da diese Spalte in der \languagemssql{FOR}-Klausel verwendet wird, wird diese Information in Spaltenform dargestellt.
+
+Die Spalte Ort hingegen, wird in Zeilenform angezeigt, da sie nicht in der \languagemssql{FOR}-Klausel angegeben wurde.
 
 \begin{merke}
     Ob eine Information in Spalten- oder Zeilenform dargestellt wird, hängt davon ab, ob die betreffende Spalte in der \languagemssql{FOR}-Klausel gelistet wurde oder nicht.
 \end{merke}
+\clearpage
 \begin{lstlisting}[language=ms_sql,caption={Zusätzliche Gruppierungen in einer Pivot-Abfrage},label=sql06_26]
 SELECT *
 FROM   (SELECT Gehalt, DATEPART(YEAR, Geburtsdatum) AS Geburtsdatum, Ort
@@ -879,8 +895,19 @@ PIVOT  (MIN(Gehalt)
                 Hecklingen &  &  & 3000 \\
                 Borne &  &  & 30000 \\
                 Schönebeck &  &  &  \\
+                Giersleben &  &  &  \\
+                Gera &  &  & 3500 \\
+                München &  &  &  \\
+                Egeln &  &  &  \\
+                Güsten &  &  &  \\
+                Seeland &  &  & 2500 \\
+                Ilberstedt &  &  &  \\
                 Bördeaue &  &  &  \\
-                ... & & & \\
+                Hamburg & 12000 &  &  \\
+                Alsleben &  &  &  \\
+                Schwerin &  &  &  \\
+                Dessau & 2500 &  &  \\
+                Könnern &  &  &  \\
                 Cottbus &  &  &  \\
                 Potsdam & 3500 & 2000 & 2000 \\
                 Aschersleben & 12000 & 88000 & 2000 \\
@@ -889,3 +916,4 @@ PIVOT  (MIN(Gehalt)
         \end{mssql}
     \end{small}
 \end{center}
+Die vorangegangenen Beispiele stellen nur einen Einstieg in das Thema \enquote{Pivottabellen} dar. Tatsächlich ist der \languageorasql{PIVOT}-Operator noch weitaus mächtiger.

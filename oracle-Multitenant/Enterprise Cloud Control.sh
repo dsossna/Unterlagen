@@ -17,18 +17,14 @@ dbca -silent -createDatabase                                                    
      -emConfiguration NONE                                                      \
      -ignorePreReqs
 	 
-	 sqlplus / as sysdba <<EOF
-  alter system set db_create_file_dest='/u01/oradata';
+sqlplus / as sysdba <<EOF
+  alter system set db_create_file_dest='/u02/oradata';
   alter pluggable database emrep save state;
-
-  -- Recommended minimum settings.
   alter system set "_allow_insert_with_update_check"=true scope=both;
   alter system set session_cached_cursors=200 scope=spfile;
   alter system set sga_target=800M scope=both;
   alter system set pga_aggregate_target=450M scope=both;
-
-  -- For 12.1.0.2 set the following.
-  --alter system set optimizer_adaptive_features=false scope=both;
+  alter system set optimizer_adaptive_features=false scope=both;
   exit;
 EOF
 
