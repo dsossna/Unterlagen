@@ -200,6 +200,14 @@ WHERE  Kunden_ID IN (SELECT Kunden_ID
                      FROM   EigenkundeKonto
                      WHERE  Eroeffnungsdatum < TO_DATE('01.01.1980'));
         \end{lstlisting}
+        \begin{lstlisting}[language=ms_sql,caption={Die Fehlermeldung in SQL Server},label=sql05_04]
+            SELECT Vorname, Nachname
+            FROM   Kunde
+            WHERE  Kunden_ID IN (SELECT Kunden_ID
+                                 FROM   EigenkundeKonto
+                                 WHERE  Eroeffnungsdatum 
+                                 < CONVERT(DATETIME2,'01.01.1980',104));
+        \end{lstlisting} 
 \begin{center}
     \begin{small}
         \changefont{pcr}{m}{n}
