@@ -1,0 +1,1 @@
+./agentDeploy.sh AGENT_BASE_DIR=/u03/app/oracle/agent OMS_HOST=oracle-server.ix.itsbw EM_UPLOAD_PORT=14511 AGENT_REGISTRATION_PASSWORD=Voyager_10 -configOnly
