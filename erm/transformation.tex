@@ -113,7 +113,6 @@ bezeichnet.
           Da das Attribut \enquote{Ausweisnummer} eingabepflichtig ist, muss jeder gespeicherte Mitarbeiter einen Ausweis haben. Andererseits ist das Attribut unikal, so dass eine Ausweisnummer nur einem Mitarbeiter zugeordnet sein kann.
 
           Es gibt aber auch Fälle, bei denen ein (1,1):(1,1) Beziehungstyp durchaus sinnvoll ist. Will man beispielsweise die Informationen über Objekte in öffentliche (z.B. Mitarbeiter-\\Offen(\pk{Personalnummer}, Name, TelNr, Abteilung)) und vertrauliche Daten (z.B. Mitar-\\beiterVS(\pk{Personalnummer}, Gehalt, Konfession)) unterteilen, kann man zwei Objekttypen A und B mit demselben Schlüssel \pk{S} ins Datenmodell aufnehmen. Dann wird sowohl der Schlüssel \pk{S} von A in B als unikaler eingabepflichtiger Fremdschlüssel vereinbart und umgekehrt, der Schlüssel \pk{S} von B wird in A als unikaler eingabepflichtiger FK deklariert. Die folgende Tabelle zeigt die entsprechende Transformationsregel T02.
-\clearpage
         \subsubsection{Transformationsregel T02 für sinnvolle (1,1):(1,1) Beziehungen}
           \tablefirsthead{%
           \hline
@@ -210,7 +209,6 @@ bezeichnet.
         Die Art der Transformation richtet sich nun danach, wie hoch der Anteil jener B-Objekte ist, für die ergänzende Angaben gemacht werden, die also in Beziehung zu einem A-Objekt stehen. Oder anders gefragt, ob der Objekttyp B wesentlich mehr Objekte enthält als der Objekttyp A.
         \subsubsection{Fall 1:\#A unwesentlich kleiner als \#B}
           Gibt es bei einem (1,1):(0,1) Beziehungstyp nur unwesentlich mehr B-Objekte als A-Objekte, können die Daten beider Objekttypen in einer Tabelle zusammengefasst werden. Die Eigenschaften von A werden dabei als nicht-eingabepflichtig deklariert.
-\clearpage
           Der Schlüssel \pk{SA} von A wird in der Tabelle B jedoch als unikal deklariert. Ein A-Objekt, das damit nur zu einem einzigen B-Objekt gehören kann, kann nicht losgelöst von \enquote{seinem} B-Objekt gespeichert werden. Bei den wenigen B-Objekten, die nicht mit einem A-Objekt verbunden sind, nehmen die A-Attribute den Wert NULL an.
         \subsubsection{Transformationsregel T03 für den (1,1):(0,1) Beziehungstyp (selten realisierte Optionalität)}
           \tablefirsthead{%
@@ -267,7 +265,7 @@ bezeichnet.
           NULL-Wert an. Dadurch, dass das Attribut
           \enquote{Handy-Inventarnummer} als unikal deklariert ist, kann ein und
           dasselbe Handy nicht mehreren Mitarbeitern zugeordnet werden.
-\clearpage
+		  
         \subsubsection{Fall 2: \#A ist wesentlich kleiner als \#B}
           Betrachten wir nun den Fall, dass es wesentlich mehr B-Objekte als A-Objekte gibt. Würde man jetzt die beiden Objekttypen in einer Tabelle vereinen, hätten die Attribute der A-Objekte in vielen Zeilen den NULL-Wert. Um dies zu vermeiden, werden zwei Tabellen angelegt: eine B-Tabelle für alle B-Objekte und eine A-Tabelle für die seltenen A-Objekte, die durch einen eingabepflichtigen Fremdschlüssel jeweils auf \enquote{ihr} B-Objekt verweisen. Die Kardinalität \enquote{1} von (0,1) auf der B-Seite wird dadurch erzwungen, dass der Fremdschlüssel in A als unikal deklariert wird. Diese Umsetzung entspricht der Transformationsregel T04.
         \subsubsection{Transformationsregel T04 für den (1,1):(0,1) Beziehungstyp (oft realisierte Optionalität)}
@@ -429,7 +427,6 @@ bezeichnet.
         aufgenommen wird. Jedes A-Objekt muss dann auf genau ein B-Objekt
         verweisen. Da der Fremdschlüssel aber nicht als unikal vereinbart ist,
         können mehrere A-Objekte mit demselben B-Objekt gekoppelt sein.
-\clearpage
         \subsubsection{Transformationsregel T06 für den (1,1):(0,*) Beziehungstyp}
           \tablefirsthead{%
           \hline
@@ -628,7 +625,6 @@ bezeichnet.
             \end{tikzpicture}
           }
         \end{center}
-\clearpage
         Wie schon beim (1,1):(1,*) Beziehungstyp, so ist auch hier die Nichtoptionalität der Beziehungstyprichtung von B zu A im physischen Datenbankmodell nicht zu erzwingen. Die Transformation des (0,1):(1,*) Beziehungstyps kann nur wie beim (0,1):(0,*) Beziehungstyp erfolgen, also gemäß\ T07. Es muss auch hier der Verlust von semantischen Informationen in Kauf genommen werden.
        \subsubsection{Beispiel - Exklusivangebotsbestellung}
           Betrachten wir als Beispiel einen Versandhandel, der Exklusivangebote für seine Kunden erstellt. Jeder Kunde kann zu einem Angebot höchstens eine Bestellung abschicken, er muss es aber nicht tun (Kardinalität (0,1)). In einer Bestellung kann der Kunde sich aber nicht nur auf ein Angebot beziehen, sondern auch auf mehrere (Kardinalität (1,*)).
@@ -1197,7 +1193,6 @@ bezeichnet.
         Beim (0,1):(0,1) Rekursiv-Beziehungstyp sind also - wie schon beim (1,1):(1,1) Rekursiv-Be\-zieh\-ungs\-typ - Objekt-Zyklen ($a_1 \rightarrow a_2 \rightarrow a_3 \rightarrow a_1$) möglich, die im Minimalfall Ein-Objekt-Zyklen ($a_4 \rightarrow a_4$) sind. Darüber hinaus kann es Objekt-Ketten ($a_5 \rightarrow a_6 \rightarrow a_7$) geben, die gegebenenfalls nur ein einziges Objekt enthalten ($a_8$). Ein solches Objekt ist dann weder Sender noch Empfänger.
 
         Für die Umsetzung im physischen Modell, betrachten wir den Fall, dass die Objekte einen Verweis auf \enquote{ihren} Sender benötigen. Dieser Sender kann der Empfänger selbst oder ein anderes A-Objekt sein. Da nicht jedes Objekt ein Empfänger ist, muss der FK, der auf den Sender verweist, als nicht-eingabepflichtig deklariert werden. Andererseits muss er unikal sein, damit ein $a_1$ Objekt nur von höchstens einem Objekt $a_2$ als \enquote{sein} Sender ausgewiesen werden kann. Zusammengefasst ist dies die Transformationsregel T10.
-\clearpage
         \subsubsection{Transformationsregel T10 für den (0,1):(0,1) Rekursiv-Beziehungstyp}
           \tablefirsthead{%
           \hline
@@ -1248,7 +1243,6 @@ dienen, ohne selbst einen Ersatz zu benötigen (Endglied einer Kette).
           \begin{small}
             Bus(\pk{PolKennzeichen}, Sitzplatzanzahl, \un{\fk{ErsatzbusKennzeichen}})
           \end{small}
-\clearpage
           Da der FK \fk{ErsatzbusKennzeichen} als nicht-eingabepflichtig deklariert ist, kann ein Bus auf keinen oder auf einen anderen Bus (evtl. auf sich selbst) als Ersatzbus verweisen. Da der FK unikal ist, kann auf einen Ersatzbus nur von \textit{einem} anderen Bus verwiesen werden. Andererseits ist nicht gefordert - und kann auch gar nicht gefordert werden -, dass jeder Wert des PK \pk{PolKennzeichen} auch tatsächlich als FK auftritt. Somit kann es Busse geben, die nicht durch einen FK-Wert als Ersatzbusse ausgewiesen sind.
       \subsection{Der (1,1):(0,*) Rekursiv-Beziehungstyp}
         Beim (1,1):(0,*) Rekursiv-Beziehungstyp kann ein Objekt keine, eine oder mehrere Nachrichten senden, es muss aber stets genau eine Nachricht empfangen werden. Das entspricht den Bedingungen des (1,1):(1,1) Rekursiv-Beziehungstyps, zuzüglich der Möglichkeit eines Objekts, entweder gar nicht als Sender oder aber als Sender mehrerer Nachrichten aufzutreten.
@@ -1364,7 +1358,8 @@ dienen, ohne selbst einen Ersatz zu benötigen (Endglied einer Kette).
         Dieser Rekursiv-Beziehungstyp ist prädestiniert für die Repräsentation von Monohierarchien, wie sie in der Praxis in Form von Organigrammen oder Stücklisten auftreten. Als Sonderfall eines \enquote{Baumes} ist eine Liste ($a_{9} \rightarrow a_{10}$) möglich, die evtl. auch nur aus einem Element ($a_{11}$) bestehen kann.
 
         Bei der Transformation dieses Rekursiv-Beziehungstyps in das physische Datenbankmodell wird der FK als nicht-eingabepflichtig und nicht-unikal deklariert. Die entsprechende Transformation ist in T12 zusammengefasst.
-        \subsubsection{Transformationsregel T12 für den (0,1):(0,*) Rekursiv-Beziehungstyp}
+\clearpage 
+ \subsubsection{Transformationsregel T12 für den (0,1):(0,*) Rekursiv-Beziehungstyp}
           \tablefirsthead{%
           \hline
             \multicolumn{1}{|c}{\textbf{ER-Modell}} &
@@ -1391,7 +1386,6 @@ dienen, ohne selbst einen Ersatz zu benötigen (Endglied einer Kette).
             }
           \end{center}
           \bild{}{transformationsregel_12_tabellen}{0.35}
-\clearpage
 				\subsubsection{Beispiel - Unternehmenshierarchie}
           Betrachten wir als Beispiel die Leitungshierarchie im Unternehmen. Ein Mitarbeiter kann ohne Leitungsfunktion sein, er kann aber auch mehrere andere Mitarbeiter anleiten. Dies kann über mehrere Hierarchiestufen erfolgen. Andererseits haben die meisten Mitarbeiter genau einen Chef. Mitarbeiter der obersten Leitungsebene haben keinen Chef. Die Transformation ist in der folgenden Abbildung dargestellt.
           \begin{center}
@@ -1627,7 +1621,6 @@ dienen, ohne selbst einen Ersatz zu benötigen (Endglied einer Kette).
               \end{tikzpicture}
             }
           \end{center}
-\clearpage
         Nun haben wir bei den binären Beziehungstypen gesehen, dass sich ein (1,1):(1,*) Beziehungstyp im physischen Datenbankmodell nur als (1,1):(0,*) Beziehungstyp repräsentieren lässt. Damit kann der (1,*):(0,*) Rekursiv-Beziehungstyp nur gemäß{} der Transformationsregel T13 wie ein (0,*):(0,*) Rekursiv-Beziehungstyp dargestellt werden.
         \subsubsection{Beispiel - Literaturverweis}
           Betrachten wir als Beispiel Literaturverweise in Lehrbüchern. Jedes Lehrbuch verweist auf mindestens ein Vorgänger-Lehrbuch. Auf ein gerade erst erschienenes Lehrbuch kann noch nicht verwiesen werden. Handelt es sich um ein interessantes Lehrbuch, so wird im Laufe der Zeit von vielen Nachfolge-Lehrbüchern zitiert.
@@ -1729,7 +1722,6 @@ dienen, ohne selbst einen Ersatz zu benötigen (Endglied einer Kette).
           }
         \end{center}
         Da sich ein (1,1):(1,*) im physischen Modell nur als (1,1):(0,*) Beziehungstyp repräsentieren lässt, muss der (1,*):(1,*) Rekursiv-Beziehungstyp - unter Verlust von semantischen Informationen - gemäß{} der Transformationsregel T13 wie ein (0,*):(0,*) Rekursiv-Beziehungstyp dargestellt werden.
-\clearpage
         \subsubsection{Beispiel - Pianisten}
           Als Beispiel betrachten wir eine Kunsthochschule, die Informationen über Pianisten sammelt, die in der Ausbildung tätig sind. Wir nehmen der Einfachheit halber an, dass die Pianisten eindeutig durch ihren Namen unterschieden werden können. Jeder dieser Pianisten hat wenigstens einen anderen Pianisten als Schüler. Andererseits ist jeder Pianist Schüler eines oder mehrerer anderer Pianisten (Autodidakten werden nicht berücksichtigt).
           \begin{center}
