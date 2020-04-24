@@ -16,13 +16,13 @@
       Anteile von Oracle Bedeutung hat und hier keine weitere Erwähnung
       findet. SQL Server kennt zusätzlich noch ein weiteres Constraint: das
       \languagemssql{DEFAULT}-Constraint.
+	  \clearpage
     \section{Die Constraints}
       Constraints können mit Hilfe der beiden Kommandos \languageorasql{CREATE
       TABLE} und \languageorasql{ALTER TABLE} angelegt werden. Sie werden durch
       einen Bezeichner und ihren Typ repräsentiert. Die Bezeichner von
       Constraints unterliegen ebenfalls den in \tabelle{createtablerestrictions}
       beschriebenen Regeln.
-\clearpage
       \begin{merke}
         Wird für ein Constraint kein Name festgelegt, legt Oracle automatisch
         einen Namen nach dem Schema \enquote{SYS\_Cn} fest, wobei n eine
@@ -52,7 +52,7 @@ CREATE TABLE <Tabellenname>(
         auf der Spalte \identifier{Gehalt} der Tabelle \identifier{Mitarbeiter}
         sinnvoll, das definiert, dass Gehälter niemals negativ und niemals
         über 90000 EUR sein können.
-
+\clearpage
         In \beispiel{sql09_02} wird gezeigt, wie die oben genannte
         Einschränkung für die \identifier{Gehalt}-Spalte der Tabelle
         \identifier{Mitarbeiter} als Out Of Line Constraint angelegt wird.
@@ -78,6 +78,7 @@ ALTER TABLE Mitarbeiter
 ADD CONSTRAINT gehalt_ck CHECK (Gehalt > 0
                AND (Gehalt + (Gehalt * Provision / 100))  <= 90000);
         \end{lstlisting}
+		\clearpage
       \subsection{Das NOT NULL-Constraint}
         Das \NOTNULL-Constraint ist dafür zuständig sicherzustellen, dass beim Einfügen oder Ändern einer Tabellenzeile bestimmte Spalten immer einen Wert haben müssen.
 
