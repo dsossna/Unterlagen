@@ -188,7 +188,6 @@ ADD Herkunft VARCHAR(25);
             Wird eine neue Spalte an eine Tabelle angefügt, haben alle Zellen dieser Spalte den Wert NULL, es sei den, es wird ein Standardwert für diese Spalte definert. In diesem Falle füllt Oracle die Spalte mit dem Standardwert auf. SQL Server tut dies nicht.
           \end{merke}
            \beispiel{sql08_09} und \beispiel{sql08_10} zeigen, wie sich Oracle und MS SQL Server verhalten, wenn eine neue Spalte, mit einem Standardwert, hinzugefügt wird. Die Spalte \identifier{Herkunft} wird mit dem Standardwert \enquote{Deutschland} an die Tabelle \identifier{Aktie} angefügt. In Oracle werden dann automatisch alle bereits vorhandenen Zeilen mit dem neuen Standardwert aufgefüllt. In SQL Server wird dies nicht der Fall sein.
-\clearpage
           \begin{lstlisting}[language=oracle_sql,caption={Tabellenspalte mit Standardwert hinzufügen in Oracle},label=sql08_09]
 ALTER TABLE Aktie
 ADD Herkunft VARCHAR2(25) DEFAULT 'Deutschland';
@@ -408,7 +407,6 @@ DELETE FROM Aktie;
           abschneiden},label=sql08_23]
 TRUNCATE TABLE Aktie;
           \end{lstlisting}
-\clearpage
           \begin{merke}
             In Oracle produziert das \languageorasql{TRUNCATE}-Statement, wie
             alle DDL-Statements, automatisch ein \languageorasql{COMMIT}, d. h.
@@ -472,6 +470,7 @@ AS
   SELECT Vorname, Nachname
   FROM   Kunde;
         \end{lstlisting}
+		\clearpage
         Was an dieser Stelle passiert ist, dass das DBMS das \SELECT-Statement verarbeitet und unter dem Namen \identifier{v\_Kunden} abspeichert. Anschließend kann, wie in \beispiel{sql08_26}, mit SQL auf die View zugegriffen werden.
         \begin{lstlisting}[language=oracle_sql,caption={Zugriff auf eine View},label=sql08_26]
 SELECT Vorname, Nachname
@@ -521,7 +520,7 @@ AS
 SELECT Kunden_ID, Vorname, Nachname
 FROM   Kunde;
         \end{lstlisting}
-\clearpage
+		\clearpage
         Diese Tatsache ist nicht ganz unwichtig, wie folgendes Szenario beweist:
         \begin{lstlisting}[language=oracle_sql,caption={Eine Szenario mit Tücke},label=sql08_28]
 CREATE VIEW v_Aktie
@@ -570,8 +569,8 @@ FROM   v_Aktie;
           \item Wenn in der View ein berechneter Ausdruck vorhanden ist
           \item Wenn in der View mehrere Tabellen mit einem Join verbunden sind und Spalten mit gleichem Namen ausgegeben werden müssen.
         \end{itemize}
+		\clearpage
         \beispiel{sql08_29} zeigt eine View mit Spaltenaliasliste.
-\clearpage
         \begin{lstlisting}[language=oracle_sql,caption={Eine einfache View mit Spaltenaliasliste},label=sql08_29]
 CREATE VIEW v_Kunde
 (Vorname, Nachname, Lebensalter)
@@ -691,6 +690,7 @@ f&ü&r die 3-Spalte kein Spaltenname angegeben wurde.
         \begin{merke}
           Bei SQL Server gibt es noch die Einschränkung, dass die Auswahlabfrage einer View keine \ORDERBY-Klausel enthalten darf.
         \end{merke}
+		\clearpage
       \subsection{Views und DML}
         Views können  auch für die Ausführung von DML-Statements verwendet werden. Dabei gibt es jedoch einige Einschränkungen und Regeln die zu beachten sind.
         \begin{center}
@@ -759,7 +759,7 @@ VALUES (666, 'Florian', 'Weidinger', 12, 8,
 ROLLBACK;
           \end{lstlisting}
           Obwohl die \WHERE-Klausel der View \identifier{v\_Mitarbeiter} die Anzeige auf die Bankfiliale mit der ID fünf einschränkt, kann trotzdem ein Datensatz in die Bankfiliale Nummer acht eingefügt werden.
-
+		  
           Um die DML-Möglichkeiten der View \identifier{v\_Mitarbeiter} einzuschränken, wird im nächsten Beispiel die \languageorasql{CHECK}-Option angewendet.
           \begin{lstlisting}[language=oracle_sql,caption={Ein Experiment mit der CHECK OPTION in Oracle},label=sql08_36]
 CREATE VIEW v_Mitarbeiter
