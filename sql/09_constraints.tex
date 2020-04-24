@@ -129,7 +129,7 @@ ADD CONSTRAINT gehalt_nn CHECK Gehalt IS NOT NULL;
         \beispiel{sql09_10} zeigt, wie in Oracle und SQL Server ein
         \UNIQUE-Constraint auf die Spalte \identifier{SozVersNr} der Tabelle
         \identifier{Mitarbeiter} gelegt wird.
-\clearpage
+		
         \begin{lstlisting}[language=oracle_sql,caption={Ein UNIQUE-Constraint anlegen},label=sql09_10]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT sozversnr_uk UNIQUE (SozVersNr);
@@ -159,7 +159,7 @@ ADD CONSTRAINT mitarbeiter_uk UNIQUE (Vorname, Nachname, SozVersNr);
         Da eine relationale Datenbank nicht ohne \PRIMARYKEY-Constraints
         auskommt, werden diese meist schon bei der Erstellung einer Tabelle
         angelegt.
-\clearpage
+
         \begin{lstlisting}[language=oracle_sql,caption={Ein PRIMARY KEY-Constraint als Inline Constraint anlegen},label=sql09_13]
 CREATE TABLE Mitarbeiter (
   Mitarbeiter_ID      NUMBER CONSTRAINT mitarbeiter_pk PRIMARY KEY,
@@ -187,7 +187,7 @@ CREATE TABLE Mitarbeiter (
         \end{merke}
         Ein Beispiel hierfür stellen die beiden Tabellen \identifier{Mitarbeiter} und \identifier{Bankfiliale} bereit. Sie stehen, durch die Spalte \identifier{Bankfiliale\_ID}, die in beiden Relationen vorkommt, in Zusammenhang zu einander. Dieser Zusammenhang besteht darin, dass jeder Mitarbeiter genau einer Bankfiliale zugeordnet ist. Das heißt,  in die Spalte \identifier{Bankfiliale\_ID} der Tabelle \identifier{Mitarbeiter} werden die Primärschlüsselwerte der Tabelle \identifier{Bankfiliale} eingetragen, um so den Zusammenhang herzustellen.
         \beispiel{sql09_15} zeigt, wie ein Fremdschlüsselconstraint angelegt wird.
-\clearpage
+
         \begin{lstlisting}[language=oracle_sql,caption={Ein Foreign Key-Constraint als Out Of Line Constraint anlegen},label=sql09_15]
 ALTER TABLE Mitarbeiter
 ADD CONSTRAINT mitarbeiter_filiale_fk
