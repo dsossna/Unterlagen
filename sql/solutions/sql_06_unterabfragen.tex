@@ -23,6 +23,7 @@ FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
 WHERE  ek.Kunden_ID NOT IN (SELECT Kunden_ID
                             FROM   EigenkundeMitarbeiter);
         \end{lstlisting}
+		\clearpage
         \item Erstellen Sie eine Abfrage, die ermittelt, ob es Mitarbeiter gibt
         (Vorname und Nachname), die keine Kundenberatung durchführen.
         Ausgenommen sind leitende Mitarbeiter (Mitarbeiter die in keiner
@@ -52,7 +53,6 @@ WHERE m.Mitarbeiter_ID NOT IN (SELECT Mitarbeiter_ID
                                FROM EigenkundeMitarbeiter ekm)
 ORDER BY m.Vorname;
         \end{lstlisting}
-\clearpage
         \item Schreiben Sie eine Abfrage, die den häufigsten Vornamen der
         Bankmitarbeiter anzeigt und wie oft dieser in der Tabelle
         \identifier{Mitarbeiter} vorkommt.
@@ -101,7 +101,6 @@ ORDER BY Guthaben;
         dass die drei Eigenkunden mit dem niedrigsten Guthaben (Girokonto +
         Sparbuch) angezeigt werden. Es müssen auch diejenigen Kunden angezeigt
         werden, die nur ein Girokonto oder nur ein Sparbuch haben!
-\clearpage
         \begin{oraclesql}[\FALSE]
         \end{oraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -122,6 +121,7 @@ WHERE rownum <= 3;
         \end{lstlisting}
         \begin{mssql}[\FALSE]
         \end{mssql}
+		\clearpage
         \begin{lstlisting}[language=ms_sql]
 SELECT TOP 3 k.Vorname, k.Nachname, SUM(Guthaben)
 FROM   (SELECT Kunden_ID, Guthaben
@@ -194,12 +194,12 @@ WHERE  Gehalt = (SELECT MAX(Gehalt)
                  FROM   Mitarbeiter m1
                  WHERE  m.Bankfiliale_ID = m1.Bankfiliale_ID);
         \end{lstlisting}
+		\clearpage
         \item Schreiben Sie eine Abfrage, die für jeden Wohnort
         (\identifier{Eigenkunde.Ort}) den Kunden anzeigt, der im Jahr 1987 das
         höchste Einkommen hatte (Das Einkommen ist die Summe aller Beträge
         eines Kunden, in der Tabelle \identifier{Buchung}). Sortieren Sie die
         Abfrage nach den Wohnorten.
-\clearpage
         \begin{oraclesql}[\FALSE]
         \end{oraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -279,10 +279,10 @@ FROM   (SELECT DATEPART(YEAR, Buchungsdatum) AS Datum, Betrag
 PIVOT  (SUM(Betrag)
   FOR Datum IN ([1985], [1986], [1987], [1988], [1989])) AS Pivottable;
         \end{lstlisting}
+		\clearpage
         \item Verändern Sie die Abfrage aus der vorangegangenen Aufgabe so,
         dass die Beträge innerhalb der einzelnen Jahre nach Quartalen
         aufgeteilt werden.
-\clearpage
         \begin{oraclesql}[\FALSE]
         \end{oraclesql}
         \begin{lstlisting}[language=oracle_sql]
@@ -319,6 +319,7 @@ FROM   (SELECT 'Summe' AS Quartal, TO_CHAR(Buchungsdatum, 'YYYY') AS Datum,
         FROM   Buchung)
 PIVOT  (SUM(Betrag) FOR Datum IN ('1985', '1986', '1987', '1988', '1989'));
         \end{lstlisting}
+		\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]
@@ -337,4 +338,3 @@ PIVOT  (SUM(Betrag) FOR Datum IN ([1985], [1986], [1987], [1988], [1989]))
 			 AS Pivottable;
         \end{lstlisting}
       \end{enumerate}
-\clearpage

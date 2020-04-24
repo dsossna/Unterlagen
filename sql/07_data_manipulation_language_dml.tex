@@ -487,6 +487,7 @@ in der Datenbank zu speichern. Dies geschieht in Oracle mit Hilfe des
 Kommandos \COMMIT. Wird eine Transaktion nicht mit \COMMIT{} abgeschlossen, werden
 automatisch alle unbestätigten Änderungen rückgängig gemacht.
 \beispiel{sql07_23} ff. zeigen dieses Verhalten.
+\clearpage
 \begin{lstlisting}[language=oracle_sql,caption={Eine Transaktion wird abgebrochen},label=sql07_23]
 SELECT Bank_ID, BIC, Name
 FROM   Bank
@@ -527,7 +528,6 @@ SELECT Bank_ID, BIC, Name
 FROM   Bank
 WHERE  Bank_ID >= 18;
         \end{lstlisting}
-\clearpage
 \begin{center}
     \begin{small}
         \changefont{pcr}{m}{n}
@@ -629,7 +629,6 @@ COMMIT;
         \end{msoraclesql}
     \end{small}
 \end{center}
-\clearpage
 \begin{lstlisting}[language=oracle_sql,label=sql07_27]
 -- An dieser Stelle wird die Client-Anwendung beendet und
 -- neugestartet.
@@ -739,6 +738,7 @@ WHERE  Bank_ID >= 18;
         \end{msoraclesql}
     \end{small}
 \end{center}
+\clearpage
 \begin{lstlisting}[language=oracle_sql,label=sql07_29]
 DELETE FROM Bank
 WHERE  Bank_ID = 21;
@@ -809,6 +809,7 @@ WHERE  Bank_ID >= 18;
     Die Anweisung \ROLLBACK{} rollt alle Aktionen einer Transaktion
     zurück und beendet sie.
 \end{merke}
+\clearpage
 \subsubsection{ROLLBACK in Microsoft SQL Server}
 Genau wie das \COMMIT-Kommando, muss auch das \ROLLBACK-Kommando um
 das Schlüsselwort \languagemssql{TRANSACTION} ergänzt werden.

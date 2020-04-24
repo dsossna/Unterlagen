@@ -36,6 +36,7 @@ FROM     Mitarbeiter
 GROUP BY Bankfiliale_ID
 ORDER BY Bankfiliale_ID;
         \end{lstlisting}
+		\clearpage
         \item Schreiben Sie eine Abfrage, die für jeden Ort einzeln, die
         Anzahl der Eigenkunden zählt, die vor dem \enquote{01.01.1990} 18
         Jahre alt waren.
@@ -84,6 +85,7 @@ FROM     Mitarbeiter m, Mitarbeiter v
 GROUP BY m.Mitarbeiter_ID, m.Vorname, m.Nachname, m.Gehalt
 HAVING   (m.Gehalt + 4000) < AVG(v.Gehalt);
         \end{lstlisting}
+		\clearpage
         \item Schreiben Sie eine Abfrage, die alle Mitarbeiter anzeigt, die
         höchstens zwei Jahre älter sind, als der jüngste Mitarbeiter in
         deren Bankfiliale! \begin{oraclesql}[\FALSE]
@@ -108,7 +110,6 @@ GROUP BY m.Mitarbeiter_ID, m.Vorname, m.Nachname, m.Geburtsdatum
 HAVING   m.Geburtsdatum BETWEEN DATEADD(YEAR, -2, MAX(a.Geburtsdatum)) AND
          MAX(a.Geburtsdatum);
         \end{lstlisting}
-\clearpage
         \item Schreiben Sie eine Abfrage, die zu jedem Filialleiter, das Gehalt
         seines am schlechtesten bezahlten Mitarbeiters anzeigt. Sortieren Sie
         die Abfrage nach den Bankfilial-IDs der Filialleiter.

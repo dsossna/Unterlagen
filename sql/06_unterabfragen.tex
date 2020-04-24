@@ -28,7 +28,6 @@ Mit Hilfe von SQL können zwei verschiedene Arten von Problemstellungen gelöst 
 Unter einer einschrittigen Problemstellung versteht man die Art von Fragestellung, die mit einer einzigen Abfrage (einem einzigen Arbeitsschritt) gelöst werden kann, so wie dies in den vorangegangenen Kapiteln der Fall war.
 
 Mehrschrittige Problemstellungen erfordern, wie der Name es sagt, mehrere Abfragen, die aufeinander aufbauen (die eine Abfrage benötigt das Ergebnis der anderen), um zu einer Lösung zu kommen. Eine solche Problemstellung könnte z. B. so lauten: \enquote{Wie hoch ist das Gehalt des Vorgesetzten der Mitarbeiterin \textit{Lena Große}?}
-\clearpage
 Diese Frage lässt sich in zwei Fragen teilen:
 \begin{enumerate}
     \item Wer ist der Vorgesetzte von Lena Große?
@@ -87,6 +86,7 @@ WHERE  Mitarbeiter_ID = 6;
         \end{msoraclesql}
     \end{small}
 \end{center}
+\clearpage
 Mit Hilfe der beiden Abfragen wurde die Antwort ermittelt: \enquote{Der Vorgesetzte von Lena Große hat ein Gehalt von 30.000 EUR.}. Durch das Kombinieren beider Queries, lässt sich diese Aufgabe viel eleganter lösen. \beispiel{sql06_03} zeigt einen möglichen Lösungsansatz.
 \begin{lstlisting}[language=oracle_sql,caption={Wie hoch ist das Gehalt des Vorgesetzten der Mitarbeiterin \textit{Lena Große}?},label=sql06_03]
 SELECT Gehalt
@@ -117,7 +117,6 @@ WHERE  Mitarbeiter_ID = (SELECT Vorgesetzter_ID
         \end{msoraclesql}
     \end{small}
 \end{center}
-\clearpage
 \begin{merke}
     Das DBMS arbeitet bei einer solchen Auswahlabfrage immer zuerst die Unterabfrage(n) ab!
 \end{merke}
@@ -141,7 +140,6 @@ Grundsätzlich gibt es vier unterschiedliche Arten von Unterabfragen:
     \item Mehrspaltige Unterabfragen: Mit einer solchen Abfrage werden Werte mehrerer Spalten zurückgeliefert.
     \item Korrelierte Unterabfragen: Ihre Ausführung ist von der Hauptabfrage abhängig.
 \end{itemize}
-\clearpage
 \section{Skalare Unterabfragen (Scalar Subqueries)}
 \begin{merke}
     \textbf{Skalar:}
@@ -176,6 +174,7 @@ Die Unterabfrage hat mehr als einen Wert zurueckgegeben. Das ist nicht
 zulaessig, wenn die Unterabfrage auf =, !=, <, <=, > oder >= folgt oder
 als Ausdruck verwendet wird.
           \end{lstlisting}
+		  \clearpage
 Hier ein Beispiel zu diesen Fehlermeldungen: Es soll das Geburtsdatum des Vorgesetzten der Mitarbeiterin \enquote{Große} ermittelt werden.
 \begin{lstlisting}[language=oracle_sql,caption={Eine Single Row Unterabfrage mit Problemen!},label=sql06_06]
 SELECT Geburtsdatum
@@ -189,6 +188,7 @@ Das Problem bei dieser Abfrage ist, dass die Tabelle \identifier{Mitarbeiter} zw
 \begin{merke}
     Als Single Row Operatoren werden relationale Operatoren bezeichnet, die einen Wert auf ihrer linken Seite mit genau einem Wert auf ihrer rechten Seite vergleichen können. Hierzu zählen: = >= <= < > != LIKE
 \end{merke}
+\clearpage
 \section{Einspaltige Unterabfragen}
 Diese Kategorie der Unterabfragen unterschiedet sich von den skalaren dahingehend, dass sie eine einspaltige Liste von mehreren Werten (Vektor) zurückliefern und das sie nicht in der \SELECT-Klausel eines SQL-Statements vorkommen dürfen.
 \subsection{Einspaltige Unterabfragen in WHERE- und HAVING-Klausel}
@@ -286,7 +286,6 @@ Das Besondere an dieser Form der Abfrage ist die \WHERE-Klausel der Unterabfrage
 \begin{merke}
     Werden die Tabellen einer Unterabfrage mit einer Tabelle der Hauptabfrage verknüpft, spricht man von einer \enquote{korrelierten Unterabfrage}.
 \end{merke}
-\clearpage
 Für die Ausführung des gesamten Statements bedeutet dies, das die Unterabfrage nicht nur einmal, sondern mehrfach ausgeführt werden muss. Genauer gesagt wird die Unterabfrage für jede Zeile der Hauptabfrage einmal ausgeführt. Bezogen auf \beispiel{sql06_08} bedeutet dies, dass die Unterabfrage 21 mal ausgeführt wird, da die Tabelle Bankfiliale 21 Datensätze hat. Die Mehrfachausführung der Unterabfrage ist notwendig, da für jede Bankfiliale einzeln geprüft werden muss, ob es dort Mitarbeiter gibt oder nicht.
 
 Eine weitere Besonderheit dieser Art von Abfrage ist die \SELECT-Klausel der Unterabfrage. Dort stehen keine Spaltenbezeichner und auch kein *. Statt dessen wird hier ein Literal, eine 1 (eins) verwendet. Der Hintergrund hierfür ist, das die \SELECT-Klausel der Unterabfrage für die Ausführung des gesamten Statements keine Bedeutung hat. Es wird nur geprüft, ob für jeden Datensatz der Hauptabfrage ein Datensatz in der Unterabfrage existiert. Das bedeutet, dass sobald die Unterabfrage eine Zeile zurückliefert die Bedingung erfüllt ist und der Datensatz der Hauptabfrage angezeigt wird.
@@ -452,6 +451,7 @@ ORDER BY Guthaben DESC;
 \begin{merke}
     Die Rownum wird erst nach Abarbeitung der \WHERE-Klausel, aber noch vor allen Gruppierungen und Sortierungen hinzugefügt.
 \end{merke}
+\clearpage
 Ein dritter \enquote{Stolperstein}, in Zusammenhang mit der \identifier{Rownum} ist, dass die \identifier{Rownum} erst inkrementiert wird, wenn sie zugewiesen wurde. Das soll heißen, dass die \WHERE-Klausel in \beispiel{sql06_13} ebenfalls fehlschlägt, da nach allen Rownums größer eins gefragt wird, ohne das Rownum eins jemals zugewiesen worden wäre (ohne 1 keine 2).
 \begin{lstlisting}[language=oracle_sql,caption={Erneut eine falsche Anwendung der Rownum},label=sql06_13]
 SELECT   Konto_ID, Guthaben
@@ -496,7 +496,6 @@ FROM   (SELECT   Konto_ID, Guthaben
         ORDER BY Guthaben DESC)
 WHERE    Rownum < 3;
         \end{lstlisting}
-\clearpage
 \begin{center}
     \begin{small}
         \changefont{pcr}{m}{n}
@@ -602,6 +601,7 @@ GROUP BY Bankfiliale_ID;
         \end{oraclesql}
     \end{small}
 \end{center}
+\clearpage
 In \beispiel{sql06_16} werden die gewünschten Zahlen ermittelt. Die Darstellung der Gehälter erfolgt zeilenweise. Sollen die gleichen Zahlen spaltenweise dargestellt werden, wird der \languageorasql{PIVOT}-Operator benötigt. \beispiel{sql06_17} zeigt dessen Einsatz.
 \begin{lstlisting}[language=oracle_sql,caption={Das Ergebnis als Pivottabelle},label=sql06_17]
 SELECT *
@@ -645,6 +645,7 @@ Diese Inlineview legt fest, welche Spalten im Endergebnis der Abfrage zu sehen s
 \begin{lstlisting}[language=oracle_sql,caption={Der \languageorasql{PIVOT}-Operator},label=sql06_19]
 PIVOT  (MIN(Gehalt) AS Gehalt FOR Bankfiliale_ID IN (1, 2, 3));
           \end{lstlisting}
+		  \clearpage
 Die Bedeutung dieses Operators ist:
 \begin{itemize}
     \item Gruppiere nach der Spalte \identifier{Bankfiliale\_ID}.
@@ -660,7 +661,6 @@ gebildet, in dem der Name der aggregierten Spalte (hier
 kombiniert werden. Dadurch entstehen die Namen \identifier{1\_GEHALT},
 \identifier{2\_GEHALT} und \identifier{3\_GEHALT}. Auch an dieser
 Stelle sind Aliasnamen möglich.
-\clearpage
 \begin{lstlisting}[language=oracle_sql,caption={Die \languageorasql{FOR}-Klausel mit Aliasnamen},label=sql06_20]
 SELECT *
 FROM   (SELECT Gehalt, Bankfiliale_ID
@@ -698,9 +698,7 @@ In einer Pivot-Abfrage können noch weitere Spalten enthalten sein, die nicht ag
     Oracle führt eine implizite Gruppierung der Ergebnismenge durch. Diese basiert auf allen nicht gruppierten Spalten, inklusive der Spalten, die in der \languageorasql{FOR}-Klausel genutzt werden.
 \end{merke}
 In \beispiel{sql06_21} wird im ersten Schritt nach dem Geburtsjahr, von 1987 bis 1989 gruppiert. Da diese Spalte in der \languageorasql{FOR}-Klausel verwendet wird, wird diese Information in Spaltenform dargestellt.
-
 Die Spalte Ort hingegen, wird in Zeilenform angezeigt, da sie nicht in der \languageorasql{FOR}-Klausel angegeben wurde.
-
 \begin{merke}
     Ob eine Information in Spalten- oder Zeilenform dargestellt wird, hängt davon ab, ob die betreffende Spalte in der \languageorasql{FOR}-Klausel gelistet wurde oder nicht.
 \end{merke}
@@ -710,7 +708,6 @@ FROM   (SELECT Gehalt, TO_CHAR(Geburtsdatum, 'YYYY') AS Geburtsdatum, Ort
         FROM   Mitarbeiter)
 PIVOT  (MIN(Gehalt) AS Gehalt FOR Geburtsdatum IN ('1987', '1988', '1989'));
           \end{lstlisting}
-\clearpage
 \begin{center}
     \begin{small}
         \changefont{pcr}{m}{n}
@@ -760,6 +757,7 @@ PIVOT  (MIN(Gehalt) AS Gehalt FOR Geburtsdatum IN ('1987', '1988', '1989'));
     \end{small}
 \end{center}
 Die vorangegangenen Beispiele stellen nur einen Einstieg in das Thema \enquote{Pivottabellen} dar. Tatsächlich ist der \languageorasql{PIVOT}-Operator noch weitaus mächtiger.
+\clearpage
 \subsection{Der PIVOT-Operator (MS SQL Server)}
 Die Möglichkeiten, welche der \languageorasql{PIVOT}-Operator bietet, werden anhand des folgenden Beispiels verdeutlicht. Für die Bankfilialen 1 bis 3 sollen die jeweils kleinsten Gehälter angezeigt werden.
 \begin{lstlisting}[language=ms_sql,caption={Die niedrigsten Gehälter in den Filialen 1 bis 3},label=sql06_22]
@@ -868,7 +866,6 @@ Die Spalte Ort hingegen, wird in Zeilenform angezeigt, da sie nicht in der \lang
 \begin{merke}
     Ob eine Information in Spalten- oder Zeilenform dargestellt wird, hängt davon ab, ob die betreffende Spalte in der \languagemssql{FOR}-Klausel gelistet wurde oder nicht.
 \end{merke}
-\clearpage
 \begin{lstlisting}[language=ms_sql,caption={Zusätzliche Gruppierungen in einer Pivot-Abfrage},label=sql06_26]
 SELECT *
 FROM   (SELECT Gehalt, DATEPART(YEAR, Geburtsdatum) AS Geburtsdatum, Ort

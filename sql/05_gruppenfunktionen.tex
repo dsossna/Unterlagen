@@ -81,6 +81,7 @@ ORDER BY 1;
 SELECT Bankfiliale_ID, SUM(Gehalt)
 FROM   Mitarbeiter;
       \end{lstlisting}
+	  \clearpage
       Auch wenn auf den ersten Blick an dieser Abfrage nichts falsches zu bemerken ist, antwortet das DBMS mit einer Fehlermeldung, was daran liegt, dass die Funktion \languageorasql{SUM} automatisch eine Gruppierung bildet, in die die Spalte \identifier{Bankfiliale\_ID} nicht mit einbezogen wird.
       \begin{lstlisting}[language=oracle_sql,caption={Die Fehlermeldung in Oracle},label=sql05_03]
 Fehler beim Start in Zeile 1 in Befehl:
@@ -91,7 +92,6 @@ Fehlerbericht:
 SQL-Fehler: ORA-00937: keine Gruppenfunktion fuer Einzelgruppe
 00937. 00000 -  "not a single-group group function"
       \end{lstlisting}
-\clearpage
 			\begin{lstlisting}[language=ms_sql,caption={Die Fehlermeldung in SQL Server},label=sql05_04]
 Meldung 8120, Ebene 16, Status 1, Zeile 1
 Die 'Bank.dbo.Bankfiliale_ID'-Spalte
@@ -204,7 +204,6 @@ SELECT   Bankfiliale_ID, AVG(Gehalt)
 FROM     Mitarbeiter
 GROUP BY Bankfiliale_ID;
         \end{lstlisting}
-\clearpage
         \begin{center}
           \begin{small}
             \changefont{pcr}{m}{n}
@@ -235,6 +234,7 @@ GROUP BY Bankfiliale_ID;
             \end{msoraclesql}
           \end{small}
         \end{center}
+		\clearpage
         Das nächste Beispiel erläutert den Zusammenhang zwischen \languageorasql{AVG} und NULL-Werten. Im Versuch soll die durchschnittliche Provision, die ein Mitarbeiter erhält, berechnet werden. Wichtig für diesen Versuch ist, dass nur ein Teil der Mitarbeiter eine Provision erhält.
         \begin{lstlisting}[language=oracle_sql,caption={AVG und NULL-Werte in Oracle},label=sql05_09]
 SELECT SUM(Provision),
@@ -491,7 +491,7 @@ WHERE    MIN(Gehalt) > 1500
 GROUP BY Bankfiliale_ID;
 
 Meldung 147, Ebene 15, Status 1, Zeile 3
-An aggregate may not appear in the WHERE clause unless it is in a subquery contained in a HAVING clause or a select list, and the column being aggregated is an outer reference.
+An aggregate may not appear in the WHERE clause unless it is in a subquery \linebreak contained in a HAVING clause or a select list, and the column being aggregated is an outer reference.
 Verweise.
         \end{lstlisting}
         \beispiel{sql05_16} und \beispiel{sql05_17} zeigen, dass die Verarbeitung einer Aggregatfunktion in der \WHERE-Klausel nicht möglich ist. Dies liegt daran, dass, wie bereits erwähnt, die \WHERE-Klausel schon vor der Gruppierungsphase abgearbeitet wird.

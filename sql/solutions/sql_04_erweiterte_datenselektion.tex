@@ -42,6 +42,7 @@ FROM   Kunde k INNER JOIN Eigenkunde ek
         \end{lstlisting}
         \begin{mssql}[\FALSE]
         \end{mssql}
+		\clearpage
         \begin{lstlisting}[language=ms_sql]
 SELECT k.Vorname, k.Nachname, ek.Strasse + ' ' + ek.Hausnummer AS Strasse,
        ek.PLZ, ek.Ort
@@ -52,7 +53,6 @@ FROM   Kunde k INNER JOIN Eigenkunde ek
        INNER JOIN Depot d
          ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
-\clearpage
         \item Schreiben Sie eine Abfrage, die für alle Eigenkunden deren Vor-
         und Nachnamen anzeigt, sowie den Vor- und den Nachnamen ihres
         persönlichen Finanzberaters (Tabelle
@@ -130,6 +130,7 @@ FROM   Mitarbeiter m LEFT OUTER JOIN EigenkundeMitarbeiter ekm
 WHERE  ekm.Mitarbeiter_ID IS NULL
   AND  m.Bankfiliale_ID IS NOT NULL;
         \end{lstlisting}
+		\clearpage
         \item Schreiben Sie eine Abfrage, die für alle Mitarbeiter, die
         höchstens 3 Jahre älter, aber keinesfalls jünger sind als ihr
         Vorgesetzter, den Vornamen, den Nachnamen, das Geburtsdatum und das
@@ -217,7 +218,6 @@ FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
        INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
        INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
-\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]
@@ -253,6 +253,7 @@ FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
        INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
        INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
+		\clearpage
         \item Schreiben Sie eine Abfrage, die eine Liste aller Eigenkunden
         ausgibt, die ein Girokonto und ein Sparbuch besitzten, aber kein Depot.
         \begin{oraclesql}[\FALSE]
@@ -273,7 +274,6 @@ FROM   Kunde k INNER JOIN Eigenkunde ek ON (k.Kunden_ID = ek.Kunden_ID)
        INNER JOIN EigenkundeKonto ekk ON (ek.Kunden_ID = ekk.Kunden_ID)
        INNER JOIN Depot d ON (ekk.Konto_ID = d.Konto_ID);
         \end{lstlisting}
-\clearpage
         \begin{mssql}[\FALSE]
         \end{mssql}
         \begin{lstlisting}[language=ms_sql]

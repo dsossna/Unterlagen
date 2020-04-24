@@ -45,7 +45,6 @@ FROM   Kunde INNER JOIN Eigenkunde
           \end{small}
         \end{center}
         Im Vergleich zu allen Beispielen, die in den vorangegangenen Kapiteln zu sehen waren, ändert sich in \beispiel{sql04_01} nur die \languageorasql{FROM}-Klausel. Hier werden zwei Tabellen, \identifier{Kunde} und \identifier{Eigenkunde}, getrennt durch die beiden Schlüsselworte \languageorasql{INNER JOIN} angegeben. Diese Syntax stammt aus dem SQL-99-Standard und ist selbsterklärend.
-\clearpage
         In der \languageorasql{ON}-Klausel werden die beiden Spalten angegeben, mit deren Hilfe die Verknüpfung zwischen den Tabellen hergestellt wird. Wichtig für diese beiden Spalten ist, dass sie beide miteinander vergleichbare Werte enthalten. Eine Namensgleichheit beider Spalten ist jedoch nicht notwendig.
 
         \begin{merke}
@@ -149,7 +148,6 @@ ORDER BY Nachname;
         \end{center}
       \subsection{Die USING-Klausel (Nur Oracle)}
         Die \languageorasql{USING}-Klausel stellt eine weitere Möglichkeit dar, eine Join-Operation durchzuführen. Sie ist eine Kurzschreibweise für \languageorasql{ON R1.Spalte = R2.Spalte}.
-\clearpage
         \begin{lstlisting}[language=oracle_sql,caption={Die USING-Klausel},label=sql04_06]
 SELECT   Vorname, Nachname, PLZ, Ort
 FROM     Kunde k INNER JOIN Eigenkunde ek
@@ -243,6 +241,7 @@ ORDER BY Nachname;
           \begin{merke}
             Da Oracle immer alle Spalten mit gleichem Namen und gleichem Datentyp in den Natural-Join einbezieht, sollte diese Syntax mit bedacht genutzt werden!
           \end{merke}
+\clearpage		  
       \subsection{Die Theta-Style Syntax}
         \begin{merke}
           Sowohl in Oracle, als auch in MS SQL Server kann die Theta-Style-Syntax nur noch zur Realisierung von Inner Joins genutzt werden. Bis auf wenige Ausnahmen ist daher die ANSI-Style-Syntax, mit dem Schlüsselwort \languageorasql{INNER JOIN}, vorzuziehen!
@@ -279,6 +278,7 @@ ORDER BY Nachname;
             \end{msoraclesql}
           \end{small}
         \end{center}
+		\clearpage
       \subsection{Mehr als zwei Tabellen verknüpfen}
         Bei komplexeren Abfragen ist es oft notwendig, auf die Daten von mehr als nur zwei Tabellen zuürckzugreifen. Dies kann mit allen bisher gezeigten Syntax-Varianten geschehen.
 
@@ -326,6 +326,7 @@ ORDER BY Nachname, IBAN;
         \begin{merke}
           Für die Ausführung des SQL-Statements ist die Reihenfolge, in der die Tabellen miteinander verbunden werden, nicht wichtig.
         \end{merke}
+		\clearpage
         Das gleiche Ergebnis lässt sich auch mit der Theta-Style-Syntax erzielen, wie \beispiel{sql04_11} zeigt.
         \begin{lstlisting}[language=oracle_sql,caption={Ein komplexer Join in der Theta-Style-Syntax},label=sql04_11]
 SELECT   Vorname, Nachname, IBAN
@@ -369,6 +370,7 @@ ORDER BY Nachname, IBAN;
             \end{msoraclesql}
           \end{small}
         \end{center}
+		\clearpage
     \section{Outer Joins}
       Während bei den Inner Joins nur solche Zeilen im Ergebnis angezeigt werden, die der Join-Bedingung genügen, ist dieses Verhalten bei den Outer-Joins anders, da auch Datensätze sichtbar werden, die der Join-Bedingung nicht entsprechen.
 
@@ -383,7 +385,8 @@ ORDER BY Nachname, IBAN;
           \bild{Left-Outer-Join}{left_outer_join}{1}
 
           \beispiel{sql04_12} zeigt einen Left-Outer-Join zwischen den beiden Tabellen \identifier{Mitarbeiter} und \identifier{Bankfiliale}. Die Auswirkungen des Left-Outer-Joins zeigen sich im Ergebnis nur in den letzten sieben Zeilen. Dort werden Mitarbeiter angezeigt, die in keiner Bankfiliale arbeiten und somit nicht der Join-Bedingung genügen.
-          \begin{lstlisting}[language=oracle_sql,caption={Ein Left-Outer-Join in Oracle},label=sql04_12]
+          \clearpage
+		  \begin{lstlisting}[language=oracle_sql,caption={Ein Left-Outer-Join in Oracle},label=sql04_12]
 SELECT   Vorname, Nachname, b.PLZ, b.Ort
 FROM     Mitarbeiter m LEFT OUTER JOIN Bankfiliale b
            ON (m.Bankfiliale_ID = b.Bankfiliale_ID);
@@ -430,7 +433,6 @@ FROM     Mitarbeiter m LEFT OUTER JOIN Bankfiliale b
            ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
 ORDER BY PLZ NULLS FIRST;
           \end{lstlisting}
-\clearpage
           \begin{center}
             \begin{small}
               \changefont{pcr}{m}{n}
@@ -500,6 +502,7 @@ ORDER BY PLZ;
               \end{mssql}
             \end{small}
           \end{center}
+		  \clearpage
         \subsubsection{Der Right-Outer-Join}
           Der Right-Outer-Join ist das Komplement zum Left-Outer-Join. Er zeigt alle Datensätze der Tabelle an, die sich auf der rechten Seite befindet. Aus der Tabelle auf der linken Join-Seite werden wiederum nur jene Zeilen angezeigt, die der Join-Bedingung genügen.
           \bild{Der Right-Outer-Join}{right_outer_join}{1}
@@ -576,7 +579,6 @@ FROM     Mitarbeiter m FULL OUTER JOIN Bankfiliale b
            ON (m.Bankfiliale_ID = b.Bankfiliale_ID)
 ORDER BY PLZ NULLS FIRST, Nachname NULLS FIRST;
         \end{lstlisting}
-\clearpage
 				\begin{center}
           \begin{small}
             \changefont{pcr}{m}{n}
@@ -646,7 +648,6 @@ ORDER BY PLZ NULLS FIRST, Nachname NULLS FIRST;
             \end{msoraclesql}
           \end{small}
         \end{center}
-\clearpage
         \subsubsection{Die Quelltabelle aufspalten}
           Grundsätzlich ist die Aufgabe einer Join-Operation zwei Tabellen zu einer Ergebnisrelation zu verknüpfen. Im besonderen Falle eines rekursiven Beziehungstyps existiert jedoch nur eine Tabelle. Wie kann der Join stattfinden? Die Antwort auf diese Frage liegt in der Nutzung von Tabellenaliasnamen.
 
@@ -799,7 +800,6 @@ FROM   Mitarbeiter m INNER JOIN Mitarbeiter v
         Kurzgesagt ist ein Non-Equi-Join ein Join, der nicht den Gleichheitsoperator (=) verwendet, sondern einen beliebigen anderen. Meist ist dies dann der \languageorasql{BETWEEN}-Operator. Da diese Art von Join in der Praxis jedoch äußerst selten ist, soll an dieser Stelle nicht weiter darauf eingegangen werden.
     \section{Mengenoperationen}
       In den vorangegangenen Abschnitten wurde gezeigt, wie zwei Tabellen durch eine Join-Operation miteinander verknüpft werden können. Dies bedingt immer, dass in beiden Tabellen eine Spalte vorhanden ist, die als Join-Attribut genutzt werden kann. Zusätzlich dazu, gibt es noch eine weitere Methode Datensätze unterschiedlicher Tabellen miteinander zu verknüpfen, die \textit{SET-Operatoren}.
-\clearpage
       SET-Operatoren ermöglichen es, die Operationen der Mengenlehre in einer Datenbank durchzuführen. \tabelle{setoperators} zeigt die Operationen und die dazu gehörenden  Operatoren:
       \begin{center}
         \tablecaption{Die SET-Operatoren}
@@ -854,6 +854,7 @@ FROM   Eigenkunde;
 SELECT Ort
 FROM   Mitarbeiter;
           \end{lstlisting}
+		  \clearpage
           Zur Lösung der Aufgabe, müssen die Ergebnisse beider Abfragen kombiniert werden. Dies wird im ersten Anlauf durch den \languageorasql{UNION ALL}-Operator erledigt.
           \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen Kunden oder Mitarbeiter leben},label=sql04_22]
 SELECT Ort
@@ -889,6 +890,7 @@ FROM   Eigenkunde;
               \end{msoraclesql}
             \end{small}
           \end{center}
+		  \clearpage
           An einigen Orten, wie z. B. Aschersleben, Borne, Egeln und Schönebeck, ist zu erkennen, dass der \languageorasql{UNION ALL}-Operator keine redundanten Zeilen ausblendet. Soll das Ergebnis reduziet werden, so dass jeder Ort genau einmal angezeigt wird, kommt der \languageorasql{UNION}-Operator zum Einsatz.
           \begin{lstlisting}[language=oracle_sql,caption={Orte, an denen Kunden oder Mitarbeiter leben (reduziert)},label=sql04_23]
 SELECT Ort
@@ -931,6 +933,7 @@ FROM   Eigenkunde;
           \begin{merke}
             Der \languageorasql{UNION ALL}-Operator sollte nur dann zum Einsatz kommen, wenn dies zwingend notwendig ist!
           \end{merke}
+		  \clearpage
           In einem weiteren Beispiel soll gezeigt werden, wie Datensätze aus unterschiedlichen Tabellen im Ergebnis gekennzeichnet werden können. In einer Abfrage sollen alle Mitarbeiter und alle Kunden mit den Attributen \identifier{Vorname}, \identifier{Nachname}, \identifier{PLZ} und \identifier{Ort} angezeit werden. Für die Kunden muss in einer extra Spalte der Buchtabe \enquote{K} und für alle Mitarbeiter der Buchstabe \enquote{M} angezeigt werden.
           \begin{lstlisting}[language=oracle_sql,caption={Spalten mit konstanten Werten und UNION},label=sql04_24]
 SELECT 'M' AS Personentyp, Vorname, Nachname, PLZ, Ort
@@ -988,7 +991,6 @@ INTERSECT
 SELECT Ort
 FROM   Eigenkunde;
           \end{lstlisting}
-\clearpage
           \begin{center}
             \begin{small}
               \changefont{pcr}{m}{n}

@@ -66,7 +66,6 @@
         \begin{merke}
           Die Funktion \languageorasql{INITCAP} existiert in MS SQL Server nicht!
         \end{merke}
-\clearpage
         \beispiel{sql03_01} zeigt die Anwendung der drei Funktionen \languageorasql{UPPER}, \languageorasql{LOWER} und \languageorasql{INITCAP} in Oracle.
         \begin{lstlisting}[language=oracle_sql,caption={UPPER, LOWER und INITCAP},label=sql03_01]
 SELECT UPPER(Vorname) AS GROSS, LOWER(Nachname) AS Klein,
@@ -375,7 +374,6 @@ WHERE  Konto_ID = 1281;
             \item \cite{i87066}
             \item \cite{i77598}
           \end{literaturinternet}
-\clearpage
         \subsubsection{SUBSTRING, LEN und CHARINDEX in MS SQL Server}
           Die Funktion \languagemssql{LEN} ermittelt, aus wie vielen Zeichen ein
           String besteht. Sie wird meist in Zusammenhang mit den beiden anderen
@@ -420,10 +418,11 @@ WHERE  Konto_ID = 1281;
           \begin{merke}
             Das Ergebnis einer solchen Operation wird als \enquote{Teilzeichenkette} oder \enquote{Substring} bezeichnet, wobei \enquote{Substring} die geläufigere Variante darstellt.
           \end{merke}
+		  \clearpage
           \beispiel{sql03_09} zeigt die Anwendung der Funktion \languagemssql{SUBSTRING}, um die IBAN eines Kontos in ihre Bestandteile zu zerlegen.
           \begin{lstlisting}[language=ms_sql,caption={Die Anwendung der Funktion \languagemssql{SUBSTRING}},label=sql03_09]
 SELECT SUBSTRING(IBAN, 1, 2) AS Laenderkuerzel, SUBSTRING(IBAN, 5 , 8) AS BLZ,
-       SUBSTRING(IBAN, 14) AS KtoNr
+       SUBSTRING(IBAN, 14, LEN(IBAN)) AS KtoNr
 FROM   Konto
 WHERE  Konto_ID = 1281;
           \end{lstlisting}
@@ -583,7 +582,6 @@ WHERE  Konto_ID = 1281;
 SELECT SQRT(4) AS "Wurzel 4"
 FROM   dual;
         \end{lstlisting}
-\clearpage
         \begin{lstlisting}[language=ms_sql,caption={Berechnung der Quadratwurzel, der Zahl 4, in MS SQL Server},label=sql03_13]
 SELECT SQRT(4) As "Wurzel 4";
         \end{lstlisting}
@@ -650,7 +648,6 @@ FROM   dual;
         Ziel dieser Unterrichtsunterlage ist es, einige wenige davon
         herauszugreifen und deren Anwendung zu erläutern. Hierbei handelt es
         sich um die folgenden Funktionen:
-\clearpage
         \begin{center}
           \tablecaption{Arithmetische Funktionen}
           \label{srfarithmfct}
@@ -738,12 +735,10 @@ FROM   dual;
         Die Anwendung dieser Funktionen ist im MS SQL Server identisch, mit der
         Ausnahme das \languageorasql{CEIL} dort \languagemssql{CEILING}
         heißt.
-\clearpage
         \begin{lstlisting}[language=ms_sql,caption={Rundungsfunktionen in MS SQL},label=sql03_16]
 SELECT SQRT(3) AS "Wurzel 3", CEILING(SQRT(3)) AS "Aufrunden",
        FLOOR(SQRT(3)) AS "Abrunden",
-       ROUND(SQRT(3), 2) AS "Kaufm. runden"
-FROM   dual;
+       ROUND(SQRT(3), 2) AS "Kaufm. runden";
         \end{lstlisting}
         \begin{center}
           \begin{small}
@@ -839,8 +834,7 @@ FROM   dual;
 SELECT 9 % 2 AS Modulo, POWER(10, 2) AS Power,
        LOG10(1000) AS Log, SQRT(16) AS Quadratwurzel,
        SQRT(27) / SQRT(3) AS "3. Wurzel von 27",
-       LOG10(8) / LOG10(5) AS "Log 8 Basis 5"
-FROM   dual;
+       LOG10(8) / LOG10(5) AS "Log 8 Basis 5";
         \end{lstlisting}
         \begin{center}
           \begin{small}
@@ -889,7 +883,6 @@ FROM   dual;
         anders. Aus diesem Grund soll an dieser Stelle erst einmal ein
         Überblick darüber gegeben werden, wie Oracle und MS SQL Server mit
         Datumswerten umgehen.
- \clearpage
         \begin{center}
           \tablecaption{Behandlung von Datumswerten}
           \label{datevalues}
@@ -932,8 +925,8 @@ FROM   dual;
         Einige Beispiele hierzu: So oder in Kommandozeile SQLPLUS !
       
         \begin{lstlisting}[language=oracle_sql,caption={Einfache Datumsarithmetik in Oracle},label=sql03_19]
-SELECT to_char (SYSDATE,'DD.MM.yyyyhh24:mm:ss) AS "Datum/Uhrzeit", SYSDATE + 2 AS "2 Tage",
-       to_char (SYSDATE - 3 / 24,'DD.MM.yyyyhh24:mm:ss) AS "3 Stunden"
+SELECT TO_CHAR (SYSDATE,'DD.MM.yyyyhh24:mm:ss) AS "Datum/Uhrzeit", TO_CHAR(SYSDATE + 2, 'DD.MM.yyyyhh24:mm:ss) AS "2 Tage",
+       TO_CHAR (SYSDATE - 3 / 24,'DD.MM.yyyyhh24:mm:ss) AS "3 Stunden"
 FROM   dual;
         \end{lstlisting}
         \begin{center}
@@ -1006,6 +999,7 @@ FROM   dual;
             \item zu jedem Intervall muss angegeben werden, ob es sich um Jahre (YEAR) oder Monate (MONTH) handelt,
             \item die Standardpräzision eines YEAR TO MONTH Intervalls ist immer 2-stellig. Bei drei- oder mehrstelligen Jahresangaben, muss die Präzision angegeben werden. In \beispiel{sql03_20} wird dieses Problem gezeigt.
           \end{itemize}
+		  \clearpage
           \begin{lstlisting}[language=oracle_sql,caption={Richtiger Umgang mit YEAR TO MONTH Intervallen},label=sql03_20]
 SELECT SYSDATE - INTERVAL '101' YEAR
 FROM   dual;
@@ -1156,6 +1150,7 @@ FROM   dual;
           \identifier{DAYOFYEAR}, \identifier{MONTH}, \identifier{QUARTER},
           \identifier{YEAR}.
         \end{merke}
+		\clearpage
         \subsubsection{Die Funktion DATEADD - Datumswerte addieren}
           \beispiel{sql03_22} zeigt, die Anwendung der Funktion \languagemssql{DATEADD}
           \begin{lstlisting}[language=ms_sql,caption={Die Funktion \languagemssql{DATEADD} in SQL Server},label=sql03_22]
@@ -1213,7 +1208,7 @@ SELECT GETDATE(),
           Mit Hilfe der Funktionen \languagemssql{DATEPART} und \languagemssql{DATENAME} können Teile eines Datums, als Zeichenkette extrahiert werden.
           \begin{lstlisting}[language=ms_sql,caption={\languagemssql{DATEPART} und \languagemssql{DATENAME} in SQL Server},label=sql03_24]
 SELECT GETDATE(), DATEPART(YEAR, GETDATE()),
-       DATEPART(MONTH, GETDATE()) AS "DATEPART"
+       DATEPART(MONTH, GETDATE()) AS "DATEPART",
        DATENAME(MONTH, GETDATE()) AS "DATENAME";
           \end{lstlisting}
           \begin{center}
@@ -1295,7 +1290,6 @@ SELECT Gehalt + (Gehalt / 100 * Provision) AS "Mit NULL",
        Gehalt + (Gehalt / 100 * ISNULL(Provision, 0)) AS "Ohne NULL"
 FROM   Mitarbeiter;
       \end{lstlisting}
-\clearpage
       \begin{center}
         \begin{small}
           \changefont{pcr}{m}{n}
@@ -1378,7 +1372,6 @@ FROM   Mitarbeiter;
           negative numerische Werte, mit oder ohne Nachkommastellen,
           aufzunehmen. Die Wertebereiche, die beide Datentypen aufnehmen
           können, unterscheiden sich.
-\clearpage
           \begin{center}
             \tablecaption{Datentypen}
             \label{numericranges}
@@ -1476,7 +1469,6 @@ FROM   Mitarbeiter;
             \end{oraclesql}
           \end{small}
         \end{center}
-\clearpage
         Damit Oracle eine Ausgabe wie \enquote{Das Gehalt von Winter betraegt:
         88000} darstellen kann, muss ein einheitlicher Datentyp geschaffen
         werden. Hierzu wird ein Ausdruck in zwei Teile zerlegt, einen linken und
