@@ -155,6 +155,7 @@ SELECT *
 INTO   Aktie_Kopie
 FROM   Aktie;
         \end{lstlisting}
+		\clearpage
         Die Auswirkungen bleiben die gleichen, wie unter Oracle mit CTAS.
 
         \begin{merke}
@@ -171,6 +172,7 @@ FROM   Aktie;
           \item Das Hinzufügen, ändern und löschen eines Standardwerts.
           \item Das Hinzufügen und Löschen von Constraints (siehe \abschnitt{constraints1})
         \end{itemize}
+		\clearpage
         \subsubsection{Eine neue Spalte an eine Tabelle anfügen}
           In beiden DBMS gibt es, zum Hinzufügen einer Spalte zu einer Tabelle, die \lstinline{ADD}-Klausel des \languageorasql{ALTER TABLE}-Kommandos. In \beispiel{sql08_07}, wird der Tabelle \identifier{Aktie} eine neue Spalte namens \identifier{Herkunft} hinzugefügt.
           \begin{lstlisting}[language=oracle_sql,caption={Oracle - Tabellenspalte hinzufügen},label=sql08_07]
