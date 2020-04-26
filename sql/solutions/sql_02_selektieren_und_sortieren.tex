@@ -1,118 +1,119 @@
 \clearpage
-    \section{Lösungen - Selektieren und sortieren}
-      \begin{enumerate}
-        \item Erstellen Sie eine Abfrage, die die Konto\_ID und das aktuelle
-        Guthaben des Girokontos der Bankkunden anzeigt, die weniger als 1000 EUR
-        Guthaben besitzen.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+\section{Lösungen - Selektieren und sortieren}
+\begin{enumerate}
+    \item Erstellen Sie eine Abfrage, die die Konto\_ID und das aktuelle
+          Guthaben des Girokontos der Bankkunden anzeigt, die weniger als 1000 EUR
+          Guthaben besitzen.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Konto_ID, Guthaben
 FROM   Girokonto
 WHERE  Guthaben < 1000;
         \end{lstlisting}
-        \item Erstellen Sie eine Abfrage, die die Mitarbeiter\_ID und den
-        Nachnamen der Mitarbeiter mit der Vorgesetzter\_ID \enquote{2} anzeigt.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Erstellen Sie eine Abfrage, die die Mitarbeiter\_ID und den
+          Nachnamen der Mitarbeiter mit der Vorgesetzter\_ID \enquote{2} anzeigt.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Mitarbeiter_ID, Nachname
 FROM   Mitarbeiter
 WHERE  Vorgesetzter_ID = 2;
         \end{lstlisting}
-        \item Erstellen Sie eine Abfrage, die die Konto\_ID und das aktuelle
-        Guthaben des Girokontos der Bankkunden anzeigt, deren Guthaben nicht
-        zwischen 1000 EUR und 1500 EUR liegt.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Erstellen Sie eine Abfrage, die die Konto\_ID und das aktuelle
+          Guthaben des Girokontos der Bankkunden anzeigt, deren Guthaben nicht
+          zwischen 1000 EUR und 1500 EUR liegt.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Konto_ID, Guthaben
 FROM   Girokonto
 WHERE  Guthaben NOT BETWEEN 1000 AND 1500;
         \end{lstlisting}
-        \item Lassen Sie sich die Kunden\_ID und das Geburtsdatum aller
-        Eigenkunden anzeigen, die zwischen dem 20. Februar 1980 und dem 02.
-        März 1988 geboren sind. Zusätzlich soll die Abfrage nach
-        dem Geburtsdatum in aufsteigender Reihenfolge sortiert werden.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Lassen Sie sich die Kunden\_ID und das Geburtsdatum aller
+          Eigenkunden anzeigen, die zwischen dem 20. Februar 1980 und dem 02.
+          März 1988 geboren sind. Zusätzlich soll die Abfrage nach
+          dem Geburtsdatum in aufsteigender Reihenfolge sortiert werden.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT   Kunden_ID, Geburtsdatum
 FROM     Eigenkunde
 WHERE    Geburtsdatum BETWEEN '20.02.1980' AND '02.03.1988'
 ORDER BY Geburtsdatum;
         \end{lstlisting}
-         \item Zeigen Sie, in alphabetischer Reihenfolge, die Mitarbeiter\_ID
-         und den Nachnamen der Mitarbeiter an, die die Vorgesetzter\_ID
-         \enquote{5} oder \enquote{6} haben.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+          \clearpage
+    \item Zeigen Sie, in alphabetischer Reihenfolge, die Mitarbeiter\_ID
+          und den Nachnamen der Mitarbeiter an, die die Vorgesetzter\_ID
+          \enquote{5} oder \enquote{6} haben.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT   Mitarbeiter_ID, Nachname
 FROM     Mitarbeiter
 WHERE    Vorgesetzter_ID IN (5, 6)
 ORDER BY Nachname;
         \end{lstlisting}
-        \item Erstellen Sie eine Abfrage, die den Nachnamen und die
-        Bankfiliale\_ID der Mitarbeiter ausgibt, die die Vorgesetzten\_ID
-        \enquote{5} oder \enquote{6} haben und deren Bankfiliale\_ID zwischen
-        \enquote{10} und \enquote{20} ist. Die Spalten sollen mit
-        \enquote{Mitarbeiter} und \enquote{Bankfiliale} benannt werden.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Erstellen Sie eine Abfrage, die den Nachnamen und die
+          Bankfiliale\_ID der Mitarbeiter ausgibt, die die Vorgesetzten\_ID
+          \enquote{5} oder \enquote{6} haben und deren Bankfiliale\_ID zwischen
+          \enquote{10} und \enquote{20} ist. Die Spalten sollen mit
+          \enquote{Mitarbeiter} und \enquote{Bankfiliale} benannt werden.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Nachname AS "Mitarbeiter", Bankfiliale_ID AS "Bankfiliale"
 FROM   Mitarbeiter
 WHERE  Vorgesetzter_ID IN (5, 6)
   AND  Bankfiliale_ID BETWEEN 10 AND 20;
         \end{lstlisting}
-        \item Zeigen Sie die Mitarbeiter\_ID und den Nachnamen des Mitarbeiters
-        an, der keinen Vorgesetzten hat.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Zeigen Sie die Mitarbeiter\_ID und den Nachnamen des Mitarbeiters
+          an, der keinen Vorgesetzten hat.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Mitarbeiter_ID, Nachname
 FROM   Mitarbeiter
 WHERE  Vorgesetzter_ID IS NULL;
         \end{lstlisting}
-        \item Zeigen Sie die Kunden\_ID und das Geburtsdatum derjenigen
-        Eigenkunden an, die im Jahre 1980 geboren sind.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Zeigen Sie die Kunden\_ID und das Geburtsdatum derjenigen
+          Eigenkunden an, die im Jahre 1980 geboren sind.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Kunden_ID, Geburtsdatum
 FROM   Eigenkunde
 WHERE  Geburtsdatum BETWEEN '01.01.1980' AND '31.12.1980';
         \end{lstlisting}
-        \item Erstellen Sie eine Abfrage, die den Nachnamen, das Gehalt und die
-        Provision für alle Mitarbeiter anzeigt, die eine Provision erhalten.
-        Sortieren Sie die Ausgabe in absteigender Reihenfolge nach dem Gehalt.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+          \clearpage
+    \item Erstellen Sie eine Abfrage, die den Nachnamen, das Gehalt und die
+          Provision für alle Mitarbeiter anzeigt, die eine Provision erhalten.
+          Sortieren Sie die Ausgabe in absteigender Reihenfolge nach dem Gehalt.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT   Nachname, Gehalt, Provision
 FROM     Mitarbeiter
 WHERE    Provision IS NOT NULL
 ORDER BY Gehalt DESC;
         \end{lstlisting}
-        \item Zeigen Sie die Nachnamen aller Mitarbeiter an, in deren Nachname
-        an dritter Stelle ein \enquote{a} vorkommt.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Zeigen Sie die Nachnamen aller Mitarbeiter an, in deren Nachname
+          an dritter Stelle ein \enquote{a} vorkommt.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Nachname
 FROM   Mitarbeiter
 WHERE  Nachname LIKE '__a%';
         \end{lstlisting}
-\clearpage
-        \item Zeigen Sie die Nachnamen aller Mitarbeiter an, deren Nachname ein
-        kleines \enquote{a} und ein kleines \enquote{e} enthält.
-        \begin{msoraclesql}[\FALSE]
-        \end{msoraclesql}
-        \begin{lstlisting}[language=oracle_sql]
+    \item Zeigen Sie die Nachnamen aller Mitarbeiter an, deren Nachname ein
+          kleines \enquote{a} und ein kleines \enquote{e} enthält.
+          \begin{msoraclesql}[\FALSE]
+          \end{msoraclesql}
+          \begin{lstlisting}[language=oracle_sql]
 SELECT Nachname
 FROM   Mitarbeiter
 WHERE  Nachname LIKE '%a%'
   AND  Nachname LIKE '%e%';
         \end{lstlisting}
-      \end{enumerate}
+\end{enumerate}
