@@ -1,7 +1,6 @@
 \chapter{Einführung in die Oracle Datenbankarchitektur}
 \chaptertoc{}
 \cleardoubleevenpage
-
     \section{Oracle und die Client-Server-Architektur}
       Oracle-Datenbanken sind dazu geschaffen, um riesige Datenmengen zu verwalten und diese in einer Multi-User-Umgebung einer großen Nutzeranzahl zur Verfügung zu stellen. Eine solche Umgebung kann auf unterschiedliche Arten realisiert werden. Die einfachste davon ist eine  Client-Server-Architektur, bestehend aus:
       \begin{itemize}
@@ -43,7 +42,6 @@
           Ein Oracle-Datenbankserver besteht aus zwei großen Teilen:
           \begin{itemize}
             \item \textbf{Instanz}: Die Instanz ist das Herzstück einer Oracle-Datenbank. Es handelt sich dabei um eine Menge von Arbeitsspeicherstrukturen und Prozessen, die ein schnelles und effizientes Arbeiten mit den Daten ermöglichen. Sie gliedern sich grob in drei Teile: System Global Area, Program Global Area und Hintergrundprozesse.
-% \clearpage
             \item \textbf{Datenbank}: Dies ist die Menge aller Dateien, aus denen der Oracleserver besteht. Es sind sowohl die Installationsdateien der Oracle-Software, als auch die Datendateien gemeint, welche die Nutzdaten enthalten, sowie alle weiteren Dateien.
           \end{itemize}
 
@@ -53,7 +51,7 @@
           Während eine Instanz immer nur auf genau eine Datenbank zugreifen kann, kann eine Datenbank gleichzeitig von mehreren Instanzen gemountet\footnote{engl. to mount = anschließen} werden.
 
           \bild{Oracle Datenbank\-architektur}{datenbankarchitektur3}{0.8}
-
+\clearpage
         \subsubsection{Serverprozess}
           Ein Serverprozess stellt das serverseitige Pendant zu einem Nutzerprozess dar. Er ist die eigentliche \enquote{Arbeitsmaschine}, nimmt die Anforderungen eines Nutzerprozesses entgegen und verarbeitet diese innerhalb der Instanz.
 
