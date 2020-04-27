@@ -360,7 +360,7 @@ Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
               \item \textbf{Buffer Checkpoint Queue}
             \end{itemize}
 						Die Buffer Checkpoint Queue ist eine Liste der geänderten Blöcke (dirty Blocks) des Buffer Caches, die noch nicht auf den Datenträger zurückgesichert wurden. Diese werden in aufsteigender Reihenfolge, nach ihrer Low Redo Byte Adress (low RBA) gespeichert.
-\clearpage
+
             Die LRU List enthält drei Blockarten:
             \begin{itemize}
               \item freie Blöcke (\textbf{clean blocks})
@@ -375,7 +375,8 @@ Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
             \bild{Aufbau des Database Buffer Caches}{buffer_cache1}{1.24}
 
             Jeder Block in der LRU hat einen \enquote{Touchcounter}, einen Zähler, der die Anzahl der Zugriffe auf den Datenblock zählt. Er wird für die Verwaltung der Blöcke in der LRU benötigt.
-          \subsubsection{Verwaltung des Database Buffer Caches}
+          \clearpage
+		  \subsubsection{Verwaltung des Database Buffer Caches}
             Sucht ein Serverprozess einen bestimmten Block im Database Buffer Cache, beginnt er mit seiner Suche am MRU\footnote{MRU = Most Recently Used}-Ende der LRU\footnote{LRU = Least Recently Used}-Liste, da die Wahrscheinlichkeit, dass sich der gesuchte Block dort befindet höher ist, als die, dass er sich am LRU-Ende befindet. Der Serverprozess durchsucht die LRU-Liste sequenziell, Block für Block.
 
             \bild{Suche nach freien Blöcken im Buffer Cache}{buffer_cache2}{1.4}
