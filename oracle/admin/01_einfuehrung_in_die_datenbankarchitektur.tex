@@ -76,12 +76,12 @@
 
       \subsection{Die Fixed SGA}
         Ein sehr kleiner Teil der SGA wird als \enquote{Fixed SGA} bezeichnet. Hierbei handelt es sich um einen betriebssystemabhängigen, unveränderlichen Teil der SGA, der als eine Art \enquote{Einstiegspunkt} von allen Serverprozessen genutzt wird. Er enthält die Speicheradressen anderer Strukturen innerhalb der SGA. Der Datenbankadministrator hat keinerlei Kontrolle über diesen Teil der SGA.
-
+\clearpage
       \subsection{Der Database Buffer Cache}
         Der Database Buffer Cache ist für die Zwischenspeicherung der zuletzt benutzten Oracleblöcke zuständig. Da eine theoretische Chance besteht, dass ein Block der bereits einmal benötigt wurde, auch noch weitere Male benötigt wird, kann so die Anzahl der Zugriffe auf den Datenträger reduziert und die Arbeitsgeschwindigkeit erhöht werden.
-
-        \bild{Oracle Datenbank\-architektur}{datenbankarchitektur6}{0.8}
-
+        
+		\bild{Oracle Datenbank\-architektur}{datenbankarchitektur6}{0.8}
+		
         Neue oder geänderte Daten werden nicht sofort auf den Datenträger geschrieben. Um die Anzahl der Festplattenzugriffe zu reduzieren und somit die Performance der Datenbank zu steigern, werden die Daten im Database Buffer Cache gesammelt. Abhängig von bestimmten Kriterien, wird der Inhalt des Caches dann auf den Datenträger geschrieben.
       \subsection{Der Shared Pool}
         Der Teil der SGA, der \enquote{Shared Pool} genannt wird, ist für die
@@ -118,7 +118,6 @@
           Das Data Dictionary ist eine Sammlung von Datenbanktabellen und Views, die Metadaten über die gesamte Datenbank enthalten. Oracle muss ständig im laufenden Betrieb auf dieses Data Dictionary zugreifen. Um häufige Datenträgerzugriffe zu vermeiden, werden benötigte Informationen aus dem Data Dictionary im Data Dictionary Cache zwischengespeichert.
         \subsubsection{Der Result Cache}
           Beim Result Cache handelt es sich um ein neues Feature der Oracle Version 11g. Dieser Cache speichert keine Datenblöcke, sondern Ergebniszeilen. Der Vorteil dieser Vorgehensweise liegt auf der Hand.
-
           Wird ein SQL-Statement häufig ausgeführt, ohne das sich die Datenbasis ändert, kann das Ergebnis direkt aus dem Result Cache übermittelt werden. Sinnvoll genutzt werden kann der Result Cache immer dann, wenn:
           \begin{itemize}
             \item SQL-Abfragen sehr rechenintensiv sind,
@@ -241,7 +240,7 @@
 
             \bild{Verteilung und Spiegelung von Redo Log
             Membern}{redo_log_verteilung}{0.8}
-
+\clearpage
           \subsubsection{Empfehlungen}
             Grundsätzlich gelten die folgenden Empfehlungen für Redo Log Dateien/-Gruppen:
             \begin{itemize}
@@ -250,7 +249,7 @@
               \item Alle Redo Log Gruppen sollten immer die gleich Anzahl Member haben und damit symmetrisch sein.
               \item Die Größe der Redo Log Member sollte so angepasst werden, dass kein Platz auf den Sicherungsmedien verschwendet wird.
             \end{itemize}
-\clearpage
+			
             \begin{merke}
               Zu beachten ist, dass die Redo Logs nur gegen System- oder Medienfehler schützen können (z.~B. im Falle eines Stromausfalls), nicht aber gegen Fehleingaben eines Nutzers.
             \end{merke}
@@ -264,7 +263,7 @@
             Andererseits entstehen die meisten Trace-Dateien aufgrund von Fehlern bei den Hintergrundprozessen. Jeder Hintergrundprozess hat seine eigene Trace-Datei in die er Informationen schreibt.
 
 						Die Inhalte einer Trace-Datei sind teils für den Datenbankadministrator und teils für den Oracle-Support bestimmt.
-\clearpage
+
             \begin{lstlisting}[caption={Eine Tracedatei des Log Writers},
             label=orcl_lgwr_12331,emph={[9]ORACLE_HOME},emphstyle={[9]\color{black}},language=terminal]
 /u01/app/oracle/diag/rdbms/orcl/orcl/trace/orcl_lgwr_12331.trc 
@@ -288,14 +287,21 @@ Unix process pid: 12331, image: oracle@FEA11-119WD01 (LGWR)
 
 						Die beiden Alert Log Dateien befinden sich in Unterverzeichnissen des ADR:
 						\begin{itemize}
-							\item \textbf{Textdatei}: Sie heißt \textbf{alert\_\textless{}SID\textgreater{}.ora}. Die Abkürzung \enquote{SID} steht für \enquote{System Identifier}, den Namen der Datenbankinstanz. Bei einer Instanz mit Namen \enquote{ORCL} hieße die Alert Log Datei dann: \textbf{alert\_ORCL.ora}. Sie wird im Verzeichnis \texttt{\$ADR\_BASE/diag/product\_type/product\_id/instance\_id/trace} erzeugt.
-							\item \textbf{XML-Datei}: Der Name der XML-Datei lautet \textbf{log.xml}. Diese wird im Verzeichnis \texttt{\$ADR\_BASE/diag/product\_type/product\_id/instance\_id/alert} angelegt.
+							\item \textbf{Textdatei}: Sie heißt \textbf{alert\_\textless{}SID\textgreater{}.ora}. 
+							Die Abkürzung \enquote{SID} steht für \enquote{System Identifier}, den Namen der Datenbankinstanz. 
+							\newline
+							Bei einer Instanz mit Namen \enquote{ORCL} hieße die Alert Log Datei dann: \textbf{alert\_ORCL.ora}.
+							\newline
+							Sie wird im Verzeichnis \texttt{\$ADR\_BASE/diag/product\_type/product\_id/instance\_id/trace} erzeugt.
+							\item \textbf{XML-Datei}: Der Name der XML-Datei lautet \textbf{log.xml}. Diese wird im Verzeichnis
+							\newline
+							\texttt{\$ADR\_BASE/diag/product\_type/product\_id/instance\_id/alert} angelegt.
 						\end{itemize}
 
 						\begin{literaturinternet}
 						  \item \cite{CNCPT005}
 						\end{literaturinternet}
-\clearpage
+						
           \begin{lstlisting}[caption={Die Alert Log
           Textdatei},label=alert_orcl.log,language=terminal]
 Fri Aug 14 13:33:43 2011 Process J000 died, see its trace file
