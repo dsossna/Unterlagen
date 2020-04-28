@@ -388,14 +388,16 @@ Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
             Wurden genügend freie Blöcke gefunden, können die neuen Blöcke in den Buffer Cache über\-tra\-gen werden. Werden keine freien Böcke gefunden, muss der Serverprozess den Database Writer damit beauftragen, die Checkpoint Queue abzuarbeiten, um Platz im Database Buffer Cache zu schaffen.
 
             \bild{Einfügen neuer Blöcke im Buffer Cache}{buffer_cache3}{1.2}
-
+\clearpage
             Der Touchcounter zählt die Zugriffe auf einen Datenblock. Wird eine bestimmte Anzahl Zugriffe erreicht, wird der Block relativ von seiner aktuellen Position aus, um 50 \% nach oben verschoben. So kann der Block aus dem Coldspot an das obere Ende der LRU-Liste,   den Hotspot, wandern. Dabei verdrängt er andere Blöcke nach unten. Wird auf einen Block nur selten zugegriffen, erreicht er irgendwann den Coldspot und bekommt früher oder später den Status clean.
 
             \begin{merke}
               Die Serverprozesse sind dafür zuständig, angeforderte Blöcke in den Database Buffer Cache zu übertragen und diese dort zu lesen bzw. nach den Anforderungen der Nutzer entsprechend zu modifizieren. Der Database Writer ist als einziger dafür zuständig modifizierte Blöcke auf die Festplatte zurückzuübertragen.
             \end{merke}
+\clearpage
         \subsection{Der Log Writer (LGWr)}
           Der Log Writer Prozess, der oft auch als Redo Thread bezeichnet wird, ist zuständig für das Management der Redo Logs. Er schreibt die Redo Log Einträge (Redo Records) im Redo Log Buffer in die Redo Log Dateien. Der Redo Log Buffer ist zyklisch aufgebaut. Wenn der Log Writer alle Einträge aus dem Buffer in die Dateien geschrieben hat, können die alten Werte im Redo Log Buffer überschrieben werden.
+		  
           \bild{Oracle Datenbank\-architektur}{datenbankarchitektur13}{1}
 
           \begin{merke}
@@ -409,7 +411,7 @@ Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
             \end{itemize}
           \end{merke}
           Der Log Writer Prozess schreibt synchron in alle Member der aktiven Log Gruppe. Ist einer defekt oder nicht verfügbar, setzt der Log Writer das Schreiben in den anderen Dateien fort und gibt eine Fehlermeldung in seiner Trace-Datei und der Alert Log Datei aus.
-\clearpage
+
           \begin{merke}
             Es sollten immer so viele Redo Log Gruppen vorhanden sein, dass der Log Writer zu jeder Zeit eine freie Gruppe finden kann, ohne warten zu müssen.
           \end{merke}
@@ -445,6 +447,7 @@ Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
         \subsection{Der Checkpoint Prozess (CKPT)}
           \bild{Oracle Datenbank\-architektur}{datenbankarchitektur14}{1}
           Der Checkpoint Prozess, kurz CKPT, gehört seit Oracle 8 zum Kreise der Prozesse, die zwingend notwendig sind für den Betrieb einer Oracle-Datenbank. Sein Name leitet sich von einem Ereignis ab, das in regelmäßigen Intervallen auftritt, dem Checkpoint.
+\clearpage
           \subsubsection{Checkpoints}
             Die offizielle Definition eines Checkpoints lautet:
 
@@ -486,7 +489,7 @@ Errors in file /u01/app/oracle/admin/ORCL/bdump/orcl_cjq0_23189.trc:
           \end{itemize}
 
           \bild{Oracle Datenbank\-architektur}{datenbankarchitektur16}{0.9}
-
+\clearpage
         \subsection{Der Archiver (ARCn)}
           Der Archiver Prozess ist dafür zuständig, befüllte Redo Log Dateien, nach einem \enquote{Log switch}, an einem definierten Speicherort zu sichern. Eine Redo Log Gruppe muss bei aktivierter Archivierung erst archiviert werden, bevor sie durch den Log Writer erneut genutzt werden kann. Ist die Archivierung nicht aktiviert, kann eine Redo Log Gruppe sofort wieder verwendet werden.
 

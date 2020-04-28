@@ -46,7 +46,8 @@
             \item Entwickeln von Backupstrategien
           \end{itemize}
           Die Planung der logischen Speicherstrukturen der Datenbank ist wichtig, um deren Einflüsse auf die Systemperformance erkennen zu können. Beispielsweise ist es entscheidend, ob in einer Datenbank große Objekte, wie z. B. Bilder oder ISO-Images gespeichert werden oder nur normale Text/Zahlen-Werte. Auch das Datenbankdesign ist entscheidend für die Performance der Datenbank. Meist hat der DBA zwar keinen direkten Einfluss\ auf das Design, er kann aber Hinweise und Verbesserungsvorschläge geben.
-      \subsection{Download und Installation von Patches}
+\clearpage
+		  \subsection{Download und Installation von Patches}
         Um die Datenbank sicherer zu machen und um Bugs zu beheben, muss der DBA von Zeit zu Zeit Patches oder Patchsets installieren. Ein Patch (auch \enquote{single interim patch} genannt) behebt ein einzelnes spezielles Problem und ist nicht bei jeder Installation notwendig. Ein Patchset ist eine Sammlung von Patches, die so erstellt wurde, das sie für jeden Kunden passt. Ein Patchset hat eine Releasenummer. Wurde beispielsweise die Oracle Version 11.2.0.0 installiert, dann hat das erste Patchset die Versionsnummer 11.2.0.1.
     \section{OFA - Die Optimal Flexible Architecture}
       \subsection{Überblick über die OFA}
@@ -75,7 +76,7 @@
           \item Integrität der Oracle-Home-Verzeichnisse
 
             Oracle-Home-Verzeichnisse können hinzugefügt, verschoben oder gelöscht werden, ohne das die betroffene Software dadurch beschädigt werden würde.
-\clearpage
+
 					\item Metadaten unterschiedlicher Datenbanken von einander trennen
 
             Die strikte Trennung administrativer Daten von einer Datenbank gegenüber allen anderen erleichtert administrative Arbeiten deutlich und schafft eine übersichtliche und zuverlä{}ssige Struktur.
@@ -170,7 +171,7 @@
           Bei der Installation der Oracle-Datenbank werden zwei Betriebssystemgruppen angelegt, welche für die \enquote{Betriebssystemauthentifizierung} relevant sind: OSDBA und OSOPER. Mitglieder der Gruppe OSDBA haben innerhalb der Datenbank alle Berechtigungen. Wie der Name der Gruppe sagt, sollten nur DBAs Mitglied sein.
 
           Alle Mitglieder der Betriebssystemgruppe OSOPER haben eingeschränkte administrative Rechte. Für die tägliche Arbeit eines Oracle-DBAs ist diese Gruppe faktisch irrelevant.
-\clearpage
+		  
           \bild{Schritt 8 - Berechtigte Betriebssystemgruppen}{oui_step_8}{0.39}
         \subsubsection{Schritt 9 - Voraussetzungen prüfen}
           In diesem Schritt werden alle Bedingungen geprüft, die betriebssystemseitig vor der Installation erfüllt sein müssen.
