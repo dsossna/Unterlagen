@@ -70,7 +70,7 @@ Voraussichtliche Anzahl Zeilen   : 300
       Gestartet wird der DBCA unter Windows mit Hilfe des Startmenüs. Unter Linux muss, in einem Terminalfenster, der gesamte Pfad zur Datei \oscommand{dbca}, also \oscommand{\$ORACLE\_HOME/bin/dbca} angegeben werden. Dies kann jedoch nur dann funktionieren, wenn bereits die Umgebungsvariable \oscommand{\$ORACLE\_HOME} gesetzt wurde. Andernfalls muss der Pfad manuell angegeben werden: \oscommand{/u01/app/oracle/product/11.2.0/<SID>/bin/dbca} (<SID> stellt hier einen Platzhalter für die SID der Datenbank dar.). Wie gewohnt, wird der Nutzer zu aller erstbegrüßt.
 
       \bild{Willkommen im DBCA}{dbca_welcome}{3}
-
+\clearpage
       Nach einem Klick auf den Button \enquote{Weiter} muss zuerst die gewünschte Tätigkeit ausgewählt werden.
 
       \bild{Schritt 1 - Vorgänge}{dbca_step_1}{3}
@@ -151,6 +151,7 @@ Voraussichtliche Anzahl Zeilen   : 300
 
           Um herauszufinden, was hinter der Angabe \oscommand{\textbraceleft{}ORACLE\_BASE\textbraceright{}/oradata} steckt, kann der Button \enquote{Variablen für Dateispeicherort} angeklickt werden.
           \bild{Schritt 6 - Variablen für Dateispeicherort}{dbca_step_6_file_locations}{4}
+		  \clearpage
         \subsubsection{Schritt 7 - Recovery-Konfiguration}
           Dieser Dialog bietet zwei Optionen:
           \begin{itemize}
@@ -178,7 +179,6 @@ Voraussichtliche Anzahl Zeilen   : 300
             \bild{Schritt 9 - Automatic Memory Management}{dbca_step_9_automatic_memory_management}{3}
             \item \textbf{Automatic Shared Memory Management}: Dies ist der Vorgänger zum Automatic Memory Management. Hier werden der Instanz zwei getrennte Werte für die Speichermenge der SGA und der aggregierten PGAs gegeben. Beide Speicherbereiche werden unabhängig von einander von der Instanz verwaltet.
             \bild{Schritt 9 - Automatic Shared Memory Management}{dbca_step_9_automatic_shared_memory_management}{0.35}
-\clearpage
             \item \textbf{Manual Shared Memory Management}: Mit dieser Variante
             muss für jeden Speicherpool in der SGA und für die aggregierten
             PGAs ein eigener Wert angegeben werden. Auch wenn der DBA hier die
@@ -203,7 +203,6 @@ Voraussichtliche Anzahl Zeilen   : 300
           Auf der dritten Registerkarte können zwei Zeichensätze für die
           Datenbank ausgewählt werden, der Datenbankzeichensatz und der
           länderspezifische Zeichensatz.
-
           \begin{merke}
             Ein Zeichensatz besteht, wie sein Name besagt, aus einer Menge von Zeichen (Buchstaben,               Ziffern, Sonderzeichen). Jedem Zeichen wird ein numerischer Code zugeordnet. Dieser wird vom Computer benötigt, um die Zeichen verarbeiten zu können.
           \end{merke}
@@ -239,7 +238,6 @@ Voraussichtliche Anzahl Zeilen   : 300
 					\bild{Schritt 12 - Bestätigung}{dbca_step_12_confirmation}{2.5}
           Nach einem Klick auf \enquote{OK} bleibt nur noch abzuwarten, bis die Datenbank fertig ist.
           \bild{Schritt 13 - Daten\-bank\-erstellung}{dbca_step_13_database_creation}{2.7}
-\clearpage
 				\subsection{Konfigurieren einer Datenbank mit dem DBCA}
           Der DBCA bietet die Möglichkeit, Konfigurationseinstellungen von Datenbankoptionen zu ändern. Folgende Optionen stehen zur Verfügung:
           \begin{itemize}
