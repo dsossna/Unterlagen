@@ -1,8 +1,7 @@
 \chapter{Verwalten einer Oracle Instanz}
   \chaptertoc{}
   \cleardoubleevenpage
-  
-      Eine Oracle-Umgebung besteht immer aus zwei Teilen: Datenbank und Instanz.
+    Eine Oracle-Umgebung besteht immer aus zwei Teilen: Datenbank und Instanz.
     Beim Start-Up, dem \enquote{Hochfahren der Datenbank}, wird die Instanz als
     Shared-Memory-Block im Arbeitsspeicher erzeugt. Dieser wird in die SGA und
     die PGA unterteilt. Des Weiteren werden verschiedene Hintergrundprozesse
@@ -19,6 +18,7 @@
       Während SQL- und PL/SQL-Befehle durch die Datenbank verarbeitet werden,
       bleiben SQL*Plus-Kommandos lokal. Sie dienen nur zur Formatierung der
       Anzeige in SQL*Plus.
+\clearpage	  
       \subsection{Die erste Anmeldung}
         Das Anmelden an einer Datenbank mit Hilfe des SQL*Plus-Tools verläuft
         in drei Schritten:
@@ -151,7 +151,6 @@ Redo Buffers                7524352 bytes
           Eine Instanz die bereits mit \languageorasql{startup} gestartet wurde, kann nicht nochmal gestartet werden. Ihr Status muss stattdessen mit \languageorasql{ALTER DATABASE} geändert werden.
         \end{merke}
         \beispiel{admin02} zeigt wie eine Instanz reagiert, wenn sie nach einen Start-Up erneut gestartet werden soll.
-\clearpage
         \begin{lstlisting}[caption={ORACLE läuft noch. Erst
         stoppen.},label=admin02,language=sqlplus]
 [oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
@@ -173,6 +172,7 @@ SQL> startup mount
         \begin{merke}
           Eine Instanz muss erst heruntergefahren werden, bevor sie erneut gestartet werden kann.
         \end{merke}
+\clearpage		
         Im folgenden Beispiel wird die Instanz korrekt von der NOMOUNT-Phase in die MOUNT-Phase gehoben.
         \begin{lstlisting}[caption={Das Kommando ALTER DATABASE MOUNT},label=admin03,,language=oracle_sql]
 [oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
@@ -194,7 +194,7 @@ Database altered.
       Eine Oracle-Datenbank zu öffnen bedeutet, die Daten- und Redo Log Dateien zu öffnen und sie den \enquote{normalen Nutzern} zugänglich zu machen. Das Öffnen einer geschlossenen Datenbank geschieht mit dem Kommando \languagesqlplus{startup} oder wahlweise auch mit \languagesqlplus{startup open}.
 
       \bild{Die OPEN-Phase}{startup_open}{1.75}
-
+\clearpage
       \begin{lstlisting}[caption={Starten der Instanz und öffnen der
       Datenbank},label=admin04,language=sqlplus]
 [oracle@FEA11-119SRV ~]$ sqlplus / as sysdba
@@ -293,6 +293,7 @@ ORACLE instance shut down.
          \begin{merke}
            Problematisch an einem Shutdown NORMAL ist, dass in einer Umgebung mit sehr vielen Nutzern, vermutlich nie alle Nutzer ihre Session beenden, was bedeutet, dass der Shutdown-Vorgang auch nie vollendet werden kann.
          \end{merke}
+\clearpage		 
       \subsection{Shutdown TRANSACTIONAL}
         Der Shutdown TRANSACTIONAL ist eine Abstufung des Shutdown NORMAL. Er führt folgende Einzelschritte durch:
         \begin{enumerate}
@@ -324,6 +325,7 @@ Database closed.
 Database dismounted.
 ORACLE instance shut down.
         \end{lstlisting}
+\clearpage		
         Der Unterschied zwischen einem Shutdown NORMAL und einem Shutdown TRANSACTIONAL ist im Alert Log File zu sehen.
         \begin{lstlisting}[caption={Der Shutdown TRANSACTIONAL im Alert
         Log},label=admin10,language=terminal]
@@ -358,7 +360,7 @@ All dispatchers and shared servers &shutdown&
        \end{merke}
       \subsection{Shutdown IMMEDIATE}
         Der Shutdown IMMEDIATE ist genau das, was sein Name besagt. Die Datenbank wird sofort, ohne auf offene Transaktionen oder Nutzer zu warten heruntergefahren. Da diese Art des Shutdowns sehr radikal ist, sollten auf jeden Fall alle Nutzer informiert werden.
-
+\clearpage
         Nur in den folgenden Situationen sollte ein Shutdown IMMEDIATE durchgeführt werden:
         \begin{itemize}
           \item Vor einem automatisierten Backup
