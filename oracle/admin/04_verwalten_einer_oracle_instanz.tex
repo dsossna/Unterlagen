@@ -452,6 +452,7 @@ ORACLE instance shut down.
       \begin{literaturinternet}
         \item \cite{i1124822}
       \end{literaturinternet}
+\clearpage	  
       \subsection{Initialisierungsparameter administrieren}
         Initialisierungsparameter haben unterschiedliche Aufgaben:
         \begin{itemize}
@@ -478,6 +479,7 @@ SQL> SELECT name, issys_modifiable
             \item \textbf{FALSE}: Der Parameter ist \textbf{statisch}.
             \item \textbf{DEFERRED}: Änderungen an einem so markierten Parameter haben nur auf neue Sessions, die nach der Änderung erstellt wurden eine Auswirkung.
           \end{itemize}
+\clearpage		  
         \subsubsection{Initialisierungsparameter ändern}
           Initialisierungsparameter können per \languageorasql{ALTER SYSTEM}-SQL-Kommando oder im Enterprise Manager geändert werden. \beispiel{admin15} zeigt wie der Parameter \identifier{license\_max\_sessions} von 0 auf 50 geändert wird.
   
@@ -532,6 +534,7 @@ SQL> SELECT name, isses_modifiable
             \item \cite{autoId0}
             \item \cite{sthref3228}
           \end{literaturinternet}
+\clearpage		  
           \begin{lstlisting}[caption={Beispiel für ALTER SESSION},label=admin17,language=oracle_sql,alsolanguage=sqlplus]
 SQL>show parameter nls_language
 
@@ -544,7 +547,6 @@ SQL>ALTER SESSION
 
 Session altered.
           \end{lstlisting}
-\clearpage
           Das Ergebnis des \languageorasql{ALTER SESSION}-Statements aus \beispiel{admin17} kann nicht mit Hilfe des SQL*Plus-Kommandos \languagesqlplus{show parameter} geprüft werden, da dieses nur Systemparameter anzeigt, aber keine Sessionparameter. Die Werte aller NLS-Sessionparameter können mit Hilfe der View \identifier{v\$nls\_parameters} angezeigt werden.
           \begin{lstlisting}[caption={Sessionparameter mit Hilfe von \identifier{v\$nls\_parameters} ermitteln},label=admin17a,language=oracle_sql,alsolanguage=sqlplus]
 SQL> col parameter format a30
@@ -585,7 +587,7 @@ FROM   PFILE  = [pfad/dateiname.ora];
           \oscommand{ORA-01078: failure in processing system parameters}\\
           \oscommand{LRM-00109: could not open parameter file}\\
           \oscommand{'/u01/app/oracle/product/11.2.0/ORCL/dbs/initorcl.ora'}
-
+\clearpage
           Durch die Angabe von MEMORY, statt PFILE, kann ein SPFile mit den Werten der aktuellen Initialisierungsparameter erzeugt werden.\beispiel{admin19} zeigt verschiedene Varianten des \languageorasql{CREATE SPFILE}-Kommandos.
           \begin{lstlisting}[caption={Beispiele für \languageorasql{CREATE SPFILE}},label=admin19,language=oracle_sql]
 SQL> CREATE SPFILE
