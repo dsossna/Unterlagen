@@ -78,7 +78,6 @@ db_block_size                  8192
           \bild{Null-Werte in Zeilen}{null_werte}{0.75}
         \subsubsection{Die RowID}
           Die \enquote{RowID} identifiziert eine Zeile eindeutig. Sie ist die 64-Bit-Kodierung des Zeilenspeicherorts, was bedeutet, dass  sie alle Angaben enthält, die Oracle braucht, um eine Tabellenzeile in der Datenbank zu finden. Für die Kodierung werden die Zeichen A-Z, a-z, 0-9, + und / verwendet.
-\clearpage
           Das folgende Beispiel zeigt den Aufbau einer RowID:
 
           \languageorasql{AAAAaoAATAAABrXAAA}
@@ -115,6 +114,7 @@ db_block_size                  8192
         die Extents für ein Segment nur bei Bedarf angefordert werden, sind
         diese meist nicht in einer fortlaufenden Reihenfolge.
         \bild{Die logische Storage-Struktur, Segmente}{oracle_storage_structure_4}{1.2}
+\clearpage		
       \subsection{Tablespaces und Datendateien}
         Die größte existierende, logische Datenstruktur in Oracle sind die Tablespaces. Ein Tablespace besteht physikalisch aus einer oder mehreren Datendateien.
         \begin{itemize}

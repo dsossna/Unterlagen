@@ -618,6 +618,7 @@ File created.
           \begin{merke}
             Wird kein Quell-SPFile angegeben, wird der Wert des Initialisierungsparameters \parameter{spfile} benutzt, um das aktuelle SPFile zu ermitteln. Wird kein Dateiname für das PFile angegeben, wird im Verzeichnis \oscommand{ORACLE\_HOME/dbs} die Datei \oscommand{init<SID>.ora} angelegt.
           \end{merke}
+\clearpage		  
         \subsubsection{Ein PFile generieren}
           Analog zum Kommando \languageorasql{CREATE SPFILE} existiert das \languageorasql{CREATE PFILE}-Statement.
           \begin{lstlisting}[caption={Beispiele für \languageorasql{CREATE PFILE}},label=admin20,language=oracle_sql]
@@ -667,6 +668,7 @@ Database opened.
         \begin{merke}
           Auf einige Komponenten der SGA, wie z. B. den Large Pool oder den Streams Pool wird in dieser Unterlage nicht näher eingegangen! Zudem existieren noch weitere Parameter, die über den Horizont dieses Skriptes hinausgehen.
         \end{merke}
+\clearpage		
         Die aktuellen Werte dieser Parameter können mit der View \identifier{v\$sgainfo} abgefragt werden.
         \begin{lstlisting}[caption={Größe der SGA-Komponenten ermitteln},label=admin22,language=oracle_sql]
 SQL> SELECT name, bytes
@@ -717,11 +719,11 @@ SQL> ALTER SYSTEM
   2  SET db_cache_size = 200M;
         \end{lstlisting}
         Wird eine Instanz, wie in \beispiel{admin23} konfiguriert, entfallen mindestens 50 Megabyte auf den Shared Pool, mindestens 200 Megabyte auf den Database Buffer Cache und 350 Megabyte können auf alle anderen Komponenten der SGA verteilt werden.
-\clearpage
         Zur Verwaltung der PGAs gibt es \parameter{pga\_aggregate\_target}. Dieser Parameter legt die gesamte Speichermenge fest, die für alle PGAs zur Verfügung steht. Statt einer fixen PGA-Größe, die der DBA selbst festlegen muss, kann die Datenbank nun selbst entscheiden, wie groß jede einzelne PGA werden kann. Serverprozesse die eine größere PGA benötigen können somit mehr Speicherplatz erhalten, als andere.
 
         Problematisch an dieser Form der Speicherverwaltung ist, dass wenn ein zu kleiner Wert für \parameter{sga\_target} und ein zu großer für \parameter{pga\_aggregate\_target} gesetzt wird, die Datenbank keinen automatischen Ausgleich schaffen kann, falls die SGA mehr Memory benötigt. Hier muss dann der DBA eingreifen und selbstständig die Werte anpassen.
-      \subsection{Automatic Memory Management}
+\clearpage      
+	  \subsection{Automatic Memory Management}
         Das mit Oracle 11g neu eingeführte Automatic Memory Management vereinfacht die Situation des DBAs erneut. Es kommen zwei neue Parameter hinzu:
         \begin{itemize}
           \item \parameter{memory\_target}: Dieser dynamische Parameter definiert die Größe aller Speicherkomponenten der Instanz (SGA + PGA).
@@ -764,7 +766,6 @@ SQL> ALTER SYSTEM
             \end{supertabular}
           \end{small}
         \end{center}
-\clearpage
         \begin{lstlisting}[caption={Auszug aus einer Parameterdatei},label=admin24,language=terminal]
 orcl.__db_cache_size=260046848
 orcl.__java_pool_size=4194304
@@ -792,7 +793,6 @@ orcl.__streams_pool_size=0
       Um eine Datenbank öffnen zu können, muss der Schreibzugriff auf die Kontrolldateien möglich sein. Generiert werden diese Dateien während der Datenbankerstellung. Standardmäßig wird immer nur eine erstellt, der Administrator sollte jedoch dafür sorgen, dass mehrere Sicherheitskopien der Kontrolldatei auf mehreren Speichermedien (Spiegelung) zur Verfügung stehen.
       \subsection{Namensgebung für Kontrolldateien}
         Welche Kontrolldateien die Datenbank benutzt, wird durch den Initialisierungsparameter \parameter{control\_files} in der Serverparameterdatei festgelegt. Er kann eine Liste von Dateinamen enthalten, wie das folgende Beispiel zeigt.
-\clearpage
 				\begin{lstlisting}[caption={Der Parameter \parameter{control\_files}},label=admin25,language=terminal]
 ...
 CONTROL_FILES='/u02/oradata/orcl/control01.ctl',
@@ -803,6 +803,7 @@ CONTROL_FILES='/u02/oradata/orcl/control01.ctl',
         \begin{merke}
           Es werden alle angegebenen Kontrolldateien geöffnet und parallel in diese geschrieben.
         \end{merke}
+\clearpage		
       \subsection{Multiplexing der Kontrolldateien}
         Jede Oracle-Datenbank sollte mindestens zwei Kopien einer Kontrolldatei
         haben, die auf verschiedenen Datenträgern gespeichert sind.
@@ -899,7 +900,7 @@ SQL> host rm -f /u05/fast_recovery_area/orcl/control02.ctl
       Für den Betrieb einer Oracle-Datenbank wird ein Set aus \enquote{Redo Log Gruppen}, umgangssprachlich als \enquote{Redo Logs} bezeichnet, benötigt. Eine Redo Log Gruppe besteht aus einer oder mehreren Redo Log Dateien, die auch als Redo Log Member bezeichnet werden. Die primäre Funktion der Redo Logs ist das Aufzeichnen aller Änderungen, die an den Daten vorgenommen wurden (Nutz- und Metadaten).
       \subsection{Redo Log Gruppen und Member erstellen}
         Obwohl die Konfiguration der Redo Log Gruppen bereits vor der Installation einer Datenbank erdacht werden sollte, kann es notwendig werden, weitere Redo Log Gruppen oder neue Member zu erstellen. Für die Erstellung von Redo Log Gruppen und Membern muss der Nutzer das Privileg \privileg{ALTER DATABASE} besitzen.
-
+\clearpage
         Das Erzeugen einer neuen Redo Log Gruppe geschieht mit \languageorasql{ALTER DATABASE ADD LOGFILE}.
           \begin{lstlisting}[caption={Erzeugen einer Redo Log Gruppe},label=admin30,language=oracle_sql]
 SQL> ALTER DATABASE
@@ -935,14 +936,14 @@ SQL> SELECT   group&\#&, members,
           \end{lstlisting}
           Die Spalte \identifier{members} zeigt, dass die Gruppen 1 bis 4 mit jeweils nur einem Member angelegt wurden, was eine sehr gefährliche Konfiguration darstellt. Wird dieser eine Member beschädigt, ist folglich die gesamte Gruppe beschädigt. Dies führt zu Problemen bei einem Datenbank-Recovery-Vorgang, wenn der Memberausfall nicht rechtzeitig bemerkt wird.
         \subsubsection{Redo Log Member einer Gruppe hinzufügen}
-          Um einer Redo Log Gruppe einen neuen Member hinzuzufügen, wird das SQL-Kommando \languageorasql{ALTER DATABASE ADD LOGFILE MEMBER}, zusammen mit dem Dateinamen des Members, sowie der Nummer der betroffenen Redo Log Gruppe verwendet.
+          Um einer Redo Log Gruppe einen neuen Member hinzuzufügen, wird das SQL-Kommando \newline 
+		  \languageorasql{ALTER DATABASE ADD LOGFILE MEMBER}, zusammen mit dem Dateinamen des Members, sowie der Nummer der betroffenen Redo Log Gruppe verwendet.
           \begin{lstlisting}[caption={Hinzufügen eines Members zu einer Redo Log Gruppe},label=admin33,language=oracle_sql]
 SQL> ALTER DATABASE
   2  ADD LOGFILE MEMBER '/u03/oradata/orcl/redo01b.log'
   3  TO GROUP 1;
           \end{lstlisting}
           Passend zur View \identifier{v\$log}, die Informationen zu allen Log Gruppen anzeigt, gibt es auch die View \identifier{v\$logfile}. Dies befasst sich mit den Redo Log Members.
-\clearpage
           \begin{lstlisting}[caption={Informationen über Redo Log Member sammeln},label=admin34,language=oracle_sql,alsolanguage=sqlplus]
 SQL> col member format a50
 SQL> SELECT group&\#&, member
@@ -988,7 +989,7 @@ SQL> SELECT group&\#&, member
             \begin{lstlisting}[caption={Instanz herunterfahren},label=admin36,language=sqlplus]
 SQL> shutdown immediate
             \end{lstlisting}
-          \item Verschieben der Datei \oscommand{/u02/oradata/orcl/redo01.log} mit Betriebssystemmitteln nach \oscommand{/u02/oradata/orcl/redo01a.log}
+          \item Verschieben der Datei \oscommand{/u02/oradata/orcl/redo01.log} mit Betriebssystemmitteln nach \newline \oscommand{/u02/oradata/orcl/redo01a.log}
             \begin{lstlisting}[caption={Verschieben der Redo Log Datei mit BS Mitteln},label=admin36a,language=sqlplus]
 SQL> host mv /u02/oradata/orcl/redo01.log /u02/oradata/orcl/redo01a.log
             \end{lstlisting}
@@ -1015,7 +1016,6 @@ SQL> ALTER DATABASE OPEN;
             \item Nur eine Redo Log Gruppe, die den Status Inactive oder Unused hat, kann gelöscht werden.
             \item Falls die Archivierung für Redo Logs aktiviert ist, sollte vorher geprüft werden, ob die zu löschende Gruppe bereits archiviert wurde.
           \end{itemize}
-\clearpage
             \begin{enumerate}
               \item Prüfen, ob die Redo Log Gruppe inaktiv ist und evtl. bereits archiviert wurde
                 \begin{lstlisting}[caption={Status der Redo Logs prüfen},label=admin40,language=oracle_sql]
@@ -1045,7 +1045,6 @@ SQL> host rm /u02/oradata/orcl/redo05a.log /u03/oradata/orcl/redo05b.log
             \item Falls die Archivierung für Redo Logs aktiviert ist, sollte vorher geprüft werden, ob die zu löschende Gruppe bereits archiviert wurde.
             \item Der letzte Member einer Redo Log Gruppe kann nicht gelöscht werden. Es muss dann die ganze Gruppe gelöscht werden.
           \end{itemize}
-\clearpage
           \begin{enumerate}
             \item Prüfen, ob die Redo Log Gruppe inaktiv ist und evtl. bereits archiviert wurde
               \begin{lstlisting}[caption={Status der Redo Logs prüfen},label=admin43,language=oracle_sql]
@@ -1099,6 +1098,7 @@ SQL> ALTER DATABASE
         \begin{merke}
           Zu beachten ist: Wird eine Redo Log Gruppe geleert, die zum Recovery der Datenbank benötigt wird, sind alle Backups, die dieses Redo Log benötigen nutzlos und es sollte sofort ein neues Backup der Datenbank angefertigt werden. In der Alert Log Datei werden die ungültigen Datenbankbackups aufgelistet (nur mit RMAN erstellte Backups).
         \end{merke}
+\clearpage		
       \subsection{Informationen über Redo Log Gruppen/Member sammeln}
         \begin{literaturinternet}
           \item \cite{i1007497}
@@ -1118,11 +1118,10 @@ SQL> ALTER DATABASE
       \subsection{Für die Archivierung notwendige Initialisierungsparameter}
         \subsubsection{Anzahl der Archiver-Prozesse festlegen}
           Der Initialisierungsparameter \parameter{log\_archive\_max\_processes} legt die Anzahl der zu startenden Archiver-Prozesse fest (Standardwert ist 4). Eine Veränderung dieses Standardwertes ist normalerweise nicht notwendig, da die Datenbank selbstständig zusätzliche Archiver-Prozesse startet, wenn dies erforderlich erscheint.
-\clearpage
 					Ein möglicher Grund für eine Änderung dieses Parameters ist z. B., dass es  performanter ist, gleich die richtige Anzahl Archiver-Prozesse zu starten. Es können bis zu 30 Archiver-Prozesse gleichzeitig gestartet werden.
 
         \subsubsection{Speicherorte der Archiver-Prozesse festlegen}
-         Zuständig für die Festlegung der Speicherorte der Archive Logs sind die Initialisierungsparameter \parameter{log\_archive\_dest\_1} bis \parameter{log\_archive\_dest\_31}. Um beispielsweise die beiden Speicherorte \oscommand{/u02/backup/archive\_logs} und \oscommand{/u03/backup/archive\_logs} festzulegen, müssen die beiden Initialisierungsparameter \parameter{log\_archive\_dest\_1} und \parameter{log\_archive\_dest\_2} wie folgt angepasst werden:
+         Zuständig für die Festlegung der Speicherorte der Archive Logs sind die Initialisierungsparameter \newline\parameter{log\_archive\_dest\_1} bis \parameter{log\_archive\_dest\_31}. Um beispielsweise die beiden Speicherorte \oscommand{/u02/backup/archive\_logs} und \oscommand{/u03/backup/archive\_logs} festzulegen, müssen die beiden Initialisierungsparameter \parameter{log\_archive\_dest\_1} und \parameter{log\_archive\_dest\_2} wie folgt angepasst werden:
           \begin{lstlisting}[caption={log\_archive\_dest-Parameter setzen},label=admin48,language=oracle_sql]
 SQL> ALTER SYSTEM
   2  SET log_archive_dest_1='LOCATION=/u02/backup/archive_logs';
@@ -1130,7 +1129,7 @@ SQL> ALTER SYSTEM
   2  SET log_archive_dest_2='LOCATION=/u03/backup/archive_logs';
           \end{lstlisting}
         \subsubsection{Dateinamen der Archive Logs konfigurieren}
-          Um das Format des Dateinamens für die Archive Logs zu setzen wird der Parameter \parameter{log\_archive\_format} verwendet. Der komplette Name eines Archive Logs setzt sich dann aus den Parameter \parameter{log\_archive\_dest\_n} + \parameter{log\_archive\_format} zusammen.
+          Um das Format des Dateinamens für die Archive Logs zu setzen wird der Parameter \newline\parameter{log\_archive\_format} verwendet. Der komplette Name eines Archive Logs setzt sich dann aus den Parameter \parameter{log\_archive\_dest\_n} + \parameter{log\_archive\_format} zusammen.
           \begin{lstlisting}[caption={\parameter{log\_archive\_format}-Parameter
           setzen},label=admin49,language=oracle_sql,alsolanguage=sqlplus]
 SQL> ALTER SYSTEM
@@ -1148,7 +1147,6 @@ SQL> col destination format a30
 SQL> col error format a40
 SQL> set linesize 300
 					\end{lstlisting}
-\clearpage
 \begin{lstlisting}[caption={Die Konfiguration der Archive Log Destination abfragen - Fortsetzung},label=admin50a,language=oracle_sql]
 SQL> SELECT dest_name, status, destination, error
   2  FROM   v$archive_dest
@@ -1210,8 +1208,8 @@ LOG_ARCHIVE_DEST_2  VALID     /u03/backup/archive_logs
         \subsubsection{Probleme mit fehlerhaften Speicherorten}
           Es kann vorkommen, dass die Speicherung eines Archive Logs an einem der angegebenen Speicherorte fehlschlägt. Oracle stellt verschiedene Möglichkeiten bereit, wie auf solche Ausfälle reagiert werden kann. Eine Möglichkeit besteht darin, mit dem Parameter \parameter{log\_archive\_min\_succeed\_dest} anzugeben, auf wie vielen Speicherorten die Archivierung als erfolgreich gelten muss, ehe die zu archivierende Redo Log Gruppe wieder verwendet werden kann. Standardwert für diesen Parameter ist 1. Der Maximalwert ist 10.
 
-          In Kombination dazu kann mit jedem \parameter{log\_archive\_dest\_n}-Parameter ein Speicherort als \textit{optional} (Standardwert) oder als \textit{mandatory} \footnote{mandatory = engl. obligatorisch, zwingend} deklariert werden. Je nachdem, wie der Parameter \parameter{log\_archive\_min\_succeed\_dest} eingestellt ist, muss die Archivierung mindestens an allen als mandatory deklarierten Speicherorten erfolgreich gewesen sein, bevor der Log Writer-Prozess die betreffende Redo Log Gruppe wieder verwenden kann.
-
+          In Kombination dazu kann mit jedem \parameter{log\_archive\_dest\_n}-Parameter ein Speicherort als \textit{optional} (Standardwert) oder als \textit{mandatory} \footnote{mandatory = engl. obligatorisch, zwingend} deklariert werden. Je nachdem, wie der Parameter \newline \parameter{log\_archive\_min\_succeed\_dest} eingestellt ist, muss die Archivierung mindestens an allen als mandatory deklarierten Speicherorten erfolgreich gewesen sein, bevor der Log Writer-Prozess die betreffende Redo Log Gruppe wieder verwenden kann.
+\clearpage
           Die folgende Tabelle soll das Verhalten der Datenbank verdeutlichen:
           \begin{itemize}
             \item Es wurden 4 Speicherorte deklariert, 2 als optional und 2 als mandatory
@@ -1282,7 +1280,6 @@ Database closed.
 Database dismounted.
 ORACLE instance shut down.
 				\end{lstlisting}
-\clearpage
 \begin{lstlisting}[caption={Archivelog-Modus aktivieren -
 Fortsetzung},label=admin52a,language=oracle_sql,alsolanguage=sqlplus]
 SQL> startup mount 
@@ -1323,6 +1320,7 @@ Database altered.
       Nicht nur, dass das Data Dictionary ein zentraler Punkt in der Datebank ist, es stellt auch ein wichtiges Hilfsmittel für alle Nutzer, vom Endnutzer bis zum Administrator dar. Es kann mit Hilfe von SQL-Befehlen abgefragt, nicht aber geändert werden.
 
       Der Oracle Nutzer \identifier{SYS} ist Eigentümer der Basistabellen und Nutzer-Views des Data Dictionary. Kein anderer Oracle Nutzer außer ihm sollte Zugriff auf diese Tabellen haben, da dies die Datenbankintegrität verletzen könnte.
+\clearpage
       \subsection{Benutzung und Struktur des Data Dictionary}
         Das Data Dictionary wird auf drei unterschiedliche Arten genutzt:
         \begin{itemize}
@@ -1337,7 +1335,6 @@ Database altered.
           Diese View tragen das Präfix \enquote{x\$} in ihrem Namen. Sie werden bei der Erstellung der Datenbank automatisch mit erstellt. Um den Inhalt der \identifier{x\$}-Views für Administratoren nutzbar zu machen, hat Oracle zusätzlich sogenannte \identifier{v\$}-Views geschaffen.
         \subsubsection{Dynamic Performance Views (V\$-Views)}
           \identifier{v\$}-Views benutzen als Informationsgrundlage die eben beschriebenen \identifier{x\$-Views}. Während die Namensgebung bei \identifier{x\$}-Views sehr undurchschaubar ist (z. B. \identifier{x\$ksmfs}, \identifier{x\$ksmss} oder \identifier{x\$kcbwait}) ist die der \identifier{v\$}-Views klar verständlich (z. B. \identifier{v\$session}, \identifier{v\$log} oder \identifier{v\$logfile}). Auch die Struktur der \identifier{v\$}-Views ist für Administratoren besser zu durchschauen, außerdem sind \identifier{v\$}-Views dokumentiert, im Gegensatz zu den \identifier{x\$}-Views.
-\clearpage
         \subsubsection{Basis Tabellen}
           Dies sind die zugrundeliegenden Tabellen, die die Metainformationen enthalten. Sie werden nur von der Datenbank selbst genutzt, da sie durch Normalisierung und kryptischen Inhalt für normale Nutzer wenig durchschaubar sind. Einige Beispiele für Basistabellen sind \identifier{user\$}, \identifier{tab\$}, \identifier{obj\$} oder \identifier{aud\$}.
         \subsubsection{Nutzer-Views}

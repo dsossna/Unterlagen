@@ -33,6 +33,7 @@ SQL> show parameter memory_target
 SQL> ALTER SYSTEM
   2  SET memory_target = 800M;
         \end{lstlisting}
+\clearpage		
       \input{exercises/dbadmin_04/item_i}
         \begin{lstlisting}[language=oracle_sql]
 SQL> ALTER SYSTEM
@@ -42,7 +43,6 @@ SQL> ALTER SYSTEM
   2  SET pga_aggregate_target = 100M
   3  SCOPE=spfile;
         \end{lstlisting}
-\clearpage
       \input{exercises/dbadmin_04/item_j}
         \begin{lstlisting}[language=sqlplus]
 SQL> shutdown immediate
@@ -86,7 +86,6 @@ SQL> CREATE PFILE = '/home/oracle/initorcl.ora'
 SQL> CREATE SPFILE = '/home/oracle/spfileorcl.ora'
   2  FROM   MEMORY;
         \end{lstlisting}
-\clearpage
       \input{exercises/dbadmin_04/item_p}
         \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> shutdown immediate
@@ -169,7 +168,7 @@ SQL> ALTER DATABASE
   2  ADD LOGFILE MEMBER '/u02/oradata/orcl/redo03c.log'
   3  TO GROUP 3;
         \end{lstlisting}
-\clearpage
+\clearpage		
       \input{exercises/dbadmin_04/item_t}
         \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> SELECT log_mode
