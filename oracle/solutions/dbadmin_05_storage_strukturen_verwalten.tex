@@ -37,6 +37,7 @@ TABLESPACE_NAME                ALLOCATION_TYPE
 ------------------------------ ---------------
 TEMP                           &UNIFORM&
       \end{lstlisting}
+\clearpage	  
     \input{exercises/dbadmin_05/item_d}
       \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> col segment_name format a30
@@ -88,7 +89,6 @@ SQL> CREATE TEMPORARY TABLESPACE temp_ts
   3           AUTOEXTEND ON MAXSIZE 4G
   4  EXTENT MANAGEMENT LOCAL UNIFORM SIZE 1M;
       \end{lstlisting}
-\clearpage
     \input{exercises/dbadmin_05/item_j}
       \begin{lstlisting}[language=oracle_sql]
 SQL> ALTER DATABASE
@@ -101,6 +101,7 @@ SQL> ALTER DATABASE
 ERROR at line 1:
 ORA-01653: unable to extend table ALICE.&FULL& by 128 in tablespace FULLTS
 		\end{lstlisting}
+\clearpage		
 		\input{exercises/dbadmin_05/item_m}
       \begin{lstlisting}[language=oracle_sql]
 SQL> SELECT file_name
@@ -119,7 +120,6 @@ SQL> ALTER DATABASE
 SQL> ALTER TABLESPACE fullts
   2  ADD DATAFILE '/u03/oradata/orcl/fullts02.dbf' SIZE 20M;
       \end{lstlisting}
-\clearpage
     \input{exercises/dbadmin_05/item_n}
       \begin{lstlisting}[language=oracle_sql]
 SQL> ALTER TABLESPACE fullts OFFLINE NORMAL;
@@ -129,6 +129,7 @@ SQL> ALTER TABLESPACE fullts OFFLINE NORMAL;
 SQL> DROP TABLESPACE fullts
   2  INCLUDING CONTENTS AND DATAFILES;
       \end{lstlisting}
+\clearpage	  
     \input{exercises/dbadmin_05/item_p}
       \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> col file_name format a50
