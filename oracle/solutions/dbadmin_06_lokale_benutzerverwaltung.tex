@@ -38,7 +38,6 @@ SQL> ALTER USER         alice
   2  DEFAULT TABLESPACE users;
       \end{lstlisting}
     \input{exercises/dbadmin_06/item_f}
-\clearpage
 		\begin{lstlisting}[language=oracle_sql]
 SQL> ALTER USER           bob
   2  DEFAULT TABLESPACE   example
@@ -67,6 +66,7 @@ USERNAME                       SYSDB SYSOP SYSAS
 SYS                            TRUE  TRUE  FALSE
 CHLOE                          TRUE  FALSE FALSE
       \end{lstlisting}
+\clearpage	  
     \input{exercises/dbadmin_06/item_j}
       \begin{lstlisting}[language=oracle_sql]
 SQL> CREATE PROFILE p_clerk
@@ -76,7 +76,6 @@ SQL> CREATE PROFILE p_clerk
   5    PASSWORD_REUSE_MAX       3
   6    PASSWORD_LOCK_TIME      10 / 1440;
       \end{lstlisting}
-\clearpage
     \input{exercises/dbadmin_06/item_k}
       \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> ALTER USER alice
@@ -92,21 +91,19 @@ SQL> connect bob/wrong_password
 ERROR:
 &\textbf{\textcolor{red}{ORA-01017: invalid username/password; logon denied}}&
 
-
 SQL> connect bob/wrong_password
 ERROR:
 &\textbf{\textcolor{red}{ORA-01017: invalid username/password; logon denied}}&
 
-
 SQL> connect bob/wrong_password
 ERROR:
 &\textbf{\textcolor{red}{ORA-01017: invalid username/password; logon denied}}&
-
 
 SQL> connect bob/wrong_password
 ERROR:
 &\textbf{\textcolor{red}{ORA-28000: the account is locked}}&
       \end{lstlisting}
+\clearpage	  
     \input{exercises/dbadmin_06/item_l}
       \begin{lstlisting}[language=oracle_sql]
 SQL> ALTER PROFILE p_clerk
@@ -131,6 +128,7 @@ SQL> ALTER USER alice
 SQL> GRANT create table, create session
   2  TO alice;
       \end{lstlisting}
+\clearpage	  
     \input{exercises/dbadmin_06/item_p}
       \begin{lstlisting}[language=oracle_sql]
 SQL> CREATE ROLE r_manager;

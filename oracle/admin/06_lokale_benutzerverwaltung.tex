@@ -381,6 +381,7 @@ orapwd file=$ORACLE_HOME/dbs/orapworcl entries=5 ignorecase=n
           \begin{merke}
             Ein Nutzer, der sich mit \privileg{sysdba} oder \privileg{sysoper} Privilegien anmeldet, wird nicht mit seinem normalen Schema, sondern mit einem Standardschema verbunden. Für das \privileg{sysdba} Privileg ist dies das Schema des Nutzers \identifier{sys}. Für \privileg{sysoper} ist es das Schema \identifier{public}.
           \end{merke}
+\clearpage		  
           Das folgende Beispiel zeigt was passiert, wenn sich ein Nutzer normal bzw. mit administrativen Privilegien anmeldet. Dem Benutzer \identifier{hr} wird das \privileg{hr}-Privileg zugeteilt. Anschließend meldet sich dieser einmal mit dem Zusatz \oscommand{as sysdba} und einmal ohne diesen an.
 
           \begin{lstlisting}[caption={Anmeldung mit und ohne administrativen
@@ -421,6 +422,7 @@ USERNAME                       SYSDBA SYSOPER SYSASM
 SYS                            TRUE   TRUE    FALSE
 HR                             TRUE   FALSE   FALSE
           \end{lstlisting}
+\clearpage		  
           Um einen Nutzer wieder aus der Passwortdatei zu entfernen, müssen ihm nur die \privileg{sys}-Privilegien \privileg{sysdba}, \privileg{sysoper} oder \privileg{sysasm} entzogen werden.
           \begin{lstlisting}[caption={Einen Nutzer aus der Passwortdatei
           entfernen},label=admin214,language=oracle_sql,alsolanguage=sqlplus]
@@ -443,6 +445,7 @@ SYS                            TRUE   TRUE    FALSE
             \item \textbf{EXCLUSIVE}: Eine als exklusiv gekennzeichnete Passwortdatei kann nur von einer Instanz genutzt werden. Um eine Passwortdatei modifizieren zu können, muss der Parameter \parameter{REMOTE\_LOGIN\_PASSWORDFILE} auf \textit{EXCLUSIVE} gestellt werden.
             \item \textbf{SHARED}: Steht der Parameter auf \textit{SHARED}, kann die Passwortdatei von mehreren Instanzen auf dem gleichen Rechner genutzt werden. Eine als shared gekennzeichnete Passwortdatei kann nicht verändert werden. D. h. es kann keinem weiteren Nutzer eines der Privilegien \privileg{sysdba} oder \privileg{sysoper} zugewiesen werden und es kann auch kein Nutzer mit einem dieser beiden Privilegien sein Passwort ändern.
           \end{itemize}
+\clearpage		  
       \subsection{Betriebssystemauthentifizierung für Administratoren}
         Die externe Authentifizierung durch das Betriebssystem wird für Administratoren durch eine spezielle Betriebssystemgruppe realisiert. Die Zugehörigkeit des Betriebssystemnutzerkontos zu dieser Betriebssystemgruppe verleiht dem Administrator automatisch \privileg{sysdba}-Privilegien in der Datenbank. Die Bezeichnung dieser Gruppe ist von Betriebssystem zu Betriebssystem unterschiedlich (Linux: \enquote{dba}, Windows: \enquote{ora\_dba}).
         \begin{merke}
@@ -592,7 +595,7 @@ SQL> CREATE PROFILE employee
         Werden beide Parameter kombiniert, müssen auch beide Bedingungen erfüllt sein, bevor ein Passwort wiederverwendet werden kann. Gemäß \beispiel{admin223} muss ein Passwort älter als 30 Tage sein und es darf nicht in der Liste der letzten 13 Passwörter vorkommen.
       \subsection{Komplexitätsprüfung von Passwörtern}
         Oracle hat die Fähigkeit, ein Passwort auf seine Komplexität hin zu überprüfen. Für diese Aufgabe wird eine PL/SQL Routine verwendet. Es existiert bereits eine Standardroutine, die dem Skript \oscommand{UTLPWDMG.SQL} entnommen werden kann. Der Administrator hat die Möglichkeit, diese Routine beizubehalten, sie zu verändern oder eine eigene zu entwerfen.
-
+\clearpage
         Falls eine eigene Routine entworfen werden soll, muss sie die folgende Signatur aufweisen:
         \begin{lstlisting}[caption={Format der Passwortroutine},label=admin224,language=plsql]
 routinen_name
@@ -658,7 +661,7 @@ SQL> ALTER USER oracle IDENTIFIED BY hallo REPLACE oracle;
       können. Sie sollten jedoch nur dann vergeben werden, wenn ein Nutzer sie
       auch wirklich benötigt, da die Vergabe nicht benötigter Privilegien
       die Sicherheit der Datenbank gefährden kann.
-      
+\clearpage      
       Nutzer können Privilegien auf zwei verschiedenen Wegen erhalten:
       \begin{itemize}
         \item Ein Privileg kann einem Nutzer direkt erteilt werden
@@ -691,6 +694,7 @@ SQL> GRANT create session
           \end{lstlisting}
           Da sich die Vergabe eines Privilegs augenblicklich auswirkt,
           kann sich der Nutzer direkt nach der Vergabe an der Datenbank anmelden.
+\clearpage		  
           \begin{merke}
             Die Vergabe eines System Privilegs wirkt sich augenblicklich aus.
           \end{merke}
@@ -733,7 +737,9 @@ SQL> GRANT create session
 
 ERROR at line 1:
 &\textbf{\textcolor{red}{ORA-01031: insufficient privileges}}&
-
+\end{lstlisting}
+\begin{lstlisting}[caption={Zuweisen eines System Privileges mit ADMIN
+          OPTION},label=admin230,language=oracle_sql,alsolanguage=sqlplus]
 SQL> connect hr/hr
 Connected.
 SQL> REVOKE create session
@@ -762,6 +768,7 @@ Revoke succeeded.
           Dictionary. Dies wird durch den Initialisierungsparameter
           \parameter{O7\_DICTIONARY\_ACCESSIBILITY} (das erste Zeichen ist ein
           großes O) vor solchen Zugriffen geschützt.
+\clearpage		  
           \begin{lstlisting}[caption={Die Auswirkungen des \privileg{select any
           table}-Privilegs},label=admin231,language=oracle_sql,alsolanguage=sqlplus]
 connect hr/hr
@@ -908,6 +915,7 @@ BI        SH      OE        &SELECT&        NO
           \begin{lstlisting}[caption={Zuweisen von Objektprivilegien auf Spaltenebene},label=admin242,language=oracle_sql]
 SQL> GRANT insert (department_id, department_name) ON hr.departments TO sh;
           \end{lstlisting}
+\clearpage		  
           Der Benutzer \identifier{sh} kann  diese Privilegien nun nutzen, um Datensätze in die Tabelle \identifier{departments} einzufügen. Da er aber nur auf zwei der vier Spalten das \privileg{insert}-Privileg erhalten hat, kann er auch nur diese beiden befüllen.
           \begin{lstlisting}[caption={Zuweisen von Objektprivilegien auf Spaltenebene},label=admin243,language=oracle_sql]
 SQL> INSERT INTO hr.departments (department_id, department_name)

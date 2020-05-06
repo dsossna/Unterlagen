@@ -25,6 +25,7 @@
           \abbildung{heap_organized_table} zeigt, dass die Tabellenzeilen, hier
           durch rote, blaue, grüne und gelbe Kästchen dargestellt, einfach
           nacheinander abgelegt werden.
+\clearpage		  
         \subsubsection{Index-Organized-Tables}
           In einer Index-Organized Table dagegen, werden die Daten als sortierte
           Baumstruktur abgelegt.
@@ -103,7 +104,6 @@ SQL> CREATE BIGFILE TABLESPACE hr_data
             Die Advanced Compression kann in smallfile und in bigfile Tablespaces zum Einsatz kommen!
           \end{merke}
           Auf Tabellenebene wird die Kompression ebenfalls mit der \languageorasql{COMPRESS}-Klausel aktiviert. Dies kann schon bei der Tabellenerstellung oder auch noch im Nachhinein erfolgen.
-\clearpage
           \begin{lstlisting}[caption={Eine Tabelle mit OLTP Compression erstellen},label=admin301,language=oracle_sql]
 SQL> CREATE TABLE buchung_hist (
   2    Buchungs_ID         NUMBER,
@@ -148,9 +148,9 @@ SQL> ALTER TABLE buchung NOCOMPRESS;
           \begin{lstlisting}[caption={Dekomprimieren einer Tabelle},label=admin306,language=oracle_sql]
 SQL> ALTER TABLE buchung MOVE NOCOMPRESS;
           \end{lstlisting}
+\clearpage		  
         \subsubsection{Ein Experiment}
           Im nachfolgenden Experiment soll gezeigt werden, wie sich die Kompression auf den Platzbedarf einer Tabelle auswirkt.
-
           Im ersten Schritt wird die Anzahl der Datenblöcke und die Anzahl der Tabellenzeilen pro Datenblock, für die unkomprimierte Tabelle \identifier{Buchung} ermittelt.
           \begin{lstlisting}[caption={Anzahl der Datenblöcke + durchschnittliche Anzahl der Zeilen pro Block},label=admin307,language=oracle_sql,alsolanguage=sqlplus]
 col segment_name format a20
@@ -178,6 +178,7 @@ SQL> SELECT AVG(Anzahl) As Mittelwert
           \begin{lstlisting}[caption={Komprimieren der Tabelle \identifier{Buchung}},label=admin308,language=oracle_sql]
 SQL> ALTER TABLE buchung MOVE COMPRESS FOR OLTP;
           \end{lstlisting}
+\clearpage		  
           Zu guter Letzt, wird nun die gleiche Statistik, wie in \beispiel{admin307} erhoben.
           \begin{lstlisting}[caption={Anzahl der Datenblöcke + durchschnittliche Anzahl der Zeilen pro Block nach der Kompression},label=admin309,language=oracle_sql,alsolanguage=sqlplus]
 col segment_name format a20
