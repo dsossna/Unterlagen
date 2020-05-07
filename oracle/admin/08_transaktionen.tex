@@ -52,6 +52,7 @@
           \item Das DBMS implementiert keine oder nur mangelhafte Isolation für Transaktionen.
           \item Konkurrierende Lese- und Schreibzugriffe
         \end{itemize}
+\clearpage		
         \begin{center}
           \tablecaption{Dirty Reads}
           \tablefirsthead{
@@ -85,6 +86,7 @@
           \item das DBMS keine oder nur mangelhafte Isolation für Transaktionen implementiert
           \item zwei gleiche Lesevorgänge \textit{eines Datensatzes} in einer Transaktion unterschiedliche Ergebnisse liefern.
         \end{itemize}
+\clearpage		
         \begin{center}
           \tablecaption{Non-Repeatable Reads}
           \tablefirsthead{
@@ -115,13 +117,13 @@
         25.000~\$. Der gleiche Lesevorgang \textit{ein und des selben
         Datensatzes} konnte also nicht zweimal mit dem gleichen Ergebnis
         durchgeführt werden, was als Non-Repeatable Read bezeichnet wird.
-\clearpage
       \subsection{Phantom Reads}
         Phantom Reads treten immer dann auf, wenn:
         \begin{itemize}
           \item das DBMS nicht die höchst mögliche Isolation für Transaktionen implementiert und
           \item zwei gleiche Lesevorgänge in einer Transaktion eine \textit{unterschiedliche Menge an Ergebniszeilen} liefern. Dies bedeutet, dass zu den bereits gelesenen Zeilen neue hinzugekommen oder bestehende weggefallen sind, sich also die Menge der gelesenen Zeilen verändert hat.
         \end{itemize}
+\clearpage		
         \begin{center}
           \tablecaption{Phantom Reads}
           \tablefirsthead{
@@ -187,7 +189,7 @@
     \section{Transaktionssteuerung}
       \subsection{Eine Transaktion starten}
         Eine Transaktion kann auf zwei verschiedene Arten gestartet werden: implizit oder explizit. Implizit wird eine Transaktion durch ein beliebiges DML-Kommando gestartet. D. h. eine Transaktion beginnt implizit, sobald der Nutzer ein DML-Statement abgesetzt hat.
-
+\clearpage
         Um das Transaktionslevel einer Transaktion zu setzen, kann das
         \languageorasql{SET TRANSACTION ISOLATION LEVEL}-Kommandos benutzt
         werden. Die drei möglichen Isolationslevel werden wie folgt gesetzt:
@@ -201,7 +203,6 @@ SET TRANSACTION READ ONLY;
         \end{lstlisting}
         Soll das Transaktionslevel für eine gesamte Session geändert werden,
         geschieht dies mit \languageorasql{ALTER SESSION}.
-\clearpage
         \begin{lstlisting}[caption={Isolationslevel einer Session wählen},label=admin402,language=oracle_sql]
 ALTER SESSION SET isolation_level = READ COMMITTED;
 
@@ -256,7 +257,6 @@ ROLLBACK TO SAVEPOINT dept;
         \end{literaturinternet}
     \section{Multiversion Concurrency Control}
       Multiversion Concurrency Control ist ein Mechanismus, den Oracle zur Ge\-währ\-leis\-tung der Lesekonsistenz nutzt. Dabei werden verschiedene Versionen von Datenbankobjekten aufbewahrt, so dass jeder Nutzer die benötigte Sicht seiner Daten bekommt. Die Umsetzung dieses Verfahrens wird durch verschiedene Methoden, wie z. B. Zeitstempelverfahren oder Snapshots erreicht. Oracle benutzt hierfür sogenannte Before Images seiner Datenblöcke.
-\clearpage
       \subsection{Lesekonsistenz}
         \subsubsection{Lesekonsistenz auf Statementebene (Statementlevel Read Consistency)}
           \begin{merke}
@@ -288,7 +288,6 @@ ROLLBACK TO SAVEPOINT dept;
           \begin{merke}
             Unter dem Begriff \enquote{Transactionlevel Read Consistency} versteht man, dass eine Abfrage nur die Daten sieht, die zum Startzeitpunkt der Transaktion gültig (committed) waren. Die Länge der Laufzeit der Transaktion darf dabei keine Rolle spielen. Um Transactionlevel Read Consistency zu erwirken, muss das Isolationslevel Serializable verwendet werden.
           \end{merke}
-\clearpage
           Das \beispiel{transactionlevelreadconsistency} zeigt die beiden Transaktionen 1 und 2. Transaktion 1 startet zum Zeitpunkt t1. Unmittelbar nach dem Start von Transaktion 1 startet Transaktion 2 zum Zeitpunkt t2. Der Delete-Vorgang von Transaktion 2 darf die gesamte Transaktion 1 nicht beeinflussen und die beiden Ausgaben der Abfrageergebnisse, zu den Zeitpunkten t4 und t6, zeigen auch korrekte 6 Datensätze an. Die Lesekonsistenz auf Transaktionsebene ist gewährleistet.
           \tablecaption{Transactionlevel Read Consistency}
           \tablefirsthead{
@@ -319,7 +318,6 @@ ROLLBACK TO SAVEPOINT dept;
         Undo-Segmente werden von der Datenbank genutzt, um Before Images von Datenblöcken zu speichern.
         \subsubsection{Before Images}
           Unter dem Begriff Before Image versteht Oracle eine Kopie eines Oracle blocks, bevor dieser geändert wird. Ein Before Image kann im weitesten Sinne als eine \enquote{Kopie der Originalwerte} verstanden werden.
-\clearpage
           Before Images werden für verschiedene Zwecke benötigt. Dies sind im wesentlichen:
           \begin{itemize}
             \item Zurückrollen einer Transaktion, wenn ein \languageorasql{ROLLBACK}-Kommando ausgeführt werden soll

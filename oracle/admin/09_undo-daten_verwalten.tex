@@ -117,7 +117,6 @@ SQL> ALTER SYSTEM SET undo_tablespace = undotbs02;
       Wird der Platz für neue Transaktionen zu knapp, werden als expired markierte Undo-Daten überschrieben. Sollte dann immer noch nicht genug Platz vorhanden sein, beginnt die Datenbank, die als unexpired markierten Daten zu überschreiben. Dies kann dazu führen, dass die überschriebenen Daten, noch von einer lang laufenden Abfrage benötigt würden, weshalb die Datenbank die Abfrage mit der Fehlermeldung \enquote{Snapshot too old} abbricht.
 
       Die beiden folgenden Punkte beschreiben noch einmal kurz, wie sich die Undo Retention auf die Lesekonsistenz der Datenbank auswirkt.
-\clearpage
 			\bild{Die Fehler\-meldung Snapshot too old}{snapshot_too_old}{0.2}
 			\begin{itemize}
         \item Hat der Undo-Tablespace eine vordefinierte Größe und kann nicht wachsen (autoextend wurde nicht benutzt), wird der Parameter \parameter{undo\_retention} ignoriert, sobald der Platz im Undo-Tablespace zu knapp wird. In dieser Situation werden als unexpired markierte Undo-Daten überschrieben.
@@ -129,7 +128,6 @@ SQL> ALTER SYSTEM SET undo_tablespace = undotbs02;
           \item Hat der Undo-Tablespace eine feste Größe, tuned Oracle die Undo Retention so, das sie für die Größe des Undo-Tablespaces und die aktuelle Transaktionslast optimal ist.
           \item Wurde der Undo-Tablespace so konfiguriert, das er wachsen kann, versucht Oracle die Undo Retention so zu tunen, das sie gro\ss\ genug für die bisher größte gelaufene Abfrage ist.
         \end{itemize}
-\clearpage
 				Die aktuelle \textit{Tuned Undo Retention} kann in der dynamischen Performance View\\ \identifier{v\$undostat} in 10-Minuten-Intervallen über die letzten 4 Tage hinweg abgefragt werden. Der Wert wird dort in Sekunden angegeben. Soll die Tuned Undo Retention über einen längeren Zeitraum, als 4 Tage, hinweg beobachtet werden, kann hierzu die View \identifier{dba\_hist\_undostat} verwendet werden.
         \begin{lstlisting}[caption={Die Tuned Undo Retention abfragen},label=admin508,language=oracle_sql]
 SQL> SELECT   TO_CHAR(begin_time, 'DD.MM.YY HH24:MI') AS "Begin Time",
@@ -142,7 +140,6 @@ SQL> SELECT   TO_CHAR(begin_time, 'DD.MM.YY HH24:MI') AS "Begin Time",
 
       \subsection{Retention Guarantee}
         Um den Erfolg von besonders lang laufenden Abfragen garantieren zu können, bietet Oracle die \enquote{Retention Guarantee}. Sie wird beim Anlegen des Undo-Tablespaces durch die Klausel \languageorasql{RETENTION GUARANTEE} aktiviert. Ist dies der Fall, werden die als unexpired markierten Undo-Records solange gespeichert, wie sie benötigt werden, um die Lesekonsistenz für alle laufenden Abfragen aufrecht zu erhalten.
-\clearpage
         Die Aufrechterhaltung der Lesekonsistenz geschieht jedoch nicht ohne Kosten. Durch die Retention Guarantee ist es möglich, dass für DML-Statements bzw. deren Transaktionen nicht mehr genügend Speicher im Undo-Tablespace vorhanden ist. Eine solche Transaktion muss dann abgebrochen und zurückgerollt werden. Aus diesem Grund wird von Oracle empfohlen, diesen Mechanismus mit Bedacht zu benutzen.
 
         Um die Retention Guarantee zu deaktivieren gibt es das \languageorasql{ALTER TABLESPACE}-Statement zusammen mit der \languageorasql{RETENTION NOGUARANTEE}-Klausel.
@@ -161,6 +158,7 @@ TABLESPACE_NAME                &RETENTION&
 ------------------------------ -----------
 UNDOTBS1                       &NOGUARANTEE&
         \end{lstlisting}
+\clearpage		
     \section{Informationen}
       \subsection{Verzeichnis der relevanten Initialisierungsparameter}
         \begin{literaturinternet}
@@ -168,7 +166,6 @@ UNDOTBS1                       &NOGUARANTEE&
           \item \cite{REFRN10225}
           \item \cite{REFRN10227}
         \end{literaturinternet}
-\clearpage
       \subsection{Verzeichnis der relevanten Data Dictionary Views}
         \begin{literaturinternet}
           \item \cite{sthref3583}
@@ -177,4 +174,4 @@ UNDOTBS1                       &NOGUARANTEE&
           \item \cite{sthref3804}
           \item \cite{REFRN23460}
         \end{literaturinternet}
-\clearpage
+\clearpage		

@@ -210,6 +210,7 @@ SQL> SELECT AVG(Anzahl) AS Mittelwert
           \item Die Tabelle wird in ein neues Segment, im gleichen Tablespace, verschoben.
           \item Die Tabelle wird in ein neues Segment, in einem anderen Tablespace, verschoben.
         \end{itemize}
+\clearpage		
         Hierzu einige Beispiele:
         \begin{lstlisting}[caption={Reorganisieren der Tabelle \identifier{Buchung}},label=admin310,language=oracle_sql]
 SQL> ALTER TABLE buchung MOVE;
@@ -241,7 +242,6 @@ SQL> ALTER TABLE buchung MOVE
         \item \textbf{Bitmap} Index: Sehr kompakte Variante, die am besten auf Spalten mit sehr wenigen Werten funktioniert
         \item \textbf{Function-based} Index: Enthalten den berechneten Ergebniswert einer Funktion
       \end{itemize}
-\clearpage
       Indizes sind logisch und physisch unabhängig von den Daten in der Tabelle, an die sie angehängt sind. Deshalb benötigen Sie ihren eigenen Speicherplatz auf dem Datenträger. Ein Index kann erstellt und gelöscht werden, ohne das dadurch Tabellen oder andere Speicherstrukturen beeinflusst werden. Ihre Verwaltung geschieht automatisch durch die Datenbank, wenn DML-Operationen auf ihren Basistabellen stattfinden. Auch Anwendungen werden durch das Löschen eines Index nicht beeinträchtigt, nur der Zugriff auf die Nutzdaten kann  langsamer werden.
       \subsection{Bäume in der Informatik}
         Bäume stellen in der Informatik eine wichtige hierarchische Datenstruktur dar, die für unterschiedlichste Zwecke genutzt werden kann. Das bekannteste Beispiel für Bäume sind die \enquote{Verzeichnisbäume} eines Dateisystems.
@@ -470,6 +470,7 @@ SQL> ALTER TABLE buchung MOVE
             Auffinden der Tabellenzeilen dar. Die indizierten Tabellenspalten
             werden als Schlüssel benutzt.
           \end{merke}
+\clearpage		  
           \abbildung{b_tree} zeigt beispielhaft, wie ein B*-Baum Index aussehen könnte.
           \bild{Ein B*-Baum Index}{b_tree}{1.2}
           Der Rootnode und die Branchnodes enthalten die Schlüsselwerte, in
@@ -499,6 +500,7 @@ SQL> CREATE INDEX idx_transactions
             Ein Index der auf eine Kombination von zwei oder mehr Spalten gelegt
             wird, wird als \enquote{Composite Index} bezeichnet.
           \end{merke}
+\clearpage		  
           Um sich den soeben erstellten Index näher betrachten zu können,
           stellt Oracle die View \identifier{dba\_indexes} bereit.
           \begin{lstlisting}[caption={Der Index unter der Lupe - Die View
@@ -526,6 +528,7 @@ IDX_TRANSACTIONS  &NORMAL&           2        1325 NONUNIQUE
           \begin{merke}
             Letztlich ist der einzige Unterschied zwischen einem Unique Index und einen Nonunique Index das interne Format, in dem die Daten abgespeichert werden.
           \end{merke}
+\clearpage		  
           Um einen Unique Index zu erstellen, muss dem \languageorasql{CREATE INDEX}-Kommando noch das Schlüsselwort \languageorasql{UNIQUE} hinzugefügt werden.
           \begin{lstlisting}[caption={Einen B*-Tree Index erstellen},label=admin314,language=oracle_sql]
 SQL> CREATE UNIQUE INDEX idx_sozversnr
@@ -651,6 +654,7 @@ SQL> CREATE UNIQUE INDEX IDX_Buchung
 SQL> CREATE BITMAP INDEX idx_bm_staatsangehoerigkeit
   2  ON eigenkunde(staatsangehoerigkeit);
         \end{lstlisting}
+\clearpage		
         Die View \identifier{dba\_indexes} zeigt, dass es sich bei \identifier{idx\_bm\_staatsangehoerigkeit} tatsächlich um einen Bitmap Index handelt.
         \begin{lstlisting}[caption={Die Eigenschaften eines Bitmap Indexes},label=admin322,language=oracle_sql,alsolanguage=sqlplus]
 SQL> col index_name format a30
@@ -705,6 +709,7 @@ SQL> SELECT vorname, nachname
   2  FROM   bank.mitarbeiter
   3  WHERE  sozversNr IN ('5679B983-694-22FA34D','17211682-BA6-D9C0B30');
           \end{lstlisting}
+\clearpage		  
           Das Ergebnis besteht aus zwei Zeilen. Mit Hilfe des \languagesqlplus{set autotrace traceonly}-Kommandos kann der Ausführungsplan, für dieses Statement, angezeigt werden.
           \begin{lstlisting}[caption={Ausfürungsplan für die Abfrage mit sichtbarem Index},label=admin327,language=oracle_sql,alsolanguage=sqlplus]
 SQL> set autotrace traceonly
@@ -731,7 +736,6 @@ Predicate Information (identified by operation id):
    3 - access("SOZVERSNR"='17211682-BA6-D9C0B30' &OR&
               "SOZVERSNR"='5679B983-694-22FA34D')
           \end{lstlisting}
-\clearpage
           \begin{lstlisting}[caption={Und so wird er wieder sichtbar -
           Fortsetzung},language=terminal]
 Statistics
@@ -774,7 +778,6 @@ Predicate Information (identified by operation id):
    1 - filter("SOZVERSNR"='17211682-BA6-D9C0B30' OR
               "SOZVERSNR"='5679B983-694-22FA34D')
           \end{lstlisting}
-\clearpage
           \begin{lstlisting}[caption={Der Index wird unsichtbar und das
           Statement wird wiederholt - Fortsetzung},language=terminal]
 Statistics
@@ -839,6 +842,7 @@ IDX_SOZVERSNR                  &INVISIBLE&    VALID
         \begin{lstlisting}[caption={Einen Index Löschen},label=admin333,language=oracle_sql]
 DROP INDEX idx_sozversnr;
         \end{lstlisting}
+\clearpage		
     \section{Informationen}
       \subsection{Verzeichnis der relevanten Initialisierungsparameter}
         In diesem Kapitel wurden keine Initialisierungsparameter angesprochen!
@@ -849,4 +853,3 @@ DROP INDEX idx_sozversnr;
           \item \cite{sthref2202}
           \item \cite{sthref2191}
         \end{literaturinternet}
-\clearpage
