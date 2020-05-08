@@ -55,7 +55,6 @@
           Der PMON versucht in Intervallen von ca. 60 Sekunden eine Verbindung zu einem Listener herzustellen, um die Registrierung nachzuholen. Dieser Mechanismus kann auch manuell, mit dem Kommando \languageorasql{ALTER SYSTEM REGISTER} durchgeführt werden.
 
           Erhält ein Listener eine Verbindungsanforderung bevor die angeforderte Instanz registriert wurde, wird er den Client abweisen.
-\clearpage
           \bild{Ablauf des Service Registration Mechanismus}{serviceregistration}{1.5}
 
           Um zu erfahren, ob eine Datenbank dynamisch bei ihrem Listener registriert wurde, kann das Listener control utility (siehe \ref{lsnrctl}) genutzt werden. Die Anzeige von \enquote{status READY} sagt aus, dass die Datenbank dynamisch registriert wurde.
@@ -110,7 +109,6 @@ ADR_BASE_LISTENER = /u01/app/oracle
           Genau wie für das SQL*Plus-Tool muss auch für den Net Manager zuerst das \oscommand{oraenv}-Skript ausgeführt werden.
         \end{merke}
         Mit Hilfe des Net Managers können verschiedene Einstellungen an der Oracle Netzwerkkonfiguration vorgenommen werden.
-\clearpage
         \begin{itemize}
           \item Listener konfigurieren
           \item Benennungsmethoden konfigurieren
@@ -209,8 +207,9 @@ ADR_BASE_LISTENER = /u01/app/oracle
       Oracle-Instanz enthält, mit der die Verbindung hergestellt werden soll.
       Er wird mittels einer Benennungsmethode in einen Connect Descriptor
       aufgelöst. Der Listener erhält dann die Verbindungsanforderung des
-      Clients und übernimmt den Verbindungsaufbau. Oracle kennt vier
-      verschiedene Benennungsmethoden:
+      Clients und übernimmt den Verbindungsaufbau. 
+\clearpage	  
+	  Oracle kennt vier verschiedene Benennungsmethoden:
       \begin{itemize}
         \item Hostnaming
 
@@ -239,6 +238,7 @@ ADR_BASE_LISTENER = /u01/app/oracle
           \item \cite{CIHGGHEE}
           \item \cite{i1047762}
         \end{literaturinternet}
+\clearpage		
       \subsection{Die Datei sqlnet.ora}
         Die Datei \oscommand{sqlnet.ora} ist für die Konfiguration der Oracle Netzwerkeinstellungen da. Hier kann unter anderem auch festgelegt werden, welche Benennungsmethoden aktiviert sind. \beispiel{admin603} zeigt beispielsweise den Parameter \parameter{NAMES.DIRECTORY\_PATH}.
         \begin{lstlisting}[caption={Der Parameter NAMES.Directory\_path in der Datei sqlnet.ora},label=admin603,emph={[9]NAMES},emphstyle={[9]\color{black}},language=configfile]
@@ -252,7 +252,6 @@ NAMES.DIRECTORY_PATH=(HOSTNAME, TNSNAMES, EZCONNECT)
             \item LDAP      : Directory Naming
             \item NIS       : Network Information Server (auch als Yellow Page bekannt)
           \end{itemize}
-\clearpage
       \subsection{Die Benennungsmethode Easy Naming}
         In einer TCP/IP-Umgebung ist das Easy Naming die einfachste Methode eine Verbindung zu einer Datenbank aufzubauen. Es besteht dabei keine Notwendigkeit, Net Service Names in der Datei \oscommand{tnsnames.ora} zu speichern. Es wird einfach die TCP/IP-Methode des Hostnamings erweitert. Die Syntax für die Nutzung des Easy Namings ist folgende:
         \begin{lstlisting}[caption={Easy Naming},label=admin606,language=terminal]
@@ -285,6 +284,7 @@ connect sys/oracle@//FEA11-119SRV.oracle.com/orcl.it-training-alt.fus as sysdba
             \item Eine Instanz, deren Initialisierungsparameter \parameter{db\_name} gleichlautend mit dem Hostnamen ist, hat sich dynamisch beim Listener registriert.
             \item Es wurde eine statische Registrierung beim Listener vorgenommen und der Listenerparameter \textit{GLOBAL\_DBNAME} wurde passend gesetzt:
           \end{itemize}
+\clearpage		  
           \begin{lstlisting}[caption={Eine statische Registrierung und der Parameter GLOBAL\_DBNAME},label=admin604,language=configfile]
 LISTENER =
   (DESCRIPTION =
@@ -314,8 +314,8 @@ Attempting to contact (DESCRIPTION=(CONNECT_DATA=(&\textcolor{red}{SERVICE\_NAME
 OK (20 msec)
           \end{lstlisting}
           Die Lösung hierfür ist im Oracle MySupport Forum beschrieben. Es muss der Listener-Parameter \languageconfigfile{DEFAULT\_SERVICE\_listener\_name} in die Datei \oscommand{listener.ora} eingefügt werden. Heißt der Listener \enquote{LISTENER}, so muss folgende Eintragung gemacht werden.
-\clearpage
-          \begin{lstlisting}[caption={Der Parameter DEFAULT\_SERVICE\_listener\_name},label=admin604b,language=configfile]
+\clearpage          
+		  \begin{lstlisting}[caption={Der Parameter DEFAULT\_SERVICE\_listener\_name},label=admin604b,language=configfile]
 LISTENER =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = FEA11-119SRV.oracle.com)(PORT = 1521))
@@ -339,7 +339,6 @@ connect hr/hr@FEA11-119SRV.oracle.com
           Der Hostname wird durch ein @ Zeichen vom Passwort getrennt. Die Namensauflösung erfolgt, wie gewohnt durch einen DNS-Server oder evtl. auch durch eine Hosts-Datei.
       \subsection{Die Benennungsmethode Local Naming}
         Beim Local Naming werden Net Service Names in einer lokalen Datei mit dem Namen \oscommand{tnsnames.ora} gespeichert. Jeder Net Service Name gehört zu einem Connect Descriptor. Wie Net Service Names und Connect Descriptors in der Datei \oscommand{tnsnames.ora} gespeichert werden, ist im folgenden Beispiel zu sehen.
-\clearpage
         \subsubsection{Connect Descriptoren}
           Ein Connect Descriptor wird zusammengesetzt aus:
           \begin{itemize}
@@ -401,9 +400,8 @@ connect scott/tiger@orcl
           \end{enumerate}
       \subsection{Die Benennungsmethode Directory Naming}
         Beim Directory Naming wird die gleiche Technik wie beim Local Naming verwendet: TNS. Der Unterschied zum Local Naming besteht jedoch darin, das die TNS-Einträge nicht mehr in einer Textdatei gespeichert werden, die lokal auf jedem Clientrechner verfügbar sein muss, sondern in einem LDAP-Verzeichnisdienst, dem Oracle Internet Directory.
-
-        Um das Directory Naming nutzen zu können, müssen die folgenden Bedingungen erfüllt werden:
 \clearpage
+        Um das Directory Naming nutzen zu können, müssen die folgenden Bedingungen erfüllt werden:
         \begin{itemize}
           \item Das Directory Naming muss in der Datei \oscommand{sqlnet.ora} aktiviert sein.
           \item Die Datei \oscommand{ldap.ora} muss auf den Clientrechnern konfiguriert werden.
@@ -461,7 +459,6 @@ DIRECTORY_SERVER_TYPE = OID
         Jeder Dispatcher kann mehrere Clientverbindungen annehmen. Jede Clientanforderung wird von den Dispatchern in eine Warteschlange (Request Queue) aufgenommen. Ein Shared Serverprozess, der eine Anforderung abgearbeitet hat, nimmt sich aus dieser Warteschlange die nächste Anforderung, um sie abzuarbeiten und legt das Ergebnis der Anforderung in die Response Queue des Dispatchers, von dem die Anforderung kam. Die Dispatcher, lesen ihre Response Queue aus, um die Ergebnisse an ihre Clients auszuliefern. Auf diese Weise kann eine kleine Menge Shared Server Prozesse eine große Anzahl Clients bedienen.
 
         Der in \abbildung{network_shared_server_architecture} gezeigte Verbindungsaufbau zwischen einem Client und der Datenbank läuft wie folgt ab:
-\clearpage
           \begin{enumerate}
             \item Ein Client baut eine Verbindung zum Listener auf und fordert eine Verbindung zur Datenbank an.
             \item Der Listener leitet den Client an einen der bestehenden Dispatcher-Prozesse weiter.
@@ -489,7 +486,7 @@ DIRECTORY_SERVER_TYPE = OID
           \begin{merke}
             DRCP kann genauso wie die Shared Server Architektur nicht für Administratoren genutzt werden!
           \end{merke}
-
+\clearpage
       \subsection{Dedicated Server, Shared Server und DRCP im Vergleich}
         \begin{center}
           \begin{small}
@@ -512,6 +509,7 @@ DIRECTORY_SERVER_TYPE = OID
             \end{supertabular}
           \end{small}
         \end{center}
+\clearpage		
     \section{Informationen}
       \subsection{Verzeichnis der Konfigurationsdateien}
         \begin{literaturinternet}
