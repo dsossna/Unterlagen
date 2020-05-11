@@ -207,7 +207,6 @@ SQL> AUDIT TABLE, ALTER TABLE
         Um eine Übersicht darüber zu erhalten, welche
         Statementauditingoptionen derzeit aktiviert sind, kann die View
         \identifier{dba\_stmt\_audit\_opts} abgefragt werden.
-\clearpage
         \begin{lstlisting}[caption={Aktvierte Statementauditingoptionen}, label=admin806,language=oracle_sql]
 SQL> SELECT user_name, audit_option, success, failure
   2  FROM   dba_stmt_audit_opts;
@@ -248,7 +247,6 @@ SQL> AUDIT &connect&
           \end{lstlisting}
           Die View \identifier{dba\_priv\_audit\_opts} dient dazu, die gesetzten
           Privilegeauditingoptionen auszuwerten.
-\clearpage
         \begin{lstlisting}[caption={Aktvierte Statementauditingoptionen}, label=admin810,language=oracle_sql]
 SQL> SELECT user_name, privilege, success, failure
   2  FROM   dba_priv_audit_opts;
@@ -258,6 +256,7 @@ USER_NAME       PRIVILEGE                                SUCCESS    &FAILURE&
 BANK             &CREATE SESSION&                             &NOT SET&     &BY ACCESS&
                  &CREATE SESSION&                             &BY ACCESS&   &BY ACCESS&
         \end{lstlisting}
+\clearpage		
       \subsection{Objectauditing aktivieren}
         Das Objectauditing ist dem Privilegeauditing sehr ähnlich. Statt Systemprivilegien werden Objektprivilegien verwendet und es müssen eines oder mehrere Objekte angegeben werden, auf die sich das Auditing bezieht.
         \begin{lstlisting}[caption={Ein einfaches Objectauditing konfigurieren},label=admin811,language=oracle_sql]

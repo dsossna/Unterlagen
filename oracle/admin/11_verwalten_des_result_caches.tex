@@ -59,6 +59,7 @@ SQL> ALTER SYSTEM
 
 System altered.
         \end{lstlisting}
+\clearpage
         Um nun zu prüfen, ob der Result Cache tatsächlich aktiviert wurde, kann die Funktion \identifier{status()} aus dem PL/SQL-Paket \identifier{dbms\_result\_cache} ausgeführt werden.
 
         \begin{lstlisting}[caption={Welchen Status hat der Result Cache?},label=admin702,language=oracle_sql,alsolanguage=sqlplus]
@@ -78,7 +79,8 @@ ENABLED
           Neben \parameter{result\_cache\_max\_size} existieren noch drei weitere Parameter, die zur Konfiguration des Result Caches dienen. \parameter{result\_cache\_mode} legt fest, ob der Optimizer automatisch versuchen soll, alle Result Sets im Cache zu speichern (Force) oder ob dies bei jedem Statement einzeln festgelegt werden muss (Manual). Der Standardwert für diesen Parameter ist \enquote{manual}.
 
           Um ein Result Set manuell im Result Cache abzulegen, muss der Result Cache Hint \languageorasql{/*+ result_cache */}, im SQL-Statement angegeben werden.
-          \begin{lstlisting}[caption={Den Result Cache manuell benutzen},label=admin703,language=oracle_sql,alsolanguage=sqlplus]
+\clearpage          
+		  \begin{lstlisting}[caption={Den Result Cache manuell benutzen},label=admin703,language=oracle_sql,alsolanguage=sqlplus]
 SQL> set autotrace traceonly explain
 SQL> SELECT /*+ result_cache */ vorname, nachname
   2  FROM   bank.mitarbeiter;
@@ -135,7 +137,6 @@ cy4n5s0cg4tbpabs63n3u2k5sa
           verwenden darf. Der Ausführungsplan aus \beispiel{admin705} zeigt,
           dass das Statement 268 MB Arbeitsspeicher benötigen würde. Daher
           wird es nicht im Result Cache aufgenommen.
-\clearpage
           \begin{lstlisting}[caption={Maximalgröße von Objekten im Result Cache},label=admin705,language=oracle_sql,alsolanguage=sqlplus]
 SQL> ALTER SYSTEM
   2  SET result_cache_max_result = 5;
@@ -217,8 +218,8 @@ SQL> SELECT *
         \enquote{Create Count Success} sagt aus, dass sich aktuell 4 Statements
         im Cache befinden. Einen etwas ausführlicheren Überblick bekommt
         man, wenn man die PL/SQL-Funktion
-        \identifier{dbms\_result\_cache.memory\_report()} ausführt.
-\clearpage
+        \identifier{dbms\_result\_cache.memory\_report()}
+
         \begin{lstlisting}[caption={Der Result Cache Report - \identifier{dbms\_result\_cache.memory\_report()}},label=admin707,language=oracle_sql,alsolanguage=sqlplus]
 SQL> set serveroutput on
 SQL> exec DBMS_RESULT_CACHE.MEMORY_REPORT();
@@ -283,7 +284,7 @@ PL/SQL procedure successfully completed.
         \tabelle{memoryreportstatistic} zeigt, dass im Bericht aus
         \beispiel{admin707} die gleichen Werte wiederzufinden sind, wie in der
         View  \identifier{v\$result\_cache\_statistics}.
-\clearpage
+\clearpage		
     \section{Informationen}
       \subsection{Verzeichnis der relevanten Initialisierungsparameter}
         \begin{literaturinternet}
