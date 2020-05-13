@@ -96,6 +96,7 @@ SQL> ALTER TABLESPACE bank READ ONLY;
               \begin{lstlisting}[caption={Tablespace wieder Read Write schalten.}label=admin909,language=oracle_sql]
 SQL> ALTER TABLESPACE bank READ WRITE;
               \end{lstlisting}
+\clearpage			  
             \item Kopieren der Datendateien auf das Zielsystem
               \begin{lstlisting}[caption={Prüfen, welche Datendateien kopiert werden müssen},label=admin910,language=oracle_sql,alsolanguage=sqlplus]
 SQL> SELECT file_name 
@@ -138,7 +139,6 @@ SQL> host cp /u01/app/oracle/oradata/orcl/bank01.dbf ...
           \end{lstlisting}
         \subsubsection{Import über das Netzwerk}
           Das Tool impdp ist in der Lage, einen Datenimport aus einer anderen Datenbank, unter Umgehung von Dumpfiles, zu machen. Es wird dabei ein Database Link benutzt, der eine benannte Verknüpfung zwischen zwei Datenbanken darstellt. Für die Verknüpfung wird die Oracle TNS-Technologie verwendet.
-\clearpage
 					Folgendes Beispiel zeigt einen Netzwerkimport mit impdp:
 
           Es existieren zwei Datenbanken: \identifier{orcl} und \identifier{orclneighbour}. Es wird ein Datenimport von \identifier{orcl} nach \identifier{orclneighbour} erfolgen. Der Connect Identifier für die Datenbank \identifier{orclneighbour} wird in der Datei \oscommand{tnsnames.ora}, der Datenbank \identifier{orcl} unter dem Namen \identifier{orclneighbour} eingetragen.
@@ -157,6 +157,7 @@ ORCLNEIGHBOUR =
     )
   )
           \end{lstlisting}
+\clearpage		  
           Als nächstes wird ein Database Link von \identifier{orcl} nach \identifier{orclneighbour} eingerichtet.
           \begin{lstlisting}[caption={Einen Database Link erstellen},label=admin917,language=oracle_sql]
 SQL> CREATE PUBLIC DATABASE LINK orcl_to_neighbour
@@ -168,7 +169,6 @@ SQL> CREATE PUBLIC DATABASE LINK orcl_to_neighbour
 > DIRECTORY=dpump_dir NETWORK_LINK='ORCL_TO_NEIGHBOUR'
           \end{lstlisting}
           Zu beachten ist, dass der Parameter \languageexpdpimpdp{DUMPFILE} entfällt und statt dessen der Parameter \languageexpdpimpdp{NETWORK_LINK} verwendet wird.
-\clearpage
           \begin{merke}
             Der Name des Database Links sollte in Hochkommas ' ' gesetzt werden.
           \end{merke}

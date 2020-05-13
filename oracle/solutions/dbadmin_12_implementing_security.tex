@@ -28,6 +28,7 @@ OBJECT_NAME                    INS UPD
 MITARBEITER                    S/- S/-
     \end{lstlisting}
     \input{exercises/dbadmin_12/item_d}
+\clearpage	
     \input{exercises/dbadmin_12/item_e}
     \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> col db_user format a10
@@ -39,7 +40,6 @@ SQL> SELECT db_user,
   4  FROM   dba_common_audit_trail
   5  WHERE  object_schema LIKE 'BANK'
     \end{lstlisting}
-\clearpage
     \begin{lstlisting}[language=terminal]
 DB_USER    TIME                SQL_TEXT
 ---------- ------------------- -------------------------------------------
@@ -65,6 +65,7 @@ D_HARRY    21.10.2013 17:09:58 UPDATE bank.mitarbeiter
     \begin{lstlisting}[language=oracle_sql]
 SQL> NOAUDIT ALL ON bank.mitarbeiter;
     \end{lstlisting}
+\clearpage	
     \input{exercises/dbadmin_12/item_g}
     \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> ALTER SYSTEM
@@ -81,7 +82,6 @@ SQL> AUDIT connect
 Audit succeeded.
     \end{lstlisting}
     \input{exercises/dbadmin_12/item_h}
-\clearpage
     \input{exercises/dbadmin_12/item_i}
     \begin{lstlisting}[language=oracle_sql]
 SQL> SELECT   username, userhost,
@@ -102,6 +102,7 @@ SQL> ALTER SYSTEM
   2  SET   audit_trail=none
   3  SCOPE=spfile;
     \end{lstlisting}
+\clearpage	
     \input{exercises/dbadmin_12/item_k}
     \begin{lstlisting}[language=configfile]
 #sqlnet.ora
@@ -121,7 +122,6 @@ SQL> ALTER SYSTEM
   2  SET ENCRYPTION WALLET OPEN
   3  IDENTIFIED BY "P@ssw0rd";
     \end{lstlisting}
-\clearpage
     \begin{lstlisting}[language=oracle_sql,alsolanguage=sqlplus]
 SQL> col tablespace_name format a10
 SQL> col file_name format a45

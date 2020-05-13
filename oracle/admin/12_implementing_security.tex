@@ -282,6 +282,7 @@ SQL> AUDIT select ON bank.Buchung
         Auch für diese Art des Auditings existiert eine View, die eine Auswertung der Auditingoptionen erlaubt, \identifier{dba\_obj\_audit\_opts}. Sie gestaltet sich jedoch gänzlich anders, als \identifier{dba\_stmt\_audit\_opts} oder \identifier{dba\_priv\_audit\_opts}.
 
         In der View \identifier{dba\_obj\_audit\_opts} existiert für jedes Objektprivileg eine eigene Spalte. Die Spaltenbezeichnungen sind Abkürzungen der betroffenen Privilegien. Beispielsweise beinhaltet die Spalte \identifier{alt} die Objectauditingoptions für das Objektprivileg \privileg{alter} oder die Spalte \identifier{sel} die Optionen für das \privileg{select}-Privileg.
+\clearpage
         \begin{lstlisting}[caption={Die View \identifier{dba\_obj\_audit\_opts}},label=admin813,language=oracle_sql]
  Name                                      Null?    Type
  ----------------------------------------- -------- --------------------
@@ -512,8 +513,8 @@ Delay: 0 Sek.
           \end{lstlisting}
           Das das Delay ab Versuch Nummer 10 wieder auf 0 zurückgeht, hängt
          damit zusammen, dass der Account dann gesperrt ist.
-\clearpage
         \subsubsection{max\_failed\_login\_attempts}
+\clearpage		
           Mit dem Profilparameter \languageorasql{MAX\_FAILED\_LOGIN\_ATTEMPTS}
           ist es möglich, für valide Nutzerkonten eine maximale Anzahl
           fehlerhafter Anmeldeversuche festzulegen. Ein Konto wird gesperrt,
@@ -556,7 +557,6 @@ SQL> ALTER SYSTEM
         Passwörter case sensitiv zum hashen. Zusätzlich dazu bringt der
         SHA1-Algorithmus ein Salt mit sich, der die Passwort-Hashes noch
         sicherer macht.
-\clearpage
         \begin{lstlisting}[caption={\parameter{sec\_case\_sensitive\_logon}},label=admin826,language=sqlplus]
 SQL> show parameter sec_case_sensitive_logon
 
@@ -588,6 +588,7 @@ sec_case_sensitive_logon          boolean      &TRUE&
         Das Standardverfahren innerhalb der Oracle-Datenbank ist AES128.
       \end{merke}
       Grundlage für die Kryptierung ist ein Wallet.
+\clearpage	  
       \subsection{Vorbereiten der Tablespaceverschlüsselung}
         \subsubsection{Wallets}
           Ein Wallet\footnote{engl. Brieftasche} ist ein verschlüselter
@@ -645,6 +646,7 @@ SQL> CREATE TABLESPACE crypto_ts_aes256
 
 Tablespace created.
           \end{lstlisting}
+\clearpage		  
           So wohl das Erstellen, als auch der Zugriff auf kryptierte Tablespaces funktioniert nur, wenn das Encryptionwallet geöffnet wurde.
           \begin{lstlisting}[caption={Einen kryptierten Tablespace mit AES128-Verschlüsselung erstellen},label=admin842,language=oracle_sql]
 SQL> CREATE TABLESPACE crypto_ts_false
@@ -676,6 +678,7 @@ SQL> SELECT t.ts#, t.name, e.encryptionalg, e.encryptedts
         16 CRYPTO_TS                      AES128  YES
         17 CRYPTO_TS_AES256               AES256  YES
           \end{lstlisting}
+\clearpage		  
         \subsubsection{Einschränkungen}
           Im Umgang mit kryptierten Tablespaces existieren drei wesentliche Einschränkungen:
           \begin{itemize}
@@ -687,6 +690,7 @@ SQL> SELECT t.ts#, t.name, e.encryptionalg, e.encryptedts
           \begin{literaturinternet}
             \item \cite{ADMIN12327}
           \end{literaturinternet}
+\clearpage		  
     \section{Informationen}
       \subsection{Verzeichnis der relevanten Initialisierungsparameter}
         \begin{literaturinternet}
@@ -711,3 +715,4 @@ SQL> SELECT t.ts#, t.name, e.encryptionalg, e.encryptedts
         \begin{literaturinternet}
           \item  \cite{NETRF006}
         \end{literaturinternet}
+\clearpage		
