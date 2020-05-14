@@ -154,7 +154,8 @@ RMAN> SQL 'ALTER DATABASE OPEN';
       Die Konfiguration des RMAN ist einfach und unkompliziert, da für fast alle Parameter Standardwerte existieren. Dadurch ist es möglich, ohne manuelle Konfiguration direkt mit dem RMAN zu arbeiten.
 
       Um den RMAN jedoch effizienter nutzen zu können, ist es notwendig die wichtigsten Optionen des RMAN zu kennen. RMAN-Parameter können mit dem Kommando \languagerman{CONFIGURE} gesetzt und gespeichert werden, so dass sie nicht bei jedem Backup erneut geändert werden müssen. Das Kommando \languagerman{SHOW} ermöglicht die Ausgabe aller Optionen.
-      \subsection{Die aktuelle RMAN-Konfiguration anzeigen}
+\clearpage      
+	  \subsection{Die aktuelle RMAN-Konfiguration anzeigen}
         Mit Hilfe des Kommandos \languagerman{SHOW} können die aktuellen Werte der RMAN-Parameter angezeigt werden.
         \begin{lstlisting}[caption={Das SHOW-Kommando},label=admin1006,language=rman]
 RMAN> SHOW retention policy;
@@ -208,6 +209,7 @@ RMAN> BACKUP database
           \begin{merke}
             Wurde hier nichts abweichendes konfiguriert, erstellt RMAN unkomprimierte Backup Sets. Es existiert keine Möglichkeit Image Copies für ein SBT-Gerät zu konfigurieren, da RMAN nur Backup Sets auf SBT-Geräte schreiben kann.
           \end{merke}
+\clearpage		  
           \begin{lstlisting}[caption={Standard-Backuptyp festlegen},label=admin1012,language=rman]
 RMAN> CONFIGURE DEVICE TYPE disk
 2>    BACKUP TYPE TO copy;
@@ -416,11 +418,8 @@ RMAN> CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
         \end{itemize}
         In \abbildung{recovery_window_example_1} ist das aktuelle Datum der 30.06.20XX. Der Point of Recoverability liegt am 23.06.20XX, sieben Tage vom aktuellen Datum zurück. Um ein Recovery gemäß\ der gültigen Retention Policy machen zu können, wird das Backup vom 13.06.20X, sowie die Archive Logs von Sequenz 550 bis 800, benötigt. Das Backup vom 01.06.20XX und alle Archive Logs vor Sequenz 550 sind obsolet und können gelöscht werden.
         \bild{Nutzung eines Recovery Window}{recovery_window_example_1}{1.5}
-\clearpage
         \abbildung{recovery_window_example_2} zeigt ein verändertes Szenario:
-
         \bild{Nutzung eines Recovery Window}{recovery_window_example_2}{1.5}
-
         Das aktuelle Datum ist der 11.07.20XX und der Point of Recoverability ist der 04.07.20XX. Um die Retention Policy zu erfüllen, werden nun das Backup vom 30.06.20XX und alle Archive von Logs von Sequenz 800 an benötigt. Das Backup vom 06.07.20X ist zwar aktueller als das vom 30.06.20XX, es kann aber die Retention Policy nicht erfüllen, da es jünger ist als der Point of Recoverability.
       \subsection{Eine redundanzbasierte Retention Policy einrichten}
         Eine redundanzbasierte Retention Policy legt fest, wie viele Backups von einer Datendatei vorhanden sein müssen, um die Policy zu erfüllen.

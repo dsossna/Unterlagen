@@ -197,6 +197,7 @@ SQL> CREATE PUBLIC DATABASE LINK orcl_to_neighbour
         \begin{literaturinternet}
           \item \cite{SUTIL004}
         \end{literaturinternet}
+\clearpage		
       \subsection{SQL*Loader Kontrolldateien}
         Die Kontrolldatei ist eine Textdatei, die SQL*Loader Parameter enthält. Sie teilt dem Loader mit, wo die Eingangsdaten zu finden sind, wie sie zu parsen sind, wo sie eingefügt werden sollen und vieles mehr.
 
@@ -216,6 +217,7 @@ SQL> CREATE PUBLIC DATABASE LINK orcl_to_neighbour
         \begin{literaturinternet}
           \item \cite{SUTIL004}
         \end{literaturinternet}
+\clearpage		
       \subsection{Daten Laden}
         \subsubsection{Die Beispieldateien}
           Für die folgenden SQL-Loader-Beispiele werden die beiden Dateien \oscommand{buchungen\_fix.csv} und \oscommand{buchungen\_var.csv} als Datenquellen herangezogen.
@@ -295,17 +297,17 @@ LOAD DATA
     transaktions_id
   )
           \end{lstlisting}
-          Die Klausel \languageconfigfile{FIELDS TERMINATED BY} legt das Spaltentrennzeichen fest. Mit der zusätzlichen Angabe \languageconfigfile{OPTIONALLY ENCLOSED BY} kann ein Zeichen bestimmt werden, das als \enquote{Zeichenkettenbegrenzer} funktioniert. Zeichenketten, wie z. B. \enquote{Hallo Welt} können Leer- oder Sonderzeichen enthalten. Deshalb müssen sie in Begrenzungszeichen, z. B. das \"{} eingeschlossen werden. Nur so kann der Loader Start und Ende der Zeichenkette zuverlässig erkennen. Das Begrenzungszeichen wird beim Import nicht mitgenommen. Nur die Zeichen dazwischen werden importiert.
+          Die Klausel \languageconfigfile{FIELDS TERMINATED BY} legt das Spaltentrennzeichen fest. Mit der zusätzlichen Angabe \newline \languageconfigfile{OPTIONALLY ENCLOSED BY} kann ein Zeichen bestimmt werden, das als \enquote{Zeichenkettenbegrenzer} funktioniert. Zeichenketten, wie z. B. \enquote{Hallo Welt} können Leer- oder Sonderzeichen enthalten. Deshalb müssen sie in Begrenzungszeichen, z. B. das \"{} eingeschlossen werden. Nur so kann der Loader Start und Ende der Zeichenkette zuverlässig erkennen. Das Begrenzungszeichen wird beim Import nicht mitgenommen. Nur die Zeichen dazwischen werden importiert.
 
           Der Aufruf für den SQL*Loader sieht wie folgt aus:
           \begin{lstlisting}[caption={Den SQL*Loader benutzen},label=admin922a,language=expdp_impdp,emph={[9]LOG},emphstyle={[9]\sffamily\color{blue}}]
 [oracle@FEA11-119SRV admin]$ sqlldr USERID=bank/bank \
 > CONTROL=buchungen_var.ldr, LOG=buchungen_var.log
           \end{lstlisting}
-
+\clearpage
         \subsubsection{Spaltenüberschriften beim Laden auslassen}
-          Mit Hilfe der \oscommand{skip n}-Klausel können beliebig viele Zeilen am Dateianfang ausgelassen werden. \oscommand{n} steht dabei für eine ganze Zahl. Dies ist beispielsweise dann nützlich, wenn die erste Zeile der Quelldatei Spaltenüberschriften enthält.
-          \begin{lstlisting}[caption={Datensätze auslassen},label=admin923,language=configfile]
+          Mit Hilfe der \oscommand{skip n}-Klausel können beliebig viele Zeilen am Dateianfang ausgelassen werden. \oscommand{n} steht dabei für eine ganze Zahl. Dies ist beispielsweise dann nützlich, wenn die erste Zeile der Quelldatei Spaltenüberschriften enthält.          
+		  \begin{lstlisting}[caption={Datensätze auslassen},label=admin923,language=configfile]
 OPTIONS (SKIP=1)
 LOAD DATA
   INFILE  'labs/buchungen_var.csv'
@@ -330,6 +332,7 @@ LOAD DATA
           \item Spaltendefinitionen
           \item Treibereinstellungen
         \end{itemize}
+\clearpage		
         \subsubsection{Erstellen der Spaltendefinitionen}
           Die Syntax für die Spaltendefinitionen ist die Gleiche, wie bei \enquote{normalen} Tabellen.
           \begin{lstlisting}[caption={Die Spaltendefinition einer externen Tabelle},label=admin924,language=oracle_sql]
@@ -351,6 +354,7 @@ CREATE TABLE kunden_ext (
 )
 ...
           \end{lstlisting}
+\clearpage		  
         \subsubsection{Wie wird die Tabelle zur externen Tabelle?}
           Um eine externe Tabelle erstellen zu können, muss die Klausel \languageorasql{ORGANIZATION EXTERNAL} an die Spaltendefinitionen angehängt werden.
           \begin{lstlisting}[caption={Die Tabelle zur externen Tabelle machen},label=admin925,language=oracle_sql]
@@ -385,8 +389,8 @@ CREATE TABLE kunden_ext (
             \item Datapump Dumpfiles
           \end{itemize}
           Das Laden von Daten aus CSV-Textdateien erfolgt mit Hilfe des SQL*Loaders. Datapump Dumpfiles werden unter zu Hilfenahme der Oracle Datapump \enquote{angezapft}. Welcher dieser beiden Treiber genutzt werden soll, wird in der \languageorasql{TYPE}-Klausel angegeben.
-\clearpage
-          \begin{lstlisting}[caption={Den Treiber auswählen},label=admin926,language=oracle_sql]
+\clearpage          
+		  \begin{lstlisting}[caption={Den Treiber auswählen},label=admin926,language=oracle_sql]
 CREATE TABLE kunden_ext (
 ...
 )
@@ -408,6 +412,7 @@ ORGANIZATION EXTERNAL
           \begin{merke}
             In Oracle existiert von Haus aus das Directory-Objekt \identifier{data\_pump\_dir} das für Ladevorgänge geschaffen wurde.
           \end{merke}
+\clearpage		  
           Mit der Klausel \languageorasql{DEFAULT DIRECTORY} wird der externen Tabelle das Directory-Objekt, in dem sich die Quelldatei befindet mitgeteilt.
           \begin{lstlisting}[caption={Ein Directory-Objekt für die Datenquelle wählen},label=admin927,language=oracle_sql]
 CREATE TABLE kunden_ext (
@@ -430,6 +435,7 @@ ORGANIZATION EXTERNAL
             \item \languageorasql{MISSING FIELD VALUES ARE NULL}: Werte die in der Quelldatei nicht vorhanden sind, sollen in der Datenbank als NULL-Werte gelten.
             \item \languageorasql{SKIP n}: n Zeilen zu Beginn der Quelldatei auslassen.
           \end{itemize}
+\clearpage		  
           \begin{lstlisting}[caption={Festlegen der Access parameter},label=admin928,language=oracle_sql]
 CREATE TABLE kunden_ext (
 ...
@@ -453,7 +459,7 @@ ORGANIZATION EXTERNAL
           Damit Oracle die Daten der Quelldatei korrekt interpretieren kann, muss im \languageorasql{CREATE TABLE}-Statement der externen Tabelle, zusätzlich zur Definition der Tabellenspalten, auch eine Definition der \enquote{Quellspalten} erfolgen. Besonders wichtig ist dies, sobald Datums- oder numerische Werte importiert werden sollen.
 
           Datumsspalten werden in der Quellspaltendefinition immer mit dem Datentyp \languageorasql{CHAR} und der Formatdefinition \languageorasql{date_format DATE mask "DD.MM.RR"}. Dies entspricht der Verwendung der SQL-Funktion \languageorasql{TO_CHAR} mit Datumswerten. Das angegebene Datumsformat \enquote{DD.MM.RR} muss das Datumsformat der Quelldaten wiederspiegeln.
-
+\clearpage
           Bei numerischen Werten empfiehlt sich die Nutzung des Datentyps \languageorasql{DECIMAL}, ohne Größenbeschränkung, da mit ihm die besten Ergebnisse erzielt werden können.
           \begin{lstlisting}[caption={Festlegen der Access parameter},label=admin928a,language=oracle_sql]
 CREATE TABLE kunden_ext (
@@ -599,6 +605,7 @@ SQL> CREATE TABLE mitarbeiter_ext (
           \item Die \languageorasql{TYPE}-Klausel
           \item Die Access parameter
         \end{itemize}
+\clearpage		
         Das folgende Beispiel zeigt, wie die Daten der Bankkunden aus einem Dumpfile gelesen werden, anstatt aus einer CSV-Datei.
           \begin{lstlisting}[caption={Eine externe Tabelle, basierend auf einem Dumpfile},label=admin933,language=oracle_sql]
 SQL> CREATE TABLE kunden_ext (
@@ -622,7 +629,6 @@ SQL> CREATE TABLE kunden_ext (
   19   &\textcolor{red}{TYPE ORACLE\_DATAPUMP}&
   20   DEFAULT DIRECTORY data_pump_dir
           \end{lstlisting}
-\clearpage
           \begin{lstlisting}[caption={Eine externe Tabelle, basierend auf einem Dumpfile - Fortsetzung},language=oracle_sql]
   21   ACCESS PARAMETERS
   22   (
@@ -649,4 +655,4 @@ SQL> CREATE TABLE kunden_ext (
           \item \cite{i1577333}
           \item \cite{i1577411}
         \end{literaturinternet}
-\clearpage
+
