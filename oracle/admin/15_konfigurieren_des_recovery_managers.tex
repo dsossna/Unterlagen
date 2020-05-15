@@ -432,7 +432,6 @@ RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
         \begin{merke}
           Die Standardeinstellung für die Retention Policy ist REDUNDANCY = 1.
         \end{merke}
-\clearpage
 			\subsection{Die Retention Policy anzeigen lassen}
         Mit Hilfe des \languagerman{SHOW}-Kommandos kann die aktuelle Retention Policy angezeigt werden.
         \begin{lstlisting}[caption={Anzeigen der Retention Policy},label=admin1027,language=rman]
@@ -505,7 +504,6 @@ RMAN-06530: &CHANGE& ... &KEEP& not supported for backup &set& which contains
           Bevor eine Fast Recovery Area erstellt werden kann, muss der geeignete
           Speicherort für sie gefunden werden (Verzeichnis oder ASM Disk
           Group).
-\clearpage
           \begin{merke}
             Eine Fast Recovery Area kann nicht auf einem Raw-Datenträger gespeichert werden.
           \end{merke}
@@ -659,7 +657,8 @@ SQL> ALTER SYSTEM
             Anschließend an die Änderung dieses Parameters, werden alle Dateien am neuen Speicherort erstellt. Alle bereits bestehenden Dateien verbleiben am Alten und verbrauchen weiterhin Speicherplatz in der Fast Recovery Area, bis sie durch die automatische Verwaltung der Fast Recovery Area gelöscht werden.
           \end{merke}
           Die nächsten Schritte sind nur dann notwendig, wenn auch die bestehenden Dateien an den neuen Speicherort überführt werden müssen. Mit Hilfe des \languagerman{BACKUP}-Kommandos können einzelne Dateiarten in die neue Fast Recovery Area gesichert werden.
-          \begin{lstlisting}[caption={Verschieben von Dateien in eine neue Fast Recovery Area},label=admin1041,language=rman]
+\clearpage          
+		  \begin{lstlisting}[caption={Verschieben von Dateien in eine neue Fast Recovery Area},label=admin1041,language=rman]
 RMAN> BACKUP AS COPY ARCHIVELOG ALL DELETE INPUT;
 
 RMAN> BACKUP DEVICE TYPE DISK BACKUPSET ALL DELETE INPUT;
