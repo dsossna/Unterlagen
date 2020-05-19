@@ -187,6 +187,7 @@ RMAN> BACKUP archivelog
           \begin{lstlisting}[caption={Manuelles Backup des Archive Logs},label=admin1320,language=rman]
 RMAN> BACKUP database PLUS archivelog;
         \end{lstlisting}
+\clearpage		
         Nach dem Absetzen dieses Kommandos führt der RMAN folgende Schritte durch:
         \begin{enumerate}
           \item Es wird ein Log Switch herbeigeführt.
@@ -213,7 +214,6 @@ RMAN> BACKUP archivelog ALL
       In verschiedenen Fällen kann es sinnvoll sein, den Inhalt der Fast
       Recovery Area auf Band zu sichern. Eine einfache Vorgehensweise beim
       Sichern der Fast Recovery Area könnte sein:
-\clearpage
       \begin{enumerate}
         \item Festlegen einer passenden Backup Retention Policy
         \item Backup der Datenbank durchführen
@@ -221,7 +221,7 @@ RMAN> BACKUP archivelog ALL
         \item Obsolete Backups der Fast Recovery Area von den Bändern löschen
         \item Obsolete Datenbankbackups aus der Fast Recovery Area löschen
       \end{enumerate}
-
+\clearpage
       \begin{lstlisting}[caption={Sichern der Fast Recovery Area},label=admin1322,language=rman]
 RMAN> CONFIGURE RETENTION POLICY TO REDUNDANCY 2;
 
