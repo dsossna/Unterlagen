@@ -121,7 +121,7 @@ SQL> SELECT   file_id, file_name, tablespace_name
           Jeder Datenblock in einer Oracle Datenbank führt in seinem Header eine System Change Number (SCN). Dies ist immer die SCN, die während der letzten Veränderung am Datenblock aktuell war. Während eines inkrementellen Backups liest RMAN die SCN jedes Datenblocks und vergleicht diese mit der SCN des Referenzbackups. Ist die SCN im Datenblock größer, als die SCN im Referenzbackup, wird der Datenblock gesichert.
 
           Inkrementelle Backups können als Level 0 oder als Level 1 Backups angelegt werden. Ein Level 0 Backup sichert alle Datenblöcke genau wie ein normales Full-Backup. Der einzige Unterschied ist, dass ein normales Full-Backup nicht in eine inkrementelle Backup-Strategie integriert werden kann.
-
+\clearpage
           Für Level 1 Backups gibt es zwei verschiedene Arten:
           \begin{itemize}
             \item \textbf{Inkrementelles Backup}: Es werden alle Datenblöcke gesichert, die sich seit dem letzten Level 1 oder Level 0 Backup geändert haben.
@@ -145,6 +145,7 @@ RMAN> BACKUP INCREMENTAL LEVEL 0 datafile 1;
           \begin{lstlisting}[caption={Inkrementelles Level 1 Backup der Datenbank},label=admin1314,language=rman]
 RMAN> BACKUP INCREMENTAL LEVEL 1 database;
           \end{lstlisting}
+\clearpage		  
           \abbildung{differentiel_backup} zeigt ein Beispiel, in dem an jedem Sonntag ein inkrementelles Level 0 Backup durchgeführt wird. Dieses dient dann als Referenzbackup für das Level 1 Backup, welches am darauf folgenden Montag erstellt wird. Das Level 1 Backup vom Montag gilt dann wiederum als Referenzbackup für das Level 1 Backup am Dienstag, bis am nächsten Sonntag wieder ein Level 0 Backup erstellt wird und die Kette von vorne beginnt.
 
           \bild{Eine inkrementelle Backup\-strategie}{differentiel_backup}{1}
@@ -187,7 +188,6 @@ RMAN> BACKUP archivelog
           \begin{lstlisting}[caption={Manuelles Backup des Archive Logs},label=admin1320,language=rman]
 RMAN> BACKUP database PLUS archivelog;
         \end{lstlisting}
-\clearpage		
         Nach dem Absetzen dieses Kommandos führt der RMAN folgende Schritte durch:
         \begin{enumerate}
           \item Es wird ein Log Switch herbeigeführt.
@@ -248,6 +248,7 @@ RMAN> DELETE obsolete;
           \item In dem eine Kopie der Kontrolldatei in das aktuelle Backup aufgenommen wird
           \item Durch das Sichern von Datendatei Nummer 1, da dabei die Kontrolldatei immer automatisch mitgesichert wird. Dies geschieht zum Beispiel im Rahmen eines Daten\-bank-Backups.
         \end{itemize}
+\clearpage		
         Damit die Kontrolldatei bei einem beliebigen Backup mitgesichert werden
         kann, gibt es die Klausel \languagerman{INCLUDE current controlfile}.
         \begin{lstlisting}[caption={Kontrolldatei in ein Backup mit einschließen},label=admin1323,language=rman]
@@ -309,7 +310,8 @@ RMAN> BACKUP database PLUS ARCHIVELOG
 2>    FORMAT '/u02/backups/%U', '/u03/backups/%U';
         \end{lstlisting}
         \beispiel{admin1327} zeigt, wie sowohl für Datendateien, als auch für Archive Log Dateien, das Backup Duplexing auf den Wert zwei konfiguriert wird. RMAN erstellt zwei identische Kopien der Datendateien und verteilt diese auf die beiden Speicherorte \oscommand{/u02/backups} und \oscommand{/u03/backups}. Ein solcher Formatstring kann mit Hilfe eines der Kommandos \languagerman{BACKUP}, \languagerman{CONFIGURE CHANNEL} oder \languagerman{ALLOCATE CHANNEL} angegeben werden.
-        \begin{merke}
+\clearpage        
+		\begin{merke}
           Zu beachten ist dabei, dass das Backup Duplexing nicht zusammen mit der Fast Recovery Area funktioniert. Dies wird durch die folgende Fehlermeldung angezeigt:
           \begin{verbatim}
 ORA-19806: cannot make duplex backups in recovery area.
@@ -365,7 +367,6 @@ RMAN> CROSSCHECK backup;
         Bei der Angabe von \languagerman{BACKUP} werden alle Arten von Backups
         überprüft. Es gibt verschieden Möglichkeiten, um die Menge der zu
         überprüfenden Backups einzuschränken.
-\clearpage
         \begin{lstlisting}[caption={\languagerman{CROSSCHECK} auf Backup Sets beschränken},label=admin1333,language=rman]
 RMAN> CROSSCHECK backupset;
 
@@ -385,6 +386,7 @@ RMAN> CROSSCHECK copy;
         \end{lstlisting}
       \subsection{Manuelle Statusänderungen an Backups}
         Mit Hilfe des \languagerman{CHANGE}-Kommandos kann der Status eines Backups manuell auf \enquote{available} oder \enquote{unavailable} gesetzt werden. Da der RMAN sich selbst die für eine Wiederherstellung notwendigen Backups sucht, ist es immer dann sinnvoll, ein Backup Set als \enquote{unavailable} zu markieren, wenn der RMAN es nicht für das Restore benutzen darf.
+\clearpage
         \begin{merke}
           Zu beachten ist, dass Dateien die sich in der Fast Recovery Area befinden, nicht als \textit{unavailable} markiert werden können.
         \end{merke}
@@ -502,6 +504,7 @@ DISABLED
           \item Gruppiert nach Backup: Zu jedem Backup werden die zugehörigen Dateien angezeigt.
           \item Gruppiert nach Datei: Zu jeder Datei wird das betreffende Backup angezeigt.
         \end{itemize}
+\clearpage		
         \subsubsection{Nach Backup gruppieren}
           \begin{lstlisting}[caption={\languagerman{LIST} - Alle Backups, gruppiert nach Backup anzeigen},label=admin1347, language=rman]
 RMAN> LIST backup;
@@ -534,6 +537,7 @@ BS Key  Type LV Size       Device Type Elapsed Time Completion Time
           \begin{lstlisting}[caption={\languagerman{LIST} - Bestimmte Backup Sets, gruppiert nach Backup anzeigen},label=admin1348,language=rman]
 RMAN> LIST backupset 666, 815, 4711;
           \end{lstlisting}
+\clearpage		  
         \subsubsection{Nach Datei gruppieren}
           Um in umgekehrter Folge zu Gruppieren, muss dem
           \languagerman{LIST}-Kommando der Zusatz \languagerman{BY FILE}
@@ -573,9 +577,9 @@ Modification Time BS Key  S #Pieces #Copies Compressed Tag
 23-OCT-13         4       A 1       1       NO         TAG20131024T141608
 23-OCT-13         2       A 1       1       NO         TAG20131024T141243
           \end{lstlisting}
+\clearpage		  
         \subsubsection{Anzeigen einer Zusammenfassung}
           Mit \languagerman{LIST ... SUMMARY} kann für jeden beliebigen Backuptyp eine Zusammenfassung angezeigt werden. Diese enthält nur noch die wesentlichsten Informationen, in geraffter Form.
-\clearpage
           \begin{lstlisting}[caption={Anzeigen einer Zusammenfassung},label=admin1350,language=rman]
 RMAN> LIST backup SUMMARY;
 
@@ -592,6 +596,7 @@ Key     TY LV S Device Type Completion Time #Pieces #Copies Compressed Tag
 7       B  F  A &DISK&        28-OCT-13       1       1       NO        TAG2013...
 8       B  F  A &DISK&        28-OCT-13       1       1       NO        TAG2013...
           \end{lstlisting}
+\clearpage		  
       \subsection{Auflisten der Expired Backups}
         Es ist möglich sich solche Backups anzeigen zu lassen, die im Repository als \enquote{expired} markiert sind.
           \begin{lstlisting}[caption={Expired Backups auflisten},label=admin1351,language=rman]
@@ -622,6 +627,7 @@ BS Key  Type LV Size       Device Type Elapsed Time Completion Time
   Controlfile Included: Ckp scn: 631510       Ckp time: 04-NOV-12
   spfile Included: Modification time: 21-OCT-12
           \end{lstlisting}
+\clearpage		  
       \subsection{Ausgewählte Backups anzeigen}
         Anbei noch einige Beispiele, die zeigen, wie verschiedenste Backups zur Auflistung ausgewählt werden können.
         \begin{lstlisting}[caption={Auflistungen eingrenzen},label=admin1352,language=rman]
@@ -685,6 +691,7 @@ File #bkps Name
 5    0     /u01/app/oracle/oradata/orcl/example01.dbf
 7    1     /u01/app/oracle/oradata/orcl/bank01.dbf
         \end{lstlisting}
+\clearpage		
         Der gleiche Vorgang ist auch für eine Zeitfensterbasierende Retention Policy möglich.
         \begin{lstlisting}[caption={Datenbankdateien die gesichert werden müssen},label=admin1355,language=rman]
 RMAN> REPORT NEED BACKUP RECOVERY WINDOW OF 3 DAYS;
@@ -892,7 +899,6 @@ Recovery Manager complete.
           Die Variable $Y$ steht in dieser Formel für die Anzahl der Tage, die zwischen den Sicherungen der Fast Recovery Area vergehen. In diesem Szenario erfolgt eine tägliche Sicherung, d. h. es gilt $Y=1$. Wichtig ist ebenfalls, dass die Fast Recovery Area als Speicherort für die Redo Logs angegeben wird.
 
           Zur Umsetzung dieser Strategie werden zwei verschiedene RMAN-Skripte benutzt. Eines für das wöchentliche Full-Backup und eines für die täglichen Backups der Fast Recovery Area. Das wöchentliche Skript wird jeden Sonntag ausgeführt. Das tägliche Skript wird sechs Tage die Woche ausgeführt.
-\clearpage
         \subsubsection{Das wöchentliche Skript}
           \begin{lstlisting}[caption={Das wöchentliche Skript},label=admin1363,language=rman]
 
